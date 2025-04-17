@@ -7,13 +7,20 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import PasswordStrengthMeter from '@/components/ui/PasswordStrengthMeter';
 
-// Validation schema for sign up form
+// Replace the existing signUpSchema with this enhanced version
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters")
+  password: z
+    .string()
+    .min(10, "Password must be at least 10 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+  confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]
@@ -26,7 +33,7 @@ export default function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   
-  const { register, handleSubmit, formState: { errors } } = useForm<SignUpFormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema)
   });
   
@@ -128,6 +135,8 @@ export default function SignUpForm() {
             className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
+          {/* Add this password strength meter component */}
+          <PasswordStrengthMeter password={watch("password") || ""} />
           {errors.password && (
             <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
           )}
