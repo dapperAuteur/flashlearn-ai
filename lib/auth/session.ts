@@ -1,5 +1,5 @@
 // lib/auth/session.ts
-import { getServerSession } from "next-auth";
+import getServerSession from "next-auth"
 import { redirect } from "next/navigation";
 
 export async function getSession() {
