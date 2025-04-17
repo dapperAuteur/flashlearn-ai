@@ -12,14 +12,16 @@ The project is currently in Phase 1: Project Foundation and Authentication. We h
 - ✅ TypeScript configuration
 - ✅ Tailwind CSS integration
 - ✅ MongoDB connection setup
+- ✅ Auth.js (NextAuth) configuration
+- ✅ User registration API
 
 ## Next Steps
 
 We will continue implementing Phase 1 with:
-
-- Auth.js integration for authentication
-- User registration and sign-in
-- Protected routes and dashboard setup
+- Authentication UI components
+- Sign-in and sign-up forms
+- Protected routes
+- Dashboard layout
 
 ## Technology Stack
 
@@ -42,13 +44,10 @@ We will continue implementing Phase 1 with:
 3. Create a `.env.local` file with the required environment variables
 4. Run the development server with `npm run dev`
 
-## Professional Services
+## Testing API Endpoints
 
-Are you looking for a developer or Developer Relations professional? I'm available for:
-
-- Contract development work
-- Developer Relations roles
-- Custom implementations of applications like FlashLearn AI
-- Technical training and workshops
-
-Please contact me at: https://i.brandanthonymcdonald.com/portfolio
+Test the registration API:
+```bash
+curl -X POST http://localhost:3000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"password123"}'
