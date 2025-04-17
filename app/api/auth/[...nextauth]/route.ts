@@ -8,6 +8,7 @@ import { getClientIp } from "@/lib/utils";
 import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
 import { logAuthEvent, checkSuspiciousActivity } from "@/lib/logging/authLogger";
 import { AuthEventType } from "@/models/AuthLog";
+import { processSuspiciousActivity } from "@/lib/security/alertService";
 
 const handler = NextAuth({
   providers: [
