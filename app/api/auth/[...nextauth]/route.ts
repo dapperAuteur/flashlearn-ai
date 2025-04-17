@@ -20,6 +20,34 @@ const handler = NextAuth({
       },
       async authorize(credentials, req) {
         if (!credentials) return null;
+
+        const ipAddress = getClientIp(request);
+        const suspiciousCheck = await checkSuspiciousActivity(email, ipAddress);
+
+        if (suspiciousCheck.suspicious) {
+          console.log("Suspicious login attempt detected:", suspiciousCheck.reason);
+
+          // Log the suspicious activity
+          const logEntry = await logAuthEvent({
+            request,
+            event: AuthEventType.SUSPICIOUS_ACTIVITY,
+            email,
+            status: "failure",
+            reason: suspiciousCheck.reason
+          });
+          
+          // Process suspicious activity and send alerts if needed
+          const suspiciousLog = await clientPromise.then(client => 
+            client.db().collection("auth_logs").findOne({ _id: new ObjectId(logEntry) })
+          );
+          
+          if (suspiciousLog) {
+            await processSuspiciousActivity(suspiciousLog as unknown as AuthLog);
+          }
+          
+          // We can still allow the login, but with additional monitoring
+          // Alternatively, we could block it or require additional verification
+        }
         
         const { email, password } = credentials;
         
