@@ -40,16 +40,18 @@ export default function SignInForm() {
       
       if (result?.error) {
         console.log("Sign in error:", result.error);
-        setError("Invalid email or password");
+        setError(result.error === "CredentialsSignin" 
+          ? "Invalid email or password" 
+          : `Authentication error: ${result.error}`);
         return;
       }
       
       console.log("User signed in successfully, redirecting to dashboard");
       router.push("/dashboard");
       router.refresh(); // Refresh the page to update the session
-    } catch (error) {
+    } catch (error: any) {
       console.error("Sign in error:", error);
-      setError("An unexpected error occurred");
+      setError(`Connection error: ${error.message || "Failed to connect to authentication server"}`);
     } finally {
       setIsLoading(false);
     }
