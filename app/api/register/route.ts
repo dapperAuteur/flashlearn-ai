@@ -8,6 +8,8 @@ import { sendEmail } from "@/lib/email/sendEmail";
 import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
 import { getClientIp } from "@/lib/utils";
 import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
+import { logAuthEvent } from "@/lib/logging/authLogger";
+import { AuthEventType } from "@/models/AuthLog";
 
 // Validation schema for user registration
 const userSchema = z.object({
@@ -56,6 +58,18 @@ export async function POST(request: NextRequest) {
     const result = userSchema.safeParse(body);
     if (!result.success) {
       console.log("Validation error:", result.error.errors);
+
+      // Log failed registration
+      await logAuthEvent({
+        request,
+        event: AuthEventType.REGISTER_FAILURE,
+        email: body.email,
+        status: "failure",
+        reason: "Validation error",
+        metadata: { validationErrors: result.error.errors }
+      });
+
+
       return NextResponse.json(
         { error: "Validation error", details: result.error.errors },
         { status: 400 }
@@ -72,6 +86,17 @@ export async function POST(request: NextRequest) {
     const existingUser = await db.collection("users").findOne({ email });
     if (existingUser) {
       console.log("User already exists:", email);
+
+      // Log failed registration
+      await logAuthEvent({
+        request,
+        event: AuthEventType.REGISTER_FAILURE,
+        email,
+        status: "failure",
+        reason: "User already exists"
+      });
+
+
       return NextResponse.json(
         { error: "User already exists" },
         { status: 409 }
@@ -98,7 +123,19 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     });
     
-    console.log("User created successfully:", newUser.insertedId.toString());
+    const userId = newUser.insertedId.toString();
+
+    console.log("User created successfully:", userId);
+
+    // Log successful registration
+    await logAuthEvent({
+      request,
+      event: AuthEventType.REGISTER,
+      userId,
+      email,
+      status: "success",
+      metadata: { name }
+    });
 
     // Create verification URL
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -131,6 +168,17 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error("Registration error:", error);
+
+    // Log registration error
+    await logAuthEvent({
+      request,
+      event: AuthEventType.REGISTER_FAILURE,
+      email: request.body ? (await request.json()).email : undefined,
+      status: "failure",
+      reason: "Server error",
+      metadata: { error: error.message }
+    });
+    
     return NextResponse.json(
       { error: "Internal server error", details: error.message },
       { status: 500 }
