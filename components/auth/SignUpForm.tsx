@@ -44,8 +44,14 @@ export default function SignUpForm() {
           email: data.email,
           password: data.password
         })
-      });
+      }).catch(error => {
+        console.error("Fetch error:", error);
+        throw new Error(`Network error: ${error.message}`);
+      })
       
+      if (!response) {
+        throw new Error("No response from server");
+      }
       const result = await response.json();
       
       if (!response.ok) {
@@ -57,14 +63,14 @@ export default function SignUpForm() {
       console.log("User registered successfully, redirecting to sign in");
       // Redirect to sign-in page with success message
       router.push("/signin?registered=true");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
-      setError("An unexpected error occurred");
+      setError(`Error: ${error.message || "An unexpected error occurred"}`);
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
       <div className="text-center">
