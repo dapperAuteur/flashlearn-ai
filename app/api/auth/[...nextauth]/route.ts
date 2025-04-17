@@ -4,6 +4,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
 import { ObjectId } from "mongodb";
+import { getClientIp } from "@/lib/utils";
+import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
 
 const handler = NextAuth({
   providers: [
@@ -70,7 +72,29 @@ const handler = NextAuth({
         session.user.role = token.role as string;
       }
       return session;
-    }
+    },
+    async signIn({ user, account, profile, email, credentials, request }) {
+      // Skip rate limiting for non-credentials providers
+      if (account?.provider !== "credentials") {
+        return true;
+      }
+
+      // If request is available, apply rate limiting
+      if (request) {
+        const req = request as unknown as NextRequest;
+        const ip = getClientIp(req);
+        
+        // Allow 5 login attempts per 5 minutes
+        const rateLimitResult = await rateLimitRequest(ip, "login", 5, 300);
+        
+        if (!rateLimitResult.success) {
+          console.log(`Rate limit exceeded for IP ${ip} on login endpoint`);
+          throw new Error(`Too many login attempts. Please try again after ${rateLimitResult.reset} seconds.`);
+        }
+      }
+      
+      return true;
+    },
   },
   pages: {
     signIn: "/signin",
