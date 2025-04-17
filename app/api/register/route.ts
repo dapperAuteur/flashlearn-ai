@@ -6,6 +6,8 @@ import { z } from "zod";
 import { generateVerificationToken } from "@/lib/tokens";
 import { sendEmail } from "@/lib/email/sendEmail";
 import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
+import { getClientIp } from "@/lib/utils";
+import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
 
 // Validation schema for user registration
 const userSchema = z.object({
@@ -21,6 +23,30 @@ const userSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+
+  // Get client IP for rate limiting
+  const ip = getClientIp(request);
+
+  // Apply rate limiting (5 registration attempts per 10 minutes)
+  const rateLimitResult = await rateLimitRequest(ip, "register", 5, 600);
+
+  // If rate limit exceeded, return 429 Too Many Requests
+  if (!rateLimitResult.success) {
+    console.log(`Rate limit exceeded for IP ${ip} on registration endpoint`);
+    return NextResponse.json(
+      { 
+        error: "Too many registration attempts. Please try again later.", 
+        retryAfter: rateLimitResult.reset 
+      },
+      { 
+        status: 429,
+        headers: {
+          "Retry-After": rateLimitResult.reset.toString(),
+        }
+      }
+    );
+  }
+
   try {
     // Parse the request body
     const body = await request.json();
