@@ -21,6 +21,38 @@ export default function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [showResendButton, setShowResendButton] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendSuccess(false);
+    
+    try {
+      const response = await fetch("/api/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resendEmail }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setResendSuccess(true);
+        setError(null);
+      } else {
+        setError(data.error || "Failed to resend verification email");
+      }
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      setError("An unexpected error occurred");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   
   const { register, handleSubmit, formState: { errors } } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema)
@@ -40,11 +72,18 @@ export default function SignInForm() {
       
       if (result?.error) {
         console.log("Sign in error:", result.error);
-        setError(result.error === "CredentialsSignin" 
-          ? "Invalid email or password" 
-          : `Authentication error: ${result.error}`);
+
+        // Check for specific error types
+      if (result.error.includes("email_not_verified")) {
+        setError("Please verify your email address before signing in");
+        setShowResendButton(true);
+        setResendEmail(data.email);
         return;
       }
+      
+      setError("Invalid email or password");
+      return;
+    }
       
       console.log("User signed in successfully, redirecting to dashboard");
       router.push("/dashboard");
@@ -100,6 +139,24 @@ export default function SignInForm() {
           />
           {errors.password && (
             <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          )}
+          {showResendButton && (
+            <div className="mt-4">
+              {resendSuccess ? (
+                <p className="text-sm text-green-600">
+                  Verification email sent! Please check your inbox.
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  className="text-sm text-blue-600 hover:text-blue-500"
+                  disabled={resendLoading}
+                >
+                  {resendLoading ? "Sending..." : "Resend verification email"}
+                </button>
+              )}
+            </div>
           )}
         </div>
         

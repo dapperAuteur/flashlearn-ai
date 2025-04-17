@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
 import { z } from "zod";
+import { generateVerificationToken } from "@/lib/tokens";
+import { sendEmail } from "@/lib/email/sendEmail";
+import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
 
 // Validation schema for user registration
 const userSchema = z.object({
@@ -48,6 +51,10 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
+
+    // Generate verification token and expiry date (24 hours from now)
+    const verificationToken = generateVerificationToken();
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     
     // Hash the password
     const hashedPassword = await hash(password, 12);
@@ -58,16 +65,41 @@ export async function POST(request: NextRequest) {
       email,
       password: hashedPassword,
       role: "free", // Default role
+      emailVerified: false,
+      verificationToken,
+      verificationExpires,
       createdAt: new Date(),
       updatedAt: new Date()
     });
     
     console.log("User created successfully:", newUser.insertedId.toString());
+
+    // Create verification URL
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const verificationUrl = `${baseUrl}/api/verify-email?token=${verificationToken}`; 
+
+
+    // Send verification email
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Verify your FlashLearn AI account",
+        html: getVerificationEmailTemplate({
+          username: name,
+          verificationUrl,
+        }),
+      });
+      console.log("Verification email sent to:", email);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // Note: We continue the registration process even if the email fails
+      // The user can request a new verification email later
+    }
     
     return NextResponse.json(
       { 
-        message: "User created successfully",
-        userId: newUser.insertedId.toString()
+        message: "User created successfully. Please check your email to verify your account.",
+        userId: newUser.insertedId.toString() 
       },
       { status: 201 }
     );

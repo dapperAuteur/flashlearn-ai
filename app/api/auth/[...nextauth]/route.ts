@@ -35,6 +35,12 @@ const handler = NextAuth({
             console.log("Invalid password for user:", email);
             return null;
           }
+
+          // Check if email is verified
+          if (!user.emailVerified) {
+            console.log("Email not verified for user:", email);
+            throw new Error("email_not_verified");
+          }
           
           console.log("User authenticated successfully:", email);
           return {
