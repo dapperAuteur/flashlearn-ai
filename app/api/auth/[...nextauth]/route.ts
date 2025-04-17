@@ -45,7 +45,7 @@ const handler = NextAuth({
           };
         } catch (error) {
           console.error("Authentication error:", error);
-          return null;
+          throw new Error(`Authentication failed: ${error.message}`);
         }
       }
     })
