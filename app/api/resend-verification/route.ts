@@ -2,10 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/db/mongodb";
 import { generateVerificationToken } from "@/lib/tokens";
-import { sendEmail } from "@/lib/email/sendEmail";
-import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
+// import { sendEmail } from "@/lib/email/sendEmail";
+// import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
 import { getClientIp } from "@/lib/utils";
 import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
+import { sendVerificationEmail } from "@/lib/email/mailgun";
 
 export async function POST(request: NextRequest) {
 
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       }
     );
   }
-  
+
   try {
     const { email } = await request.json();
     
@@ -82,20 +83,9 @@ export async function POST(request: NextRequest) {
         }
       }
     );
-    
-    // Create verification URL
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const verificationUrl = `${baseUrl}/api/verify-email?token=${verificationToken}`;
-    
+
     // Send verification email
-    await sendEmail({
-      to: email,
-      subject: "Verify your FlashLearn AI account",
-      html: getVerificationEmailTemplate({
-        username: user.name,
-        verificationUrl,
-      }),
-    });
+    await sendVerificationEmail(user.email, user.name, verificationToken);
     
     console.log("Verification email resent to:", email);
     

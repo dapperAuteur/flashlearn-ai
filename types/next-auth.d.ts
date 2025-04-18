@@ -12,5 +12,11 @@ declare module "next-auth" {
   interface User {
     id: string;
     role: string;
+    emailVerified: {
+      type: boolean,
+      default: false
+    },
+    verificationToken?: string;
+    verificationTokenExpires?: Date;
   }
 }

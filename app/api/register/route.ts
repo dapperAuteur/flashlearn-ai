@@ -4,12 +4,13 @@ import { hash } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
 import { z } from "zod";
 import { generateVerificationToken } from "@/lib/tokens";
-import { sendEmail } from "@/lib/email/sendEmail";
-import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
+// import { sendEmail } from "@/lib/email/sendEmail";
+// import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
 import { getClientIp } from "@/lib/utils";
 import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
 import { logAuthEvent } from "@/lib/logging/authLogger";
 import { AuthEventType } from "@/models/AuthLog";
+import { sendVerificationEmail } from "@/lib/email/mailgun";
 
 // Validation schema for user registration
 const userSchema = z.object({
@@ -143,21 +144,7 @@ export async function POST(request: NextRequest) {
 
 
     // Send verification email
-    try {
-      await sendEmail({
-        to: email,
-        subject: "Verify your FlashLearn AI account",
-        html: getVerificationEmailTemplate({
-          username: name,
-          verificationUrl,
-        }),
-      });
-      console.log("Verification email sent to:", email);
-    } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
-      // Note: We continue the registration process even if the email fails
-      // The user can request a new verification email later
-    }
+    await sendVerificationEmail(email, name, verificationToken);
     
     return NextResponse.json(
       { 

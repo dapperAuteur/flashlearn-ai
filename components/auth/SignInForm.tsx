@@ -78,6 +78,8 @@ export default function SignInForm() {
         setError("Please verify your email address before signing in");
         setShowResendButton(true);
         setResendEmail(data.email);
+        // Redirect to error page with specific error
+        router.push("/auth/error?error=email_not_verified");
         return;
       }
       
