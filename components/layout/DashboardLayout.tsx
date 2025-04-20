@@ -8,6 +8,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import { useAuth } from '../providers/TempAuthProvider';
 
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }

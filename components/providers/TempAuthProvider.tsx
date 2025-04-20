@@ -1,76 +1,91 @@
 // components/providers/TempAuthProvider.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+// Define user and auth context types
 interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
 }
+
+type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 interface AuthContextType {
   user: User | null;
-  status: 'loading' | 'authenticated' | 'unauthenticated';
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  status: AuthStatus;
+  signIn: (credentials: { email: string; password: string }) => Promise<boolean>;
+  signOut: () => void;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  status: 'loading',
-  login: async () => false,
-  logout: () => {},
-});
+// Create context
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Provider component
 export function TempAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+  const [status, setStatus] = useState<AuthStatus>('loading');
 
+  // Check for existing session on mount
   useEffect(() => {
-    // Fetch session on mount
-    const getSession = async () => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
       try {
-        const res = await fetch('/api/auth/session');
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-          setStatus('authenticated');
-        } else {
-          setStatus('unauthenticated');
-        }
+        setUser(JSON.parse(storedUser));
+        setStatus('authenticated');
       } catch (error) {
-        console.error('Failed to fetch session:', error);
+        console.error('Failed to parse stored user:', error);
         setStatus('unauthenticated');
       }
-    };
-
-    getSession();
+    } else {
+      setStatus('unauthenticated');
+    }
   }, []);
 
-  const login = async (email: string, password: string) => {
-    // For now, just mock a successful login
-    setUser({
-      id: "1",
-      name: "Test User",
-      email: email,
-      role: "free"
-    });
-    setStatus('authenticated');
-    return true;
+  // Sign in function
+  const signIn = async (credentials: { email: string; password: string }) => {
+    // For demo, just check if email is test@example.com
+    if (credentials.email === 'test@example.com') {
+      const user = {
+        id: '1',
+        name: 'Test User',
+        email: credentials.email,
+        role: 'free',
+      };
+      
+      // Store user in localStorage for persistence
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Update state
+      setUser(user);
+      setStatus('authenticated');
+      return true;
+    }
+    
+    return false;
   };
 
-  const logout = () => {
+  // Sign out function
+  const signOut = () => {
+    localStorage.removeItem('user');
     setUser(null);
     setStatus('unauthenticated');
   };
 
   return (
-    <AuthContext.Provider value={{ user, status, login, logout }}>
+    <AuthContext.Provider value={{ user, status, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+// Hook for using auth context
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within a TempAuthProvider');
+  }
+  return context;
+}
