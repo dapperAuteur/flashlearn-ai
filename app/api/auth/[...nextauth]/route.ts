@@ -9,6 +9,7 @@ import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
 import { logAuthEvent, checkSuspiciousActivity } from "@/lib/logging/authLogger";
 import { AuthEventType } from "@/models/AuthLog";
 import { processSuspiciousActivity } from "@/lib/security/alertService";
+import { NextRequest } from "next/server";
 
 const handler = NextAuth({
   providers: [
@@ -20,34 +21,6 @@ const handler = NextAuth({
       },
       async authorize(credentials, req) {
         if (!credentials) return null;
-
-        const ipAddress = getClientIp(request);
-        const suspiciousCheck = await checkSuspiciousActivity(email, ipAddress);
-
-        if (suspiciousCheck.suspicious) {
-          console.log("Suspicious login attempt detected:", suspiciousCheck.reason);
-
-          // Log the suspicious activity
-          const logEntry = await logAuthEvent({
-            request,
-            event: AuthEventType.SUSPICIOUS_ACTIVITY,
-            email,
-            status: "failure",
-            reason: suspiciousCheck.reason
-          });
-          
-          // Process suspicious activity and send alerts if needed
-          const suspiciousLog = await clientPromise.then(client => 
-            client.db().collection("auth_logs").findOne({ _id: new ObjectId(logEntry) })
-          );
-          
-          if (suspiciousLog) {
-            await processSuspiciousActivity(suspiciousLog as unknown as AuthLog);
-          }
-          
-          // We can still allow the login, but with additional monitoring
-          // Alternatively, we could block it or require additional verification
-        }
         
         const { email, password } = credentials;
         
@@ -65,13 +38,22 @@ const handler = NextAuth({
             console.log("Suspicious login attempt detected:", suspiciousCheck.reason);
             
             // Log the suspicious activity
-            await logAuthEvent({
+            const logEntry = await logAuthEvent({
               request,
               event: AuthEventType.SUSPICIOUS_ACTIVITY,
               email,
               status: "failure",
               reason: suspiciousCheck.reason
             });
+
+            // Process suspicious activity and send alerts if needed
+          const suspiciousLog = await clientPromise.then(client => 
+            client.db().collection("auth_logs").findOne({ _id: new ObjectId(logEntry) })
+          );
+          
+          if (suspiciousLog) {
+            await processSuspiciousActivity(suspiciousLog as unknown as AuthLog);
+          }
 
             // We can still allow the login, but with additional monitoring
             // Alternatively, we could block it or require additional verification
@@ -157,6 +139,7 @@ const handler = NextAuth({
         }
       }
     }),
+  ],
     // Add an event handler for signOut
     events: {
       async signOut({ token, session }) {
@@ -176,8 +159,7 @@ const handler = NextAuth({
           });
         }
       }
-    }
-  ],
+    },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

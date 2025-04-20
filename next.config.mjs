@@ -43,29 +43,12 @@ headers: async () => {
         // Content Security Policy
         {
           key: 'Content-Security-Policy',
-          value: ContentSecurityPolicy,
+          value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; media-src 'self'; object-src 'none'",
         },
       ],
     },
   ];
 },
 };
-
-// Define Content Security Policy
-const ContentSecurityPolicy = `
-default-src 'self';
-script-src 'self' 'unsafe-inline' 'unsafe-eval';
-style-src 'self' 'unsafe-inline';
-img-src 'self' data: blob:;
-font-src 'self';
-connect-src 'self';
-frame-src 'self';
-frame-ancestors 'self';
-form-action 'self';
-base-uri 'self';
-media-src 'self';
-object-src 'none';
-upgrade-insecure-requests;
-`.replace(/\s{2,}/g, ' ').trim();
 
 export default nextConfig;
