@@ -1,7 +1,8 @@
 // app/layout.tsx
 import { Inter } from "next/font/google";
 import type { Metadata } from "next";
-import { AuthProvider } from "@/components/providers/AuthProvider";
+// import { AuthProvider } from "@/components/providers/AuthProvider";
+import { TempAuthProvider } from "@/components/providers/TempAuthProvider";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -19,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
+        <TempAuthProvider>{children}</TempAuthProvider>
       </body>
     </html>
   );
