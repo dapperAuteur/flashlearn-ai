@@ -1,9 +1,9 @@
 // app/(dashboard)/dashboard/page.tsx
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatisticCard from '@/components/ui/StatisticCard';
 import { useAuth } from '@/components/providers/TempAuthProvider';
@@ -19,7 +19,13 @@ export default function DashboardPage() {
   const { user, status } = useAuth();
   const router = useRouter();
   
-  // This would normally come from a database query
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/signin');
+    }
+  }, [status, router]);
+  
+  // Mock stats data
   const stats = {
     totalFlashcards: 0,
     studySessions: 0,
@@ -27,15 +33,15 @@ export default function DashboardPage() {
     correctRate: '0%',
   };
   
-  // Redirect if not authenticated (additional safety check)
-  React.useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/signin');
-    }
-  }, [status, router]);
-  
   if (status === 'loading') {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-3 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
   
   if (!user) {
@@ -45,7 +51,7 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name || 'User'}!</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name}!</h1>
         <p className="mt-1 text-gray-600">
           Get started by creating your first flashcard set or exploring the app.
         </p>

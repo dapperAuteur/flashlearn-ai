@@ -5,10 +5,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 // Define user and auth context types
 interface User {
-  id?: string;
-  name?: string;
-  email?: string;
-  role?: string;
+  id: string;
+  name: string;
+  email: string;
+  role: string;
 }
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -16,7 +16,7 @@ type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 interface AuthContextType {
   user: User | null;
   status: AuthStatus;
-  signIn: (credentials: { email: string; password: string }) => Promise<boolean>;
+  signIn: (credentials: { email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
   signOut: () => void;
 }
 
@@ -30,41 +30,52 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setStatus('authenticated');
-      } catch (error) {
-        console.error('Failed to parse stored user:', error);
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+          setStatus('authenticated');
+        } catch (error) {
+          console.error('Failed to parse stored user:', error);
+          localStorage.removeItem('user');
+          setStatus('unauthenticated');
+        }
+      } else {
         setStatus('unauthenticated');
       }
-    } else {
-      setStatus('unauthenticated');
     }
   }, []);
 
   // Sign in function
   const signIn = async (credentials: { email: string; password: string }) => {
-    // For demo, just check if email is test@example.com
-    if (credentials.email === 'test@example.com') {
-      const user = {
-        id: '1',
-        name: 'Test User',
-        email: credentials.email,
-        role: 'free',
-      };
+    try {
+      console.log('Attempting to sign in with:', credentials.email);
       
-      // Store user in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify(user));
+      // For demo, accept a test user
+      if (credentials.email === 'test@example.com') {
+        const newUser = {
+          id: '1',
+          name: 'Test User',
+          email: credentials.email,
+          role: 'free',
+        };
+        
+        // Store user in localStorage for persistence
+        localStorage.setItem('user', JSON.stringify(newUser));
+        
+        // Update state
+        setUser(newUser);
+        setStatus('authenticated');
+        return { success: true };
+      }
       
-      // Update state
-      setUser(user);
-      setStatus('authenticated');
-      return true;
+      return { success: false, error: 'Invalid email or password' };
+    } catch (error) {
+      console.error('Sign in error:', error);
+      return { success: false, error: 'An unexpected error occurred' };
     }
-    
-    return false;
   };
 
   // Sign out function
