@@ -1,27 +1,19 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
-
-interface Flashcard {
-  term: string;
-  definition: string;
-}
+import type { Flashcard } from "@/types/flashcards";
 
 const genAI = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
-if (!genAI) {
-  console.error("Missing GEMINI_API_KEY environment variable");
-  // Don't expose the error details directly in production if possible
-  // return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-  // For development, this is okay:
-  return NextResponse.json({ error: "API key not configured on server." }, { status: 500 });
-}
-
-const model = genAI.getGenerativeModel({
-  model: 'gemini-2.0-flash-exp'
-});
-
 export async function POST(request: Request) {
   try {
+    if (!genAI) {
+      console.error("Missing GEMINI_API_KEY environment variable");
+      // Don't expose the error details directly in production if possible
+      // return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+      // For development, this is okay:
+      return NextResponse.json({ error: "API key not configured on server." }, { status: 500 });
+    }
+    
     const { topic } = await request.json();
 
     if (!topic || typeof topic !== 'string' || topic.trim() === '') {

@@ -3,7 +3,7 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
-import { ObjectId } from "mongodb";
+// import { ObjectId } from "mongodb";
 
 const handler = NextAuth({
   providers: [

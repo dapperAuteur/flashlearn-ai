@@ -1,11 +1,7 @@
 'use client';
 
 import { useState } from "react";
-
-interface Flashcard {
-  term: string;
-  definition: string;
-}
+import type { Flashcard } from "@/types/flashcards";
 
 export default function GenerateFlashcardsPage(){
   
