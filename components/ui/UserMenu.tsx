@@ -2,12 +2,21 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { signOut } from 'next-auth/react';
+// import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, LogOut, Settings } from 'lucide-react';
-import { useAuth } from '@/components/providers/TempAuthProvider';
 
-export default function UserMenu() {
-  const { user, logout } = useAuth();
+
+interface UserMenuProps {
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+}
+
+export default function UserMenu({user}: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
@@ -27,9 +36,9 @@ export default function UserMenu() {
     };
   }, []);
 
-  if (!user) {
-    return null;
-  }
+  // if (!user) {
+  //   return null;
+  // }
   
   return (
     <div className="relative" ref={menuRef}>
@@ -78,7 +87,7 @@ export default function UserMenu() {
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               onClick={() => {
                 setIsOpen(false);
-                logout();
+                signOut({ callbackUrl: '/' })
               }}
             >
               <LogOut className="mr-2 h-4 w-4" />

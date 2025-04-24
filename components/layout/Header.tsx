@@ -1,6 +1,7 @@
 // components/layout/Header.tsx
 'use client';
 
+import { useSession } from 'next-auth/react'
 import Link from 'next/link';
 import UserMenu from '../ui/UserMenu';
 import { Menu } from 'lucide-react';
@@ -10,6 +11,8 @@ interface HeaderProps {
 }
 
 export default function Header({ toggleSidebar }: HeaderProps) {
+  const { data: session } = useSession();
+
   return (
     <header className="bg-white shadow-sm h-16 fixed top-0 left-0 right-0 z-10">
       <div className="h-full px-4 flex items-center justify-between">
@@ -30,7 +33,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         
         {/* Right side navigation */}
         <div className="flex items-center space-x-4">
-          <UserMenu />
+        {session?.user && (
+            <UserMenu user={session.user} />
+          )}
         </div>
       </div>
     </header>

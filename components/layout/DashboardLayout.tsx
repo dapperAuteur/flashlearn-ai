@@ -2,11 +2,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-// import { useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import { useAuth } from '../providers/TempAuthProvider';
 
 
 interface DashboardLayoutProps {
@@ -15,9 +14,10 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // const { data: session, status } = useSession();
-  const { user, status } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
+
+  console.log('DashboardLayout session :>> ', session);
   
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);

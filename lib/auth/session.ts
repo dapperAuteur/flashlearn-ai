@@ -1,14 +1,22 @@
 // lib/auth/session.ts
-import {getServerSession} from "next-auth/next"
+import {getServerSession} from "next-auth"
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function getSession() {
-  return await getServerSession(authOptions);
+  try {
+    const session = await getServerSession(authOptions);
+    console.log('Session retrieved:', session);
+    return session;
+  } catch (error) {
+    console.error('Error getting session:', error);
+    return null;
+  }
 }
 
 export async function getCurrentUser() {
   const session = await getSession();
+  console.log('lib/auth/session :>> ', session);
   
   if (!session?.user) {
     return null;

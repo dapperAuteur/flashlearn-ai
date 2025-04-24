@@ -6,7 +6,8 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatisticCard from '@/components/ui/StatisticCard';
-import { useAuth } from '@/components/providers/TempAuthProvider';
+import { useSession } from 'next-auth/react';
+
 import {
   BookOpenIcon,
   ClockIcon,
@@ -16,12 +17,16 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function DashboardPage() {
-  const { user, status } = useAuth();
+  
+  const { data: session, status } = useSession();
+  const user = session?.user;
   const router = useRouter();
   
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/signin');
+      // router.push('/signin');
+      // NOT Hitting here BUG
+      console.log('DashboardPage() status :>> ', status);
     }
   }, [status, router]);
   

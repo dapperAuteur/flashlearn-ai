@@ -1,12 +1,28 @@
 // middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+// import { getSession } from '@/lib/auth/session';
+
 
 /**
  * Middleware to add additional security measures
  * and handle rate limiting headers
  */
 export function middleware(request: NextRequest) {
+
+  // console.log('middleware()request :>> ', request);
+  
+  // get session from NextAuth
+  // const session = await getSession();
+  // console.log('session :>> ', session);
+  // if (!session) {
+  //   return NextResponse.redirect(new URL('/signin', request.url));
+  // }
+  
+  
+  
+
+
   // Clone the response
   const response = NextResponse.next();
   

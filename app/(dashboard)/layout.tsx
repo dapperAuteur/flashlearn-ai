@@ -19,7 +19,7 @@ export default async function DashboardLayout({
   
   if (!user) {
     console.log('User not authenticated, redirecting to sign in page');
-    redirect('/signin');
+    // redirect('/signin');
   }
   
   return (
