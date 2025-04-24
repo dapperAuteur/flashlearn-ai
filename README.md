@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FlashLearn AI: Intelligent Flashcard Learning System
+
+![FlashLearn AI Logo](https://via.placeholder.com/150x50?text=FlashLearn+AI)
+
+## Project Overview
+
+FlashLearn AI is an advanced flashcard application designed to enhance learning through AI-powered features and adaptive study techniques. Built with Next.js, TypeScript, and MongoDB, this application supports multiple learning modes, offline capabilities, and intelligent content extraction.
+
+### Key Features
+
+- **Multiple Study Modes**: Progress through increasingly difficult recall levels - from true/false to free text entry
+- **AI-Generated Content**: Convert PDFs, websites, audio files, and YouTube videos into flashcards automatically
+- **Spaced Repetition**: Smart scheduling system prioritizes cards you need to review most
+- **Offline Support**: Study anywhere, even without internet connection
+- **Team Collaboration**: Paid users can share flashcards and study with teammates in real-time
+- **Custom Organization**: Tag, categorize, and organize flashcards for efficient study
+- **Performance Analytics**: Track your progress with detailed statistics and reports
+
+## Current Status
+
+The project is currently in active development. Here's what's been completed:
+
+- ✅ Project setup with Next.js App Router architecture  
+- ✅ Authentication system (sign up, sign in)
+- ✅ MongoDB integration
+- ✅ Email verification with Mailgun
+- ✅ Dashboard layout with responsive sidebar
+- ✅ User profile management
+
+### Next Features (Roadmap)
+
+1. Flashcard CRUD operations and organization system
+2. Basic study interface with multiple difficulty modes
+3. Stripe subscription integration
+4. AI-powered content extraction
+5. Offline functionality
+6. Team collaboration features
+7. Real-time multiplayer study sessions
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 18.0 or later
+- MongoDB database
+- Mailgun account (for email verification)
+- npm or yarn
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/flashlearn-ai.git
+   cd flashlearn-ai
