@@ -16,8 +16,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
-
-  console.log('DashboardLayout session :>> ', session);
   
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);

@@ -31,17 +31,6 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
           
-          // For test user, we'll skip password check
-          if (email === "test@example.com") {
-            console.log("Test user authenticated successfully");
-            return {
-              id: user._id.toString(),
-              email: user.email,
-              name: user.name || "Test User",
-              role: user.role || "free"
-            };
-          }
-          
           const isPasswordValid = await compare(password, user.password);
           
           if (!isPasswordValid) {

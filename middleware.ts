@@ -2,19 +2,45 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 // import { getSession } from '@/lib/auth/session';
+import { getToken } from 'next-auth/jwt';
 
+const secret = process.env.NEXTAUTH_SECRET;
 
 /**
  * Middleware to add additional security measures
  * and handle rate limiting headers
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
 
-  // console.log('middleware()request :>> ', request);
-  
-  // get session from NextAuth
+  if (!secret) {
+    console.error("Missing NEXTAUTH_SECRET environment variable in middleware");
+    // Handle appropriately - maybe redirect to an error page or allow access cautiously
+    // For now, let's return a generic error response
+    return new Response("Internal Server Error: Auth configuration missing", { status: 500 });
+  }
+
+  // Use getToken to decode the JWT from the request cookies
+  const token = await getToken({ req: request, secret: secret });
+  console.log('Middleware token:', token); // For debugging
+
+  // Check if the token exists (user is logged in)
+  // Add checks for specific paths if needed (e.g., only protect /dashboard)
+  const { pathname } = request.nextUrl;
+  // const isPublicPath = pathname === '/signin' || pathname === '/signup' || pathname === '/generate' || pathname === '/'; // Add other public paths
+
+  const publicPaths = ['/signin', '/signup', '/generate', '/'];
+  const isPublicPath = publicPaths.includes(pathname);
+
+  if (!token && !isPublicPath) {
+    console.log(`Middleware: No token found for protected path ${pathname}, redirecting to signin.`);
+    const signInUrl = new URL('/signin', request.url);
+    signInUrl.searchParams.set('callbackUrl', request.url); // Optional: redirect back after login
+    return NextResponse.redirect(signInUrl);
+  }
+
+  // // get session from NextAuth
   // const session = await getSession();
-  // console.log('session :>> ', session);
+  // // console.log('session :>> ', session);
   // if (!session) {
   //   return NextResponse.redirect(new URL('/signin', request.url));
   // }
@@ -50,6 +76,6 @@ export const config = {
      * 2. _next/image (image optimization files)
      * 3. favicon.ico (favicon file)
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/|_next/static|_next/image|favicon.ico).*)',
   ],
 };
