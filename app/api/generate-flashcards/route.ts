@@ -51,8 +51,8 @@ export async function POST(request: Request) {
     const normalizedTopic = topic.toLowerCase().replace(/[^\w\s]/g, '').trim();
     const existingSets = await db.collection("shared_flashcard_sets")
       .find({ 
-        normalizedTopic: { $regex: normalizedTopic, $options: 'i' },
-        "ratings.count": { $gte: 3 },  // Only use sets with sufficient ratings
+        normalizedTopic: normalizedTopic,
+        // "ratings.count": { $gte: 3 },  // Only use sets with sufficient ratings
       })
       .sort({ 
         "ratings.average": -1,  // Highest rated first
@@ -60,6 +60,19 @@ export async function POST(request: Request) {
         })
       .limit(1)
       .toArray();
+
+      await Logger.debug(
+        LogContext.AI,
+        "Searched for existing flashcard sets", 
+        { 
+          requestId, 
+          metadata: { 
+            normalizedTopic, 
+            existingSetsCount: existingSets.length,
+            firstSetId: existingSets[0]?._id?.toString()
+          }
+        }
+      );
 
     if (existingSets.length > 0) {
       const sharedSet = existingSets[0];
