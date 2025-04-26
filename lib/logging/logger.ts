@@ -171,13 +171,16 @@ export class Logger {
 export class AnalyticsLogger {
   // Event types for analytics
   static EventType = {
+    AI_GENERATED: "ai_generated",
+    AI_PROMPT_SUBMITTED: "ai_prompt_submitted",
     FLASHCARD_CREATED: "flashcard_created",
     FLASHCARD_STUDIED: "flashcard_studied",
-    AI_GENERATED: "ai_generated",
-    LIST_IMPORTED: "list_imported",
     LIST_EXPORTED: "list_exported",
-    USER_SIGNUP: "user_signup",
-    USER_LOGIN: "user_login"
+    LIST_IMPORTED: "list_imported",
+    SHARED_FLASHCARDS_USED: "shared_flashcards_used",
+    SHARED_FLASHCARDS_VIEWED: "shared_flashcards_viewed",
+    USER_LOGIN: "user_login",
+    USER_SIGNUP: "user_signup"
   };
 
   // Record an analytics event
@@ -295,5 +298,32 @@ export class AnalyticsLogger {
         cardsPerMinute: (correctCount + incorrectCount) / (durationSeconds / 60)
       }
     });
+  }
+
+  // New tracking method for prompts
+  static async trackPromptSubmission(
+    userId: string | undefined,
+    topic: string,
+    source: "web" | "mobile" | "api" = "web"
+  ): Promise<string | null> {
+    return this.trackEvent({
+      userId,
+      eventType: this.EventType.AI_PROMPT_SUBMITTED,
+      properties: {
+        topic,
+        topicNormalized: this.normalizeTopicForClustering(topic),
+        source,
+        timestamp: new Date()
+      }
+    });
+  }
+
+  // Helper to normalize topics for clustering similar requests
+  private static normalizeTopicForClustering(topic: string): string {
+    return topic
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '') // Remove special chars
+      .replace(/\s+/g, ' ')    // Normalize whitespace
+      .trim();
   }
 }

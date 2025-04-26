@@ -1,24 +1,101 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import type { Flashcard } from "@/types/flashcards";
+import { Logger, LogContext } from "@/lib/logging/logger";
+import { AnalyticsLogger } from "@/lib/logging/logger";
+import { getServerSession } from "next-auth/next";
+import clientPromise from "@/lib/db/mongodb";
 
 const genAI = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
 export async function POST(request: Request) {
+  const startTime = Date.now();
+  let userId = undefined;
+  let requestId = undefined;
+
   try {
+    // Get authenticated user if available
+    const session = await getServerSession();
+    userId = session?.user?.id;
+
+    const client = await clientPromise;
+    const db = client.db();
+    
+    // Log request
+    requestId = await Logger.info(
+      LogContext.AI, 
+      "AI flashcard generation request", 
+      { userId, request }
+    );
     if (!genAI) {
-      console.error("Missing GEMINI_API_KEY environment variable");
-      // Don't expose the error details directly in production if possible
-      // return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-      // For development, this is okay:
+      await Logger.error(
+        LogContext.AI,
+        "Missing GEMINI_API_KEY environment variable",
+        { requestId }
+      );
       return NextResponse.json({ error: "API key not configured on server." }, { status: 500 });
     }
     
     const { topic } = await request.json();
 
     if (!topic || typeof topic !== 'string' || topic.trim() === '') {
+      await Logger.warning(
+        LogContext.AI,
+        "Invalid topic provided",
+        { requestId, metadata: { topic } }
+      );
       return NextResponse.json({ error: 'Topic is required' }, { status: 400 });
     }
+
+    // Check for existing similar flashcard sets
+    const normalizedTopic = topic.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    const existingSets = await db.collection("shared_flashcard_sets")
+      .find({ 
+        normalizedTopic: { $regex: normalizedTopic, $options: 'i' },
+        usageCount: { $gte: 3 } // Only use sets that have been used multiple times
+      })
+      .sort({ usageCount: -1, quality: -1 })
+      .limit(1)
+      .toArray();
+
+    if (existingSets.length > 0) {
+      const sharedSet = existingSets[0];
+      
+      // Log that we're using a shared set
+      await Logger.info(
+        LogContext.AI,
+        "Using existing shared flashcard set",
+        { requestId, metadata: { topic, sharedSetId: sharedSet._id } }
+      );
+      
+      // Increment usage count
+      await db.collection("shared_flashcard_sets").updateOne(
+        { _id: sharedSet._id },
+        { $inc: { usageCount: 1 } }
+      );
+      
+      // Track analytics for shared set usage
+      if (userId) {
+        await AnalyticsLogger.trackEvent({
+          userId,
+          eventType: AnalyticsLogger.EventType.SHARED_FLASHCARDS_USED,
+          properties: { 
+            setId: sharedSet._id.toString(),
+            topic: sharedSet.topic,
+            cardCount: sharedSet.flashcards.length
+          }
+        });
+      }
+      
+      return NextResponse.json({ flashcards: sharedSet.flashcards });
+    }
+
+    await Logger.debug(
+      LogContext.AI,
+      "Generating flashcards",
+      { requestId, metadata: { topic } }
+    );
+
     const prompt = `Generate a list of flashcards for the topic of "${topic}". Each flashcard should have a term and a concise definition. Format the output as a list of "Term: Definition" pairs, with each pair on a new line. Ensure terms and definitions are distinct and clearly separated by a single colon. Here's an example output:
       Hello: Hola
       Goodbye: Adiós`;
@@ -48,21 +125,87 @@ export async function POST(request: Request) {
         .filter((card): card is Flashcard => card !== null); // Filter out nulls and type guard
   
       if (flashcards.length > 0) {
-        console.log('Generated flashcards:');
-        flashcards.forEach((flashcard, index) => {
-          // console.log(`flashcard:index :>> , ${flashcard}:${index}`);
+        const durationMs = Date.now() - startTime;
+        // Log success
+        await Logger.info(
+          LogContext.AI,
+          "Successfully generated flashcards",
+          { 
+            requestId, 
+            metadata: { 
+              topic, 
+              cardCount: flashcards.length,
+              durationMs
+            }
+          }
+        );
+        // Track analytics
+        if (userId) {
+          await AnalyticsLogger.trackAiGeneration(
+            userId,
+            topic,
+            flashcards.length,
+            durationMs
+          );
+        }
+        // If no shared set exists, proceed with AI generation as before...
+        // After successful generation, store for future use:
+        await db.collection("shared_flashcard_sets").insertOne({
+          topic,
+          normalizedTopic,
+          flashcards,
+          createdBy: userId,
+          usageCount: 1,
+          quality: 0, // Not rated yet
+          createdAt: new Date(),
+          updatedAt: new Date()
         });
         return NextResponse.json({ flashcards });
       } else {
-        console.log('No valid flashcards could be generated from the response. Please check the format.');
-        
+        await Logger.warning(
+          LogContext.AI,
+          "No valid flashcards could be generated",
+          { 
+            requestId, 
+            metadata: { 
+              topic, 
+              responseText 
+            }
+          }
+        );
+        return NextResponse.json({ 
+          error: 'No valid flashcards could be generated. Please try a different topic or format.' 
+        }, { status: 400 });
       }
     } else {
-      console.log('Failed to generate flashcards or received an empty response. Please try again.');
+      await Logger.error(
+        LogContext.AI,
+        "Empty response from AI",
+        { requestId, metadata: { topic } }
+      );
       
+      return NextResponse.json({ 
+        error: 'Failed to generate flashcards. Please try again later.' 
+      }, { status: 500 });
     }
   } catch (error) {
-    console.log('error :>> ', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    await Logger.error(
+      LogContext.AI,
+      `Error generating flashcards: ${errorMessage}`,
+      { 
+        requestId, 
+        metadata: { 
+          error,
+          stack: error instanceof Error ? error.stack : undefined
+        }
+      }
+    );
+    
+    return NextResponse.json({ 
+      error: 'An unexpected error occurred while generating flashcards.' 
+    }, { status: 500 });
   }
 }
 
