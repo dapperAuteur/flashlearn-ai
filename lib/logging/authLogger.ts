@@ -1,5 +1,6 @@
 // lib/logging/authLogger.ts
 import { NextRequest } from "next/server";
+import { Logger, LogContext, LogLevel } from "./logger";import { AnalyticsLogger } from "./logger";
 import clientPromise from "@/lib/db/mongodb";
 import { AuthEventType, AuthLog } from "@/models/AuthLog";
 import { getClientIp } from "@/lib/utils";
@@ -25,6 +26,40 @@ export async function logAuthEvent({
   metadata?: Record<string, any>;
 }): Promise<string> {
   try {
+    const message = `Auth event: ${event}, status: ${status}${reason ? `, reason: ${reason}` : ''}`;
+    const level = status === "success" ? LogLevel.INFO : LogLevel.WARNING;
+
+    const requestId = await Logger.log({
+      context: LogContext.AUTH,
+      level,
+      message,
+      userId,
+      request,
+      metadata: { ...metadata, email, reason }
+    });
+
+    // Also track as analytics event if successful
+    if (status === "success") {
+      let eventType = "";
+      switch (event) {
+        case AuthEventType.LOGIN:
+          eventType = AnalyticsLogger.EventType.USER_LOGIN;
+          break;
+        case AuthEventType.REGISTER:
+          eventType = AnalyticsLogger.EventType.USER_SIGNUP;
+          break;
+      }
+
+      if (eventType) {
+        await AnalyticsLogger.trackEvent({
+          userId,
+          eventType,
+          properties: { email },
+          request
+        });
+      }
+    }
+
     const client = await clientPromise;
     const db = client.db();
     
@@ -47,7 +82,6 @@ export async function logAuthEvent({
     
     // Insert into database
     const result = await db.collection("auth_logs").insertOne(logEntry);
-    console.log(`Auth event logged: ${event} by ${userId || email || ipAddress}, status: ${status}`);
     
     return result.insertedId.toString();
   } catch (error) {
