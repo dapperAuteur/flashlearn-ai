@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import type { Flashcard } from "@/types/flashcards";
+import RatingStars from "@/components/RatingStars";
 
 // Helper function to escape fields for CSV format
 const escapeCsvField = (field: string): string => {
@@ -92,6 +93,10 @@ export default function GenerateFlashcardsPage(){
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showTemplateDownloadButton, setShowTemplateDownloadButton] = useState(false);
+  // Rating System
+  const [flashcardSetId, setFlashcardSetId] = useState<string | null>(null);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [ratingCount, setRatingCount] = useState<number>(0);
 
 
 
@@ -184,6 +189,9 @@ export default function GenerateFlashcardsPage(){
 
         if (data.flashcards && data.flashcards.length > 0) {
           setFlashcards(data.flashcards);
+          setFlashcardSetId(data.setId || null);
+          setAverageRating(data.rating?.average || 0);
+          setRatingCount(data.rating?.count || 0);
         } else {
            setError(data.error || 'No flashcards were generated. Try refining your topic.');
         }
@@ -516,7 +524,16 @@ const handleDownloadTemplate = () => {
           </div>
         ))}
       </div>
-
+      {flashcards.length > 0 && flashcardSetId && (
+      <RatingStars 
+        setId={flashcardSetId} 
+        initialRating={averageRating}
+        totalRatings={ratingCount}
+        onRatingSubmitted={(newRating) => {
+          console.log(`User submitted rating: ${newRating}`);
+        }}
+      />
+    )}
        {/* Add CSS for the flip animation (e.g., in your global.css) */}
        {/*
           .perspective { perspective: 1000px; }

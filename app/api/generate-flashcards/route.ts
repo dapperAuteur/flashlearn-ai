@@ -52,9 +52,12 @@ export async function POST(request: Request) {
     const existingSets = await db.collection("shared_flashcard_sets")
       .find({ 
         normalizedTopic: { $regex: normalizedTopic, $options: 'i' },
-        usageCount: { $gte: 3 } // Only use sets that have been used multiple times
+        "ratings.count": { $gte: 3 },  // Only use sets with sufficient ratings
       })
-      .sort({ usageCount: -1, quality: -1 })
+      .sort({ 
+        "ratings.average": -1,  // Highest rated first
+        usageCount: -1,
+        })
       .limit(1)
       .toArray();
 
@@ -87,7 +90,16 @@ export async function POST(request: Request) {
         });
       }
       
-      return NextResponse.json({ flashcards: sharedSet.flashcards });
+      // When returning existing set, include rating info
+      return NextResponse.json({ 
+        flashcards: sharedSet.flashcards,
+        setId: sharedSet._id.toString(),
+        source: "shared",
+        rating: {
+          average: sharedSet.ratings.average,
+          count: sharedSet.ratings.count
+        }
+      });
     }
 
     await Logger.debug(
@@ -156,11 +168,24 @@ export async function POST(request: Request) {
           flashcards,
           createdBy: userId,
           usageCount: 1,
+          ratings: {
+            count: 0,
+            sum: 0,
+            average: 0
+          },
           quality: 0, // Not rated yet
           createdAt: new Date(),
           updatedAt: new Date()
         });
-        return NextResponse.json({ flashcards });
+        // When returning the response, include the setId for rating
+        const insertedSet = await db.collection("shared_flashcard_sets")
+        .findOne({ topic, normalizedTopic });
+
+        return NextResponse.json({ 
+        flashcards, 
+        setId: insertedSet?._id.toString(),
+        source: "generated" 
+        });
       } else {
         await Logger.warning(
           LogContext.AI,
