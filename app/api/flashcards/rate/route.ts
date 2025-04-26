@@ -4,13 +4,20 @@ import { Logger, LogContext } from "@/lib/logging/logger";
 import { AnalyticsLogger } from "@/lib/logging/logger";
 import { getServerSession } from "next-auth/next";
 import { ObjectId } from "mongodb";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(request: NextRequest) {
   const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard rating submission", { request });
   
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
+    // Add at the top of POST function
+    console.log("Session check:", {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      headers: Object.fromEntries(request.headers.entries())
+    });
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

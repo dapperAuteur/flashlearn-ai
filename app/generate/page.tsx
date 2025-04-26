@@ -1,8 +1,12 @@
 'use client';
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Flashcard } from "@/types/flashcards";
 import RatingStars from "@/components/RatingStars";
+import MainLayout from "@/components/layout/MainLayout";
 
 // Helper function to escape fields for CSV format
 const escapeCsvField = (field: string): string => {
@@ -81,7 +85,8 @@ const extractTopicFromKey = (key: string): string => {
 
 
 export default function GenerateFlashcardsPage(){
-  
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [topic, setTopic] = useState('');
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +106,6 @@ export default function GenerateFlashcardsPage(){
 
 
   const handleExportCSV = () => {
-    // console.log('flashcards :>> ', flashcards);
     if (flashcards.length === 0) {
       setError('No flashcards to export.');
       return;
@@ -286,7 +290,6 @@ export default function GenerateFlashcardsPage(){
 
 
   const toggleFlip = (index: number) => {
-    // console.log('index :>> ', index);
     setFlippedCardIndices(prev => {
       const newSet = new Set(prev);
       if (newSet.has(index)) {
@@ -429,17 +432,19 @@ const handleDownloadTemplate = () => {
 
 
   return (
-      <div className="container mx-auto p-4 md:p-8 max-w-3xl"> {/* Use Tailwind container */}
-      <h1 className="text-3xl font-bold mb-4 text-center text-blue-600 dark:text-blue-400"> {/* Tailwind styling */}
-        AI Flashcard Generator
-      </h1>
-      <p className="mb-6 text-center text-gray-600 dark:text-gray-400">
-        Enter a topic or specific "Term: Definition" pairs (one per line) to generate flashcards instantly using AI. No sign-in required!
-      </p>
+    <MainLayout>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6 text-center">Generate Flashcards with AI</h1>
+        
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+          <p className="mb-4 text-gray-600 dark:text-gray-300">
+            Enter a topic or specific "Term: Definition" pairs to generate flashcards instantly using AI.
+          </p>
 
       <textarea
         id="topicInput"
-        className="w-full p-3 border border-gray-300 rounded-md mb-4 min-h-[120px] focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white" // Tailwind styling
+        className="w-full p-3 border border-gray-300 rounded-md mb-4 min-h-[120px] focus:ring-2 focus:ring-blue-500"
         placeholder="e.g., Photosynthesis, Capital cities of Europe, useState Hook: React state management..."
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
@@ -452,18 +457,18 @@ const handleDownloadTemplate = () => {
           accept=".csv" // Specify accepted file type
           style={{ display: 'none' }} // Hide the default input
         />
-      <div className="text-center mb-6 flex flex-col sm:flex-row justify-center items-center gap-4">
+      <div className="flex flex-wrap gap-3 justify-center mb-4">
          <button
            id="generateButton"
-           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out w-full sm:w-auto" // Tailwind styling
-           onClick={handleGenerate}
+           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            onClick={handleGenerate}
            disabled={isLoading || isExporting || isUploading}
          >
            {isLoading ? 'Generating...' : 'Generate Flashcards w/AI'}
          </button>
          <button
           id="uploadButton"
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out w-full sm:w-auto"
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
           onClick={handleTriggerUpload} // Trigger the hidden input
           disabled={isLoading || isExporting || isUploading}
         >
@@ -471,16 +476,16 @@ const handleDownloadTemplate = () => {
         </button>
         <button
            id="loadButton"
-           className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out w-full sm:w-auto"
-           onClick={handleScanStorage}
+           className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            onClick={handleScanStorage}
            disabled={isLoading || isExporting || isUploading} // Disable while generating/exporting
          >
            Load from Storage
          </button>
          <button
            id="exportCSVButton"
-           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out sm:w-auto" // Tailwind styling
-           onClick={handleExportCSV}
+           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            onClick={handleExportCSV}
            disabled={isLoading || isExporting || flashcards.length === 0 || !topic.trim()}
          >
            {isExporting ? 'Exporting CSV...' : 'Export CSV of Flashcards'}
@@ -489,51 +494,72 @@ const handleDownloadTemplate = () => {
 
 
       {error && (
-        <div className="text-center my-4 p-3 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-md">
-        <p className="text-red-600 dark:text-red-400">{error}</p>
+        <div className="my-4 p-3 bg-red-100 border border-red-300 rounded-md">
+          <p className="text-red-600">{error}</p>
         {/* Conditional Template Download Button */}
         {showTemplateDownloadButton && (
           <button
             onClick={handleDownloadTemplate}
-            className="mt-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-bold py-1 px-3 rounded transition duration-150 ease-in-out"
-          >
+            className="mt-2 bg-gray-500 hover:bg-gray-600 text-white text-sm py-1 px-3 rounded"
+                  >
             Download Template CSV
           </button>
         )}
       </div>
       )}
 
-      {/* Flashcard Display Area - Adapt styling from gemini-flashcard-maker/index.css using Tailwind */}
-      <div id="flashcardsContainer" className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 perspective"> {/* Tailwind grid layout */}
-        {flashcards.map((card, index) => (
-          <div
-            key={index}
-            className={`flashcard cursor-pointer h-40 rounded-lg shadow-md ${flippedCardIndices.has(index) ? 'flipped' : ''}`} // Basic structure, needs flip styles
-            onClick={() => toggleFlip(index)}
-          >
-            <div className="flashcard-inner relative w-full h-full text-center transition-transform duration-700 transform-style-preserve-3d">
-               {/* Front */}
-               <div className="flashcard-front absolute w-full h-full backface-hidden flex flex-col justify-center items-center p-4 bg-blue-100 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
-                  <div className="term font-semibold text-lg text-blue-900 dark:text-blue-100">{card.term}</div>
-               </div>
-               {/* Back */}
-               <div className="flashcard-back absolute w-full h-full backface-hidden flex flex-col justify-center items-center p-4 bg-green-100 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg transform rotate-y-180">
-                  <div className="definition text-sm text-green-900 dark:text-green-100">{card.definition}</div>
-               </div>
+      {/* Flashcard Grid */}
+      {flashcards.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4">Generated Flashcards</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 perspective">
+                {flashcards.map((card, index) => (
+                  <div
+                    key={index}
+                    className={`flashcard cursor-pointer h-40 rounded-lg shadow-md ${flippedCardIndices.has(index) ? 'flipped' : ''}`}
+                    onClick={() => toggleFlip(index)}
+                  >
+                    <div className="flashcard-inner relative w-full h-full text-center transition-transform duration-700 transform-style-preserve-3d">
+                      {/* Front */}
+                      <div className="flashcard-front absolute w-full h-full backface-hidden flex flex-col justify-center items-center p-4 bg-blue-100 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <div className="term font-semibold text-lg text-blue-900 dark:text-blue-100">{card.term}</div>
+                      </div>
+                      {/* Back */}
+                      <div className="flashcard-back absolute w-full h-full backface-hidden flex flex-col justify-center items-center p-4 bg-green-100 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg transform rotate-y-180">
+                        <div className="definition text-sm text-green-900 dark:text-green-100">{card.definition}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Rating Component */}
+              {flashcardSetId && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                  <h3 className="text-lg font-medium mb-2">Rate These Flashcards</h3>
+                  {status === 'authenticated' ? (
+                  <RatingStars 
+                    setId={flashcardSetId} 
+                    initialRating={averageRating}
+                    totalRatings={ratingCount}
+                    onRatingSubmitted={(newRating) => {
+                      console.log(`User submitted rating: ${newRating}`);
+                    }}
+                  />
+                  ) : (
+                    <div className="text-center">
+                      <p className="mb-2 text-sm text-gray-600">Sign in to rate these flashcards</p>
+                      <Link href="/signin" className="bg-blue-600 text-white px-4 py-2 rounded-md">
+                        Sign In
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
-      {flashcards.length > 0 && flashcardSetId && (
-      <RatingStars 
-        setId={flashcardSetId} 
-        initialRating={averageRating}
-        totalRatings={ratingCount}
-        onRatingSubmitted={(newRating) => {
-          console.log(`User submitted rating: ${newRating}`);
-        }}
-      />
-    )}
        {/* Add CSS for the flip animation (e.g., in your global.css) */}
        {/*
           .perspective { perspective: 1000px; }
@@ -577,6 +603,7 @@ const handleDownloadTemplate = () => {
       )}
       {/* End Load from Storage Modal */}
     </div>
+    </MainLayout>
   );
 
 
