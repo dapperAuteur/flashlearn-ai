@@ -2,11 +2,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['mongoose'],
+    serverComponentsExternalPackages: ['mongoose', 'mongodb'],
   },
   webpack: (config) => {
     // DNS lookup issue fix for MongoDB connections
-    config.resolve.fallback = { dns: false, net: false, tls: false };
+    config.resolve.fallback = { dns: false, net: false, tls: false, 'child_process': false  };
     return config;
   },
 // Add security headers configuration

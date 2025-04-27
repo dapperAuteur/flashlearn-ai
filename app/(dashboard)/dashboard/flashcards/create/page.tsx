@@ -5,39 +5,51 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import FlashcardForm from '@/components/flashcards/FlashcardForm';
-import { FlashcardFormData } from '@/types/flashcard';
+import { FlashcardFormData } from '@/types/flashcards';
+import { createFlashcard } from '@/app/api/flashcards/flashcardService'
+import { Logger, LogContext } from "@/lib/logging/logger";
 
 export default function CreateFlashcardPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateFlashcard = async (data: FlashcardFormData) => {
     try {
-      console.log('Creating flashcard with data:', data);
+      setIsSubmitting(true);
+      setError(null);
       
-      // This will be replaced with actual API call in the next stages
-      // const response = await fetch('/api/flashcards', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
+      await Logger.info(
+        LogContext.FLASHCARD,
+        "User submitted create flashcard form",
+        { metadata: { listId: data.listId } }
+      );
       
-      // if (!response.ok) {
-      //   throw new Error('Failed to create flashcard');
-      // }
-
-      // Simulate success for now
-      setTimeout(() => {
-        console.log('Flashcard created successfully');
-        router.push('/dashboard/flashcards');
-      }, 1000);
+      await createFlashcard(data);
+      
+      await Logger.info(
+        LogContext.FLASHCARD,
+        "Redirecting user after successful flashcard creation",
+        { metadata: { destination: '/dashboard/flashcards' } }
+      );
+      
+      // Success - redirect to flashcards page
+      router.push('/dashboard/flashcards');
       
     } catch (error) {
-      console.error('Error creating flashcard:', error);
-      setError('Failed to create flashcard. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      await Logger.error(
+        LogContext.FLASHCARD,
+        `Flashcard creation form error: ${errorMessage}`,
+        { metadata: { error } }
+      );
+      
+      setError(error instanceof Error ? error.message : 'Failed to create flashcard');
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
   return (
     <DashboardLayout>
       <div className="p-4">
@@ -49,7 +61,9 @@ export default function CreateFlashcardPage() {
           </div>
         )}
         
-        <FlashcardForm onSubmit={handleCreateFlashcard} />
+        <FlashcardForm
+          onSubmit={handleCreateFlashcard}
+          isSubmitting={isSubmitting} />
       </div>
     </DashboardLayout>
   );
