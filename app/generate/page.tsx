@@ -123,8 +123,8 @@ export default function GenerateFlashcardsPage(){
       const localStorageKey = `flashlearn_${sanitizedTopic}_flashcards_csv`; // Add prefix
 
       // 1. Format data into CSV string
-      const header = ["Term", "Definition"];
-      const rows = flashcards.map(card => [escapeCsvField(card.term), escapeCsvField(card.definition)]);
+      const header = ["Front", "Back"];
+      const rows = flashcards.map(card => [escapeCsvField(card.front), escapeCsvField(card.back)]);
 
       const csvContent = [header, ...rows].map(row => row.join(",")).join("\n");
       // 2. Save CSV content to localStorage with dynamic key
@@ -256,9 +256,9 @@ export default function GenerateFlashcardsPage(){
         throw new Error("Invalid or empty CSV data found.");
       }
 
-      const header = parseCsvRow(lines[0]); // ['Term', 'Definition']
-      if (header.length < 2 || header[0].toLowerCase() !== 'term' || header[1].toLowerCase() !== 'definition') {
-          throw new Error("CSV header is missing or incorrect ('Term', 'Definition' expected).");
+      const header = parseCsvRow(lines[0]); // ['Front', 'Back']
+      if (header.length < 2 || header[0].toLowerCase() !== 'front' || header[1].toLowerCase() !== 'back') {
+          throw new Error("CSV header is missing or incorrect ('Front', 'Back' expected).");
       }
 
       const loadedFlashcards: Flashcard[] = [];
@@ -266,7 +266,7 @@ export default function GenerateFlashcardsPage(){
         if (lines[i].trim() === '') continue; // Skip empty lines
         const fields = parseCsvRow(lines[i]);
         if (fields.length >= 2) {
-          loadedFlashcards.push({ term: fields[0], definition: fields[1] });
+          loadedFlashcards.push({ front: fields[0], back: fields[1] });
         } else {
             console.warn(`Skipping invalid CSV row ${i + 1}: ${lines[i]}`);
         }
@@ -375,11 +375,11 @@ const processCsvContent = (csvContent: string, originalFilename: string) => {
     }
 
     const header = parseCsvRow(lines[0]);
-    const expectedHeader = ["term", "definition"]; // Case-insensitive check
+    const expectedHeader = ["front", "back"]; // Case-insensitive check
 
     // Validate Header
     if (header.length < 2 || header[0].trim().toLowerCase() !== expectedHeader[0] || header[1].trim().toLowerCase() !== expectedHeader[1]) {
-      setError(`Invalid CSV header. Expected columns: "Term,Definition" (case-insensitive).`);
+      setError(`Invalid CSV header. Expected columns: "Front,Back" (case-insensitive).`);
       setShowTemplateDownloadButton(true); // Offer template
       return;
     }
@@ -389,7 +389,7 @@ const processCsvContent = (csvContent: string, originalFilename: string) => {
     for (let i = 1; i < lines.length; i++) {
       const fields = parseCsvRow(lines[i]);
       if (fields.length >= 2 && fields[0].trim()) { // Ensure term is not empty
-        loadedFlashcards.push({ term: fields[0].trim(), definition: fields[1].trim() });
+        loadedFlashcards.push({ front: fields[0].trim(), back: fields[1].trim() });
       } else {
         console.warn(`Skipping invalid or incomplete CSV row ${i + 1}: ${lines[i]}`);
       }
@@ -416,7 +416,7 @@ const processCsvContent = (csvContent: string, originalFilename: string) => {
 };
 
 const handleDownloadTemplate = () => {
-  const templateContent = `"Term","Definition"\n"Example Term 1","Example Definition 1"\n"Term with, comma","Definition with ""quotes"""`;
+  const templateContent = `"Front","Back"\n"Example Front 1","Example Back 1"\n"Front with, comma","Back with ""quotes"""`;
   const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -439,7 +439,7 @@ const handleDownloadTemplate = () => {
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
           <p className="mb-4 text-gray-600 dark:text-gray-300">
-            Enter a topic or specific "Term: Definition" pairs to generate flashcards instantly using AI.
+            Enter a topic or specific "Front: Back" pairs to generate flashcards instantly using AI.
           </p>
 
       <textarea
@@ -522,11 +522,11 @@ const handleDownloadTemplate = () => {
                     <div className="flashcard-inner relative w-full h-full text-center transition-transform duration-700 transform-style-preserve-3d">
                       {/* Front */}
                       <div className="flashcard-front absolute w-full h-full backface-hidden flex flex-col justify-center items-center p-4 bg-blue-100 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
-                        <div className="term font-semibold text-lg text-blue-900 dark:text-blue-100">{card.term}</div>
+                        <div className="front font-semibold text-lg text-blue-900 dark:text-blue-100">{card.front}</div>
                       </div>
                       {/* Back */}
                       <div className="flashcard-back absolute w-full h-full backface-hidden flex flex-col justify-center items-center p-4 bg-green-100 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg transform rotate-y-180">
-                        <div className="definition text-sm text-green-900 dark:text-green-100">{card.definition}</div>
+                        <div className="back text-sm text-green-900 dark:text-green-100">{card.back}</div>
                       </div>
                     </div>
                   </div>

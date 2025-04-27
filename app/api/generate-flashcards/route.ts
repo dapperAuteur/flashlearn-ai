@@ -137,12 +137,12 @@ export async function POST(request: Request) {
         // Improved splitting and filtering
         .map((line) => {
           const parts = line.split(':');
-          // Ensure there's a term and at least one part for definition
+          // Ensure there's a term (front) and at least one part for definition (back)
           if (parts.length >= 2 && parts[0].trim()) {
-            const term = parts[0].trim();
-            const definition = parts.slice(1).join(':').trim(); // Join remaining parts for definition
-            if (definition) {
-              return {term, definition};
+            const front = parts[0].trim();
+            const back = parts.slice(1).join(':').trim(); // Join remaining parts for definition (back)
+            if (back) {
+              return {front, back};
             }
           }
           return null; // Return null for invalid lines
