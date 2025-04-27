@@ -9,6 +9,7 @@ import { FlashcardFormData } from '@/types/flashcard';
 import TagSelector from './TagSelector';
 import ListSelector from './ListSelector';
 import FlashcardPreview from './FlashcardPreview';
+import RichTextEditor from '../ui/RichTextEditor';
 
 // Validation schema
 const flashcardSchema = z.object({
@@ -82,23 +83,30 @@ export default function FlashcardForm({
     setValue('listId', selectedListId);
   };
 
+  // Update to handle rich text content
+  const handleFrontContentChange = (content: string) => {
+    setValue('front', content);
+  };
+
+  const handleBackContentChange = (content: string) => {
+    setValue('back', content);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h1 className="text-2xl font-bold mb-6">
+    <div className="bg-gray-50 rounded-lg shadow-md p-6 border border-gray-200">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">
         {isEditing ? 'Edit Flashcard' : 'Create New Flashcard'}
       </h1>
 
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-        {/* Front Content */}
+        {/* Front Content with Rich Text Editor */}
         <div>
-          <label htmlFor="front" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="front" className="block text-sm font-medium text-gray-800 mb-1">
             Front Content
           </label>
-          <textarea
-            id="front"
-            {...register('front')}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            rows={4}
+          <RichTextEditor
+            content={watchedValues.front}
+            onChange={handleFrontContentChange}
             placeholder="Enter the question or term"
           />
           {errors.front && (
@@ -106,16 +114,14 @@ export default function FlashcardForm({
           )}
         </div>
 
-        {/* Back Content */}
+        {/* Back Content with Rich Text Editor */}
         <div>
-          <label htmlFor="back" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="back" className="block text-sm font-medium text-gray-800 mb-1">
             Back Content
           </label>
-          <textarea
-            id="back"
-            {...register('back')}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            rows={4}
+          <RichTextEditor
+            content={watchedValues.back}
+            onChange={handleBackContentChange}
             placeholder="Enter the answer or definition"
           />
           {errors.back && (
@@ -126,32 +132,32 @@ export default function FlashcardForm({
         {/* Placeholder for image uploads - to be implemented later */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-800 mb-1">
               Front Image (Coming soon)
             </label>
-            <div className="h-40 bg-gray-100 border border-dashed border-gray-300 rounded-md flex items-center justify-center">
-              <p className="text-sm text-gray-500">Image upload will be available soon</p>
+            <div className="h-40 bg-white border border-dashed border-gray-300 rounded-md flex items-center justify-center">
+              <p className="text-sm text-gray-600">Image upload will be available soon</p>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-800 mb-1">
               Back Image (Coming soon)
             </label>
-            <div className="h-40 bg-gray-100 border border-dashed border-gray-300 rounded-md flex items-center justify-center">
-              <p className="text-sm text-gray-500">Image upload will be available soon</p>
+            <div className="h-40 bg-white border border-dashed border-gray-300 rounded-md flex items-center justify-center">
+              <p className="text-sm text-gray-600">Image upload will be available soon</p>
             </div>
           </div>
         </div>
 
-        {/* List Selector Placeholder */}
+        {/* List Selector Placeholder - Updated for better contrast */}
         <div>
-          <label htmlFor="listId" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="listId" className="block text-sm font-medium text-gray-800 mb-1">
             List
           </label>
           <select
             id="listId"
             {...register('listId')}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
           >
             <option value="">Select a list</option>
             <option value="placeholder-list-1">General Knowledge</option>
@@ -162,28 +168,28 @@ export default function FlashcardForm({
           )}
         </div>
 
-        {/* Tags Placeholder */}
+        {/* Tags Placeholder - Updated for better contrast */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-800 mb-1">
             Tags
           </label>
           <input
             type="text"
             placeholder="Add tags separated by commas"
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 placeholder-gray-500"
           />
-          <p className="mt-1 text-xs text-gray-500">Tags help organize your flashcards</p>
+          <p className="mt-1 text-xs text-gray-600">Tags help organize your flashcards</p>
         </div>
 
-        {/* Difficulty Level */}
+        {/* Difficulty Level - Updated for better contrast */}
         <div>
-          <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="difficulty" className="block text-sm font-medium text-gray-800 mb-1">
             Difficulty Level
           </label>
           <select
             id="difficulty"
             {...register('difficulty', { valueAsNumber: true })}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
           >
             <option value="1">Very Easy</option>
             <option value="2">Easy</option>
@@ -193,12 +199,12 @@ export default function FlashcardForm({
           </select>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Updated for better contrast */}
         <div className="flex justify-between pt-4">
           <button
             type="button"
             onClick={() => setShowPreview(!showPreview)}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 border border-gray-300"
           >
             {showPreview ? 'Hide Preview' : 'Show Preview'}
           </button>
@@ -213,7 +219,7 @@ export default function FlashcardForm({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 border border-blue-700"
             >
               {isSubmitting ? 'Saving...' : isEditing ? 'Update Flashcard' : 'Create Flashcard'}
             </button>
@@ -223,8 +229,8 @@ export default function FlashcardForm({
 
       {/* Preview Section */}
       {showPreview && (
-        <div className="mt-8 border-t pt-6">
-          <h2 className="text-lg font-semibold mb-4">Preview</h2>
+        <div className="mt-8 border-t border-gray-300 pt-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800">Preview</h2>
           <FlashcardPreview 
             front={watchedValues.front} 
             back={watchedValues.back}

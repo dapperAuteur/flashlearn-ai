@@ -38,13 +38,12 @@ export default function CreateFlashcardPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-gray-100 min-h-screen">
       {error && (
         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
         </div>
       )}
-      
       <FlashcardForm onSubmit={handleCreateFlashcard} />
     </div>
   );

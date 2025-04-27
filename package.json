@@ -15,6 +15,7 @@
     "@headlessui/react": "^2.2.1",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.0.1",
+    "@tailwindcss/typography": "^0.5.16",
     "@tiptap/extension-color": "^2.11.7",
     "@tiptap/extension-image": "^2.11.7",
     "@tiptap/pm": "^2.11.7",

@@ -45,7 +45,6 @@ body {
   transform: rotateY(180deg);
 }
 
-/* globals.css additions */
 @layer utilities {
   .perspective-1000 {
     perspective: 1000px;
@@ -62,5 +61,34 @@ body {
   
   .rotate-y-180 {
     transform: rotateY(180deg);
+  }
+}
+
+@layer base {
+  body {
+    @apply text-gray-800 bg-gray-100;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-800;
+  }
+  
+  .ProseMirror {
+    @apply min-h-[200px] text-gray-800 bg-white p-4;
+  }
+  
+  .ProseMirror p.is-editor-empty:first-child::before {
+    @apply text-gray-500 float-left h-0 pointer-events-none;
+    content: attr(data-placeholder);
+  }
+  
+  /* Improved select boxes and inputs */
+  select, input[type="text"], input[type="email"], input[type="password"], textarea {
+    @apply text-gray-800 bg-white border-gray-300;
+  }
+  
+  /* Improved option text */
+  option {
+    @apply text-gray-800 bg-white;
   }
 }
