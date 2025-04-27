@@ -1,34 +1,76 @@
 // app/actions/flashcardActions.ts
-'use server'; // Mark this file as containing Server Actions
+'use server'
 
-import connectDB from '@/lib/db/mongodb';
-import Flashcard from '@/lib/models/Flashcard';
-import { FlashcardFormData } from '@/types/flashcard';
-import { revalidatePath } from 'next/cache';
-// import { getCurrentUser } from '@/lib/auth/session'; // Get user server-side
+import { sanitizeHtml } from '@/lib/utils/sanitize';
+import clientPromise from '@/lib/db/mongodb';
+import { ObjectId } from 'mongodb';
+import { Logger, LogContext } from "@/lib/logging/logger";
+import { AnalyticsLogger } from "@/lib/logging/logger";
+import { getServerSession } from "next-auth/next";
+import { FlashcardFormData } from '@/types/flashcards';
+import { authOptions } from '../api/auth/[...nextauth]/route';
 
-export async function createFlashcardAction(data: FlashcardFormData) {
+export async function createFlashcard(formData: FlashcardFormData) {
+  const requestId = await Logger.info(
+    LogContext.FLASHCARD,
+    "Flashcard creation server action called"
+  );
+  
   try {
-    // const user = await getCurrentUser(); // Perform auth check server-side
-    // if (!user) { throw new Error("Unauthorized"); }
-
-    await connectDB();
-
-    const newFlashcard = new Flashcard({
-      front: data.front,
-      back: data.back,
-      listId: data.listId,
-      tags: data.tags,
-      // userId: user.id,
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      throw new Error('Unauthorized');
+    }
+    const userId = session.user.id;
+    
+    // Sanitize HTML content
+    const sanitizedData = {
+      ...formData,
+      front: sanitizeHtml(formData.front),
+      back: sanitizeHtml(formData.back)
+    };
+    
+    // Add timestamps and user ID
+    const flashcardData = {
+      ...sanitizedData,
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    // Connect to database
+    const client = await clientPromise;
+    const db = client.db();
+    
+    // Insert flashcard
+    const result = await db.collection('flashcards').insertOne(flashcardData);
+    const flashcardId = result.insertedId.toString();
+    
+    // Update card count in list
+    await db.collection('lists').updateOne(
+      { _id: new ObjectId(formData.listId), userId },
+      { $inc: { cardCount: 1 } }
+    );
+    
+    // Track analytics
+    await AnalyticsLogger.trackEvent({
+      userId,
+      eventType: "flashcard_created",
+      properties: {
+        flashcardId,
+        listId: formData.listId
+      }
     });
-    await newFlashcard.save();
-
-    revalidatePath('/dashboard/flashcards'); // Clear cache for the list page
-    return { success: true, flashcardId: newFlashcard._id.toString() };
-
+    
+    return { success: true, id: flashcardId };
   } catch (error) {
-    console.error("Server Action Error creating flashcard:", error);
-    const message = error instanceof Error ? error.message : "Failed to create flashcard";
-    return { success: false, error: message };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    await Logger.error(
+      LogContext.FLASHCARD,
+      `Flashcard creation error: ${errorMessage}`,
+      { requestId }
+    );
+    return { success: false, error: errorMessage };
   }
 }

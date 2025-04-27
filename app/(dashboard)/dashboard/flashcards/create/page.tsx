@@ -25,12 +25,22 @@ export default function CreateFlashcardPage() {
         { metadata: { listId: data.listId } }
       );
       
-      await createFlashcard(data);
+      const result = await createFlashcard(data);
+
+      if (!result.success) {
+        const errorMessage = result.error;
+        await Logger.error(
+          LogContext.FLASHCARD,
+          `Flashcard creation error: ${errorMessage}`,
+          { metadata: { listId: data.listId } }
+        );
+        return { success: false, error: errorMessage };
+      }
       
       await Logger.info(
         LogContext.FLASHCARD,
         "Redirecting user after successful flashcard creation",
-        { metadata: { destination: '/dashboard/flashcards' } }
+        { metadata: { error } }
       );
       
       // Success - redirect to flashcards page

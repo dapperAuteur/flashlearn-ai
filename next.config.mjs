@@ -6,7 +6,7 @@ const nextConfig = {
   },
   webpack: (config) => {
     // DNS lookup issue fix for MongoDB connections
-    config.resolve.fallback = { dns: false, net: false, tls: false, 'child_process': false  };
+    config.resolve.fallback = { ...config.resolve.fallback, dns: false, net: false, tls: false, 'child_process': false, 'mongodb-client-encryption': false  };
     return config;
   },
 // Add security headers configuration
