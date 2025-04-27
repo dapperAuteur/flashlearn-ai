@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import FlashcardForm from '@/components/flashcards/FlashcardForm';
 import { FlashcardFormData } from '@/types/flashcard';
 
@@ -38,13 +39,18 @@ export default function CreateFlashcardPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-gray-100 min-h-screen">
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-      <FlashcardForm onSubmit={handleCreateFlashcard} />
-    </div>
+    <DashboardLayout>
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Create New Flashcard</h1>
+        
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        
+        <FlashcardForm onSubmit={handleCreateFlashcard} />
+      </div>
+    </DashboardLayout>
   );
 }

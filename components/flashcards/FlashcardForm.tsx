@@ -93,11 +93,7 @@ export default function FlashcardForm({
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg shadow-md p-6 border border-gray-200">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">
-        {isEditing ? 'Edit Flashcard' : 'Create New Flashcard'}
-      </h1>
-
+    <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Front Content with Rich Text Editor */}
         <div>
@@ -129,27 +125,27 @@ export default function FlashcardForm({
           )}
         </div>
 
-        {/* Placeholder for image uploads - to be implemented later */}
+        {/* Image uploads placeholder */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">
-              Front Image (Coming soon)
+              Front Image
             </label>
-            <div className="h-40 bg-white border border-dashed border-gray-300 rounded-md flex items-center justify-center">
-              <p className="text-sm text-gray-600">Image upload will be available soon</p>
+            <div className="h-40 bg-gray-50 border border-dashed border-gray-300 rounded-md flex items-center justify-center">
+              <p className="text-sm text-gray-600">Image upload coming soon</p>
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">
-              Back Image (Coming soon)
+              Back Image
             </label>
-            <div className="h-40 bg-white border border-dashed border-gray-300 rounded-md flex items-center justify-center">
-              <p className="text-sm text-gray-600">Image upload will be available soon</p>
+            <div className="h-40 bg-gray-50 border border-dashed border-gray-300 rounded-md flex items-center justify-center">
+              <p className="text-sm text-gray-600">Image upload coming soon</p>
             </div>
           </div>
         </div>
 
-        {/* List Selector Placeholder - Updated for better contrast */}
+        {/* List Selector */}
         <div>
           <label htmlFor="listId" className="block text-sm font-medium text-gray-800 mb-1">
             List
@@ -168,7 +164,7 @@ export default function FlashcardForm({
           )}
         </div>
 
-        {/* Tags Placeholder - Updated for better contrast */}
+        {/* Tags */}
         <div>
           <label className="block text-sm font-medium text-gray-800 mb-1">
             Tags
@@ -176,12 +172,12 @@ export default function FlashcardForm({
           <input
             type="text"
             placeholder="Add tags separated by commas"
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 placeholder-gray-500"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
           />
           <p className="mt-1 text-xs text-gray-600">Tags help organize your flashcards</p>
         </div>
 
-        {/* Difficulty Level - Updated for better contrast */}
+        {/* Difficulty Level */}
         <div>
           <label htmlFor="difficulty" className="block text-sm font-medium text-gray-800 mb-1">
             Difficulty Level
@@ -199,12 +195,12 @@ export default function FlashcardForm({
           </select>
         </div>
 
-        {/* Action Buttons - Updated for better contrast */}
+        {/* Action Buttons */}
         <div className="flex justify-between pt-4">
           <button
             type="button"
             onClick={() => setShowPreview(!showPreview)}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 border border-gray-300"
+            className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 border border-gray-300"
           >
             {showPreview ? 'Hide Preview' : 'Show Preview'}
           </button>
@@ -219,7 +215,7 @@ export default function FlashcardForm({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 border border-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : isEditing ? 'Update Flashcard' : 'Create Flashcard'}
             </button>
