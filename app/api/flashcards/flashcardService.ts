@@ -1,62 +1,62 @@
-// lib/api/flashcardService.ts
-import { Flashcard, FlashcardFormData } from '@/types/flashcards';
-import { Logger, LogContext } from "@/lib/logging/logger";
+// // lib/api/flashcardService.ts
+// import { Flashcard, FlashcardFormData } from '@/types/flashcards';
+// import { Logger, LogContext } from "@/lib/logging/logger";
 
-/**
- * Create a new flashcard
- */
-export async function createFlashcard(data: FlashcardFormData): Promise<Flashcard> {
-  const startTime = performance.now();
+// /**
+//  * Create a new flashcard
+//  */
+// export async function createFlashcard(data: FlashcardFormData): Promise<Flashcard> {
+//   const startTime = performance.now();
   
-  try {
-    await Logger.info(
-      LogContext.FLASHCARD,
-      "Client initiating flashcard creation",
-      { metadata: { listId: data.listId } }
-    );
+//   try {
+//     await Logger.info(
+//       LogContext.FLASHCARD,
+//       "Client initiating flashcard creation",
+//       { metadata: { listId: data.listId } }
+//     );
     
-    const response = await fetch('/api/flashcards', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+//     const response = await fetch('/api/flashcards', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(data),
+//     });
     
-    const responseData = await response.json();
+//     const responseData = await response.json();
     
-    if (!response.ok) {
-      await Logger.warning(
-        LogContext.FLASHCARD,
-        "Flashcard creation failed",
-        { metadata: { error: responseData.error, status: response.status } }
-      );
-      throw new Error(responseData.error || 'Failed to create flashcard');
-    }
+//     if (!response.ok) {
+//       await Logger.warning(
+//         LogContext.FLASHCARD,
+//         "Flashcard creation failed",
+//         { metadata: { error: responseData.error, status: response.status } }
+//       );
+//       throw new Error(responseData.error || 'Failed to create flashcard');
+//     }
     
-    const duration = performance.now() - startTime;
+//     const duration = performance.now() - startTime;
     
-    await Logger.info(
-      LogContext.FLASHCARD,
-      "Flashcard creation successful",
-      { metadata: { id: responseData.id, durationMs: duration } }
-    );
+//     await Logger.info(
+//       LogContext.FLASHCARD,
+//       "Flashcard creation successful",
+//       { metadata: { id: responseData.id, durationMs: duration } }
+//     );
     
-    return {
-      id: responseData.id,
-      ...data,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+//     return {
+//       id: responseData.id,
+//       ...data,
+//       createdAt: new Date(),
+//       updatedAt: new Date()
+//     };
+//   } catch (error) {
+//     const errorMessage = error instanceof Error ? error.message : String(error);
     
-    await Logger.error(
-      LogContext.FLASHCARD,
-      `Flashcard creation error: ${errorMessage}`,
-      { metadata: { error } }
-    );
+//     await Logger.error(
+//       LogContext.FLASHCARD,
+//       `Flashcard creation error: ${errorMessage}`,
+//       { metadata: { error } }
+//     );
     
-    throw error;
-  }
-}
+//     throw error;
+//   }
+// }
