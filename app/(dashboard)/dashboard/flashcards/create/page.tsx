@@ -8,6 +8,7 @@ import FlashcardForm from '@/components/flashcards/FlashcardForm';
 import { FlashcardFormData } from '@/types/flashcards';
 import { createFlashcard } from '@/app/api/flashcards/flashcardService'
 import { Logger, LogContext } from "@/lib/logging/logger";
+import { flashcardService } from '@/lib/api/flashcardClient';
 
 export default function CreateFlashcardPage() {
   const router = useRouter();
