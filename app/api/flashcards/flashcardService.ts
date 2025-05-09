@@ -1,5 +1,5 @@
-// lib/api/flashcards/flashcardService.ts
-import { Flashcard, FlashcardFormData } from '@/types/flashcard';
+// lib/api/flashcardService.ts
+import { Flashcard, FlashcardFormData } from '@/types/flashcards';
 import { Logger, LogContext } from "@/lib/logging/logger";
 
 /**
