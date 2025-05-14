@@ -5,6 +5,7 @@ import { Logger, LogContext } from "@/lib/logging/logger";
 import { AnalyticsLogger } from "@/lib/logging/logger";
 import { getServerSession } from "next-auth/next";
 import clientPromise from "@/lib/db/mongodb";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 const genAI = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 
@@ -15,8 +16,11 @@ export async function POST(request: Request) {
 
   try {
     // Get authenticated user if available
-    const session = await getServerSession();
+    console.log("\n");
+    console.log("***********************");
+    const session = await getServerSession(authOptions);
     userId = session?.user?.id;
+    console.log('session, userId :>> ', session, userId);
 
     const client = await clientPromise;
     const db = client.db();
