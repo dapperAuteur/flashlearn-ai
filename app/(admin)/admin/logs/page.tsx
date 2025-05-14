@@ -24,7 +24,7 @@ export default function AuthLogsPage() {
     }
     
     if (session?.user && (session.user as any).role !== "admin") {
-      router.push("/dashboard");
+      router.push("/generate");
       return;
     }
     
