@@ -108,6 +108,8 @@ export default function GenerateFlashcardsPage(){
   // if user is authenticated, save flashcards to database in 'shared_flashcard_sets' collection using /generate-flashcards route
   // //generate-flashcards route checks if flashcard set already exists in db.
   const handleSave = async () => {
+    console.log("save flashcards");
+    
     if (flashcards.length === 0) {
       setError('No flashcards to save.');
       return;
@@ -125,7 +127,8 @@ export default function GenerateFlashcardsPage(){
     setError(null);
 
     try {
-      const response = await fetch('/api/generate-flashcards', {
+      // console.log('topic :>> ', topic);
+      const response = await fetch('/api/save-flashcards', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,6 +141,7 @@ export default function GenerateFlashcardsPage(){
       });
 
       const data = await response.json();
+      console.log('data :>> ', data);
 
       if (!response.ok) {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
