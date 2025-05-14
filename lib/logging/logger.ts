@@ -174,6 +174,7 @@ export class AnalyticsLogger {
     AI_GENERATED: "ai_generated",
     AI_PROMPT_SUBMITTED: "ai_prompt_submitted",
     FLASHCARD_CREATED: "flashcard_created",
+    FLASHCARD_SET_SAVED: "flashcard_set_saved",
     FLASHCARD_STUDIED: "flashcard_studied",
     LIST_EXPORTED: "list_exported",
     LIST_IMPORTED: "list_imported",
