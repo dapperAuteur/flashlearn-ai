@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       { requestId, metadata: { topic } }
     );
 
-    const prompt = `Generate a list of flashcards for the topic of "${topic}". Each flashcard should have a term and a concise definition. Format the output as a list of "Term: Definition" pairs, with each pair on a new line. Ensure terms and definitions are distinct and clearly separated by a single colon. Here's an example output:
+    const prompt = `Generate a list of flashcards for the topic of "${topic}". Each flashcard should have a term and a concise definition. Format the output as a list of "Front: Back" pairs, with each pair on a new line. Ensure terms are set to front and definitions are set to back. Front (Terms) and Back (Definitions) are distinct and clearly separated by a single colon. Here's an example output:
       Hello: Hola
       Goodbye: Adiós`;
     const result = await genAI.models.generateContent({
@@ -137,12 +137,12 @@ export async function POST(request: Request) {
         // Improved splitting and filtering
         .map((line) => {
           const parts = line.split(':');
-          // Ensure there's a term and at least one part for definition
+          // Ensure there's a front/term and at least one part for back/definition
           if (parts.length >= 2 && parts[0].trim()) {
-            const term = parts[0].trim();
-            const definition = parts.slice(1).join(':').trim(); // Join remaining parts for definition
-            if (definition) {
-              return {term, definition};
+            const front = parts[0].trim();
+            const back = parts.slice(1).join(':').trim(); // Join remaining parts for back/definition
+            if (back) {
+              return {front, back};
             }
           }
           return null; // Return null for invalid lines
