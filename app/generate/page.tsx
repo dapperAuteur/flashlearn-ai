@@ -104,6 +104,67 @@ export default function GenerateFlashcardsPage(){
   const [ratingCount, setRatingCount] = useState<number>(0);
 
 
+  // check if user is authenticated.
+  // if user is authenticated, save flashcards to database in 'shared_flashcard_sets' collection using /generate-flashcards route
+  // //generate-flashcards route checks if flashcard set already exists in db.
+  const handleSave = async () => {
+    if (flashcards.length === 0) {
+      setError('No flashcards to save.');
+      return;
+    }
+    if (!topic.trim()) {
+      setError("Cannot save without a topic.");
+      return;
+    }
+    if (status !== 'authenticated' || !session?.user?.email) {
+      setError('You must be signed in to save flashcards.');
+      return;
+    }
+
+    setIsExporting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/generate-flashcards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          topic, 
+          flashcards,
+          userEmail: session.user.email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+
+      if (data.success) {
+        // Update flashcardSetId and rating if available
+        if (data.setId) {
+          setFlashcardSetId(data.setId);
+        }
+        if (data.rating) {
+          setAverageRating(data.rating.average || 0);
+          setRatingCount(data.rating.count || 0);
+        }
+        // Provide user feedback
+        alert('Flashcards saved successfully!');
+      } else {
+        throw new Error(data.message || 'Failed to save flashcards.');
+      }
+    } catch (error: unknown) {
+      console.error("Saving failed:", error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred while saving.');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+  
 
   const handleExportCSV = () => {
     if (flashcards.length === 0) {
@@ -489,6 +550,14 @@ const handleDownloadTemplate = () => {
            disabled={isLoading || isExporting || flashcards.length === 0 || !topic.trim()}
          >
            {isExporting ? 'Exporting CSV...' : 'Export CSV of Flashcards'}
+         </button>
+         <button
+           id="saveButton"
+           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            onClick={handleSave}
+           disabled={isLoading || isExporting || flashcards.length === 0 || !topic.trim()}
+         >
+           {isExporting ? 'Saving...' : 'Save Flashcards'}
          </button>
       </div>
 
