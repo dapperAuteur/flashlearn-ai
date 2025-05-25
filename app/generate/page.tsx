@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Flashcard } from "@/types/flashcards";
 import RatingStars from "@/components/RatingStars";
-import MainLayout from "@/components/layout/MainLayout";
 
 // Helper function to escape fields for CSV format
 const escapeCsvField = (field: string): string => {
@@ -497,7 +496,7 @@ const handleDownloadTemplate = () => {
 
 
   return (
-    <MainLayout>
+    <>
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6 text-center">Generate Flashcards with AI</h1>
@@ -676,7 +675,7 @@ const handleDownloadTemplate = () => {
       )}
       {/* End Load from Storage Modal */}
     </div>
-    </MainLayout>
+    </>
   );
 
 
