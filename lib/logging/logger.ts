@@ -17,6 +17,7 @@ export enum LogContext {
   FLASHCARD = "flashcard",
   AI = "ai",
   USER = "user",
+  STUDY = "study",
   SYSTEM = "system"
 }
 
