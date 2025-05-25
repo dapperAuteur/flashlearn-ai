@@ -61,7 +61,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 <Link 
                   href="#" 
                   className={`inline-flex items-center px-1 pt-1 border-b-2 ${
-                    pathname === '/study' 
+                    pathname === '/dashboard/study' 
                       ? 'border-blue-500 text-gray-900 dark:text-gray-100' 
                       : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
