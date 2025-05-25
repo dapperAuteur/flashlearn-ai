@@ -3,6 +3,8 @@
 https://mongoosejs.com/docs/tutorials/virtuals.html
 add virtuals to json export
 do blog post on virtuals
+Is there a way to create a virtual for tracking how many times the user has completed a session with each list?
+Add the ability to pause session and pause time for session and create a paused UI component and a component to show all paused sessions for the current user.
 **/
 import mongoose, { Schema, Document } from 'mongoose';
 
