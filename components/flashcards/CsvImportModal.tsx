@@ -135,7 +135,7 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
         {previewData.length > 0 && (
           <div className="mb-4">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Preview:</h4>
-            <div className="bg-gray-50 p-2 rounded text-xs">
+            <div className="bg-gray-500 p-2 rounded text-xs">
               {previewData.map((item, index) => (
                 <div key={index} className="mb-1">
                   <strong>Q:</strong> {item.front}<br />
