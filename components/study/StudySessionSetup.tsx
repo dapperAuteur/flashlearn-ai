@@ -2,33 +2,37 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+import CsvImportModal from '../flashcards/CsvImportModal';
 
 interface StudySessionSetupProps {
   onStartSession: (sessionId: string, flashcards: any[]) => void;
 }
 
 export default function StudySessionSetup({ onStartSession }: StudySessionSetupProps) {
+  const router = useRouter();
   const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Fetch user's lists
-  useEffect(() => {
-    async function fetchLists() {
-      try {
+  const fetchLists = async () => {
+    try {
         const response = await fetch('/api/lists');
         if (!response.ok) throw new Error('Failed to fetch lists');
         const data = await response.json();
+        console.log('StudySessionSetup data :>> ', data);
         setLists(data);
       } catch (error) {
         setError('Failed to load lists. Please try again.');
         console.error('Error fetching lists:', error);
       }
-    }
-
+  }
+  useEffect(() => {
     fetchLists();
   }, []);
 
@@ -59,7 +63,11 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
       
       // Pass session ID and flashcards to parent component
       onStartSession(data.sessionId, data.flashcards);
-      
+      Logger.log(LogContext.STUDY, "Study session started", { sessionId: data.sessionId });
+
+      // route to http://localhost:3000/dashboard/study/sessions/[id]
+      router.push(`/dashboard/study/session/${data.sessionId}`);
+                  
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to start session';
       setError(message);
@@ -69,8 +77,12 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
     }
   };
 
+  const handleImportSuccess = () => {
+    fetchLists(); // Refresh the lists
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-gray-800 rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold mb-4 text-gray-800">Study Session</h2>
       
       {error && (
@@ -80,7 +92,7 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
       )}
       
       <div className="mb-6">
-        <label htmlFor="listSelect" className="block mb-2 text-sm font-medium text-gray-700">
+        <label htmlFor="listSelect" className="block mb-2 text-sm font-medium text-gray-300">
           Select a List to Study
         </label>
         <select
@@ -97,6 +109,17 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
           ))}
         </select>
       </div>
+
+      <div className='mb-6'>
+        <button
+          type="button"
+          onClick={() => setShowImportModal(true)}
+          className="w-full px-4 py-2 border border-gray-300 text-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Import New List from CSV
+        </button>
+      </div>
+
       
       <div className="flex justify-end">
         <button
@@ -108,6 +131,11 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
           {isLoading ? 'Starting...' : 'Start Studying'}
         </button>
       </div>
+      <CsvImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImportSuccess={handleImportSuccess}
+      />
     </div>
   );
 }
