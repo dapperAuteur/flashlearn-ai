@@ -29,7 +29,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               </div>
               <nav className="ml-6 flex space-x-4">
                 <Link 
-                  href="#" 
+                  href="/dashboard" 
                   className={`inline-flex items-center px-1 pt-1 border-b-2 ${
                     pathname === '/dashboard' 
                       ? 'border-blue-500 text-gray-900 dark:text-gray-100' 
@@ -59,7 +59,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   Generate
                 </Link>
                 <Link 
-                  href="#" 
+                  href="/dashboard/study" 
                   className={`inline-flex items-center px-1 pt-1 border-b-2 ${
                     pathname === '/dashboard/study' 
                       ? 'border-blue-500 text-gray-900 dark:text-gray-100' 
