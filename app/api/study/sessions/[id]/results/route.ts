@@ -11,6 +11,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const requestId = await Logger.info(LogContext.STUDY, "Record card result request");
+  console.log('params :>> ', params);
 
   try {
     // Authenticate user
@@ -19,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = params.id;
+    const sessionId = await params.id;
     const { flashcardId, isCorrect, timeSeconds } = await request.json();
     
     // Validate input

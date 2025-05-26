@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    console.log('list route userId :>> ', userId);
     await Logger.debug(
       LogContext.FLASHCARD, 
       "Processing lists retrieval", 

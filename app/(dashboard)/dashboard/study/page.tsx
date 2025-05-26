@@ -12,7 +12,7 @@ export default function StudyPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Study Flashcards</h1>
+      <h1 className="text-3xl font-bold mb-6 text-blue-600 dark:text-blue-400">Study Flashcards</h1>
       <StudySession />
     </div>
   );

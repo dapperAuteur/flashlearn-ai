@@ -29,8 +29,10 @@ export async function POST(request: NextRequest) {
     // Verify list exists and belongs to user
     const list = await db.collection('lists').findOne({
       _id: new ObjectId(listId),
-      userId: new ObjectId(session.user.id)
+      // userId: new ObjectId(session.user.id) // BUG userId is causing list to return null, fix it
     });
+
+    console.log('list :>> ', list);
     
     if (!list) {
       return NextResponse.json({ error: "List not found" }, { status: 404 });
@@ -40,6 +42,8 @@ export async function POST(request: NextRequest) {
     const flashcards = await db.collection('flashcards').find({
       listId: new ObjectId(listId)
     }).toArray();
+
+    console.log('flashcards :>> ', flashcards);
     
     if (flashcards.length === 0) {
       return NextResponse.json({ error: "No flashcards in this list" }, { status: 400 });
