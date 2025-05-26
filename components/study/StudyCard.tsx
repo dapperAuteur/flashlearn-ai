@@ -49,7 +49,7 @@ export default function StudyCard({ flashcard, onResult }: StudyCardProps) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="mb-4 flex justify-between items-center">
-        <div className="text-gray-600">
+        <div className="text-white">
           Tap card to flip
         </div>
       </div>
@@ -64,7 +64,7 @@ export default function StudyCard({ flashcard, onResult }: StudyCardProps) {
             animate={{ rotateY: isFlipped ? 180 : 0 }}
           >
             {/* Front of card */}
-            <div className="absolute w-full h-full backface-hidden bg-white border border-gray-200 rounded-lg p-6 flex flex-col justify-center shadow-md">
+            <div className="absolute w-full h-full backface-hidden bg-gray-700 border border-gray-200 rounded-lg p-6 flex flex-col justify-center shadow-md">
               <div className="overflow-auto">
                 <div 
                   className="text-center text-lg prose max-w-none"
@@ -84,7 +84,7 @@ export default function StudyCard({ flashcard, onResult }: StudyCardProps) {
             </div>
             
             {/* Back of card */}
-            <div className="absolute w-full h-full backface-hidden bg-blue-50 border border-blue-200 rounded-lg p-6 flex flex-col justify-center shadow-md rotate-y-180">
+            <div className="bg-gray-800 absolute w-full h-full backface-hidden bg-blue-50 border border-blue-200 rounded-lg p-6 flex flex-col justify-center shadow-md rotate-y-180">
               <div className="overflow-auto">
                 <div 
                   className="text-center text-lg prose max-w-none"

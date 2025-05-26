@@ -116,7 +116,7 @@ export default function StudySession() {
   const renderContent = () => {
     if (error) {
       return (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-gray-800 rounded-lg shadow p-6">
           <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded mb-4">
             {error}
           </div>
@@ -131,6 +131,7 @@ export default function StudySession() {
     }
     
     if (!sessionId) {
+      console.log('line 134 sessionId :>> ', sessionId);
       return <StudySessionSetup onStartSession={handleStartSession} />;
     }
     
@@ -140,8 +141,8 @@ export default function StudySession() {
     
     if (flashcards.length === 0) {
       return (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-800 mb-4">No flashcards available for this list.</p>
+        <div className="bg-gray-800 rounded-lg shadow p-6 text-center">
+          <p className="text-white mb-4">No flashcards available for this list.</p>
           <button
             onClick={handleReset}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -151,11 +152,12 @@ export default function StudySession() {
         </div>
       );
     }
+    console.log('line 155 sessionId :>> ', sessionId);
     
     return (
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-gray-800 rounded-lg shadow p-6">
         <div className="mb-4 flex justify-between items-center">
-          <div className="text-gray-700">
+          <div className="text-white">
             Card {currentIndex + 1} of {flashcards.length}
           </div>
           <button
