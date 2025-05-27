@@ -7,11 +7,7 @@ import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import CsvImportModal from '../flashcards/CsvImportModal';
 
-interface StudySessionSetupProps {
-  onStartSession: (sessionId: string, flashcards: any[]) => void;
-}
-
-export default function StudySessionSetup({ onStartSession }: StudySessionSetupProps) {
+export default function StudySessionSetup() {
   const router = useRouter();
   const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
@@ -61,11 +57,9 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
       
       const data = await response.json();
       
-      // Pass session ID and flashcards to parent component
-      onStartSession(data.sessionId, data.flashcards);
+      
       Logger.log(LogContext.STUDY, "Study session started", { sessionId: data.sessionId });
 
-      // route to http://localhost:3000/dashboard/study/sessions/[id]
       router.push(`/dashboard/study/session/${data.sessionId}`);
                   
     } catch (error) {
