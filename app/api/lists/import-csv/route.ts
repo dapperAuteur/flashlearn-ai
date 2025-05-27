@@ -23,8 +23,17 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const listName = formData.get('listName') as string;
-    const isPublic = formData.get('isPublic') || 'false';
+    const isPublicBoolean = formData.get('isPublic') || 'false'; // ensure isPublic is a boolean and not a string
+    const isPublic = isPublicBoolean === 'true';
 
+    await Logger.info(LogContext.FLASHCARD, "Processing CSV import", {
+      requestId,
+      userId,
+      metadata: { fileName: file?.name, listName, isPublic }
+    });
+
+    // Validate input
+    
 
     if (!file || !listName) {
       await Logger.warning(LogContext.FLASHCARD, "Missing file or list name", { requestId });

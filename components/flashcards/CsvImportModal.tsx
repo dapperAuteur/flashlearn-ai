@@ -61,6 +61,8 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
       const formData = new FormData();
       formData.append('file', file);
       formData.append('listName', listName.trim());
+      formData.append('isPublic', isPublic.toString())
+      console.log('formData :>> ', formData);
 
       const response = await fetch('/api/lists/import-csv', {
         method: 'POST',
