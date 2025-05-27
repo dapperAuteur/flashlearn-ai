@@ -105,7 +105,7 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
         )}
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
             CSV File
           </label>
           <input
@@ -114,13 +114,13 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
             onChange={handleFileChange}
             className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-300 mt-1">
             Expected format: Front, Back columns
           </p>
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
             List Name
           </label>
           <input
@@ -132,9 +132,26 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
           />
         </div>
 
+        <div className="mb-4">
+          <label htmlFor='isPublicCheckbox' className="block text-sm font-medium text-gray-300 mb-2">
+          <input
+            id="isPublicCheckbox"
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+            className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter list name"
+          />
+          Make this list public?
+          </label>
+          <p className="text-xs text-gray-300 mt-1">
+            Public lists can be discovered and used by other users.
+          </p>
+        </div>
+
         {previewData.length > 0 && (
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Preview:</h4>
+            <h4 className="text-sm font-medium text-gray-300 mb-2">Preview:</h4>
             <div className="bg-gray-500 p-2 rounded text-xs">
               {previewData.map((item, index) => (
                 <div key={index} className="mb-1">
@@ -150,7 +167,7 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+            className="px-4 py-2 text-gray-300 border border-gray-300 rounded hover:bg-gray-50"
           >
             Cancel
           </button>
