@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 interface Flashcard {
-  _id: string;
+  id: string;
   front: string;
   back: string;
   frontImage?: string;
@@ -84,14 +84,14 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
   const handleAnswer = async (isCorrect: boolean) => {
     const currentCard = flashcards[currentCardIndex];
     const timeSpent = getCardTime();
-    
+    console.log('StudySessionInterface.tsx: 87 currentCard :>> ', currentCard);
     try {
       console.log('StudySessionInterface.tsx: 89 sessionId :>> ', sessionId);
       await fetch(`/api/study/sessions/${sessionId}/results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          flashcardId: currentCard._id,
+          flashcardId: currentCard.id,
           isCorrect,
           timeSeconds: timeSpent
         })
@@ -103,7 +103,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
       }));
 
       Logger.log(LogContext.STUDY, "Card answered", {
-        cardId: currentCard._id,
+        cardId: currentCard.id,
         isCorrect,
         timeSeconds: timeSpent,
         sessionId
