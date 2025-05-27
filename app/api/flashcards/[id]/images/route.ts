@@ -12,6 +12,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const resolvedParams = await params;
   const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard image upload request");
   
   try {
@@ -22,7 +23,7 @@ export async function POST(
     }
     
     // Get the flashcard ID from the URL parameter
-    const flashcardId = params.id;
+    const flashcardId = resolvedParams.id;
     
     // Get form data with the image and side info
     const formData = await request.formData();
@@ -132,6 +133,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const resolvedParams = await params;
   const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard image delete request");
   
   try {
@@ -142,7 +144,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
-    const flashcardId = params.id;
+    const flashcardId = resolvedParams.id;
     const searchParams = new URL(request.url).searchParams;
     const side = searchParams.get('side');
     
@@ -211,7 +213,7 @@ export async function DELETE(
       requestId,
       metadata: { 
         error,
-        flashcardId: params.id,
+        flashcardId: resolvedParams.id,
         stack: error instanceof Error ? error.stack : undefined
       }
     });

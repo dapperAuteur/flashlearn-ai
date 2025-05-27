@@ -10,6 +10,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const resolvedParams = await params;
   const requestId = await Logger.info(LogContext.STUDY, "Complete study session request");
 
   try {
@@ -19,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = params.id;
+    const sessionId = resolvedParams.id;
     
     // Connect to database
     const client = await clientPromise;
