@@ -1,6 +1,6 @@
 // lib/services/spacedRepetitionService.ts
 
-import { Flashcard } from '@/types/models';
+import { Flashcard } from '@/types/flashcard';
 import { Logger, LogContext } from '@/lib/logging/logger';
 
 interface ReviewRating {

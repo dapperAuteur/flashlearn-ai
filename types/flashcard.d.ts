@@ -2,6 +2,13 @@
 
 import { ObjectId } from 'mongodb';
 
+export interface FlashcardMetadata {
+  easeFactor?: number;
+  lastInterval?: number;
+  studyStreak?: number;
+  lastStudyDate?: Date;
+}
+
 /**
  * Represents a flashcard in the system
  */
@@ -22,6 +29,9 @@ export interface Flashcard {
   correctCount: number;           // Number of times answered correctly
   incorrectCount: number;         // Number of times answered incorrectly
   stage: number;                  // Current study stage (0-4)
+
+  // Spaced Repetition Algorithm Implementation
+  metadata?: FlashcardMetadata;
   
   // Metadata
   createdAt: Date;
