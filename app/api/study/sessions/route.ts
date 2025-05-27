@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
       userId: new ObjectId(session.user.id),
       listId: new ObjectId(listId),
       startTime: new Date(),
+      status: 'active',
       totalCards: flashcards.length,
       correctCount: 0,
       incorrectCount: 0,

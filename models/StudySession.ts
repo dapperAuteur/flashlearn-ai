@@ -15,6 +15,7 @@ export interface IStudySession extends Document {
   listId: mongoose.Types.ObjectId;
   startTime: Date;
   endTime?: Date;
+  status: 'active' | 'completed';
   totalCards: number;
   correctCount: number;
   incorrectCount: number;
@@ -32,6 +33,7 @@ const StudySessionSchema: Schema = new Schema(
     listId: { type: Schema.Types.ObjectId, ref: 'List', required: true },
     startTime: { type: Date, default: Date.now },
     endTime: { type: Date },
+    status: { type: String, enum: ['active', 'completed'], default: 'active' },
     totalCards: { type: Number, default: 0 },
     correctCount: { type: Number, default: 0 },
     incorrectCount: { type: Number, default: 0 },
