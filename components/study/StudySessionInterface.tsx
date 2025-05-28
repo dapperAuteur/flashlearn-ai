@@ -2,15 +2,18 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 interface Flashcard {
   id: string;
+  _id?: string;
   front: string;
   back: string;
   frontImage?: string;
   backImage?: string;
+  stage?: number;
+  nextReviewDate?: string;
 }
 
 interface StudySessionInterfaceProps {
@@ -25,6 +28,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
   const [error, setError] = useState<string | null>(null);
   const [sessionComplete, setSessionComplete] = useState(false);
   const [results, setResults] = useState({ correct: 0, total: 0 });
+  const [showQualityButtons, setShowQualityButtons] = useState(false);
   
   // Time tracking
   const [sessionStartTime] = useState(Date.now());
@@ -33,6 +37,9 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isReviewMode = searchParams.get('mode') === 'review';
+
 
   useEffect(() => {
     fetchSessionData();
@@ -81,37 +88,51 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
     }
   };
 
-  const handleAnswer = async (isCorrect: boolean) => {
+  const handleAnswer = async (quality: number) => {
     const currentCard = flashcards[currentCardIndex];
     const timeSpent = getCardTime();
-    console.log('StudySessionInterface.tsx: 87 currentCard :>> ', currentCard);
+    const flashcardId = currentCard._id || currentCard.id;
+
     try {
-      console.log('StudySessionInterface.tsx: 89 sessionId :>> ', sessionId);
+      if (isReviewMode) {
+        // Use spaced repetition endpoint
+        await fetch(`/api/flashcards/${flashcardId}/review`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quality: quality.toString(),
+            timeSpent: timeSpent * 1000
+          })
+        });
+      } else {
+        // Use regular study endpoint
       await fetch(`/api/study/sessions/${sessionId}/results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           flashcardId: currentCard.id,
-          isCorrect,
+          isCorrect: quality >= 2,
           timeSeconds: timeSpent
         })
       });
+    }
 
       setResults(prev => ({
-        correct: prev.correct + (isCorrect ? 1 : 0),
+        correct: prev.correct + (quality >= 2 ? 1 : 0),
         total: prev.total + 1
       }));
 
       Logger.log(LogContext.STUDY, "Card answered", {
-        cardId: currentCard.id,
-        isCorrect,
+        cardId: flashcardId,
+        quality,
         timeSeconds: timeSpent,
-        sessionId
+        sessionId,
+        isReviewMode
       });
 
       nextCard();
     } catch (error) {
-      Logger.error(LogContext.STUDY, "Failed to record answer");
+      Logger.error(LogContext.STUDY, `Failed to record answer. error: ${error}`);
     }
   };
 
@@ -119,6 +140,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
     if (currentCardIndex < flashcards.length - 1) {
       setCurrentCardIndex(prev => prev + 1);
       setShowAnswer(false);
+      setShowQualityButtons(false);
       resetCardTimer();
     } else {
       if (intervalRef.current) {
@@ -147,7 +169,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
         <p className="text-lg mb-2">
           Score: {results.correct}/{results.total} ({Math.round((results.correct/results.total) * 100)}%)
         </p>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-400 mb-4">
           Total time: {formatTime(totalSessionTime)}
         </p>
         <button
@@ -161,11 +183,17 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
   }
 
   const currentCard = flashcards[currentCardIndex];
+  const isNewCard = currentCard.stage === 0;
 
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6">
       <div className="flex justify-between mb-4 text-sm text-gray-60">
-        <span>Card {currentCardIndex + 1} of {flashcards.length}</span>
+        <span>
+          Card {currentCardIndex + 1} of {flashcards.length}
+          {isReviewMode && isNewCard && (
+            <span className="ml-2 text-blue-400">(New)</span>
+          )}
+        </span>
         <span>Session time: {formatTime(totalSessionTime)}</span>
       </div>
       
@@ -181,21 +209,58 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
 
         {!showAnswer ? (
           <button
-            onClick={() => setShowAnswer(true)}
-            className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-900"
+            onClick={() => {
+              setShowAnswer(true);
+              setShowQualityButtons(isReviewMode);
+            }}
+            className="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-900"
           >
             Show Answer
           </button>
+          ) : (
+          <div className="space-y-4">
+            {showQualityButtons ? (
+              <>
+                <div className="text-center text-sm text-gray-400 mb-2">
+                  How well did you know this?
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleAnswer(0)}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    Again
+                  </button>
+                  <button
+                    onClick={() => handleAnswer(1)}
+                    className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+                  >
+                    Hard
+                  </button>
+                  <button
+                    onClick={() => handleAnswer(2)}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    Good
+                  </button>
+                  <button
+                    onClick={() => handleAnswer(3)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Easy
+                  </button>
+                </div>
+              </>
         ) : (
           <div className="flex space-x-4">
             <button
-              onClick={() => handleAnswer(false)}
+              onClick={() => handleAnswer(0)}
               className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
               Incorrect
             </button>
             <button
-              onClick={() => handleAnswer(true)}
+              onClick={() => handleAnswer(2)}
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
               Correct
@@ -203,6 +268,8 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
           </div>
         )}
       </div>
+      )}
+    </div>
     </div>
   );
 }
