@@ -17,12 +17,18 @@ export default function StudySessionSetup() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [dueCards, setDueCards] = useState({ new: 0, review: 0, total: 0 });
 
+  console.log('/components/study/StudySessionSetup.tsx: 20 selectedListId :>> ', selectedListId);
   // Fetch user's lists and due cards
   const fetchData = async () => {
     try {
+      let reviewQueueUrl = '/api/study/review-queue';
+      if (selectedListId) {
+        console.log('/components/study/StudySessionSetup.tsx: 26 selectedListId :>> ', selectedListId);
+        reviewQueueUrl += `?listId=${selectedListId}`;
+      }
         const [listsResponse, dueResponse] = await Promise.all([
           fetch('/api/lists'),
-          fetch('/api/study/review-queue')
+          fetch(reviewQueueUrl)
         ]);
         if (!listsResponse.ok) throw new Error('Failed to fetch lists');
         const listsData = await listsResponse.json();
@@ -30,6 +36,7 @@ export default function StudySessionSetup() {
 
         if (!dueResponse.ok) throw new Error('Failed to fetch due cards');
         const dueData = await dueResponse.json();
+        console.log('/components/study/StudySessionSetup.tsx: 39 dueData :>> ', dueData);
         setDueCards({
           new: dueData.summary.newCards,
           review: dueData.summary.reviewCards,
@@ -43,7 +50,7 @@ export default function StudySessionSetup() {
   }
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedListId]);
 
   const handleStartSession = async () => {
     if (studyMode === 'regular' && !selectedListId) {
@@ -63,7 +70,7 @@ export default function StudySessionSetup() {
         ? { mode: 'review', listId: selectedListId || undefined }
         : { listId: selectedListId };
       
-      Logger.log(LogContext.STUDY, "Starting study session", {
+      Logger.log(LogContext.STUDY, "Setup starting study session", {
         mode: studyMode,
         listId: selectedListId || 'all'
       });
@@ -83,7 +90,7 @@ export default function StudySessionSetup() {
       const data = await response.json();
       
       
-      Logger.log(LogContext.STUDY, "Study session started", {
+      Logger.log(LogContext.STUDY, "Study session setup started", {
         mode: studyMode,
         sessionId: data.sessionId
       });
