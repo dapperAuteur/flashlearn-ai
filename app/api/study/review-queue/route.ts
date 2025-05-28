@@ -22,6 +22,9 @@ export async function GET(request: NextRequest) {
     const listId = searchParams.get('listId');
     const maxNew = parseInt(searchParams.get('maxNew') || '20');
     const maxReviews = parseInt(searchParams.get('maxReviews') || '100');
+
+    console.log('/api/study/review-queue 26 listId :>> ', listId);
+    console.log('/api/study/review-queue 27 request.url :>> ', request.url);
     
     const client = await clientPromise;
     const db = client.db();
@@ -29,6 +32,9 @@ export async function GET(request: NextRequest) {
     // Build query
     const query: any = { userId };
     if (listId) query.listId = listId;
+
+    console.log('/api/study/review-queue 35 query :>> ', query);
+    console.log('/api/study/review-queue 35 listId :>> ', listId);
     
     // Fetch flashcards
     const flashcards = await db.collection('flashcards')
@@ -44,9 +50,10 @@ export async function GET(request: NextRequest) {
     // Interleave cards for optimal learning
     const orderedCards = ReviewQueueService.interleaveCards(queue);
     
-    await Logger.info(LogContext.STUDY, 'Review queue built successfully', {
+    await Logger.info(LogContext.STUDY, 'Review queue built successfully: requestId, userId, listId, metadata', {
       requestId,
       userId,
+      listId,
       metadata: {
         totalDue: queue.totalDue,
         newCards: queue.newCards.length,

@@ -79,11 +79,12 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
       if (!response.ok) throw new Error('Failed to load session');
       
       const data = await response.json();
+      console.log('/components/study/StudySessionInterface 82 data :>> ', data);
       setFlashcards(data.flashcards);
       setIsLoading(false);
       resetCardTimer();
     } catch (error) {
-      setError('Failed to load study session');
+      setError(`Failed to load study session data. error: ${error}`);
       setIsLoading(false);
     }
   };
@@ -182,6 +183,8 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
     );
   }
 
+  console.log('/components/study/StudySessionInterface.tsx: 185 flashcards :>> ', flashcards);
+  console.log('/components/study/StudySessionInterface.tsx: 186 currentCardIndex :>> ', currentCardIndex);
   const currentCard = flashcards[currentCardIndex];
   const isNewCard = currentCard.stage === 0;
 

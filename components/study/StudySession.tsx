@@ -132,7 +132,7 @@ export default function StudySession() {
     }
     
     if (!sessionId) {
-      console.log('line 134 sessionId :>> ', sessionId);
+      console.log('/components/study/StudySession.tsx line 134 sessionId :>> ', sessionId);
       return <StudySessionSetup onStartSession={handleStartSession} />;
     }
     
