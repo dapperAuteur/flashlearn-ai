@@ -1,13 +1,14 @@
 // components/study/StudySession.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+// import { Flashcard } from '@/types/flashcard';
 import StudySessionSetup from './StudySessionSetup';
 import StudyCard from './StudyCard';
 import StudySessionResults from './StudySessionResults';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
-type Flashcard = {
+type FlashcardType = {
   id: string;
   front: string;
   back: string;
@@ -17,14 +18,14 @@ type Flashcard = {
 
 export default function StudySession() {
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+  const [flashcards, setFlashcards] = useState<FlashcardType[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [sessionResults, setSessionResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Start a new study session
-  const handleStartSession = (newSessionId: string, cards: Flashcard[]) => {
+  const handleStartSession = (newSessionId: string, cards: FlashcardType[]) => {
     Logger.log(LogContext.STUDY, "Study session started", { 
       sessionId: newSessionId,
       cardCount: cards.length
@@ -152,7 +153,6 @@ export default function StudySession() {
         </div>
       );
     }
-    console.log('line 155 sessionId :>> ', sessionId);
     
     return (
       <div className="bg-gray-800 rounded-lg shadow p-6">
