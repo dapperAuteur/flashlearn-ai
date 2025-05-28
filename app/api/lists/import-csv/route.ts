@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       ...card,
       listId,
       userId,
-      difficulty: 3,
+      difficulty: 3, // allow the user to choose difficulty or is it needed?
       correctCount: 0,
       incorrectCount: 0,
       stage: 0,
