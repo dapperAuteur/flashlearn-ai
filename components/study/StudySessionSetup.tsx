@@ -11,29 +11,42 @@ export default function StudySessionSetup() {
   const router = useRouter();
   const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
+  const [studyMode, setStudyMode] = useState<'regular' | 'review'>('regular');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [dueCards, setDueCards] = useState({ new: 0, review: 0, total: 0 });
 
-  // Fetch user's lists
-  const fetchLists = async () => {
+  // Fetch user's lists and due cards
+  const fetchData = async () => {
     try {
-        const response = await fetch('/api/lists');
-        if (!response.ok) throw new Error('Failed to fetch lists');
-        const data = await response.json();
-        console.log('StudySessionSetup data :>> ', data);
-        setLists(data);
+        const [listsResponse, dueResponse] = await Promise.all([
+          fetch('/api/lists'),
+          fetch('/api/study/review-queue')
+        ]);
+        if (!listsResponse.ok) throw new Error('Failed to fetch lists');
+        const listsData = await listsResponse.json();
+        setLists(listsData);
+
+        if (!dueResponse.ok) throw new Error('Failed to fetch due cards');
+        const dueData = await dueResponse.json();
+        setDueCards({
+          new: dueData.summary.newCards,
+          review: dueData.summary.reviewCards,
+          total: dueData.summary.totalDue
+        });
+
       } catch (error) {
         setError('Failed to load lists. Please try again.');
         console.error('Error fetching lists:', error);
       }
   }
   useEffect(() => {
-    fetchLists();
+    fetchData();
   }, []);
 
   const handleStartSession = async () => {
-    if (!selectedListId) {
+    if (studyMode === 'regular' && !selectedListId) {
       setError('Please select a list to study');
       return;
     }
@@ -41,13 +54,25 @@ export default function StudySessionSetup() {
     try {
       setIsLoading(true);
       setError(null);
+
+      const endpoint = studyMode === 'review' 
+        ? '/api/study/sessions?mode=review' 
+        : '/api/study/sessions';
       
-      Logger.log(LogContext.STUDY, "Starting study session", { listId: selectedListId });
+      const body = studyMode === 'review' 
+        ? { mode: 'review', listId: selectedListId || undefined }
+        : { listId: selectedListId };
       
-      const response = await fetch('/api/study/sessions', {
+      Logger.log(LogContext.STUDY, "Starting study session", {
+        mode: studyMode,
+        listId: selectedListId || 'all'
+      });
+      
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listId: selectedListId })
+        body: JSON.stringify(body)
       });
       
       if (!response.ok) {
@@ -58,9 +83,12 @@ export default function StudySessionSetup() {
       const data = await response.json();
       
       
-      Logger.log(LogContext.STUDY, "Study session started", { sessionId: data.sessionId });
+      Logger.log(LogContext.STUDY, "Study session started", {
+        mode: studyMode,
+        sessionId: data.sessionId
+      });
 
-      router.push(`/dashboard/study/session/${data.sessionId}`);
+      router.push(`/dashboard/study/session/${data.sessionId}?mode=${studyMode}`);
                   
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to start session';
@@ -72,30 +100,71 @@ export default function StudySessionSetup() {
   };
 
   const handleImportSuccess = () => {
-    fetchLists(); // Refresh the lists
+    fetchData(); // Refresh the lists and dueCards
   }
 
   return (
     <div className="bg-gray-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Study Session</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-300">Study Session</h2>
       
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
         </div>
       )}
+
+      {/* Study Mode Selection */}
+      <div className="mb-6">
+        <label className="block mb-2 text-sm font-medium text-gray-300">
+          Study Mode
+        </label>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => setStudyMode('regular')}
+            className={`p-4 rounded-md border ${
+              studyMode === 'regular'
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-300 text-gray-300 hover:bg-gray-700'
+            }`}
+          >
+            <div className="font-medium">Regular Study</div>
+            <div className="text-sm mt-1">Study all cards in a list</div>
+          </button>
+          
+          <button
+            onClick={() => setStudyMode('review')}
+            className={`p-4 rounded-md border ${
+              studyMode === 'review'
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-300 text-gray-300 hover:bg-gray-700'
+            }`}
+          >
+            <div className="font-medium">Smart Review</div>
+            <div className="text-sm mt-1">
+              {dueCards.total > 0 
+                ? `${dueCards.total} cards due (${dueCards.new} new, ${dueCards.review} reviews)`
+                : 'Spaced repetition review'
+              }
+            </div>
+          </button>
+        </div>
+      </div>
       
+      {/* List Selection */}
       <div className="mb-6">
         <label htmlFor="listSelect" className="block mb-2 text-sm font-medium text-gray-300">
-          Select a List to Study
+          {studyMode === 'review' ? 'Filter by List (Optional)' : 'Select a List to Study'}
         </label>
         <select
           id="listSelect"
           className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           value={selectedListId}
           onChange={(e) => setSelectedListId(e.target.value)}
+          disabled={studyMode === 'review' && lists.length === 0}
         >
-          <option value="">-- Select a List --</option>
+          <option value="">
+            {studyMode === 'review' ? '-- All Lists --' : '-- Select a List --'}
+          </option>
           {lists.map((list) => (
             <option key={list._id?.toString()} value={list._id?.toString()}>
               {list.name} ({list.cardCount} cards)
@@ -119,7 +188,7 @@ export default function StudySessionSetup() {
         <button
           type="button"
           onClick={handleStartSession}
-          disabled={isLoading || !selectedListId}
+          disabled={isLoading || (studyMode === 'regular' && !selectedListId)}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         >
           {isLoading ? 'Starting...' : 'Start Studying'}
