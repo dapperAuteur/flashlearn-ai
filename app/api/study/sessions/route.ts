@@ -16,8 +16,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const userId = new ObjectId(session.user.id);
+
     // Parse request body
-    const { listId } = await request.json();
+    const body = await request.json();
+    const { listId, mode } = body;
+
+    let flashcards;
+
+    if (mode === 'review') {
+      // Fetch from review queue
+      const reviewResponse = await fetch(
+        `${process.env.NEXTAUTH_URL}/api/study/review-queue${listId ? `?listId=${listId}` : ''}`,
+      { headers: { cookie: request.headers.get('cookie') || '' } }
+      );
+
+      if (!reviewResponse.ok) {
+      throw new Error('Failed to fetch review queue');
+    }
+    
+    const reviewData = await reviewResponse.json();
+    flashcards = reviewData.cards;
+    } else {
+
     if (!listId) {
       return NextResponse.json({ error: "List ID is required" }, { status: 400 });
     }
@@ -39,12 +60,13 @@ export async function POST(request: NextRequest) {
     }
     
     // Get flashcards for this list
-    const flashcards = await db.collection('flashcards').find({
-      listId: new ObjectId(listId)
+    flashcards = await db.collection('flashcards').find({
+      listId: new ObjectId(listId),
+      userId  // is it a BUG: userId is causing list to return null, fix it
     }).toArray();
 
     console.log('flashcards :>> ', flashcards);
-    
+  }
     if (flashcards.length === 0) {
       return NextResponse.json({ error: "No flashcards in this list" }, { status: 400 });
     }
