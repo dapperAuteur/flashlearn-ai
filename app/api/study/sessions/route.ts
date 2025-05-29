@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       flashcards = await db.collection('flashcards')
         .find({
           listId,
-          userId // is it a BUG: userId is causing list to return null, fix it
+          // userId // is it a BUG: userId is causing list to return null, fix it
         })
         .toArray();
 

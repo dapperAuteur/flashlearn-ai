@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
     const query: any = { userId };
     if (listId) query.listId = listId;
 
-    console.log('/api/study/review-queue 35 query :>> ', query);
-    console.log('/api/study/review-queue 35 listId :>> ', listId);
+    console.log('/api/study/review-queue 36 query :>> ', query);
+    console.log('/api/study/review-queue 37 listId :>> ', listId);
     
     // Fetch flashcards
     const flashcards = await db.collection('flashcards')
