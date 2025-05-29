@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import CsvImportModal from '../flashcards/CsvImportModal';
+import { DueCard, DueData, ListWithDueCards } from '@/types/flashcard';
 
 export default function StudySessionSetup() {
   const router = useRouter();
@@ -16,41 +17,94 @@ export default function StudySessionSetup() {
   const [error, setError] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [dueCards, setDueCards] = useState({ new: 0, review: 0, total: 0 });
+  const [dueData, setDueData] = useState<DueData>({
+    cards: [] as DueCard[],
+    summary: {
+      newCards: 0,
+      reviewCards: 0,
+      totalDue: 0
+    }
+  })
+
+  // Process dueData to get lists with due cards and their counts
+  const getListsWithDueCards = (): ListWithDueCards[] => {
+    if (!dueData.cards || dueData.cards.length === 0) return [];
+    
+    // Group cards by listId and count them, also find earliest review date
+    const listInfo = dueData.cards.reduce((acc, card) => {
+      const listId = card.listId;
+      if (!acc[listId]) {
+        acc[listId] = { 
+          count: 0, 
+          earliestReview: card.nextReviewDate ? new Date(card.nextReviewDate) : new Date()
+        };
+      }
+      acc[listId].count++;
+      
+      // Track earliest review date for sorting
+      if (card.nextReviewDate) {
+        const cardReviewDate = new Date(card.nextReviewDate);
+        if (cardReviewDate < acc[listId].earliestReview) {
+          acc[listId].earliestReview = cardReviewDate;
+        }
+      }
+      
+      return acc;
+    }, {} as Record<string, { count: number; earliestReview: Date }>);
+    
+    // Filter lists to only those with due cards and add due count info
+    return lists
+      .filter(list => list._id && listInfo[list._id.toString()])
+      .map(list => ({
+        ...list,
+        dueCount: listInfo[list._id!.toString()].count,
+        nextReviewDate: listInfo[list._id!.toString()].earliestReview
+      }))
+      .sort((a, b) => {
+        // Sort by earliest review date (most urgent first)
+        if (a.nextReviewDate && b.nextReviewDate) {
+          return a.nextReviewDate.getTime() - b.nextReviewDate.getTime();
+        }
+        return 0;
+      });
+  };
 
   console.log('/components/study/StudySessionSetup.tsx: 20 selectedListId :>> ', selectedListId);
   // Fetch user's lists and due cards
   const fetchData = async () => {
     try {
-      let reviewQueueUrl = '/api/study/review-queue';
-      if (selectedListId) {
-        console.log('/components/study/StudySessionSetup.tsx: 26 selectedListId :>> ', selectedListId);
-        reviewQueueUrl += `?listId=${selectedListId}`;
-      }
-        const [listsResponse, dueResponse] = await Promise.all([
-          fetch('/api/lists'),
-          fetch(reviewQueueUrl)
-        ]);
-        if (!listsResponse.ok) throw new Error('Failed to fetch lists');
-        const listsData = await listsResponse.json();
-        setLists(listsData);
+      Logger.log(LogContext.STUDY, "Fetching lists and due cards data");
+      
+      // Always fetch all lists first
+      const listsResponse = await fetch('/api/lists');
+      if (!listsResponse.ok) throw new Error('Failed to fetch lists');
+      const listsData = await listsResponse.json();
+      setLists(listsData);
 
-        if (!dueResponse.ok) throw new Error('Failed to fetch due cards');
-        const dueData = await dueResponse.json();
-        console.log('/components/study/StudySessionSetup.tsx: 39 dueData :>> ', dueData);
-        setDueCards({
-          new: dueData.summary.newCards,
-          review: dueData.summary.reviewCards,
-          total: dueData.summary.totalDue
-        });
+      // Fetch due cards (don't filter by listId for review mode)
+      const reviewQueueUrl = '/api/study/review-queue';
+      const dueResponse = await fetch(reviewQueueUrl);
+
+      if (!dueResponse.ok) throw new Error('Failed to fetch due cards');
+      const dueCardsData = await dueResponse.json();
+      console.log('/components/study/StudySessionSetup.tsx: 90 dueCardsData :>> ', dueCardsData);
+
+      Logger.log(LogContext.STUDY, "Due cards data fetched", {
+        totalCards: dueCardsData.cards?.length || 0,
+        summary: dueCardsData.summary
+      });
+
+      setDueData(dueCardsData);
 
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load data';
         setError('Failed to load lists. Please try again.');
-        console.error('Error fetching lists:', error);
+        Logger.error(LogContext.STUDY, `Error fetching data: ${errorMessage}`);
       }
-  }
+  };
   useEffect(() => {
     fetchData();
-  }, [selectedListId]);
+  }, []);
 
   const handleStartSession = async () => {
     if (studyMode === 'regular' && !selectedListId) {
@@ -58,21 +112,31 @@ export default function StudySessionSetup() {
       return;
     }
 
+    if (studyMode === 'review' && !selectedListId) {
+      setError('Please select a list to review');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
 
-      const endpoint = studyMode === 'review' 
-        ? '/api/study/sessions?mode=review' 
-        : '/api/study/sessions';
-      
+      const endpoint = '/api/study/sessions';
       const body = studyMode === 'review' 
-        ? { mode: 'review', listId: selectedListId || undefined }
+        ? { mode: 'review', listId: selectedListId }
         : { listId: selectedListId };
+
+      // const endpoint = studyMode === 'review' 
+      //   ? '/api/study/sessions?mode=review' 
+      //   : '/api/study/sessions';
+      
+      // const body = studyMode === 'review' 
+      //   ? { mode: 'review', listId: selectedListId || undefined }
+      //   : { listId: selectedListId };
       
       Logger.log(LogContext.STUDY, "Setup starting study session", {
         mode: studyMode,
-        listId: selectedListId || 'all'
+        listId: selectedListId
       });
       
       
@@ -84,7 +148,7 @@ export default function StudySessionSetup() {
       
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to start study session');
+        throw new Error(data.error || 'Setup Failed to start study session');
       }
       
       const data = await response.json();
@@ -98,9 +162,9 @@ export default function StudySessionSetup() {
       router.push(`/dashboard/study/session/${data.sessionId}?mode=${studyMode}`);
                   
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to start session';
+      const message = error instanceof Error ? error.message : 'Setup Failed to start session';
       setError(message);
-      Logger.error(LogContext.STUDY, `Error starting study session: ${message}`);
+      Logger.error(LogContext.STUDY, `Setup Error starting study session: ${message}`);
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +173,17 @@ export default function StudySessionSetup() {
   const handleImportSuccess = () => {
     fetchData(); // Refresh the lists and dueCards
   }
+
+  // Get the appropriate lists to show in dropdown
+  const getDisplayLists = () => {
+    if (studyMode === 'review') {
+      return getListsWithDueCards();
+    }
+    return lists;
+  };
+
+  const displayLists = getDisplayLists();
+  console.log('/components/study/StudySessionSetup 186 displayLists :>> ', displayLists);
 
   return (
     <div className="bg-gray-800 rounded-lg shadow p-6">
@@ -127,7 +202,12 @@ export default function StudySessionSetup() {
         </label>
         <div className="grid grid-cols-2 gap-4">
           <button
-            onClick={() => setStudyMode('regular')}
+            onClick={
+              () => {
+                setStudyMode('regular');
+                setSelectedListId(''); // Reset selection when changing modes
+              }
+            }
             className={`p-4 rounded-md border ${
               studyMode === 'regular'
                 ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -139,7 +219,12 @@ export default function StudySessionSetup() {
           </button>
           
           <button
-            onClick={() => setStudyMode('review')}
+            onClick={
+              () => {
+                setStudyMode('review');
+                setSelectedListId(''); // Reset selection when changing modes
+              }
+            }
             className={`p-4 rounded-md border ${
               studyMode === 'review'
                 ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -148,8 +233,8 @@ export default function StudySessionSetup() {
           >
             <div className="font-medium">Smart Review</div>
             <div className="text-sm mt-1">
-              {dueCards.total > 0 
-                ? `${dueCards.total} cards due (${dueCards.new} new, ${dueCards.review} reviews)`
+              {dueData.summary.totalDue > 0 
+                ? `${dueData.summary.totalDue} cards due (${dueData.summary.newCards} new, ${dueData.summary.reviewCards} reviews)`
                 : 'Spaced repetition review'
               }
             </div>
@@ -160,24 +245,45 @@ export default function StudySessionSetup() {
       {/* List Selection */}
       <div className="mb-6">
         <label htmlFor="listSelect" className="block mb-2 text-sm font-medium text-gray-300">
-          {studyMode === 'review' ? 'Filter by List (Optional)' : 'Select a List to Study'}
+          {studyMode === 'review' ? 'Select a List to Review' : 'Select a List to Study'}
         </label>
         <select
           id="listSelect"
           className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           value={selectedListId}
           onChange={(e) => setSelectedListId(e.target.value)}
-          disabled={studyMode === 'review' && lists.length === 0}
+          disabled={displayLists.length === 0}
+          required
         >
           <option value="">
-            {studyMode === 'review' ? '-- All Lists --' : '-- Select a List --'}
+            {studyMode === 'review' ? '-- Select a List to Review --' : '-- Select a List --'}
           </option>
-          {lists.map((list) => (
-            <option key={list._id?.toString()} value={list._id?.toString()}>
-              {list.name} ({list.cardCount} cards)
-            </option>
-          ))}
+          {displayLists.map((list) => {
+            const listId = list._id?.toString() || '';
+            if (studyMode === 'review') {
+              const reviewList = list as ListWithDueCards;
+              const reviewDate = reviewList.nextReviewDate 
+                ? new Date(reviewList.nextReviewDate).toLocaleDateString()
+                : 'Now';
+              return (
+                <option key={listId} value={listId}>
+                  {list.name} ({reviewList.dueCount} due - Review by {reviewDate})
+                </option>
+              );
+            } else {
+              return (
+                <option key={listId} value={listId}>
+                  {list.name} ({list.cardCount} cards)
+                </option>
+              );
+            }
+          })}
         </select>
+        {studyMode === 'review' && displayLists.length === 0 && (
+          <p className="mt-2 text-sm text-gray-400">
+            No cards are due for review at this time.
+          </p>
+        )}
       </div>
 
       <div className='mb-6'>
@@ -195,7 +301,7 @@ export default function StudySessionSetup() {
         <button
           type="button"
           onClick={handleStartSession}
-          disabled={isLoading || (studyMode === 'regular' && !selectedListId)}
+          disabled={isLoading || !selectedListId}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         >
           {isLoading ? 'Starting...' : 'Start Studying'}
