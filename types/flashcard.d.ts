@@ -37,3 +37,39 @@ export interface Flashcard {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface DueCard {
+  _id: string;
+  listId: string;
+  front: string;
+  back: string;
+  stage: number;
+  correctCount: number;
+  incorrectCount: number;
+  nextReviewDate?: Date;
+  difficulty: number;
+  userId: string;
+  summary: {
+    newCards: number;
+    reviewCards: number;
+    totalDue: number;
+  }
+  // ... other card properties
+  // Metadata
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DueData {
+  cards: DueCard[];
+  summary: {
+    newCards: number;
+    reviewCards: number;
+    totalDue: number;
+  };
+}
+
+export interface ListWithDueCards extends List {
+  dueCount: number;
+  nextReviewDate?: Date;
+}
