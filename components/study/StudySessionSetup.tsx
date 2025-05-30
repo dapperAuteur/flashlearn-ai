@@ -156,7 +156,11 @@ export default function StudySessionSetup() {
       
       if (!response.ok) {
         const data = await response.json();
-        Logger.error(LogContext.STUDY, `Setup Error starting study session: ${data.error}`);
+        Logger.error(LogContext.STUDY, `Setup Error starting study session: ${data.error}`, {
+          mode: studyMode,
+          listId: selectedListId,
+          sessionId: data.sessionId
+        });
         throw new Error(data.error || 'Setup Failed to start study session');
       }
       
