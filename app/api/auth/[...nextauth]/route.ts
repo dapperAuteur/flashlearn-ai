@@ -3,8 +3,9 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
-import { ObjectId } from "mongodb";
+// import { ObjectId } from "mongodb";
 import { NextAuthOptions } from "next-auth";
+import { LogContext, Logger } from "@/lib/logging/logger";
 
 // Extract the configuration options to be reused
 export const authOptions: NextAuthOptions = {
@@ -21,24 +22,22 @@ export const authOptions: NextAuthOptions = {
         const { email, password } = credentials;
         
         try {
-          console.log("Authenticating user:", email);
           const client = await clientPromise;
           const db = client.db();
           const user = await db.collection("users").findOne({ email });
           
           if (!user) {
-            console.log("No user found with email:", email);
+            Logger.error(LogContext.USER,"User not found:", email);
             return null;
           }
           
           const isPasswordValid = await compare(password, user.password);
           
           if (!isPasswordValid) {
-            console.log("Invalid password for user:", email);
+            Logger.error(LogContext.USER,"Invalid password for user:", email);
             return null;
           }
           
-          console.log("User authenticated successfully:", email);
           return {
             id: user._id.toString(),
             email: user.email,
@@ -46,7 +45,11 @@ export const authOptions: NextAuthOptions = {
             role: user.role
           };
         } catch (error) {
-          console.error("Authentication error:", error);
+
+          Logger.error(LogContext.USER,"Error during authorization:", {
+            email,
+            error
+          });
           return null;
         }
       }

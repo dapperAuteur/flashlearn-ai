@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { getCurrentUser } from "@/lib/auth/session";
+import { Logger, LogContext } from "@/lib/logging/logger";
 
 export const metadata: Metadata = {
   title: "Analytics | FlashLearn AI",
@@ -14,7 +15,7 @@ export default async function AnalyticsPage() {
   
   // Server-side authentication check
   if (!user) {
-    console.log("User not authenticated (server-side), redirecting to sign in");
+    Logger.error(LogContext.USER,"User not authenticated, redirecting to /signin");
     redirect("/signin");
   }
   

@@ -28,6 +28,13 @@ export default function StudySessionSetup() {
 
   // Process dueData to get lists with due cards and their counts
   const getListsWithDueCards = (): ListWithDueCards[] => {
+    Logger.log(LogContext.STUDY, "Processing due cards data", {
+      totalCards: dueData.cards?.length || 0,
+      summary: dueData.summary,
+      lists: lists.length,
+      listName: lists[0].name
+    });
+
     if (!dueData.cards || dueData.cards.length === 0) return [];
     
     // Group cards by listId and count them, also find earliest review date
@@ -69,11 +76,13 @@ export default function StudySessionSetup() {
       });
   };
 
-  console.log('/components/study/StudySessionSetup.tsx: 20 selectedListId :>> ', selectedListId);
   // Fetch user's lists and due cards
   const fetchData = async () => {
     try {
-      Logger.log(LogContext.STUDY, "Fetching lists and due cards data");
+      Logger.log(LogContext.STUDY, "Fetching lists and due cards data", {
+        studyMode,
+        selectedListId
+      });
       
       // Always fetch all lists first
       const listsResponse = await fetch('/api/lists');
@@ -87,10 +96,12 @@ export default function StudySessionSetup() {
 
       if (!dueResponse.ok) throw new Error('Failed to fetch due cards');
       const dueCardsData = await dueResponse.json();
-      console.log('/components/study/StudySessionSetup.tsx: 90 dueCardsData :>> ', dueCardsData);
 
       Logger.log(LogContext.STUDY, "Due cards data fetched", {
         totalCards: dueCardsData.cards?.length || 0,
+        newCards: dueCardsData.summary.newCards,
+        reviewCards: dueCardsData.summary.reviewCards,
+        totalDue: dueCardsData.summary.totalDue,
         summary: dueCardsData.summary
       });
 
@@ -107,6 +118,11 @@ export default function StudySessionSetup() {
   }, []);
 
   const handleStartSession = async () => {
+    Logger.log(LogContext.STUDY, "Starting study session", {
+      studyMode,
+      selectedListId
+    });
+
     if (studyMode === 'regular' && !selectedListId) {
       setError('Please select a list to study');
       return;
@@ -125,14 +141,6 @@ export default function StudySessionSetup() {
       const body = studyMode === 'review' 
         ? { mode: 'review', listId: selectedListId }
         : { listId: selectedListId };
-
-      // const endpoint = studyMode === 'review' 
-      //   ? '/api/study/sessions?mode=review' 
-      //   : '/api/study/sessions';
-      
-      // const body = studyMode === 'review' 
-      //   ? { mode: 'review', listId: selectedListId || undefined }
-      //   : { listId: selectedListId };
       
       Logger.log(LogContext.STUDY, "Setup starting study session", {
         mode: studyMode,
@@ -148,6 +156,7 @@ export default function StudySessionSetup() {
       
       if (!response.ok) {
         const data = await response.json();
+        Logger.error(LogContext.STUDY, `Setup Error starting study session: ${data.error}`);
         throw new Error(data.error || 'Setup Failed to start study session');
       }
       
@@ -183,7 +192,6 @@ export default function StudySessionSetup() {
   };
 
   const displayLists = getDisplayLists();
-  console.log('/components/study/StudySessionSetup 186 displayLists :>> ', displayLists);
 
   return (
     <div className="bg-gray-800 rounded-lg shadow p-6">

@@ -28,7 +28,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   
   // If not authenticated, redirect to login
   if (status === "unauthenticated") {
-    console.log("User not authenticated, redirecting to sign in page");
     router.push("/signin");
     return null;
   }
@@ -36,7 +35,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // If not admin, redirect to dashboard
   const user = session?.user as any;
   if (user?.role !== "admin") {
-    console.log("User not admin, redirecting to dashboard");
     router.push("/generate");
     return null;
   }
@@ -71,7 +69,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     </span>
                     <button
                       onClick={() => {
-                        console.log("Admin signing out");
                         signOut({ callbackUrl: "/" });
                       }}
                       className="text-sm text-blue-600 hover:text-blue-500"

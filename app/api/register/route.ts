@@ -11,6 +11,7 @@ import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
 import { logAuthEvent } from "@/lib/logging/authLogger";
 import { AuthEventType } from "@/models/AuthLog";
 import { sendVerificationEmail } from "@/lib/email/mailgun";
+import { LogContext, Logger } from "@/lib/logging/logger";
 
 // Validation schema for user registration
 const userSchema = z.object({
@@ -35,7 +36,11 @@ export async function POST(request: NextRequest) {
 
   // If rate limit exceeded, return 429 Too Many Requests
   if (!rateLimitResult.success) {
-    console.log(`Rate limit exceeded for IP ${ip} on registration endpoint`);
+    Logger.error(LogContext.AUTH, `Rate limit exceeded for IP ${ip} on registration endpoint`, {
+      ip,
+      rateLimitResult,
+      request
+    })
     return NextResponse.json(
       { 
         error: "Too many registration attempts. Please try again later.", 
@@ -53,12 +58,14 @@ export async function POST(request: NextRequest) {
   try {
     // Parse the request body
     const body = await request.json();
-    console.log("Registration attempt:", body.email);
+    Logger.debug(LogContext.AUTH, "Registration attempt", {
+      body,
+      email: body.email,
+    })
     
     // Validate input
     const result = userSchema.safeParse(body);
     if (!result.success) {
-      console.log("Validation error:", result.error.errors);
 
       // Log failed registration
       await logAuthEvent({
@@ -86,7 +93,6 @@ export async function POST(request: NextRequest) {
     // Check if user already exists
     const existingUser = await db.collection("users").findOne({ email });
     if (existingUser) {
-      console.log("User already exists:", email);
 
       // Log failed registration
       await logAuthEvent({
@@ -126,8 +132,6 @@ export async function POST(request: NextRequest) {
     
     const userId = newUser.insertedId.toString();
 
-    console.log("User created successfully:", userId);
-
     // Log successful registration
     await logAuthEvent({
       request,
@@ -154,7 +158,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Registration error:", error);
 
     // Log registration error
     await logAuthEvent({

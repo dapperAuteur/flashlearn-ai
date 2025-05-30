@@ -1,6 +1,6 @@
 // app/(dashboard)/layout.tsx
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+// import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/session';
 
 export const metadata: Metadata = {
@@ -18,7 +18,6 @@ export default async function DashboardLayout({
   const user = await getCurrentUser();
   
   if (!user) {
-    console.log('User not authenticated, redirecting to sign in page');
     // redirect('/signin');
   }
   

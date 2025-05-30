@@ -16,11 +16,17 @@ export async function POST(request: Request) {
 
   try {
     // Get authenticated user if available
-    console.log("\n");
-    console.log("***********************");
+    
     const session = await getServerSession(authOptions);
     userId = session?.user?.id;
-    console.log('session, userId :>> ', session, userId);
+    Logger.debug(LogContext.AI, "POST request received to generate flashcards using AI", {
+      userId,
+      session,
+      request: {
+        method: request.method,
+        url: request.url,
+        headers: Object.fromEntries(request.headers),
+  }});
 
     const client = await clientPromise;
     const db = client.db();

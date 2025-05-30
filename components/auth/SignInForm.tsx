@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { LogContext, Logger } from "@/lib/logging/client-logger";
 
 // Validation schema for sign in form
 const signInSchema = z.object({
@@ -46,7 +47,10 @@ export default function SignInForm() {
         setError(data.error || "Failed to resend verification email");
       }
     } catch (error) {
-      console.error("Resend verification error:", error);
+      Logger.error(LogContext.AUTH,"Resend verification error:", {
+          error,
+          resendEmail
+        })
       setError("An unexpected error occurred");
     } finally {
       setResendLoading(false);
@@ -63,7 +67,6 @@ export default function SignInForm() {
     setError(null);
     
     try {
-      console.log("Signing in user:", data.email);
       const result = await signIn("credentials", {
         redirect: false,
         email: data.email,
@@ -71,10 +74,15 @@ export default function SignInForm() {
       });
       
       if (result?.error) {
-        console.log("Sign in error:", result.error);
+        Logger.error(LogContext.AUTH,"Sign in error:", result.error);
 
         // Check for specific error types
       if (result.error.includes("email_not_verified")) {
+        Logger.error(LogContext.AUTH,"Sign in error: result.error.includes(email_not_verified)", {
+          error: result.error,
+          email: data.email
+        }
+        );
         setError("Please verify your email address before signing in");
         setShowResendButton(true);
         setResendEmail(data.email);
@@ -87,11 +95,10 @@ export default function SignInForm() {
       return;
     }
       
-      console.log("User signed in successfully, redirecting to dashboard");
       router.push("/generate");
       router.refresh(); // Refresh the page to update the session
     } catch (error: any) {
-      console.error("Sign in error:", error);
+      Logger.error(LogContext.AUTH,"Sign in error:", error);
       setError(`Connection error: ${error.message || "Failed to connect to authentication server"}`);
     } finally {
       setIsLoading(false);

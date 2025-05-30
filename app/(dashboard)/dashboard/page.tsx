@@ -26,7 +26,6 @@ export default function DashboardPage() {
     if (status === 'unauthenticated') {
       // router.push('/signin');
       // NOT Hitting here BUG
-      console.log('DashboardPage() status :>> ', status);
     }
   }, [status, router]);
   

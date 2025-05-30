@@ -79,11 +79,22 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
       if (!response.ok) throw new Error('Failed to load session');
       
       const data = await response.json();
-      console.log('/components/study/StudySessionInterface 82 data :>> ', data);
+      Logger.log(LogContext.STUDY, "Session loaded", {
+        sessionId,
+        isReviewMode,
+        flashcardCount: data.flashcards.length
+      });
       setFlashcards(data.flashcards);
       setIsLoading(false);
       resetCardTimer();
     } catch (error) {
+      Logger.error(LogContext.STUDY, `Failed to load session. error: ${error}`,
+        {
+          sessionId,
+          isReviewMode,
+          flashcardCount: flashcards.length
+        }
+      );
       setError(`Failed to load study session data. error: ${error}`);
       setIsLoading(false);
     }
@@ -95,6 +106,12 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
     const flashcardId = currentCard._id || currentCard.id;
 
     try {
+      Logger.log(LogContext.STUDY, "Card answered", {
+        flashcardId,
+        quality,
+        sessionId,
+        isReviewMode
+      })
       if (isReviewMode) {
         // Use spaced repetition endpoint
         await fetch(`/api/flashcards/${flashcardId}/review`, {
@@ -183,8 +200,6 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
     );
   }
 
-  console.log('/components/study/StudySessionInterface.tsx: 185 flashcards :>> ', flashcards);
-  console.log('/components/study/StudySessionInterface.tsx: 186 currentCardIndex :>> ', currentCardIndex);
   const currentCard = flashcards[currentCardIndex];
   const isNewCard = currentCard.stage === 0;
 

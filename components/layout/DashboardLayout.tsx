@@ -35,7 +35,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Check if user is authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
-      console.log('User not authenticated, redirecting to sign in page');
       router.push('/signin');
     }
   }, [status, router]);

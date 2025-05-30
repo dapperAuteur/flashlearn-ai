@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Flashcard } from "@/types/flashcards";
+import { Logger, LogContext } from '@/lib/logging/client-logger';
 import RatingStars from "@/components/RatingStars";
 
 // Helper function to escape fields for CSV format
@@ -107,7 +108,6 @@ export default function GenerateFlashcardsPage(){
   // if user is authenticated, save flashcards to database in 'shared_flashcard_sets' collection using /generate-flashcards route
   // //generate-flashcards route checks if flashcard set already exists in db.
   const handleSave = async () => {
-    console.log("save flashcards");
     
     if (flashcards.length === 0) {
       setError('No flashcards to save.');
@@ -126,7 +126,6 @@ export default function GenerateFlashcardsPage(){
     setError(null);
 
     try {
-      // console.log('topic :>> ', topic);
       const response = await fetch('/api/save-flashcards', {
         method: 'POST',
         headers: {
@@ -140,9 +139,15 @@ export default function GenerateFlashcardsPage(){
       });
 
       const data = await response.json();
-      console.log('data :>> ', data);
 
       if (!response.ok) {
+        Logger.log(LogContext.FLASHCARD, "Error saving Generated Flashcards at !response.ok", {
+          data,
+          topic, 
+          flashcards: flashcards.length,
+          error: data.error || `HTTP error! status: ${response.status}`,
+          userEmail: session.user.email,
+        });
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
@@ -158,10 +163,22 @@ export default function GenerateFlashcardsPage(){
         // Provide user feedback
         alert('Flashcards saved successfully!');
       } else {
+        Logger.error(LogContext.FLASHCARD, "Error saving Generated Flashcards at !data.success", {
+          data,
+          topic, 
+          flashcards: flashcards.length,
+          error: data.message || 'Failed to save flashcards.',
+          userEmail: session.user.email,
+        })
         throw new Error(data.message || 'Failed to save flashcards.');
       }
     } catch (error: unknown) {
-      console.error("Saving failed:", error);
+      Logger.error(LogContext.FLASHCARD, "Error saving Generated Flashcards at catch, error unknown", {
+          topic, 
+          flashcards: flashcards.length,
+          error: 'Failed to save flashcards.',
+          userEmail: session.user.email,
+        })
       setError(error instanceof Error ? error.message : 'An unexpected error occurred while saving.');
     } finally {
       setIsExporting(false);
@@ -194,9 +211,15 @@ export default function GenerateFlashcardsPage(){
       // 2. Save CSV content to localStorage with dynamic key
       try {
         localStorage.setItem(localStorageKey, csvContent);
-        console.log(`CSV content saved to localStorage under key: ${localStorageKey}`);
       } catch (storageError) {
-        console.error("Failed to save CSV content to localStorage:", storageError);
+        Logger.error(LogContext.FLASHCARD, "Failed to save CSV content to localStorage, but download will proceed.", {
+          error: storageError,
+          topic, 
+          flashcards: flashcards.length,
+          filename,
+          localStorageKey,
+          csvContent,
+        })
         // Optionally notify the user, but proceed with download anyway
         setError("Could not save to local storage, but download will proceed.");
       }
@@ -221,7 +244,11 @@ export default function GenerateFlashcardsPage(){
       // Optional: Revoke the object URL to free up memory, though browser usually handles this
       // URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error exporting CSV:", error);
+      Logger.error(LogContext.FLASHCARD, "Error exporting CSV:", {
+          error,
+          topic, 
+          flashcards: flashcards.length,
+        })
       setError("An error occurred while exporting the CSV file.");
     }
     setIsExporting(false);
@@ -265,7 +292,10 @@ export default function GenerateFlashcardsPage(){
         }
       }
     } catch (error: unknown) {
-      console.error("Generation failed:", error);
+      Logger.error(LogContext.FLASHCARD, "Generation failed:", {
+        error,
+        topic, 
+      })
       setError(error instanceof Error ? error.message : 'An unexpected error occurred.');
       setFlashcards([]);
     } finally {
@@ -284,9 +314,7 @@ export default function GenerateFlashcardsPage(){
 
     const foundSets: { key: string; topicName: string }[] = [];
     try {
-      console.log("scanning storage");
       for (let i = 0; i < localStorage.length; i++) {
-        console.log('localStorage.key(i) :>> ', localStorage.key(i));
         const key = localStorage.key(i);
         if (key && key.startsWith('flashlearn_') || key.endsWith('_flashcards_csv')) {
           const topicName = extractTopicFromKey(key);
@@ -294,7 +322,9 @@ export default function GenerateFlashcardsPage(){
         }
       }
     } catch (e) {
-      console.error("Could not access localStorage:", e);
+      Logger.error(LogContext.FLASHCARD, "Could not access localStorage:", {
+        error: e,
+      })
       setError("Could not access local storage. It might be disabled.");
       return;
     }
@@ -303,6 +333,9 @@ export default function GenerateFlashcardsPage(){
       setAvailableSets(foundSets);
       setShowLoadModal(true);
     } else {
+      Logger.error(LogContext.FLASHCARD, "No saved flashcard sets found in local storage.", {
+        error: 'No saved flashcard sets found in local storage.',
+      });
       setError("No saved flashcard sets found in local storage.");
     }
   };
@@ -332,7 +365,7 @@ export default function GenerateFlashcardsPage(){
         if (fields.length >= 2) {
           loadedFlashcards.push({ front: fields[0], back: fields[1] });
         } else {
-            console.warn(`Skipping invalid CSV row ${i + 1}: ${lines[i]}`);
+          Logger.error(LogContext.FLASHCARD, `Skipping invalid CSV row ${i + 1}: ${lines[i]}`);
         }
       }
 
@@ -346,7 +379,9 @@ export default function GenerateFlashcardsPage(){
       setFlippedCardIndices(new Set()); // Reset flip state
 
     } catch (err: unknown) {
-      console.error("Error loading or parsing CSV from storage:", err);
+      Logger.error(LogContext.FLASHCARD, "Error loading or parsing CSV from storage:", {
+        error: err,
+      })
       setError(err instanceof Error ? err.message : "Failed to load or parse the selected set.");
       setShowLoadModal(false); // Close modal even on error
     }
@@ -358,13 +393,9 @@ export default function GenerateFlashcardsPage(){
       const newSet = new Set(prev);
       if (newSet.has(index)) {
         newSet.delete(index);
-      } else {
-        console.log("else, add index to set");
-        
+      } else {        
         newSet.add(index);
-      }
-      console.log("return new set");
-      
+      }      
       return newSet;
     });
   };
@@ -387,6 +418,9 @@ const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
 
   // Basic file type check (can be improved with MIME types if needed)
   if (!file.name.toLowerCase().endsWith('.csv')) {
+    Logger.error(LogContext.FLASHCARD, "Invalid file type. Please upload a .csv file.", {
+      error: 'Invalid file type. Please upload a .csv file.',
+    })
     setError("Invalid file type. Please upload a .csv file.");
     // Clear the file input value so the user can select the same file again if needed
     if (fileInputRef.current) {
@@ -455,11 +489,12 @@ const processCsvContent = (csvContent: string, originalFilename: string) => {
       if (fields.length >= 2 && fields[0].trim()) { // Ensure front is not empty
         loadedFlashcards.push({ front: fields[0].trim(), back: fields[1].trim() });
       } else {
-        console.warn(`Skipping invalid or incomplete CSV row ${i + 1}: ${lines[i]}`);
+        Logger.error(LogContext.FLASHCARD, `Skipping invalid or incomplete CSV row ${i + 1}: ${lines[i]}`);
       }
     }
 
     if (loadedFlashcards.length === 0) {
+      Logger.error(LogContext.FLASHCARD, "CSV file contained a valid header but no valid flashcard data rows.")
       setError("CSV file contained a valid header but no valid flashcard data rows.");
       return;
     }
@@ -473,7 +508,9 @@ const processCsvContent = (csvContent: string, originalFilename: string) => {
     setFlippedCardIndices(new Set()); // Reset flip state
 
   } catch (err) {
-    console.error("Error processing CSV content:", err);
+    Logger.error(LogContext.FLASHCARD, "An error occurred while processing the CSV file. Please ensure it's correctly formatted.", {
+      error: err,
+    })
     setError("An error occurred while processing the CSV file. Please ensure it's correctly formatted.");
     setShowTemplateDownloadButton(true); // Offer template on generic processing error too
   }
@@ -615,7 +652,10 @@ const handleDownloadTemplate = () => {
                     initialRating={averageRating}
                     totalRatings={ratingCount}
                     onRatingSubmitted={(newRating) => {
-                      console.log(`User submitted rating: ${newRating}`);
+                      Logger.log(LogContext.FLASHCARD, `User submitted rating: ${newRating}`, {
+                        setId: flashcardSetId,
+                        newRating,
+                      })
                     }}
                   />
                   ) : (

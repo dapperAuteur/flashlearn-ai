@@ -28,7 +28,7 @@ export default function StudySession() {
   const handleStartSession = (newSessionId: string, cards: FlashcardType[]) => {
     Logger.log(LogContext.STUDY, "Study session started", { 
       sessionId: newSessionId,
-      cardCount: cards.length
+      cardCount: cards.length,
     });
     
     setSessionId(newSessionId);
@@ -44,6 +44,12 @@ export default function StudySession() {
     if (!sessionId) return;
 
     try {
+      Logger.log(LogContext.STUDY, "Recording card result", {
+        sessionId,
+        flashcardId,
+        isCorrect,
+        timeSeconds
+      });
       // Send result to API
       const response = await fetch(`/api/study/sessions/${sessionId}/results`, {
         method: 'POST',
@@ -52,6 +58,15 @@ export default function StudySession() {
       });
       
       if (!response.ok) {
+        Logger.error(LogContext.STUDY, `Error recording card result: ${response.statusText}`, {
+          sessionId,
+          flashcardId,
+          isCorrect,
+          timeSeconds,
+          message: response.statusText,
+          status: response.status,
+          statusText: response.statusText
+        });
         const data = await response.json();
         throw new Error(data.error || 'Failed to record result');
       }
@@ -66,7 +81,13 @@ export default function StudySession() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error recording result';
       setError(message);
-      Logger.error(LogContext.STUDY, `Error recording card result: ${message}`);
+      Logger.error(LogContext.STUDY, `Error recording card result: ${message}`, {
+        sessionId,
+        flashcardId,
+        isCorrect,
+        timeSeconds,
+        message
+      });
     }
   };
 
@@ -75,11 +96,20 @@ export default function StudySession() {
     if (!sessionId) return;
 
     try {
+      Logger.log(LogContext.STUDY, "Completing study session", { 
+        sessionId
+      });
+      // Send complete request to API
       const response = await fetch(`/api/study/sessions/${sessionId}/complete`, {
         method: 'POST'
       });
       
       if (!response.ok) {
+        Logger.error(LogContext.STUDY, `Error completing study session: ${response.statusText}`, {
+          sessionId,
+          status: response.status,
+          statusText: response.statusText
+        });
         const data = await response.json();
         throw new Error(data.error || 'Failed to complete session');
       }
@@ -99,7 +129,10 @@ export default function StudySession() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error completing session';
       setError(message);
-      Logger.error(LogContext.STUDY, `Error completing session: ${message}`);
+      Logger.error(LogContext.STUDY, `Error completing session: ${message}`,{
+        sessionId,
+        message
+      });
     }
   };
 
@@ -116,6 +149,11 @@ export default function StudySession() {
   // Show current UI based on session state
   const renderContent = () => {
     if (error) {
+      Logger.error(LogContext.STUDY, "Error rendering content", {
+        error,
+        component: "StudySession.tsx",
+        action: "renderContent"
+      })
       return (
         <div className="bg-gray-800 rounded-lg shadow p-6">
           <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded mb-4">
@@ -132,7 +170,11 @@ export default function StudySession() {
     }
     
     if (!sessionId) {
-      console.log('/components/study/StudySession.tsx line 134 sessionId :>> ', sessionId);
+      Logger.log(LogContext.STUDY, "No study session started. sessionId check failed.", {
+        sessionId,
+        component: "StudySession.tsx",
+        action: "renderContent"
+      });
       return <StudySessionSetup onStartSession={handleStartSession} />;
     }
     

@@ -16,7 +16,6 @@ export default async function FlashcardsPage() {
   
   // Server-side authentication check
   if (!user) {
-    console.log("User not authenticated (server-side), redirecting to sign in");
     redirect("/signin");
   }
   

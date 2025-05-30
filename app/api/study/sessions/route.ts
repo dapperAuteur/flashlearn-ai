@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     // Authenticate user
     const session = await getServerSession(authOptions);
     if (!session?.user) {
+      Logger.error(LogContext.STUDY, "User not authenticated")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -26,11 +27,13 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    console.log('/api/study/sessions POST line 23 body :>> ', body);
     const { listId, mode } = body;
-    console.log('/api/study/sessions POST line 25 listId :>> ', listId);
-    console.log('/api/study/sessions POST line 26 mode :>> ', mode); // BUG? mode is undefined when Regular study mode is chosen
 
+    await Logger.debug(LogContext.STUDY, 'POST /api/study/sessions retrieve listId and mode from request body', {
+      requestId,
+      listId,
+      mode
+    })
 
     let flashcards;
 
@@ -54,14 +57,32 @@ export async function POST(request: NextRequest) {
       const reviewResponse = await fetch(reviewUrl.toString(), { headers });
 
       if (!reviewResponse.ok) {
+        await Logger.error(LogContext.STUDY, 'Failed to fetch review queue', {
+          requestId,
+          status: reviewResponse.status,
+          statusText: reviewResponse.statusText
+        });
         throw new Error('Failed to fetch review queue');
       }
     
       const reviewData = await reviewResponse.json();
-      console.log('/api/study/sessions POST line 61 reviewData :>> ', reviewData);
+      await Logger.debug(LogContext.STUDY, 'Review queue data received', {
+        requestId,
+        reviewDataSummary: {
+          newCards: reviewData.summary?.newCards,
+          reviewCards: reviewData.summary?.reviewCards,
+          totalDue: reviewData.summary?.totalDue,
+          cardCount: reviewData.cards?.length
+        }
+      });
+      
       flashcards = reviewData.cards;
     } else {
       if (!listId) {
+        await Logger.error(LogContext.STUDY, "List ID, listId, is required for regular study mode", {
+          requestId,
+          metadata: { listId }
+        });
         return NextResponse.json({ error: "List ID is required for regular study mode" }, { status: 400 });
       }
 
@@ -73,28 +94,36 @@ export async function POST(request: NextRequest) {
         })
         .toArray();
 
-        console.log('/api/study/sessions POST line 77 flashcards[0] :>> ', flashcards[0]);
+        Logger.debug(LogContext.STUDY, 'Flashcards found for list', {
+          requestId,
+          listId,
+          flashcards: flashcards[0],
+          cardCount: flashcards.length
+        });
 
+        // Ensure the list belongs to the user
+        const list = await db.collection('lists').findOne({
+          _id: new ObjectId(listId),
+          userId: new ObjectId(session.user.id)
+        });
 
-      
-      // // Verify list exists and belongs to user
-      // const list = await db.collection('lists').findOne({
-      //   _id: new ObjectId(listId),
-      //   // userId: new ObjectId(session.user.id) // BUG userId is causing list to return null, fix it
-      // });
-
-      // console.log('/api/study/sessions POST line 61 list :>> ', list);
-      
-      // if (!list) {
-      //   return NextResponse.json({ error: "List not found" }, { status: 404 });
-      // }
-      
-      
-
-      
+        if (!list) {
+          await Logger.warning(LogContext.STUDY, "List not found or does not belong to user", {
+            requestId,
+            userId,
+            listId
+          });
+          return NextResponse.json({ error: "List not found or does not belong to you" }, { status: 404 });
+        }
     }
     
       if (!flashcards ||flashcards.length === 0) {
+        await Logger.warning(LogContext.STUDY, "No flashcards in this list", {
+          requestId,
+          userId,
+          listId
+        });
+
         return NextResponse.json({ error: "No flashcards in this list" }, { status: 404 });
       }
       
@@ -113,13 +142,10 @@ export async function POST(request: NextRequest) {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-
-      console.log('/api/study/sessions POST line 93 studySession :>> ', studySession);
       
       const result = await db.collection('studySessions').insertOne(studySession); // BUG
 
       const sessionId = result.insertedId.toString();
-      console.log('/api/study/sessions POST line 123 sessionId :>> ', sessionId);
       
       await Logger.info(LogContext.STUDY, "Study session created successfully", {
         requestId,

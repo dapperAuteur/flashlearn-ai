@@ -8,6 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import PasswordStrengthMeter from '@/components/ui/PasswordStrengthMeter';
+import { Logger, LogContext } from "@/lib/logging/client-logger";
 
 // Replace the existing signUpSchema with this enhanced version
 const signUpSchema = z.object({
@@ -42,7 +43,6 @@ export default function SignUpForm() {
     setError(null);
     
     try {
-      console.log("Registering user:", data.email);
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,7 +52,10 @@ export default function SignUpForm() {
           password: data.password
         })
       }).catch(error => {
-        console.error("Fetch error:", error);
+        Logger.error(LogContext.AUTH,"Fetch error:", {
+          error,
+          email: data.email
+        });
         throw new Error(`Network error: ${error.message}`);
       })
       
@@ -62,16 +65,23 @@ export default function SignUpForm() {
       const result = await response.json();
       
       if (!response.ok) {
-        console.log("Registration failed:", result);
+        Logger.error(LogContext.AUTH,"Fetch error:", {
+          error: result.error,
+          email: data.email,
+          result
+        });
         setError(result.error || "Registration failed");
         return;
       }
       
-      console.log("User registered successfully, redirecting to sign in");
       // Redirect to sign-in page with success message
       router.push("/signin?registered=true");
     } catch (error: any) {
-      console.error("Registration error:", error);
+      Logger.error(LogContext.AUTH,"Registration error:", {
+          error,
+          message: error.message,
+          email: data.email
+        });
       setError(`Error: ${error.message || "An unexpected error occurred"}`);
     } finally {
       setIsLoading(false);

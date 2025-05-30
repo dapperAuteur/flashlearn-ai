@@ -12,8 +12,14 @@ export async function GET(request: NextRequest) {
   const requestId = await Logger.info(LogContext.STUDY, 'Review queue request');
   
   try {
+    Logger.debug(LogContext.STUDY, 'Review queue request received', {
+      requestId
+    });
     const session = await getServerSession(authOptions);
     if (!session?.user) {
+      await Logger.error(LogContext.STUDY, 'Unauthorized access to review queue', {
+        requestId
+      });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -22,9 +28,6 @@ export async function GET(request: NextRequest) {
     const listId = searchParams.get('listId');
     const maxNew = parseInt(searchParams.get('maxNew') || '20');
     const maxReviews = parseInt(searchParams.get('maxReviews') || '100');
-
-    console.log('/api/study/review-queue 26 listId :>> ', listId);
-    console.log('/api/study/review-queue 27 request.url :>> ', request.url);
     
     const client = await clientPromise;
     const db = client.db();
@@ -32,9 +35,6 @@ export async function GET(request: NextRequest) {
     // Build query
     const query: any = { userId };
     if (listId) query.listId = listId;
-
-    console.log('/api/study/review-queue 36 query :>> ', query);
-    console.log('/api/study/review-queue 37 listId :>> ', listId);
     
     // Fetch flashcards
     const flashcards = await db.collection('flashcards')

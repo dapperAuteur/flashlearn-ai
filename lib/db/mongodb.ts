@@ -1,5 +1,6 @@
 // lib/db/mongodb.ts
 import { MongoClient } from 'mongodb';
+import { LogContext, Logger, LogLevel } from '../logging/logger';
 
 if (!process.env.MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable');
@@ -21,9 +22,9 @@ if (process.env.NODE_ENV === 'development') {
   if (!globalWithMongo._mongoClientPromise) {
     client = new MongoClient(uri, options);
     globalWithMongo._mongoClientPromise = client.connect();
-    console.log('Creating new MongoDB connection...');
+    Logger.info(LogContext.SYSTEM,'Creating new MongoDB connection...');
   } else {
-    console.log('Using existing MongoDB connection...');
+    Logger.info(LogContext.SYSTEM,'Using existing MongoDB connection...');
   }
   clientPromise = globalWithMongo._mongoClientPromise;
 } else {

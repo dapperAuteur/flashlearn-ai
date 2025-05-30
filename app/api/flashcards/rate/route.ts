@@ -12,11 +12,14 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
-    // Add at the top of POST function
-    console.log("Session check:", {
+    await Logger.debug(LogContext.FLASHCARD, "Rating request received", {
+      requestId,
       hasSession: !!session,
-      userId: session?.user?.id,
-      headers: Object.fromEntries(request.headers.entries())
+      userId,
+      request,
+      metadata: {
+        headers: Object.fromEntries(request.headers.entries())
+      }
     });
     
     if (!userId) {
