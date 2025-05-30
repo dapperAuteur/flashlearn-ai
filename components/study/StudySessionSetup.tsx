@@ -140,7 +140,7 @@ export default function StudySessionSetup() {
       const endpoint = '/api/study/sessions';
       const body = studyMode === 'review' 
         ? { mode: 'review', listId: selectedListId }
-        : { listId: selectedListId };
+        : { mode: 'regular', listId: selectedListId };
       
       Logger.log(LogContext.STUDY, "Setup starting study session", {
         mode: studyMode,
