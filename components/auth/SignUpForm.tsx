@@ -91,7 +91,7 @@ export default function SignUpForm() {
   return (
     <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
       <div className="text-center">
-        <h1 className="text-3xl font-bold">Create an Account</h1>
+        <h1 className="text-3xl text-gray-900 font-bold">Create an Account</h1>
         <p className="mt-2 text-gray-600">Join FlashLearn AI today</p>
       </div>
       
@@ -110,7 +110,7 @@ export default function SignUpForm() {
             id="name"
             type="text"
             {...register("name")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 mt-1 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="John Doe"
           />
           {errors.name && (
@@ -126,7 +126,7 @@ export default function SignUpForm() {
             id="email"
             type="email"
             {...register("email")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 mt-1 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="you@example.com"
           />
           {errors.email && (
@@ -142,7 +142,7 @@ export default function SignUpForm() {
             id="password"
             type="password"
             {...register("password")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-gray-900 p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
           {/* Add this password strength meter component */}
@@ -160,7 +160,7 @@ export default function SignUpForm() {
             id="confirmPassword"
             type="password"
             {...register("confirmPassword")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-gray-900 p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
           {errors.confirmPassword && (

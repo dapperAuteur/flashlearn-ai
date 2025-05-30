@@ -108,8 +108,8 @@ export default function SignInForm() {
   return (
     <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
       <div className="text-center">
-        <h1 className="text-3xl font-bold">Sign In</h1>
-        <p className="mt-2 text-gray-600">Welcome back to FlashLearn AI</p>
+        <h1 className="text-3xl text-gray-900 font-bold">Sign In</h1>
+        <p className="mt-2 text-gray-800">Welcome back to FlashLearn AI</p>
       </div>
       
       {error && (
@@ -120,14 +120,14 @@ export default function SignInForm() {
       
       <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-800">
             Email address
           </label>
           <input
             id="email"
             type="email"
             {...register("email")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 mt-1 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="you@example.com"
           />
           {errors.email && (
@@ -136,14 +136,14 @@ export default function SignInForm() {
         </div>
         
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-800">
             Password
           </label>
           <input
             id="password"
             type="password"
             {...register("password")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 mt-1 border text-gray-900 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
           {errors.password && (
