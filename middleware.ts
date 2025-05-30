@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 // import { getSession } from '@/lib/auth/session';
 import { getToken } from 'next-auth/jwt';
-import { LogContext, Logger } from './lib/logging/logger';
 
 const secret = process.env.NEXTAUTH_SECRET;
 
@@ -22,9 +21,9 @@ export async function middleware(request: NextRequest) {
 
   // Use getToken to decode the JWT from the request cookies
   const token = await getToken({ req: request, secret: secret });
-  Logger.debug(LogContext.SYSTEM, "Middleware: token", {
-    token
-  })
+  // Logger.log(LogContext.AUTH, "Middleware: token", {
+  //   token
+  // })
 
   // Check if the token exists (user is logged in)
   // Add checks for specific paths if needed (e.g., only protect /dashboard)
@@ -35,9 +34,9 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = publicPaths.includes(pathname);
 
   if (!token && !isPublicPath) {
-    Logger.debug(LogContext.SYSTEM, "Middleware: No token found for protected path, redirecting to signin.", {
-      pathname
-    })
+    // Logger.log(LogContext.AUTH, "Middleware: No token found for protected path, redirecting to signin.", {
+    //   pathname
+    // })
     const signInUrl = new URL('/signin', request.url);
     signInUrl.searchParams.set('callbackUrl', request.url); // Optional: redirect back after login
     return NextResponse.redirect(signInUrl);
