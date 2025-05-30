@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const body = await request.json();
     const { listId, mode } = body;
+    console.log('listId, mode :>> ', listId, mode);
 
     await Logger.debug(LogContext.STUDY, 'POST /api/study/sessions retrieve listId and mode from request body', {
       requestId,
@@ -117,57 +118,57 @@ export async function POST(request: NextRequest) {
         }
     }
     
-      if (!flashcards ||flashcards.length === 0) {
-        await Logger.warning(LogContext.STUDY, "No flashcards in this list", {
-          requestId,
-          userId,
-          listId
-        });
-
-        return NextResponse.json({ error: "No flashcards in this list" }, { status: 404 });
-      }
-      
-      // Create new study session
-      const studySession = {
-        userId,
-        listId: listId || null,
-        mode: mode || 'regular',
-        flashcardIds: flashcards.map((card: any) => card._id),
-        startTime: new Date(),
-        status: 'active',
-        totalCards: flashcards.length,
-        correctCount: 0,
-        incorrectCount: 0,
-        completedCards: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      const result = await db.collection('studySessions').insertOne(studySession); // BUG
-
-      const sessionId = result.insertedId.toString();
-      
-      await Logger.info(LogContext.STUDY, "Study session created successfully", {
+    if (!flashcards ||flashcards.length === 0) {
+      await Logger.warning(LogContext.STUDY, "No flashcards in this list", {
         requestId,
         userId,
-        mode,
-        sessionId,
-        metadata: { sessionId: result.insertedId.toString(), cardCount: flashcards.length }
+        listId
       });
+
+      return NextResponse.json({ error: "No flashcards in this list" }, { status: 404 });
+    }
       
-      return NextResponse.json({
-        sessionId: result.insertedId.toString(),
-        flashcards: flashcards.map((card: any) => ({
-          id: card._id.toString(),
-          _id: card._id.toString(),
-          front: card.front,
-          back: card.back,
-          frontImage: card.frontImage,
-          backImage: card.backImage,
-          stage: card.stage || 0,
-          nextReviewDate: card.nextReviewDate || null,
-        }))
-      });
+    // Create new study session
+    const studySession = {
+      userId,
+      listId: listId || null,
+      mode: mode || 'regular',
+      flashcardIds: flashcards.map((card: any) => card._id),
+      startTime: new Date(),
+      status: 'active',
+      totalCards: flashcards.length,
+      correctCount: 0,
+      incorrectCount: 0,
+      completedCards: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+      
+    const result = await db.collection('studySessions').insertOne(studySession); // BUG
+
+    const sessionId = result.insertedId.toString();
+    
+    await Logger.info(LogContext.STUDY, "Study session created successfully", {
+      requestId,
+      userId,
+      mode,
+      sessionId,
+      metadata: { sessionId: result.insertedId.toString(), cardCount: flashcards.length }
+    });
+    
+    return NextResponse.json({
+      sessionId: result.insertedId.toString(),
+      flashcards: flashcards.map((card: any) => ({
+        id: card._id.toString(),
+        _id: card._id.toString(),
+        front: card.front,
+        back: card.back,
+        frontImage: card.frontImage,
+        backImage: card.backImage,
+        stage: card.stage || 0,
+        nextReviewDate: card.nextReviewDate || null,
+      }))
+    });
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
