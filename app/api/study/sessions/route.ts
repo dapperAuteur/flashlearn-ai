@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     const sessionId = result.insertedId.toString();
     
-    await Logger.info(LogContext.STUDY, "Study session created successfully 163", {
+    await Logger.info(LogContext.STUDY, "Study session created successfully", {
       requestId,
       userId,
       mode,
