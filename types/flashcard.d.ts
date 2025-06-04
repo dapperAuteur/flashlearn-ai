@@ -39,8 +39,8 @@ export interface Flashcard {
 }
 
 export interface DueCard {
-  _id: string;
-  listId: string;
+  _id: string | ObjectId;
+  listId: string | ObjectId;
   front: string;
   back: string;
   stage: number;
