@@ -32,7 +32,7 @@ export default function StudySessionSetup() {
       totalCards: dueData.cards?.length || 0,
       summary: dueData.summary,
       lists: lists.length,
-      listName: lists[0].name
+      listName: lists[0]?.name
     });
 
     if (!dueData.cards || dueData.cards.length === 0) return [];
@@ -120,7 +120,8 @@ export default function StudySessionSetup() {
   const handleStartSession = async () => {
     Logger.log(LogContext.STUDY, "Starting study session", {
       studyMode,
-      selectedListId
+      selectedListId,
+      dueCards
     });
 
     if (studyMode === 'regular' && !selectedListId) {
@@ -139,7 +140,11 @@ export default function StudySessionSetup() {
 
       const endpoint = '/api/study/sessions';
       const body = studyMode === 'review' 
-        ? { mode: 'review', listId: selectedListId }
+        ? {
+          mode: 'review',
+          listId: selectedListId,
+          dueCards: dueCards
+        }
         : { mode: 'regular', listId: selectedListId };
       
       Logger.log(LogContext.STUDY, "Setup starting study session", {

@@ -28,7 +28,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
   const [error, setError] = useState<string | null>(null);
   const [sessionComplete, setSessionComplete] = useState(false);
   const [results, setResults] = useState({ correct: 0, total: 0 });
-  const [showQualityButtons, setShowQualityButtons] = useState(false);
+  const [showQualityButtons, setShowQualityButtons] = useState(false);  
   
   // Time tracking
   const [sessionStartTime] = useState(Date.now());
@@ -78,7 +78,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
       const response = await fetch(`/api/study/sessions/${sessionId}`);
       if (!response.ok) throw new Error('Failed to load session');
       
-      const data = await response.json();
+      const data = await response.json(); // BUG returns entire list instead of review list
       Logger.log(LogContext.STUDY, "Session loaded", {
         sessionId,
         isReviewMode,
@@ -201,7 +201,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
   }
 
   const currentCard = flashcards[currentCardIndex];
-  const isNewCard = currentCard.stage === 0;
+  const isNewCard = currentCard?.stage === 0;
 
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6">
@@ -221,7 +221,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
             {showAnswer ? 'Answer:' : 'Question:'}
           </h3>
           <p className="text-lg">
-            {showAnswer ? currentCard.back : currentCard.front}
+            {showAnswer ? currentCard.back : currentCard?.front}
           </p>
         </div>
 
