@@ -28,3 +28,15 @@ export interface StudySession {
   createdAt: Date;
   updatedAt: Date;
 }
+
+interface IncompleteSession {
+  _id?: string | ObjectId;
+  userId: string | ObjectId;
+  listId: string | ObjectId;
+  listName: string;
+  mode: 'regular' | 'review';
+  startTime: string;
+  cardsCompleted: number;
+  totalCards: number;
+  createdAt: string;
+}
