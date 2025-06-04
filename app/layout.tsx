@@ -1,11 +1,11 @@
 // app/layout.tsx
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google"; // was causing errors in server
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 import MainLayout from "@/components/layout/MainLayout";
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] }); // was causing errors in server
 
 export const metadata: Metadata = {
   title: "FlashLearn AI",
@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <AuthProvider>
           <MainLayout>
             {children}
