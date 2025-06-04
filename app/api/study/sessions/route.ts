@@ -23,18 +23,17 @@ export async function POST(request: NextRequest) {
 
     // Get user ID
 
-    const userId = new ObjectId(session.user.id);
+    const userId = session.user.id;
 
     // Parse request body
     const body = await request.json();
     const { listId, mode } = body;
-    console.log('listId, mode :>> ', listId, mode);
 
     await Logger.debug(LogContext.STUDY, 'POST /api/study/sessions retrieve listId and mode from request body', {
       requestId,
       listId,
       mode
-    })
+    }) // doesn't log values for requestId, listId, mode
 
     let flashcards;
 
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
       flashcards = await db.collection('flashcards')
         .find({
           listId,
-          // userId // is it a BUG: userId is causing list to return null, fix it
+          userId // is it a BUG: userId is causing list to return null, fix it
         })
         .toArray();
 
@@ -100,19 +99,21 @@ export async function POST(request: NextRequest) {
           listId,
           flashcards: flashcards[0],
           cardCount: flashcards.length
-        });
+        }); // doesn't log values for requestId, listId, flashcards, cardcount
 
         // Ensure the list belongs to the user
         const list = await db.collection('lists').findOne({
           _id: new ObjectId(listId),
-          userId: new ObjectId(session.user.id)
+          // userId: new ObjectId(session.user.id),
+          userId: session.user.id
         });
 
         if (!list) {
           await Logger.warning(LogContext.STUDY, "List not found or does not belong to user", {
             requestId,
             userId,
-            listId
+            listId,
+            session
           });
           return NextResponse.json({ error: "List not found or does not belong to you" }, { status: 404 });
         }
@@ -148,14 +149,13 @@ export async function POST(request: NextRequest) {
 
     const sessionId = result.insertedId.toString();
     
-    await Logger.info(LogContext.STUDY, "Study session created successfully", {
+    await Logger.info(LogContext.STUDY, "Study session created successfully 163", {
       requestId,
       userId,
       mode,
       sessionId,
       metadata: { sessionId: result.insertedId.toString(), cardCount: flashcards.length }
     });
-    
     return NextResponse.json({
       sessionId: result.insertedId.toString(),
       flashcards: flashcards.map((card: any) => ({

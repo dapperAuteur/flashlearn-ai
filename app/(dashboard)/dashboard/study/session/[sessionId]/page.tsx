@@ -15,10 +15,10 @@ interface StudyPageProps {
 export default async function StudyPage({ params }: StudyPageProps) {
   const { sessionId } = await params;
   
-  Logger.log(LogContext.STUDY, "StudyPage sessionId", {
-    sessionId,
-    params
-  })
+  // Logger.log(LogContext.STUDY, "StudyPage sessionId", {
+  //   sessionId,
+  //   params
+  // })
   
   return (
     <div className="min-h-screen bg-gray-800">

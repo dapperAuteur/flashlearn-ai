@@ -30,7 +30,7 @@ export async function GET(
 
     const studySession = await db.collection('studySessions').findOne({
       _id: new ObjectId(sessionId),
-      userId: new ObjectId(session.user.id)
+      userId: session.user.id
     });
 
     if (!studySession) {
@@ -43,17 +43,44 @@ export async function GET(
         return NextResponse.json({ error: "Study session is incomplete (missing listId)" }, { status: 500 });
     }
 
-    const flashcards = await db.collection('flashcards').find({
-      listId: new ObjectId(studySession.listId)
-    }).project({ front: 1, back: 1, frontImage: 1, backImage: 1 }).toArray(); // Ensure projection if needed
+    const flashcards = await db.collection('flashcards')
+      .find({
+        listId: studySession.listId
+      })
+      .project({
+        front: 1,
+        back: 1,
+        frontImage: 1,
+        backImage: 1
+      })
+      .toArray(); // Ensure projection if needed
 
-    const formattedFlashcards = flashcards.map(fc => ({
-      id: fc._id.toString(),
-      front: fc.front,
-      back: fc.back,
-      frontImage: fc.frontImage,
-      backImage: fc.backImage,
-    }));
+    const studySessionIdSet = new Set(studySession.flashcardIds);
+
+    let formattedFlashcards;
+    if (studySession.mode === 'review') {
+      const filteredFlashcards = flashcards.filter(fc => {
+        return studySessionIdSet.has(fc._id.toString());
+      }); // creates bug
+      formattedFlashcards = filteredFlashcards.map(fc => ({
+        id: fc._id.toString(),
+        front: fc.front,
+        back: fc.back,
+        frontImage: fc.frontImage,
+        backImage: fc.backImage,
+      }));
+    } else {
+      formattedFlashcards = flashcards.map(fc => ({
+        id: fc._id.toString(),
+        front: fc.front,
+        back: fc.back,
+        frontImage: fc.frontImage,
+        backImage: fc.backImage,
+      }));
+    }
+    
+
+    
 
     await Logger.debug(LogContext.STUDY, "Study session details retrieved successfully", {
       requestId,
