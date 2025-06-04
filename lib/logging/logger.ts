@@ -151,20 +151,64 @@ export class Logger {
   }
 
   // Convenience methods for different log levels
-  static async debug(context: LogContext, message: string, options = {}): Promise<string | null> {
-    return this.log({ context, level: LogLevel.DEBUG, message, ...options });
+  static async debug(
+    context: LogContext,
+    message: string, 
+    metadata: any = {},
+    options: { userId?: string; requestId?: string; request?: NextRequest } = {}
+  ): Promise<string | null> {
+    return this.log({
+      context,
+      level: LogLevel.DEBUG,
+      message,
+      metadata,
+      ...options
+    });
   }
 
-  static async info(context: LogContext, message: string, options = {}): Promise<string | null> {
-    return this.log({ context, level: LogLevel.INFO, message, ...options });
+  static async info(
+    context: LogContext, 
+    message: string, 
+    metadata: any = {}, 
+    options: { userId?: string; requestId?: string; request?: NextRequest } = {}
+  ): Promise<string | null> {
+    return this.log({ 
+      context, 
+      level: LogLevel.INFO, 
+      message, 
+      metadata,
+      ...options 
+    });
   }
 
-  static async warning(context: LogContext, message: string, options = {}): Promise<string | null> {
-    return this.log({ context, level: LogLevel.WARNING, message, ...options });
+  static async warning(
+    context: LogContext,
+    message: string, 
+    metadata: any = {}, 
+    options: { userId?: string; requestId?: string; request?: NextRequest } = {}
+  ): Promise<string | null> {
+    return this.log({
+      context,
+      level: LogLevel.WARNING,
+      message,
+      metadata,
+      ...options
+    });
   }
 
-  static async error(context: LogContext, message: string, options = {}): Promise<string | null> {
-    return this.log({ context, level: LogLevel.ERROR, message, ...options });
+  static async error(
+    context: LogContext,
+    message: string, 
+    metadata: any = {}, 
+    options: { userId?: string; requestId?: string; request?: NextRequest } = {}
+  ): Promise<string | null> {
+    return this.log({
+      context,
+      level: LogLevel.ERROR,
+      message,
+      metadata,
+      ...options
+    });
   }
 }
 
