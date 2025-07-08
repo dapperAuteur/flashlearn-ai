@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/study/review-queue/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     // Interleave cards for optimal learning
     const orderedCards = ReviewQueueService.interleaveCards(queue);
     
-    await Logger.info(LogContext.STUDY, 'Review queue built successfully: requestId, userId, listId, metadata', {
+    await Logger.info(LogContext.STUDY, 'ROUTE: Review queue built successfully: requestId, userId, listId, metadata', {
       requestId,
       userId,
       listId,
