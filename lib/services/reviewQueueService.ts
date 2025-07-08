@@ -58,7 +58,7 @@ export class ReviewQueueService {
     const limitedNewCards = newCards.slice(0, finalConfig.maxNewCardsPerDay);
     const limitedReviews = dueReviews.slice(0, finalConfig.maxReviewsPerDay);
     
-    Logger.info(LogContext.STUDY, 'Review queue built', {
+    Logger.info(LogContext.STUDY, 'SERVICE:Review queue built', {
       newCardsAvailable: newCards.length,
       newCardsIncluded: limitedNewCards.length,
       reviewsDue: dueReviews.length,
