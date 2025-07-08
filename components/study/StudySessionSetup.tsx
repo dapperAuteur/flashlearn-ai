@@ -1,4 +1,3 @@
-// components/study/StudySessionSetup.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,6 +6,7 @@ import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import CsvImportModal from '../flashcards/CsvImportModal';
 import { DueCard, DueData, ListWithDueCards } from '@/types/flashcard';
+import { IncompleteSession } from '@/types/studySession';
 
 export default function StudySessionSetup() {
   const router = useRouter();
@@ -24,7 +24,9 @@ export default function StudySessionSetup() {
       reviewCards: 0,
       totalDue: 0
     }
-  })
+  });
+  const [incompleteSessions, setIncompleteSessions] = useState<IncompleteSession[] | null>([]);
+
 
   // Process dueData to get lists with due cards and their counts
   const getListsWithDueCards = (): ListWithDueCards[] => {
@@ -79,9 +81,10 @@ export default function StudySessionSetup() {
   // Fetch user's lists and due cards
   const fetchData = async () => {
     try {
-      Logger.log(LogContext.STUDY, "Fetching lists and due cards data", {
+      Logger.log(LogContext.STUDY, "Fetching lists, due cards, and incomplete sessions", {
         studyMode,
-        selectedListId
+        selectedListId,
+        incompleteSessions
       });
       
       // Always fetch all lists first
