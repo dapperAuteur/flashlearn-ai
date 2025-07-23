@@ -8,12 +8,12 @@ export interface Flashcard {
   /**
    * The term or question on the front of the card.
    */
-  term: string;
+  front: string;
 
   /**
    * The definition or answer on the back of the card.
    */
-  definition: string;
+  back: string;
 
   // You could add more shared properties here later if needed, e.g.:
   // id?: string; // Optional database ID

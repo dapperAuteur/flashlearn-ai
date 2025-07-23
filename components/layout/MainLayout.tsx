@@ -39,7 +39,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   Dashboard
                 </Link>
                 <Link 
-                  href="/flashcards" 
+                  href="#" 
                   className={`inline-flex items-center px-1 pt-1 border-b-2 ${
                     pathname === '/flashcards' 
                       ? 'border-blue-500 text-gray-900 dark:text-gray-100' 
@@ -59,9 +59,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   Generate
                 </Link>
                 <Link 
-                  href="/study" 
+                  href="/dashboard/study" 
                   className={`inline-flex items-center px-1 pt-1 border-b-2 ${
-                    pathname === '/study' 
+                    pathname === '/dashboard/study' 
                       ? 'border-blue-500 text-gray-900 dark:text-gray-100' 
                       : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}

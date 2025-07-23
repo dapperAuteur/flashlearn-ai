@@ -79,7 +79,7 @@ export default function DashboardPage() {
             title="Study Sessions"
             value={stats.studySessions}
             icon={<ClockIcon className="h-6 w-6" />}
-            linkHref="/study"
+            linkHref="/dashboard/study"
             linkText="Start studying"
             color="green"
           />
@@ -122,7 +122,7 @@ export default function DashboardPage() {
             Import Flashcards
           </Link>
           <Link
-            href="/study"
+            href="/dashboard/study"
             className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Start Studying

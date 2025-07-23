@@ -88,7 +88,7 @@ export default function SignInForm() {
     }
       
       console.log("User signed in successfully, redirecting to dashboard");
-      router.push("/dashboard");
+      router.push("/generate");
       router.refresh(); // Refresh the page to update the session
     } catch (error: any) {
       console.error("Sign in error:", error);
