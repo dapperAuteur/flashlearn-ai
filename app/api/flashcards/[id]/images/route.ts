@@ -9,11 +9,17 @@ import { Logger, LogContext } from '@/lib/logging/logger';
 import mongodb from '@/lib/db/mongodb';
 const { Readable } = await import('stream')
 
+type RouteParams = {
+  id: string;
+}
+
 // Handle uploading an image for a flashcard (both front and back)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  // { params }: { params: { id: string } }
+  context: { params: RouteParams }
 ) {
+  const { params } = context;
   const resolvedParams = await params;
   const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard image upload request");
   
