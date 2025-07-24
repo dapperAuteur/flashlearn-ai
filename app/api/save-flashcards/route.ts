@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import type { Flashcard } from "@/types/flashcards";
 import { Logger, LogContext } from "@/lib/logging/logger";

@@ -39,7 +39,8 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
       });
       setPreviewData(preview);
     } catch (error) {
-      setError('Could not preview file. Please check the format.');
+      Logger.error(LogContext.FLASHCARD, `Could not preview file. Please check the format. Error: ${error}`);
+      setError(`Could not preview file. Please check the format.`);
     }
   };
 

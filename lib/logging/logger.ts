@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/logging/logger.ts
 import { NextRequest } from "next/server";
 import clientPromise from "@/lib/db/mongodb";

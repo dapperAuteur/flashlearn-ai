@@ -1,7 +1,6 @@
-// app/(auth)/error/page.tsx
 "use client";
 
-import { Metadata } from "next";
+// import { Metadata } from "next";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
@@ -51,7 +50,7 @@ export default function ErrorPage() {
       const data = await response.json();
       setMessage(data.message || "Verification email has been sent if the account exists.");
     } catch (error) {
-      setMessage("Failed to resend verification email. Please try again later.");
+      setMessage(`Failed to resend verification email. Please try again later. Error: ${error}`);
     } finally {
       setIsSubmitting(false);
     }

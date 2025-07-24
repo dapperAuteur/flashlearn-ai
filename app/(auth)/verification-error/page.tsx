@@ -15,7 +15,7 @@ export default function VerificationErrorPage() {
           <h1 className="text-3xl font-bold text-red-600">Verification Error</h1>
           <div className="mt-6">
             <p className="text-gray-600 mb-4">
-              We couldn't verify your email address. The verification link may be invalid or expired.
+              We couldn&apos;t verify your email address. The verification link may be invalid or expired.
             </p>
             <p className="text-gray-600">
               Please try signing in again. You can request a new verification email from there.

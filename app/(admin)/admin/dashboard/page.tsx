@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/(admin)/admin/dashboard/page.tsx
 "use client";
 

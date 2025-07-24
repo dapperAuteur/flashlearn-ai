@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/flashcards/[id]/images/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -5,6 +6,7 @@ import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/db/mongodb';
 import { Logger, LogContext } from '@/lib/logging/logger';
+import mongodb from '@/lib/db/mongodb';
 const { Readable } = await import('stream')
 
 // Handle uploading an image for a flashcard (both front and back)

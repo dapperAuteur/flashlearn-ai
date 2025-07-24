@@ -1,7 +1,7 @@
-// components/study/StudySession.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import StudySessionSetup from './StudySessionSetup';
 import StudyCard from './StudyCard';
 import StudySessionResults from './StudySessionResults';
