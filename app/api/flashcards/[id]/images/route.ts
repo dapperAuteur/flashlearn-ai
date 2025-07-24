@@ -7,17 +7,23 @@ import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/db/mongodb';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import mongodb from '@/lib/db/mongodb';
+// import { Route } from 'next';
 const { Readable } = await import('stream')
 
-type RouteParams = {
-  id: string;
+// type RouteParams = {
+//   id: string;
+// }
+interface RouteContext {
+  params: {
+    id: string;
+  };
 }
 
 // Handle uploading an image for a flashcard (both front and back)
 export async function POST(
   request: NextRequest,
   // { params }: { params: { id: string } }
-  context: { params: RouteParams }
+  context: RouteContext
 ) {
   const { params } = context;
   const resolvedParams = await params;
