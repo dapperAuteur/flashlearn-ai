@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // /* eslint-disable @typescript-eslint/no-explicit-any */
 // // app/api/flashcards/[id]/images/route.ts
 
-// import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 // import { getServerSession } from 'next-auth/next';
 // import { ObjectId } from 'mongodb';
 // import clientPromise from '@/lib/db/mongodb';
@@ -19,6 +20,9 @@
 //   };
 // }
 
+export async function POST(request: NextRequest){
+  return
+}
 // // Handle uploading an image for a flashcard (both front and back)
 // export async function POST(
 //   request: NextRequest,
