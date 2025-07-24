@@ -71,7 +71,7 @@ export default async function AnalyticsPage() {
             Learning Progress
           </h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Track how well you're learning each flashcard.
+            Track how well you&apos;re learning each flashcard.
           </p>
         </div>
         <div className="p-6 text-center">
