@@ -18,133 +18,133 @@ interface RouteContext {
     id: string;
   };
 }
-
+// REFACTOR TO USE CLOUDINARY API
 // export async function POST(request: NextRequest){
 //   return
 // }
 // Handle uploading an image for a flashcard (both front and back)
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> },
+// export async function POST(
+//   request: NextRequest,
+//   context: { params: Promise<{ id: string }> },
   // context: RouteContext
-) {
+// ) {
   // const { params } = context;
-  const params = await context;
-  const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard image upload request",{
-    params: params
-  });
+  // const params = await context;
+  // const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard image upload request",{
+  //   params: params
+  // });
   
-  try {
+  // try {
     // Validate session
-    const session = await getServerSession();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const session = await getServerSession();
+    // if (!session?.user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
     
     // Get the flashcard ID from the URL parameter
-    const flashcardId = params;
+    // const flashcardId = params;
     
     // Get form data with the image and side info
-    const formData = await request.formData();
-    const file = formData.get('file') as File | null;
-    const side = formData.get('side') as string | null;
+    // const formData = await request.formData();
+    // const file = formData.get('file') as File | null;
+    // const side = formData.get('side') as string | null;
     
     // Validate inputs
-    if (!file) {
-      await Logger.warning(LogContext.FLASHCARD, "No file provided for upload", { requestId });
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    }
+    // if (!file) {
+    //   await Logger.warning(LogContext.FLASHCARD, "No file provided for upload", { requestId });
+    //   return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    // }
     
-    if (!side || (side !== 'front' && side !== 'back')) {
-      await Logger.warning(LogContext.FLASHCARD, "Invalid side specified for image", { requestId });
-      return NextResponse.json({ error: "Side must be 'front' or 'back'" }, { status: 400 });
-    }
+    // if (!side || (side !== 'front' && side !== 'back')) {
+    //   await Logger.warning(LogContext.FLASHCARD, "Invalid side specified for image", { requestId });
+    //   return NextResponse.json({ error: "Side must be 'front' or 'back'" }, { status: 400 });
+    // }
     
     // Check if flashcard exists and belongs to user
-    const client = await clientPromise;
-    const db = client.db();
+    // const client = await clientPromise;
+    // const db = client.db();
     
-    const flashcard = await db.collection('flashcards').findOne({
-      _id: flashcardId,
-      userId: session.user.id
-    });
+    // const flashcard = await db.collection('flashcards').findOne({
+    //   _id: flashcardId,
+    //   userId: session.user.id
+    // });
     
-    if (!flashcard) {
-      await Logger.warning(LogContext.FLASHCARD, "Flashcard not found or access denied", { requestId });
-      return NextResponse.json({ error: "Flashcard not found" }, { status: 404 });
-    }
+    // if (!flashcard) {
+    //   await Logger.warning(LogContext.FLASHCARD, "Flashcard not found or access denied", { requestId });
+    //   return NextResponse.json({ error: "Flashcard not found" }, { status: 404 });
+    // }
     
     // Read the file data
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // const bytes = await file.arrayBuffer();
+    // const buffer = Buffer.from(bytes);
     
     // Create GridFS bucket
-    const bucket = new mongodb.GridFSBucket(db, {
-      bucketName: 'flashcardImages'
-    });
+    // const bucket = new mongodb.GridFSBucket(db, {
+    //   bucketName: 'flashcardImages'
+    // });
     
     // Create a file upload stream
-    const uploadStream = bucket.openUploadStream(file.name, {
-      contentType: file.type,
-      metadata: {
-        flashcardId,
-        side,
-        userId: session.user.id,
-        originalName: file.name
-      }
-    });
+    // const uploadStream = bucket.openUploadStream(file.name, {
+    //   contentType: file.type,
+    //   metadata: {
+    //     flashcardId,
+    //     side,
+    //     userId: session.user.id,
+    //     originalName: file.name
+    //   }
+    // });
     
     // Convert buffer to stream and pipe to upload stream
-    const readableStream = new Readable();
-    readableStream.push(buffer);
-    readableStream.push(null);
+    // const readableStream = new Readable();
+    // readableStream.push(buffer);
+    // readableStream.push(null);
     
     // Wait for the upload to complete
-    await new Promise<void>((resolve, reject) => {
-      readableStream.pipe(uploadStream)
-        .on('finish', () => resolve())
-        .on('error', (error: any) => reject(error));
-    });
+    // await new Promise<void>((resolve, reject) => {
+    //   readableStream.pipe(uploadStream)
+    //     .on('finish', () => resolve())
+    //     .on('error', (error: any) => reject(error));
+    // });
     
     // Get the file ID
-    const fileId = uploadStream.id.toString();
+    // const fileId = uploadStream.id.toString();
     
     // Update the flashcard with the image reference
-    await db.collection('flashcards').updateOne(
-      { _id: flashcardId },
-      { 
-        $set: { 
-          [`${side}Image`]: fileId,
-          updatedAt: new Date()
-        } 
-      }
-    );
+    // await db.collection('flashcards').updateOne(
+    //   { _id: flashcardId },
+    //   { 
+    //     $set: { 
+    //       [`${side}Image`]: fileId,
+    //       updatedAt: new Date()
+    //     } 
+    //   }
+    // );
     
-    await Logger.info(LogContext.FLASHCARD, "Image uploaded successfully", {
-      requestId,
-      metadata: { fileId, flashcardId, side }
-    });
+    // await Logger.info(LogContext.FLASHCARD, "Image uploaded successfully", {
+    //   requestId,
+    //   metadata: { fileId, flashcardId, side }
+    // });
     
     // Return success response
-    return NextResponse.json({
-      fileId,
-      url: `/api/images/${fileId}`,
-      fileName: file.name,
-      mimeType: file.type,
-      size: file.size
-    });
+//     return NextResponse.json({
+//       fileId,
+//       url: `/api/images/${fileId}`,
+//       fileName: file.name,
+//       mimeType: file.type,
+//       size: file.size
+//     });
     
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+//   } catch (error) {
+//     const errorMessage = error instanceof Error ? error.message : String(error);
     
-    await Logger.error(LogContext.FLASHCARD, `Error uploading image: ${errorMessage}`, {
-      requestId,
-      metadata: { error }
-    });
+//     await Logger.error(LogContext.FLASHCARD, `Error uploading image: ${errorMessage}`, {
+//       requestId,
+//       metadata: { error }
+//     });
     
-    return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
-  }
-}
+//     return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
+//   }
+// }
 
 // Delete an image from a flashcard
 // Delete an image from a flashcard
@@ -199,11 +199,11 @@ export async function DELETE(
     }
     
     // 3. Delete from GridFS
-    const bucket = new mongodb.GridFSBucket(db, {
-      bucketName: 'flashcardImages'
-    });
+    // const bucket = new mongodb.GridFSBucket(db, {
+    //   bucketName: 'flashcardImages'
+    // });
     
-    await bucket.delete(new ObjectId(fileId));
+    // await bucket.delete(new ObjectId(fileId));
     
     // 4. Update the flashcard document
     await db.collection('flashcards').updateOne(
