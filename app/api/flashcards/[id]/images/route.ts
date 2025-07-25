@@ -42,7 +42,7 @@ export async function POST(
     }
     
     // Get the flashcard ID from the URL parameter
-    const flashcardId = params?.id;
+    const flashcardId = params;
     
     // Get form data with the image and side info
     const formData = await request.formData();
@@ -65,7 +65,7 @@ export async function POST(
     const db = client.db();
     
     const flashcard = await db.collection('flashcards').findOne({
-      _id: new ObjectId(flashcardId),
+      _id: flashcardId,
       userId: session.user.id
     });
     
@@ -111,7 +111,7 @@ export async function POST(
     
     // Update the flashcard with the image reference
     await db.collection('flashcards').updateOne(
-      { _id: new ObjectId(flashcardId) },
+      { _id: flashcardId },
       { 
         $set: { 
           [`${side}Image`]: fileId,
@@ -163,7 +163,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
-    const flashcardId = params?.id;
+    const flashcardId = params;
     const searchParams = new URL(request.url).searchParams;
     const side = searchParams.get('side');
     
@@ -177,7 +177,7 @@ export async function DELETE(
     const db = client.db();
     
     const flashcard = await db.collection('flashcards').findOne({
-      _id: new ObjectId(flashcardId),
+      _id: flashcardId,
       userId: session.user.id
     });
     
@@ -207,7 +207,7 @@ export async function DELETE(
     
     // 4. Update the flashcard document
     await db.collection('flashcards').updateOne(
-      { _id: new ObjectId(flashcardId) },
+      { _id: flashcardId },
       { 
         $unset: { [imageField]: "" },
         $set: { updatedAt: new Date() }
@@ -232,7 +232,7 @@ export async function DELETE(
       requestId,
       metadata: { 
         error,
-        flashcardId: params?.id,
+        flashcardId: params,
         stack: error instanceof Error ? error.stack : undefined
       }
     });

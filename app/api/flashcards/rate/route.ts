@@ -4,7 +4,7 @@ import { Logger, LogContext } from "@/lib/logging/logger";
 import { AnalyticsLogger } from "@/lib/logging/logger";
 import { getServerSession } from "next-auth/next";
 import { ObjectId } from "mongodb";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth/auth";
 
 export async function POST(request: NextRequest) {
   const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard rating submission", { request });
