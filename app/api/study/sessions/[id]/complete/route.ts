@@ -8,9 +8,9 @@ import { authOptions } from '@/lib/auth/auth';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise <{ id: string }> }
+  context: { params: Promise <{ id: string }> }
 ) {
-  const resolvedParams = await params;
+  const params = await context;
   const requestId = await Logger.info(LogContext.STUDY, "Complete study session request");
 
   try {
@@ -20,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = resolvedParams.id;
+    const sessionId = params?.id;
     
     // Connect to database
     const client = await clientPromise;

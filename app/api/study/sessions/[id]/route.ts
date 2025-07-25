@@ -3,15 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/db/mongodb';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/auth';
 import { Logger, LogContext } from '@/lib/logging/logger';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const resolvedParams = await params;
-  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { sessionIdFromParams: resolvedParams.id });
+  const params = await context;
+  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { sessionIdFromParams: params?.id });
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -19,7 +19,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = resolvedParams.id;
+    const sessionId = params?.id;
     if (!ObjectId.isValid(sessionId)) {
       await Logger.warn(LogContext.STUDY, "Invalid session ID format for get study session", { requestId, sessionId });
       return NextResponse.json({ error: "Invalid session ID format" }, { status: 400 });
