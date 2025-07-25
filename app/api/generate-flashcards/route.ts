@@ -5,7 +5,7 @@ import { Logger, LogContext } from "@/lib/logging/logger";
 import { AnalyticsLogger } from "@/lib/logging/logger";
 import { getServerSession } from "next-auth/next";
 import clientPromise from "@/lib/db/mongodb";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth/auth";
 
 const genAI = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 

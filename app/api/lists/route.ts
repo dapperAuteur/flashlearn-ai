@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth/next';
 import clientPromise from '@/lib/db/mongodb';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { AnalyticsLogger } from '@/lib/logging/logger';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/auth';
 
 export async function GET(request: NextRequest) {
   const requestId = await Logger.info(
