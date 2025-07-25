@@ -8,7 +8,7 @@ import { Logger, LogContext } from '@/lib/logging/logger';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const params = await context;
   const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { sessionIdFromParams: params?.id });
