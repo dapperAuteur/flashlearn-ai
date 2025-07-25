@@ -4,13 +4,13 @@ import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/db/mongodb';
 import { Logger, LogContext } from '@/lib/logging/logger';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/auth';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const resolvedParams = await params;
+  const params = await context;
   const requestId = await Logger.info(LogContext.STUDY, "Record card result request");
 
   try {
@@ -20,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = await resolvedParams.id;
+    const sessionId = await params?.id;
     const { flashcardId, isCorrect, timeSeconds } = await request.json();
     
     // Validate input
