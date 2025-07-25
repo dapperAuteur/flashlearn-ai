@@ -20,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = params?.id;
+    const sessionId = params;
     
     // Connect to database
     const client = await clientPromise;
@@ -28,7 +28,7 @@ export async function POST(
     
     // Verify study session exists and belongs to user
     const studySession = await db.collection('studySessions').findOne({
-      _id: new ObjectId(sessionId),
+      _id: sessionId,
       userId: new ObjectId(session.user.id)
     });
     
@@ -38,7 +38,7 @@ export async function POST(
     
     // Mark session as complete
     await db.collection('studySessions').updateOne(
-      { _id: new ObjectId(sessionId) },
+      { _id: sessionId },
       { 
         $set: { 
           endTime: new Date(),
@@ -49,7 +49,7 @@ export async function POST(
     
     // Get updated session with stats
     const updatedSession = await db.collection('studySessions').findOne({
-      _id: new ObjectId(sessionId)
+      _id: sessionId
     });
     
     // Calculate stats
