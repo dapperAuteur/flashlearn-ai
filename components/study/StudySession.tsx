@@ -5,15 +5,8 @@ import { useState } from 'react';
 import StudySessionSetup from './StudySessionSetup';
 import StudyCard from './StudyCard';
 import StudySessionResults from './StudySessionResults';
+import { Flashcard } from '@/types/flashcard';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-
-type Flashcard = {
-  id: string;
-  front: string;
-  back: string;
-  frontImage?: string;
-  backImage?: string;
-};
 
 export default function StudySession() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -39,8 +32,15 @@ export default function StudySession() {
   };
 
   // Handle flashcard result (correct/incorrect)
-  const handleCardResult = async (flashcardId: string, isCorrect: boolean, timeSeconds: number) => {
+  const handleCardResult = async (isCorrect: boolean, timeSeconds: number) => {
     if (!sessionId) return;
+
+    const currentCard = flashcards[currentIndex];
+    if (!currentCard?._id) {
+        setError("Cannot record result: flashcard ID is missing.");
+        return;
+    }
+    const flashcardId = String(currentCard._id);
 
     try {
       // Send result to API
@@ -131,7 +131,6 @@ export default function StudySession() {
     }
     
     if (!sessionId) {
-      console.log('line 134 sessionId :>> ', sessionId);
       return <StudySessionSetup onStartSession={handleStartSession} />;
     }
     
@@ -152,7 +151,6 @@ export default function StudySession() {
         </div>
       );
     }
-    console.log('line 155 sessionId :>> ', sessionId);
     
     return (
       <div className="bg-gray-800 rounded-lg shadow p-6">
