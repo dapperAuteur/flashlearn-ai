@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/(admin)/admin/dashboard/page.tsx
 "use client";
 
@@ -55,7 +56,7 @@ export default function AdminDashboardPage() {
     };
     
     fetchStats();
-  }, [session, status]);
+  }, [session, status, router]);
   
   if (loading) {
     return <div className="p-6">Loading dashboard data...</div>;

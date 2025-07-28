@@ -7,6 +7,7 @@ import { ObjectId } from 'mongodb';
  */
 export interface Flashcard {
   _id?: string | ObjectId;
+  id?: string | ObjectId;
   front: string;                  // Front content (question/term)
   back: string;                   // Back content (answer/definition)
   frontImage?: string;            // URL to image on front side

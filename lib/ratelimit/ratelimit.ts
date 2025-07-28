@@ -5,7 +5,7 @@ import { Redis } from "@upstash/redis";
 // Create a Redis instance using environment variables
 // For development without Redis, we'll use a simpler in-memory version
 let redis: Redis | undefined;
-let ratelimits: Record<string, Ratelimit> = {};
+const ratelimits: Record<string, Ratelimit> = {};
 
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   // Use Upstash Redis if credentials are provided

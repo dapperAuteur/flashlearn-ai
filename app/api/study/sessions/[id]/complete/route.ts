@@ -4,13 +4,13 @@ import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/db/mongodb';
 import { Logger, LogContext } from '@/lib/logging/logger';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/auth';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise <{ id: string }> }
 ) {
-  const resolvedParams = await params;
+  const params = await context;
   const requestId = await Logger.info(LogContext.STUDY, "Complete study session request");
 
   try {
@@ -20,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = resolvedParams.id;
+    const sessionId = params;
     
     // Connect to database
     const client = await clientPromise;
@@ -28,7 +28,7 @@ export async function POST(
     
     // Verify study session exists and belongs to user
     const studySession = await db.collection('studySessions').findOne({
-      _id: new ObjectId(sessionId),
+      _id: sessionId,
       userId: new ObjectId(session.user.id)
     });
     
@@ -38,7 +38,7 @@ export async function POST(
     
     // Mark session as complete
     await db.collection('studySessions').updateOne(
-      { _id: new ObjectId(sessionId) },
+      { _id: sessionId },
       { 
         $set: { 
           endTime: new Date(),
@@ -49,14 +49,14 @@ export async function POST(
     
     // Get updated session with stats
     const updatedSession = await db.collection('studySessions').findOne({
-      _id: new ObjectId(sessionId)
+      _id: sessionId
     });
     
     // Calculate stats
-    const totalAnswered = updatedSession.correctCount + updatedSession.incorrectCount;
-    const accuracy = totalAnswered > 0 ? (updatedSession.correctCount / totalAnswered) * 100 : 0;
+    const totalAnswered = updatedSession?.correctCount + updatedSession?.incorrectCount;
+    const accuracy = totalAnswered > 0 ? (updatedSession?.correctCount / totalAnswered) * 100 : 0;
     const durationSeconds = Math.round(
-      (updatedSession.endTime.getTime() - updatedSession.startTime.getTime()) / 1000
+      (updatedSession?.endTime.getTime() - updatedSession?.startTime.getTime()) / 1000
     );
     
     await Logger.info(LogContext.STUDY, "Study session completed", {
@@ -66,17 +66,17 @@ export async function POST(
         sessionId, 
         accuracy, 
         durationSeconds,
-        cardsCompleted: updatedSession.completedCards
+        cardsCompleted: updatedSession?.completedCards
       }
     });
     
     // Return session summary
     return NextResponse.json({
       sessionId,
-      totalCards: updatedSession.totalCards,
-      completedCards: updatedSession.completedCards,
-      correctCount: updatedSession.correctCount,
-      incorrectCount: updatedSession.incorrectCount,
+      totalCards: updatedSession?.totalCards,
+      completedCards: updatedSession?.completedCards,
+      correctCount: updatedSession?.correctCount,
+      incorrectCount: updatedSession?.incorrectCount,
       accuracy,
       durationSeconds
     });

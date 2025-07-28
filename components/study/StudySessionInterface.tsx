@@ -76,6 +76,10 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
       setIsLoading(false);
       resetCardTimer();
     } catch (error) {
+      Logger.error(LogContext.STUDY, "Failed to load study session", {
+        sessionId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
       setError('Failed to load study session');
       setIsLoading(false);
     }
@@ -111,7 +115,13 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
 
       nextCard();
     } catch (error) {
-      Logger.error(LogContext.STUDY, "Failed to record answer");
+      Logger.error(LogContext.STUDY, "Failed to record answer", {
+        cardId: currentCard.id,
+        isCorrect,
+        timeSeconds: timeSpent,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        sessionId
+      });
     }
   };
 

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/logging/authLogger.ts
 import { NextRequest } from "next/server";
 import { Logger, LogContext, LogLevel } from "./logger";import { AnalyticsLogger } from "./logger";

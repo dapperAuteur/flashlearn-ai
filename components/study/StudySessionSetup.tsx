@@ -6,8 +6,13 @@ import { useRouter } from 'next/navigation';
 import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import CsvImportModal from '../flashcards/CsvImportModal';
+import { Flashcard } from '@/types/flashcard';
 
-export default function StudySessionSetup() {
+interface StudySessionSetupProps {
+  onStartSession: (sessionId: string, cards: Flashcard[]) => void;
+}
+
+export default function StudySessionSetup({ onStartSession }: StudySessionSetupProps) {
   const router = useRouter();
   const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
@@ -55,8 +60,11 @@ export default function StudySessionSetup() {
         throw new Error(data.error || 'Failed to start study session');
       }
       
-      const data = await response.json();
+      const data = await response.json(); // Expecting { sessionId, cards }
       
+      // 3. Call the onStartSession function from the parent with the new data
+      // This lifts the state up to the StudySession component.
+      onStartSession(data.sessionId, data.cards);
       
       Logger.log(LogContext.STUDY, "Study session started", { sessionId: data.sessionId });
 

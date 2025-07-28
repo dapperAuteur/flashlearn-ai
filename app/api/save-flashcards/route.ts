@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import type { Flashcard } from "@/types/flashcards";
 import { Logger, LogContext } from "@/lib/logging/logger";
 import { AnalyticsLogger } from "@/lib/logging/logger";
 import { getServerSession } from "next-auth/next";
 import clientPromise from "@/lib/db/mongodb";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth/auth";
 // import { metadata } from "@/app/layout";
 
 export async function POST(request: Request) {

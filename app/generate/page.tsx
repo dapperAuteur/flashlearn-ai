@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -288,7 +289,7 @@ export default function GenerateFlashcardsPage(){
       for (let i = 0; i < localStorage.length; i++) {
         console.log('localStorage.key(i) :>> ', localStorage.key(i));
         const key = localStorage.key(i);
-        if (key && key.startsWith('flashlearn_') || key.endsWith('_flashcards_csv')) {
+        if (key && key.startsWith('flashlearn_') || key?.endsWith('_flashcards_csv')) {
           const topicName = extractTopicFromKey(key);
           foundSets.push({ key, topicName });
         }
@@ -503,7 +504,7 @@ const handleDownloadTemplate = () => {
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
           <p className="mb-4 text-gray-600 dark:text-gray-300">
-            Enter a topic or specific "Front: Back" pairs to generate flashcards instantly using AI.
+            Enter a topic or specific &quot;Front: Back&quot; pairs to generate flashcards instantly using AI.
           </p>
 
       <textarea

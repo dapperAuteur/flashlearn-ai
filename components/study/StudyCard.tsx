@@ -1,35 +1,37 @@
 // components/study/StudyCard.tsx
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+import { Flashcard } from '@/types/flashcard';
+
+// interface StudySessionProps {
+//   flashcards: Flashcard[];
+// }
 
 interface StudyCardProps {
-  flashcard: {
-    id: string;
-    front: string;
-    back: string;
-    frontImage?: string;
-    backImage?: string;
-  };
-  onResult: (flashcardId: string, isCorrect: boolean, timeSeconds: number) => void;
+  flashcard: Flashcard;
+  onResult: (isCorrect: boolean, timeSeconds: number) => void;
 }
 
 export default function StudyCard({ flashcard, onResult }: StudyCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [startTime, setStartTime] = useState<number>(Date.now());
+
+  const cardId = String(flashcard._id);
   
   // Reset timer when a new flashcard is shown
   useEffect(() => {
     setIsFlipped(false);
     setStartTime(Date.now());
-  }, [flashcard.id]);
+  }, [cardId]);
 
   const handleFlip = () => {
     if (!isFlipped) {
       setIsFlipped(true);
-      Logger.log(LogContext.STUDY, "Card flipped", { cardId: flashcard.id });
+      Logger.log(LogContext.STUDY, "Card flipped", { cardId });
     }
   };
 
@@ -38,12 +40,12 @@ export default function StudyCard({ flashcard, onResult }: StudyCardProps) {
     const timeSeconds = Math.round((Date.now() - startTime) / 1000);
     
     Logger.log(LogContext.STUDY, "Result selected", { 
-      cardId: flashcard.id,
+      cardId,
       correct,
       timeSeconds
     });
     
-    onResult(flashcard.id, correct, timeSeconds);
+    onResult(correct, timeSeconds);
   };
 
   return (
@@ -73,10 +75,12 @@ export default function StudyCard({ flashcard, onResult }: StudyCardProps) {
                 
                 {flashcard.frontImage && (
                   <div className="mt-4 flex justify-center">
-                    <img 
+                    <Image 
                       src={flashcard.frontImage} 
                       alt="Front visual" 
                       className="max-h-48 object-contain"
+                      width={400}
+                      height={400}
                     />
                   </div>
                 )}
@@ -93,10 +97,12 @@ export default function StudyCard({ flashcard, onResult }: StudyCardProps) {
                 
                 {flashcard.backImage && (
                   <div className="mt-4 flex justify-center">
-                    <img 
+                    <Image 
                       src={flashcard.backImage} 
                       alt="Back visual" 
                       className="max-h-48 object-contain"
+                      width={400}
+                      height={400}
                     />
                   </div>
                 )}

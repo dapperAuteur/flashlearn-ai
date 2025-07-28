@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/admin/logs/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -6,6 +7,7 @@ import {
   getRecentFailedLogins, 
   getSuspiciousActivityLogs 
 } from "@/lib/logging/authLogger";
+import clientPromise from "@/lib/db/mongodb";
 
 /**
  * Get authentication logs

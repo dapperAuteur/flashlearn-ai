@@ -3,25 +3,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/db/mongodb';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/auth';
 import { Logger, LogContext } from '@/lib/logging/logger';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const resolvedParams = await params;
-  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { sessionIdFromParams: resolvedParams.id });
+  const params = await context;
+  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { sessionIdFromParams: params });
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      await Logger.warn(LogContext.STUDY, "Unauthorized attempt to get study session", { requestId });
+      await Logger.warning(LogContext.STUDY, "Unauthorized attempt to get study session", { requestId });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = resolvedParams.id;
-    if (!ObjectId.isValid(sessionId)) {
-      await Logger.warn(LogContext.STUDY, "Invalid session ID format for get study session", { requestId, sessionId });
+    const sessionId = params;
+    if (!sessionId) {
+      await Logger.warning(LogContext.STUDY, "Invalid session ID format for get study session", { requestId, sessionId });
       return NextResponse.json({ error: "Invalid session ID format" }, { status: 400 });
     }
 
@@ -29,12 +29,12 @@ export async function GET(
     const db = client.db();
 
     const studySession = await db.collection('studySessions').findOne({
-      _id: new ObjectId(sessionId),
+      _id: sessionId,
       userId: new ObjectId(session.user.id)
     });
 
     if (!studySession) {
-      await Logger.warn(LogContext.STUDY, "Study session not found or access denied for get", { requestId, sessionId, userId: session.user.id });
+      await Logger.warning(LogContext.STUDY, "Study session not found or access denied for get", { requestId, sessionId, userId: session.user.id });
       return NextResponse.json({ error: "Study session not found or access denied" }, { status: 404 });
     }
 
