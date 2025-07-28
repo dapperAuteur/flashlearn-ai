@@ -11,7 +11,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const params = await context;
-  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { sessionIdFromParams: params?.id });
+  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { sessionIdFromParams: params });
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -19,8 +19,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = params?.id;
-    if (!ObjectId.isValid(sessionId)) {
+    const sessionId = params;
+    if (!sessionId) {
       await Logger.warn(LogContext.STUDY, "Invalid session ID format for get study session", { requestId, sessionId });
       return NextResponse.json({ error: "Invalid session ID format" }, { status: 400 });
     }
@@ -29,7 +29,7 @@ export async function GET(
     const db = client.db();
 
     const studySession = await db.collection('studySessions').findOne({
-      _id: new ObjectId(sessionId),
+      _id: sessionId,
       userId: new ObjectId(session.user.id)
     });
 

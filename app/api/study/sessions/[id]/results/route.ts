@@ -20,7 +20,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = await params?.id;
+    const sessionId = await params;
     const { flashcardId, isCorrect, timeSeconds } = await request.json();
     
     // Validate input
@@ -34,7 +34,7 @@ export async function POST(
     
     // Verify study session exists and belongs to user
     const studySession = await db.collection('studySessions').findOne({
-      _id: new ObjectId(sessionId),
+      _id: sessionId,
       userId: new ObjectId(session.user.id)
     });
     
@@ -44,7 +44,7 @@ export async function POST(
     
     // Create card result
     const cardResult = {
-      sessionId: new ObjectId(sessionId),
+      sessionId: sessionId,
       flashcardId: new ObjectId(flashcardId),
       isCorrect,
       timeSeconds,
@@ -56,7 +56,7 @@ export async function POST(
     
     // Update study session stats
     await db.collection('studySessions').updateOne(
-      { _id: new ObjectId(sessionId) },
+      { _id: sessionId },
       { 
         $inc: { 
           completedCards: 1,

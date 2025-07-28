@@ -3,7 +3,7 @@
 // app/(admin)/admin/logs/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AuthLog, AuthEventType } from "@/models/AuthLog";
@@ -18,23 +18,7 @@ export default function AuthLogsPage() {
   const [logType, setLogType] = useState<string>("all");
   const [userId, setUserId] = useState<string>("");
   
-  useEffect(() => {
-    // Redirect if not authenticated or not admin
-    if (status === "unauthenticated") {
-      router.push("/signin");
-      return;
-    }
-    
-    if (session?.user && (session.user as any).role !== "admin") {
-      router.push("/generate");
-      return;
-    }
-    
-    // Load logs when component mounts or filters change
-    fetchLogs();
-  }, [session, status, logType, userId]);
-  
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -52,13 +36,30 @@ export default function AuthLogsPage() {
       
       const data = await response.json();
       setLogs(data.logs);
-    } catch (error) {
-      console.error("Error fetching logs:", error);
+    } catch (err) {
+      console.error("Error fetching logs:", err);
       setError("Failed to load authentication logs");
     } finally {
       setLoading(false);
     }
-  };
+  }, [logType, userId]);
+  
+  useEffect(() => {
+    // Redirect if not authenticated or not admin
+    if (status === "unauthenticated") {
+      router.push("/signin");
+      return;
+    }
+    
+    if (session?.user && (session.user as any).role !== "admin") {
+      router.push("/generate");
+      return;
+    }
+    
+    // Load logs when component mounts or filters change
+    fetchLogs();
+  }, [session, status, router, fetchLogs]);
+  
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
