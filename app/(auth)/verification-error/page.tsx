@@ -1,4 +1,3 @@
-// app/(auth)/verification-error/page.tsx
 import { Metadata } from "next";
 import Link from "next/link";
 

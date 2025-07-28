@@ -1,4 +1,3 @@
-// app/(dashboard)/dashboard/page.tsx
 'use client';
 
 import { useRouter } from 'next/navigation';

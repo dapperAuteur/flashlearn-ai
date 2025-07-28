@@ -1,4 +1,3 @@
-// components/study/StudyCard.tsx
 'use client';
 
 import Image from 'next/image';

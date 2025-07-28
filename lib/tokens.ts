@@ -1,4 +1,3 @@
-// lib/tokens.ts
 import crypto from 'crypto';
 
 export function generateVerificationToken(): string {

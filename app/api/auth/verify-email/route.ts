@@ -1,4 +1,3 @@
-// app/api/auth/verify-email/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/db/mongodb";
 import { sendWelcomeEmail } from "@/lib/email/mailgun";

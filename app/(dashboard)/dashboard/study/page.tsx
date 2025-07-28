@@ -1,4 +1,3 @@
-// app/dashboard/study/page.tsx
 'use client';
 
 import { useEffect } from 'react';

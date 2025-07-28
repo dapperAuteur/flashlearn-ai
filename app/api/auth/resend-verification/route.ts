@@ -1,4 +1,3 @@
-// app/api/auth/resend-verification/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import clientPromise from "@/lib/db/mongodb";

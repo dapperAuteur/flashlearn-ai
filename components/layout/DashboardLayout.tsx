@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// components/layout/DashboardLayout.tsx
 'use client';
 
 import { useState, useEffect } from 'react';

@@ -1,4 +1,3 @@
-// components/ui/PasswordStrengthMeter.tsx
 'use client';
 
 import { useState, useEffect } from 'react';

@@ -1,5 +1,3 @@
-// lib/utils/getErrorMessage.ts
-
 /**
  * Safely gets an error message from an unknown type.
  * @param error The error object, which is of type 'unknown' in a catch block.

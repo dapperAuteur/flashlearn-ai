@@ -1,4 +1,3 @@
-// lib/email/templates/securityAlert.ts
 interface SecurityAlertEmailProps {
   username: string;
   eventType: string;
