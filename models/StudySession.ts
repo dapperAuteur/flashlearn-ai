@@ -43,19 +43,19 @@ const StudySessionSchema: Schema = new Schema(
 );
 
 // Virtual property to check if session is complete
-StudySessionSchema.virtual('isComplete').get(function() {
+StudySessionSchema.virtual('isComplete').get(function(this: IStudySession) {
   return this.completedCards >= this.totalCards;
 });
 
 // Virtual property to calculate accuracy
-StudySessionSchema.virtual('accuracy').get(function() {
+StudySessionSchema.virtual('accuracy').get(function(this: IStudySession) {
   const answered = this.correctCount + this.incorrectCount;
   return answered > 0 ? (this.correctCount / answered) * 100 : 0;
 });
 
 // Virtual property to calculate duration in seconds
-StudySessionSchema.virtual('durationSeconds').get(function() {
-  if (!this.endTime) return 0;
+StudySessionSchema.virtual('durationSeconds').get(function(this: IStudySession) {
+  if (!this.endTime || !this.startTime) return 0;
   return Math.round((this.endTime.getTime() - this.startTime.getTime()) / 1000);
 });
 
