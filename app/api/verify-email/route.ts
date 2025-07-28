@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/db/mongodb";
 import { logAuthEvent } from "@/lib/logging/authLogger";
 import { AuthEventType } from "@/models/AuthLog";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,7 +74,8 @@ export async function GET(request: NextRequest) {
     // Redirect to success page
     return NextResponse.redirect(new URL("/signin?verified=true", request.url));
   } catch (error) {
-    console.error("Verification error:", error);
+    const errorMessage = getErrorMessage(error);
+    console.error("Verification error:", errorMessage);
 
     // Log verification error
     await logAuthEvent({
@@ -81,7 +83,7 @@ export async function GET(request: NextRequest) {
       event: AuthEventType.EMAIL_VERIFICATION_FAILURE,
       status: "failure",
       reason: "Server error",
-      metadata: { error: error.message }
+      metadata: { error: errorMessage }
     });
     
     return NextResponse.redirect(new URL("/verification-error", request.url));
