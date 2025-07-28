@@ -1,4 +1,3 @@
-// components/flashcards/CsvImportModal.tsx
 // allow user to set public status
 'use client';
 

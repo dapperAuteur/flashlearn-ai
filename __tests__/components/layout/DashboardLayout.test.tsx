@@ -1,4 +1,3 @@
-// __tests__/components/layout/DashboardLayout.test.tsx
 import { render, screen } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';

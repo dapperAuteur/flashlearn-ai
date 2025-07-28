@@ -1,4 +1,3 @@
-// components/RatingStars.tsx
 'use client';
 
 import { useState } from "react";

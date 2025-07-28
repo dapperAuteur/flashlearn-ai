@@ -1,4 +1,3 @@
-// __tests__/auth/SignUpForm.test.tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SignUpForm from '@/components/auth/SignUpForm';
 import { useRouter } from 'next/navigation';

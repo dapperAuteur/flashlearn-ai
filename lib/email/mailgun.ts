@@ -1,4 +1,3 @@
-// lib/email/mailgun.ts
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
 

@@ -1,5 +1,3 @@
-// types/flashcard.d.ts
-
 /**
  * Represents the structure of a single flashcard
  * used throughout the FlashLearn AI application.

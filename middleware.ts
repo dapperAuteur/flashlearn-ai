@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 // import { getSession } from '@/lib/auth/session';
@@ -28,7 +27,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // const isPublicPath = pathname === '/signin' || pathname === '/signup' || pathname === '/generate' || pathname === '/'; // Add other public paths
 
-  const publicPaths = ['/signin', '/signup', '/generate', '/'];
+  const publicPaths = ['/signin', '/signup', '/'];
   const isPublicPath = publicPaths.includes(pathname);
 
   if (!token && !isPublicPath) {

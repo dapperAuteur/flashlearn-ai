@@ -1,4 +1,3 @@
-// app/(dashboard)/teams/page.tsx
 import { Metadata } from 'next';
 import { getCurrentUser } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';

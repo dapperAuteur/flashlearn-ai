@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// components/layout/AdminLayout.tsx
 "use client";
 
 import { ReactNode } from "react";

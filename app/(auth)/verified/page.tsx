@@ -1,4 +1,3 @@
-// app/(auth)/verified/page.tsx
 import { Metadata } from "next";
 import Link from "next/link";
 

@@ -1,4 +1,3 @@
-// app/(dashboard)/profile/page.tsx
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";

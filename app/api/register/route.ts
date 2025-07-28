@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// app/api/register/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";

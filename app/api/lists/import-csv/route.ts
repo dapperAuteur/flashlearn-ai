@@ -1,4 +1,3 @@
-// app/api/lists/import-csv/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import clientPromise from '@/lib/db/mongodb';

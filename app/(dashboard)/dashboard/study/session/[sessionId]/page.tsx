@@ -1,4 +1,3 @@
-// app/dashboard/study/[sessionId]/page.tsx
 import { Metadata } from 'next';
 import StudySessionInterface from '@/components/study/StudySessionInterface';
 

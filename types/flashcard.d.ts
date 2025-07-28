@@ -1,5 +1,3 @@
-// types/models.ts
-
 import { ObjectId } from 'mongodb';
 
 /**

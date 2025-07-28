@@ -1,4 +1,3 @@
-// lib/security/alertService.ts
 import { sendEmail } from "@/lib/email/sendEmail";
 import { getSecurityAlertEmailTemplate } from "@/lib/email/templates/securityAlert";
 import { AuthLog } from "@/models/AuthLog";

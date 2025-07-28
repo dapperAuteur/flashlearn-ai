@@ -1,4 +1,3 @@
-// components/study/StudySessionResults.tsx
 'use client';
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';

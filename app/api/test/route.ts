@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/test/route.ts
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/db/mongodb';
 

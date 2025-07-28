@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// lib/logging/client-logger.ts
 'use client';
 
 // Simple client-side logger for the study functionality

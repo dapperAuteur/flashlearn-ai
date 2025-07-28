@@ -1,4 +1,3 @@
-// components/ui/StatisticCard.tsx
 import React, { ReactNode } from 'react';
 import Link from 'next/link';
 

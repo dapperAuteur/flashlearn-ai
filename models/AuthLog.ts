@@ -1,4 +1,3 @@
-// models/AuthLog.ts
 import { ObjectId } from "mongodb";
 
 export interface AuthLog {

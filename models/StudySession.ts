@@ -1,4 +1,3 @@
-// models/StudySession.ts
 /*
 https://mongoosejs.com/docs/tutorials/virtuals.html
 add virtuals to json export

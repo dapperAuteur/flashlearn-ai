@@ -1,4 +1,3 @@
-// app/api/study/sessions/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';

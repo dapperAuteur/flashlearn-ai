@@ -1,5 +1,3 @@
-// types/dtos.ts
-
 /**
  * DTO for creating or updating a flashcard
  */

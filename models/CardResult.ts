@@ -1,4 +1,3 @@
-// models/CardResult.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICardResult extends Document {

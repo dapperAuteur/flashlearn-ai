@@ -1,4 +1,3 @@
-// lib/email/templates/verification.ts
 interface VerificationEmailProps {
   username: string;
   verificationUrl: string;
