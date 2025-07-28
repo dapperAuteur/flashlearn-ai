@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
-import { ObjectId } from "mongodb";
 import { NextAuthOptions } from "next-auth";
+import type { User } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,7 +13,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials): Promise<User | null> {
         if (!credentials) return null;
         
         const { email, password } = credentials;
@@ -23,14 +22,14 @@ export const authOptions: NextAuthOptions = {
           console.log("Authenticating user:", email);
           const client = await clientPromise;
           const db = client.db();
-          const user = await db.collection("users").findOne({ email });
+          const userDoc = await db.collection("users").findOne({ email });
           
-          if (!user) {
+          if (!userDoc) {
             console.log("No user found with email:", email);
             return null;
           }
           
-          const isPasswordValid = await compare(password, user.password);
+          const isPasswordValid = await compare(password, userDoc.password);
           
           if (!isPasswordValid) {
             console.log("Invalid password for user:", email);
@@ -39,10 +38,12 @@ export const authOptions: NextAuthOptions = {
           
           console.log("User authenticated successfully:", email);
           return {
-            id: user._id.toString(),
-            email: user.email,
-            name: user.name,
-            role: user.role
+            id: userDoc._id.toString(),
+            email: userDoc.email || null,
+            name: userDoc.name,
+            role: userDoc.role,
+            image: userDoc.image || null,
+            // emailVerified: null
           };
         } catch (error) {
           console.error("Authentication error:", error);
