@@ -15,13 +15,13 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      await Logger.warn(LogContext.STUDY, "Unauthorized attempt to get study session", { requestId });
+      await Logger.warning(LogContext.STUDY, "Unauthorized attempt to get study session", { requestId });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const sessionId = params;
     if (!sessionId) {
-      await Logger.warn(LogContext.STUDY, "Invalid session ID format for get study session", { requestId, sessionId });
+      await Logger.warning(LogContext.STUDY, "Invalid session ID format for get study session", { requestId, sessionId });
       return NextResponse.json({ error: "Invalid session ID format" }, { status: 400 });
     }
 
@@ -34,7 +34,7 @@ export async function GET(
     });
 
     if (!studySession) {
-      await Logger.warn(LogContext.STUDY, "Study session not found or access denied for get", { requestId, sessionId, userId: session.user.id });
+      await Logger.warning(LogContext.STUDY, "Study session not found or access denied for get", { requestId, sessionId, userId: session.user.id });
       return NextResponse.json({ error: "Study session not found or access denied" }, { status: 404 });
     }
 

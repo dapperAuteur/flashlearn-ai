@@ -1,5 +1,6 @@
 // app/layout.tsx
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
@@ -23,6 +24,7 @@ export default function RootLayout({
         <AuthProvider>
           <MainLayout>
             {children}
+            <Analytics />
           </MainLayout>
         </AuthProvider>
       </body>
