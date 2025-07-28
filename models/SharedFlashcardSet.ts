@@ -1,3 +1,5 @@
+import { Flashcard } from "@/types/flashcard";
+
 export interface SharedFlashcardSet {
   _id?: string;
   topic: string;
