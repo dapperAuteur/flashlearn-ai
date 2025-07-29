@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';
@@ -8,68 +9,87 @@ import { Logger, LogContext } from '@/lib/logging/logger';
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
-) {
+) {  
+  // Log the entire params object to see what Next.js is providing.
   const params = await context;
-  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { sessionIdFromParams: params });
+  // const sessionId = await params.id;
+
+  console.log("paramsparams");
+  
+  console.log('params :>> ', await params);
+
+  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", { paramsReceived: params });
+  
+  // The key from the params object MUST match the file name (e.g., [sessionId])
+  console.log('sessionIdId params :>> ', await params);
+
+
   try {
+    // Authenticate user
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      await Logger.warning(LogContext.STUDY, "Unauthorized attempt to get study session", { requestId });
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionId = params;
-    if (!sessionId) {
-      await Logger.warning(LogContext.STUDY, "Invalid session ID format for get study session", { requestId, sessionId });
-      return NextResponse.json({ error: "Invalid session ID format" }, { status: 400 });
+    const sessionId = await params;
+    const { flashcardId, isCorrect, timeSeconds } = await request.json();
+    
+    // Validate input
+    if (!flashcardId || typeof isCorrect !== 'boolean' || !timeSeconds) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
-
+    
+    // Connect to database
     const client = await clientPromise;
     const db = client.db();
-
+    
+    // Verify study session exists and belongs to user
     const studySession = await db.collection('studySessions').findOne({
       _id: sessionId,
       userId: new ObjectId(session.user.id)
     });
-
+    
     if (!studySession) {
-      await Logger.warning(LogContext.STUDY, "Study session not found or access denied for get", { requestId, sessionId, userId: session.user.id });
-      return NextResponse.json({ error: "Study session not found or access denied" }, { status: 404 });
+      return NextResponse.json({ error: "Study session not found" }, { status: 404 });
     }
-
-    if (!studySession.listId || !ObjectId.isValid(studySession.listId.toString())) {
-        await Logger.error(LogContext.STUDY, "Study session missing valid listId", { requestId, sessionId: studySession._id.toString() });
-        return NextResponse.json({ error: "Study session is incomplete (missing listId)" }, { status: 500 });
-    }
-
-    const flashcards = await db.collection('flashcards').find({
-      listId: new ObjectId(studySession.listId)
-    }).project({ front: 1, back: 1, frontImage: 1, backImage: 1 }).toArray(); // Ensure projection if needed
-
-    const formattedFlashcards = flashcards.map(fc => ({
-      id: fc._id.toString(),
-      front: fc.front,
-      back: fc.back,
-      frontImage: fc.frontImage,
-      backImage: fc.backImage,
-    }));
-
-    await Logger.debug(LogContext.STUDY, "Study session details retrieved successfully", {
+    
+    // Create card result
+    const cardResult = {
+      sessionId: sessionId,
+      flashcardId: new ObjectId(flashcardId),
+      isCorrect,
+      timeSeconds,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    await db.collection('cardResults').insertOne(cardResult);
+    
+    // Update study session stats
+    await db.collection('studySessions').updateOne(
+      { _id: sessionId },
+      { 
+        $inc: { 
+          completedCards: 1,
+          correctCount: isCorrect ? 1 : 0,
+          incorrectCount: isCorrect ? 0 : 1
+        },
+        $set: { updatedAt: new Date() }
+      }
+    );
+    
+    // Log result
+    await Logger.info(LogContext.STUDY, "Card result recorded", {
       requestId,
-      sessionId: studySession._id.toString(),
-      flashcardCount: formattedFlashcards.length
+      userId: session.user.id,
+      metadata: { sessionId, flashcardId, isCorrect }
     });
-
-    return NextResponse.json({
-      sessionId: studySession._id.toString(),
-      listId: studySession.listId.toString(),
-      flashcards: formattedFlashcards,
-      ...studySession // spread other relevant fields from studySession
-    });
-
+    
+    return NextResponse.json({ success: true });
+    
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    await Logger.error(LogContext.STUDY, `Error fetching study session: ${errorMessage}`, { requestId, error });
-    return NextResponse.json({ error: "Failed to fetch study session" }, { status: 500 });
+    await Logger.error(LogContext.STUDY, `Error recording card result: ${errorMessage}`, { requestId });
+    return NextResponse.json({ error: "Failed to record result" }, { status: 500 });
   }
 }
