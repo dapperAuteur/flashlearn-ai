@@ -34,6 +34,29 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
   const router = useRouter();
 
   useEffect(() => {
+    const startSessionTimer = () => {
+      intervalRef.current = setInterval(() => {
+        setTotalSessionTime(Date.now() - sessionStartTime);
+      }, 1000);
+    };
+    const fetchSessionData = async () => {
+      try {
+        const response = await fetch(`/api/study/sessions/${sessionId}`);
+        if (!response.ok) throw new Error('Failed to load session');
+        
+        const data = await response.json();
+        setFlashcards(data.flashcards);
+        setIsLoading(false);
+        resetCardTimer();
+      } catch (error) {
+        Logger.error(LogContext.STUDY, "Failed to load study session", {
+          sessionId,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        setError('Failed to load study session');
+        setIsLoading(false);
+      }
+    };
     fetchSessionData();
     startSessionTimer();
     
@@ -42,13 +65,7 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
         clearInterval(intervalRef.current);
       }
     };
-  }, [sessionId]);
-
-  const startSessionTimer = () => {
-    intervalRef.current = setInterval(() => {
-      setTotalSessionTime(Date.now() - sessionStartTime);
-    }, 1000);
-  };
+  }, [sessionId, sessionStartTime]);
 
   const resetCardTimer = () => {
     setCardStartTime(Date.now());
@@ -63,25 +80,6 @@ export default function StudySessionInterface({ sessionId }: StudySessionInterfa
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  const fetchSessionData = async () => {
-    try {
-      const response = await fetch(`/api/study/sessions/${sessionId}`);
-      if (!response.ok) throw new Error('Failed to load session');
-      
-      const data = await response.json();
-      setFlashcards(data.flashcards);
-      setIsLoading(false);
-      resetCardTimer();
-    } catch (error) {
-      Logger.error(LogContext.STUDY, "Failed to load study session", {
-        sessionId,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-      setError('Failed to load study session');
-      setIsLoading(false);
-    }
   };
 
   const handleAnswer = async (isCorrect: boolean) => {

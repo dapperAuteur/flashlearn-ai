@@ -80,6 +80,16 @@ export class Logger {
       metadata.userAgent = request.headers.get("user-agent") || "unknown";
     }
 
+    // Sanitize metadata to prevent serialization errors. This ensures that complex
+    // objects (like class instances) are converted to plain objects.
+    try {
+      metadata = JSON.parse(JSON.stringify(metadata));
+    } catch (e) {
+      /* Ignore sanitization errors, proceed with original metadata */
+      console.error("Failed to sanitize metadata:", e);
+      console.error("Original metadata:", metadata);
+    }
+
     // Create log entry
     const logEntry: BaseLogEntry = {
       context,
@@ -151,20 +161,28 @@ export class Logger {
   }
 
   // Convenience methods for different log levels
-  static async debug(context: LogContext, message: string, options = {}): Promise<string | null> {
-    return this.log({ context, level: LogLevel.DEBUG, message, ...options });
+  static async debug(context: LogContext, message: string, options: Record<string, any> = {}): Promise<string | null> {
+    const { userId, requestId, request, metadata, ...rest } = options;
+    const finalMetadata = { ...(metadata || {}), ...rest };
+    return this.log({ context, level: LogLevel.DEBUG, message, userId, requestId, request, metadata: finalMetadata });
   }
 
-  static async info(context: LogContext, message: string, options = {}): Promise<string | null> {
-    return this.log({ context, level: LogLevel.INFO, message, ...options });
+  static async info(context: LogContext, message: string, options: Record<string, any> = {}): Promise<string | null> {
+    const { userId, requestId, request, metadata, ...rest } = options;
+    const finalMetadata = { ...(metadata || {}), ...rest };
+    return this.log({ context, level: LogLevel.INFO, message, userId, requestId, request, metadata: finalMetadata });
   }
 
-  static async warning(context: LogContext, message: string, options = {}): Promise<string | null> {
-    return this.log({ context, level: LogLevel.WARNING, message, ...options });
+  static async warning(context: LogContext, message: string, options: Record<string, any> = {}): Promise<string | null> {
+    const { userId, requestId, request, metadata, ...rest } = options;
+    const finalMetadata = { ...(metadata || {}), ...rest };
+    return this.log({ context, level: LogLevel.WARNING, message, userId, requestId, request, metadata: finalMetadata });
   }
 
-  static async error(context: LogContext, message: string, options = {}): Promise<string | null> {
-    return this.log({ context, level: LogLevel.ERROR, message, ...options });
+  static async error(context: LogContext, message: string, options: Record<string, any> = {}): Promise<string | null> {
+    const { userId, requestId, request, metadata, ...rest } = options;
+    const finalMetadata = { ...(metadata || {}), ...rest };
+    return this.log({ context, level: LogLevel.ERROR, message, userId, requestId, request, metadata: finalMetadata });
   }
 }
 
@@ -206,6 +224,14 @@ export class AnalyticsLogger {
     // Add timestamp if not provided
     if (!properties.timestamp) {
       properties.timestamp = new Date();
+    }
+
+    // Sanitize properties to prevent serialization errors
+    try {
+      properties = JSON.parse(JSON.stringify(properties));
+    } catch (e) {
+      /* Ignore sanitization errors */
+      console.error("Failed to sanitize metadata:", e);
     }
 
     // First log through the main logger for operational visibility
