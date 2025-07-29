@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // const isPublicPath = pathname === '/signin' || pathname === '/signup' || pathname === '/generate' || pathname === '/'; // Add other public paths
 
-  const publicPaths = ['/signin', '/signup', '/'];
+  const publicPaths = ['/dashboard/study','/signin', '/signup', '/'];
   const isPublicPath = publicPaths.includes(pathname);
 
   if (!token && !isPublicPath) {
