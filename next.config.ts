@@ -1,8 +1,32 @@
 import type { NextConfig } from "next";
-// /** @type {import('next').NextConfig} */
+/** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
+  // Add the headers function to define Content Security Policy
+  async headers() {
+    return [
+      {
+        // Apply these headers to all routes in your application.
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            // This policy allows scripts, iframes, and connections necessary for Consolto.
+            // For production, consider tightening this policy further.
+            value: [
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://client.consolto.com;",
+              "style-src 'self' 'unsafe-inline';",
+              "frame-src https://client.consolto.com;",
+              "img-src 'self' data: https:;",
+              "connect-src 'self' wss://*.consolto.com;",
+            ].join(' '),
+          },
+        ],
+      },
+    ];
+  },
+
   webpack: (config, { isServer }) => {
-    // Don't attempt to bundle these modules
+    // Don't attempt to bundle these modules on the client-side
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -31,6 +55,7 @@ const nextConfig: NextConfig = {
     
     return config;
   },
+  
   // Prevent server-side bundling of problematic packages
   experimental: {
     serverComponentsExternalPackages: [
@@ -43,4 +68,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
