@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 import MainLayout from "@/components/layout/MainLayout";
+import ConsoltoChat from "@/components/ConsoltoChat";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default function RootLayout({
           <MainLayout>
             {children}
             <Analytics />
+            <ConsoltoChat />
           </MainLayout>
         </AuthProvider>
       </body>
