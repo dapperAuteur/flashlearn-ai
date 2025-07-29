@@ -28,7 +28,10 @@ export async function middleware(request: NextRequest) {
   // const isPublicPath = pathname === '/signin' || pathname === '/signup' || pathname === '/generate' || pathname === '/'; // Add other public paths
 
   const publicPaths = ['/dashboard/study','/signin', '/signup', '/'];
-  const isPublicPath = publicPaths.includes(pathname);
+  const isPublicPath =
+    publicPaths.includes(pathname) ||
+    pathname.startsWith('/dashboard/study/session/') ||
+    pathname === '/';
 
   if (!token && !isPublicPath) {
     console.log(`Middleware: No token found for protected path ${pathname}, redirecting to signin.`);
