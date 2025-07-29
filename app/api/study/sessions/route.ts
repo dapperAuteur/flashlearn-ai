@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';
@@ -9,48 +10,51 @@ export async function POST(request: NextRequest) {
   const requestId = await Logger.info(LogContext.STUDY, "Create study session request");
 
   try {
-    // Authenticate user
+    // Attempt to get the session, but don't require it for public sets.
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userId = session?.user?.id ? new ObjectId(session.user.id) : null;
 
-    // Parse request body
     const { listId } = await request.json();
     if (!listId) {
       return NextResponse.json({ error: "List ID is required" }, { status: 400 });
     }
 
-    // Connect to database
     const client = await clientPromise;
     const db = client.db();
     
-    // Verify list exists and belongs to user
-    const list = await db.collection('lists').findOne({
-      _id: new ObjectId(listId),
-      // userId: new ObjectId(session.user.id) // BUG userId is causing list to return null, fix it
-    });
-
-    console.log('list :>> ', list);
+    // Build a query to find the flashcard set.
+    const findQuery: any = { _id: new ObjectId(listId) };
     
-    if (!list) {
-      return NextResponse.json({ error: "List not found" }, { status: 404 });
+    if (userId) {
+      // If the user is authenticated, they can access public sets OR their own private sets.
+      findQuery.$or = [{ isPublic: true }, { userId: userId }];
+    } else {
+      // If the user is not authenticated, they can ONLY access public sets.
+      findQuery.isPublic = true;
+    }
+
+    // Find the requested flashcard set using the constructed query.
+    const flashcardSet = await db.collection('flashcard_sets').findOne(findQuery);
+    
+    if (!flashcardSet) {
+      await Logger.warning(LogContext.STUDY, "Flashcard set not found or access denied", {
+        requestId,
+        userId: userId?.toString(),
+        listId,
+      });
+      return NextResponse.json({ error: "Flashcard set not found or you do not have permission to access it." }, { status: 404 });
     }
     
-    // Get flashcards for this list
-    const flashcards = await db.collection('flashcards').find({
-      listId: new ObjectId(listId)
-    }).toArray();
-
-    console.log('flashcards :>> ', flashcards);
+    const flashcards = flashcardSet.flashcards || [];
     
     if (flashcards.length === 0) {
-      return NextResponse.json({ error: "No flashcards in this list" }, { status: 400 });
+      return NextResponse.json({ error: "This flashcard set contains no cards." }, { status: 400 });
     }
     
-    // Create new study session
+    // Create a new study session.
+    // For anonymous users, we create a new ObjectId to act as a temporary user ID for this session.
     const studySession = {
-      userId: new ObjectId(session.user.id),
+      userId: userId || new ObjectId(),
       listId: new ObjectId(listId),
       startTime: new Date(),
       status: 'active',
@@ -64,16 +68,17 @@ export async function POST(request: NextRequest) {
     
     const result = await db.collection('studySessions').insertOne(studySession);
     
-    await Logger.info(LogContext.STUDY, "Study session created", {
+    await Logger.info(LogContext.STUDY, "Study session created successfully", {
       requestId,
-      userId: session.user.id,
+      userId: session?.user?.id,
+      isAnonymous: !userId,
       metadata: { sessionId: result.insertedId.toString(), cardCount: flashcards.length }
     });
     
     return NextResponse.json({
       sessionId: result.insertedId.toString(),
-      flashcards: flashcards.map(card => ({
-        id: card._id.toString(),
+      flashcards: flashcards.map((card: any) => ({
+        _id: card._id.toString(),
         front: card.front,
         back: card.back,
         frontImage: card.frontImage,
