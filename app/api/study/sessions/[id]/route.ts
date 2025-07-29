@@ -37,7 +37,7 @@ interface StudySession {
  */
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { id: sessionId } = await context.params;
   const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", {
