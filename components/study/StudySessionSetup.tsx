@@ -46,7 +46,9 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
       setIsLoading(true);
       setError(null);
       
-      Logger.log(LogContext.STUDY, "Starting study session", { listId: selectedListId });
+      Logger.log(LogContext.STUDY, "Starting study session", {
+        listId: selectedListId
+      });
       
       const response = await fetch('/api/study/sessions', {
         method: 'POST',
@@ -60,10 +62,13 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
       }
       
       const data = await response.json(); // Expecting { sessionId, cards }
+      Logger.log(LogContext.STUDY, "Retrieved Flashcards", {
+        data
+      });
       
       // 3. Call the onStartSession function from the parent with the new data
       // This lifts the state up to the StudySession component.
-      onStartSession(data.sessionId, data.cards);
+      onStartSession(data.sessionId, data.flashcards);
       
       Logger.log(LogContext.STUDY, "Study session started", { sessionId: data.sessionId });
 
