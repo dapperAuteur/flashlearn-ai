@@ -100,7 +100,7 @@ export default function SignUpForm() {
             id="name"
             type="text"
             {...register("name")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="John Doe"
           />
           {errors.name && (
@@ -116,7 +116,7 @@ export default function SignUpForm() {
             id="email"
             type="email"
             {...register("email")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="you@example.com"
           />
           {errors.email && (
@@ -132,7 +132,7 @@ export default function SignUpForm() {
             id="password"
             type="password"
             {...register("password")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
           {/* Add this password strength meter component */}
@@ -150,7 +150,7 @@ export default function SignUpForm() {
             id="confirmPassword"
             type="password"
             {...register("confirmPassword")}
-            className="w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
           {errors.confirmPassword && (
