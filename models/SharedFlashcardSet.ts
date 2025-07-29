@@ -2,6 +2,7 @@ import { Flashcard } from "@/types/flashcard";
 
 export interface SharedFlashcardSet {
   _id?: string;
+  name?: string;
   topic: string;
   normalizedTopic: string;
   flashcards: Flashcard[];
