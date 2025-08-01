@@ -1,5 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { Logger, LogContext } from "@/lib/logging/logger";
 
 // Create a Redis instance using environment variables
 // For development without Redis, we'll use a simpler in-memory version
@@ -12,13 +13,49 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
   });
-  console.log("Redis initialized for rate limiting");
+  Logger.info(LogContext.SYSTEM, "Redis initialized for rate limiting");
 } else {
-  console.log("Redis credentials not found, using in-memory rate limiting (not for production)");
+  Logger.warning(LogContext.SYSTEM, "Redis credentials not found, using in-memory rate limiting (not for production)");
 }
 
-// Map to store in-memory rate limiting data (only for development)
-const inMemoryMap = new Map<string, { count: number, reset: number }>();
+/**
+ * A simple in-memory rate limiter for development environments.
+ * This class mimics the necessary parts of the Upstash Ratelimit interface.
+ */
+class InMemoryRateLimiter {
+  private map = new Map<string, { count: number; reset: number }>();
+  private limitCount: number;
+  private windowSeconds: number;
+
+  constructor(limit: number, window: number) {
+    this.limitCount = limit;
+    this.windowSeconds = window;
+  }
+
+  async limit(key: string) {
+    const now = Date.now();
+    const windowMs = this.windowSeconds * 1000;
+    const resetTime = now + windowMs;
+
+    const keyData = this.map.get(key) || { count: 0, reset: resetTime };
+
+    if (now > keyData.reset) {
+      keyData.count = 0;
+      keyData.reset = resetTime;
+    }
+
+    keyData.count += 1;
+    this.map.set(key, keyData);
+
+    const success = keyData.count <= this.limitCount;
+    const remaining = Math.max(0, this.limitCount - keyData.count);
+    const reset = Math.ceil((keyData.reset - now) / 1000);
+
+    return {
+      success, limit: this.limitCount, remaining, reset,
+    };
+  }
+}
 
 /**
  * Create a rate limiter instance
@@ -40,39 +77,13 @@ export function getRateLimiter(identifier: string, limit: number, window: number
       analytics: true,
     });
   } else {
-    // Create a simple in-memory rate limiter for development
-    ratelimits[identifier] = {
-      limit: async (key: string) => {
-        const now = Date.now();
-        const resetTime = now + window * 1000;
-        
-        const keyData = inMemoryMap.get(key) || { count: 0, reset: resetTime };
-        
-        // Reset counter if window has passed
-        if (now > keyData.reset) {
-          keyData.count = 0;
-          keyData.reset = resetTime;
-        }
-        
-        // Increment count
-        keyData.count += 1;
-        inMemoryMap.set(key, keyData);
-        
-        const success = keyData.count <= limit;
-        const remaining = Math.max(0, limit - keyData.count);
-        const reset = Math.ceil((keyData.reset - now) / 1000);
-        
-        return {
-          success,
-          limit,
-          remaining,
-          reset,
-        };
-      }
-    } as unknown as Ratelimit;
+    // Use the type-safe in-memory rate limiter for development
+    ratelimits[identifier] = new InMemoryRateLimiter(limit, window) as unknown as Ratelimit;
   }
   
-  console.log(`Rate limiter created: ${identifier}, ${limit} requests per ${window} seconds`);
+  Logger.info(LogContext.SYSTEM, `Rate limiter created: ${identifier}`, {
+    limit, window
+  });
   return ratelimits[identifier];
 }
 
