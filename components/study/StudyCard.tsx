@@ -1,14 +1,10 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { Flashcard } from '@/types/flashcard';
-
-// interface StudySessionProps {
-//   flashcards: Flashcard[];
-// }
+import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 interface StudyCardProps {
   flashcard: Flashcard;
@@ -17,116 +13,84 @@ interface StudyCardProps {
 
 export default function StudyCard({ flashcard, onResult }: StudyCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [startTime, setStartTime] = useState<number>(Date.now());
+  const [startTime, setStartTime] = useState(Date.now());
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  const cardId = String(flashcard._id);
-  
-  // Reset timer when a new flashcard is shown
   useEffect(() => {
     setIsFlipped(false);
     setStartTime(Date.now());
-  }, [cardId]);
+    cardRef.current?.focus();
+  }, [flashcard]);
 
   const handleFlip = () => {
     if (!isFlipped) {
       setIsFlipped(true);
-      Logger.log(LogContext.STUDY, "Card flipped", { cardId });
+      Logger.log(LogContext.STUDY, "Card flipped", { cardId: flashcard._id });
     }
   };
 
-  const handleResult = (correct: boolean) => {
-    // Calculate time spent on this card in seconds
-    const timeSeconds = Math.round((Date.now() - startTime) / 1000);
-    
-    Logger.log(LogContext.STUDY, "Result selected", { 
-      cardId,
-      correct,
-      timeSeconds
-    });
-    
-    onResult(correct, timeSeconds);
+  const handleResult = (isCorrect: boolean) => {
+    const timeSeconds = (Date.now() - startTime) / 1000;
+    onResult(isCorrect, timeSeconds);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === ' ') { e.preventDefault(); handleFlip(); }
+    if (isFlipped) {
+      if (e.key === '1') handleResult(false); // Incorrect
+      if (e.key === '2') handleResult(true);  // Correct
+    }
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="mb-4 flex justify-between items-center">
-        <div className="text-white">
-          Tap card to flip
-        </div>
-      </div>
-      
-      <div className="mb-8">
-        <motion.div
-          className="w-full h-80 cursor-pointer perspective-1000"
+    <div className="w-full">
+      <div 
+        ref={cardRef}
+        tabIndex={0} 
+        onKeyDown={handleKeyDown}
+        className="w-full aspect-[4/3] sm:aspect-video perspective-1000 focus:outline-none mb-6"
+      >
+        <motion.div 
+          className="relative w-full h-full transition-transform duration-700 transform-style-3d"
+          animate={{ rotateY: isFlipped ? 180 : 0 }}
           onClick={handleFlip}
         >
-          <motion.div
-            className="relative w-full h-full transform-style-preserve-3d transition-transform duration-500"
-            animate={{ rotateY: isFlipped ? 180 : 0 }}
-          >
-            {/* Front of card */}
-            <div className="absolute w-full h-full backface-hidden bg-gray-700 border border-gray-200 rounded-lg p-6 flex flex-col justify-center shadow-md">
-              <div className="overflow-auto">
-                <div 
-                  className="text-center text-lg prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: flashcard.front }}
-                />
-                
-                {flashcard.frontImage && (
-                  <div className="mt-4 flex justify-center">
-                    <Image 
-                      src={flashcard.frontImage} 
-                      alt="Front visual" 
-                      className="max-h-48 object-contain"
-                      width={400}
-                      height={400}
-                    />
-                  </div>
-                )}
-              </div>
+          {/* Front of the card */}
+          <div className="absolute w-full h-full backface-hidden bg-white rounded-lg shadow-xl flex items-center justify-center p-4 sm:p-6 text-center cursor-pointer">
+            <div>
+              <div className="prose max-w-none text-xl sm:text-2xl font-semibold text-gray-800" dangerouslySetInnerHTML={{ __html: flashcard.front }} />
+              {flashcard.frontImage && (
+                <div className="mt-4 flex justify-center"><Image src={flashcard.frontImage} alt="Front visual" className="max-h-40 sm:max-h-48 object-contain" width={400} height={400}/></div>
+              )}
             </div>
-            
-            {/* Back of card */}
-            <div className="bg-gray-800 absolute w-full h-full backface-hidden bg-blue-50 border border-blue-200 rounded-lg p-6 flex flex-col justify-center shadow-md rotate-y-180">
-              <div className="overflow-auto">
-                <div 
-                  className="text-center text-lg prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: flashcard.back }}
-                />
-                
-                {flashcard.backImage && (
-                  <div className="mt-4 flex justify-center">
-                    <Image 
-                      src={flashcard.backImage} 
-                      alt="Back visual" 
-                      className="max-h-48 object-contain"
-                      width={400}
-                      height={400}
-                    />
-                  </div>
-                )}
-              </div>
+          </div>
+
+          {/* Back of the card */}
+          <div className="absolute w-full h-full backface-hidden bg-blue-50 rounded-lg shadow-xl flex items-center justify-center p-4 sm:p-6 text-center rotate-y-180">
+            <div>
+              <div className="prose max-w-none text-xl sm:text-2xl font-semibold text-gray-800" dangerouslySetInnerHTML={{ __html: flashcard.back }} />
+              {flashcard.backImage && (
+                <div className="mt-4 flex justify-center"><Image src={flashcard.backImage} alt="Back visual" className="max-h-40 sm:max-h-48 object-contain" width={400} height={400}/></div>
+              )}
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
       
       {isFlipped && (
-        <div className="flex space-x-4 justify-center">
-          <button
-            onClick={() => handleResult(false)}
-            className="px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
-          >
-            Got it Wrong
+        <motion.div 
+          className="flex flex-col sm:flex-row w-full gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <button onClick={() => handleResult(false)} className="w-full py-3 px-6 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+            Incorrect (1)
           </button>
-          
-          <button
-            onClick={() => handleResult(true)}
-            className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            Got it Right
+          <button onClick={() => handleResult(true)} className="w-full py-3 px-6 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+            Correct (2)
           </button>
-        </div>
+        </motion.div>
       )}
     </div>
   );

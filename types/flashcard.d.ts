@@ -26,3 +26,16 @@ export interface Flashcard {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface IFlashcardSet {
+  id: string; // The document ID
+  _id: string; // The document ID
+  userId: string;
+  profileId: string;
+  title: string;
+  isPublic: boolean;
+  source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV' | 'Text' | 'Video';
+  flashcards: IFlashcard[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
