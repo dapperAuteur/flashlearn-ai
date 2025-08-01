@@ -5,7 +5,7 @@ import { generateVerificationToken } from "@/lib/tokens";
 // import { sendEmail } from "@/lib/email/sendEmail";
 // import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
 import { getClientIp } from "@/lib/utils";
-import { rateLimitRequest } from "@/lib/ratelimit/ratelimit";
+import { rateLimitRequest } from "@/lib/ratelimit/rateLimitAPI";
 import { sendVerificationEmail } from "@/lib/email/mailgun";
 
 export async function POST(request: NextRequest) {
