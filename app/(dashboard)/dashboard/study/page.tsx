@@ -10,8 +10,11 @@ export default function StudyPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-blue-600 dark:text-blue-400">Study Flashcards</h1>
+    // This container ensures consistent padding and max-width.
+    <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800">
+        Study Flashcards
+      </h1>
       <StudySession />
     </div>
   );
