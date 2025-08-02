@@ -57,6 +57,8 @@ export default function StudySessionResults({ results, onReset }: StudySessionRe
     const secs = Math.round(seconds % 60);
     return `${mins}m ${secs}s`;
   };
+  const avgTime = results.completedCards > 0 ? results.durationSeconds / results.completedCards : 0;
+
 
   // Log viewing results
   Logger.log(LogContext.STUDY, "Viewing study session results", {
