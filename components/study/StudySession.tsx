@@ -222,8 +222,11 @@ export default function StudySession() {
         </div>
         <StudyCard
           flashcard={flashcards[currentIndex]}
-          onResult={recordCardResult}
-        />
+          onResult={recordCardResult} onPrevious={function (): void {
+            throw new Error('Function not implemented.');
+          } } onEndSession={function (): void {
+            throw new Error('Function not implemented.');
+          } }        />
       </div>
     );
   };
