@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // const isPublicPath = pathname === '/signin' || pathname === '/signup' || pathname === '/generate' || pathname === '/'; // Add other public paths
 
-  const publicPaths = ['/forgot-password', '/dashboard/study','/signin', '/signup', '/'];
+  const publicPaths = ['/generate', '/forgot-password', '/dashboard/study','/signin', '/signup', '/'];
   const isPublicPath =
     publicPaths.includes(pathname) ||
     pathname.startsWith('/dashboard/study/session/') ||
