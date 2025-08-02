@@ -119,7 +119,7 @@ export default function GenerateFlashcardsPage(){
       return;
     }
     if (status !== 'authenticated' || !session?.user?.email) {
-      setError('You must be signed in to save flashcards.');
+      setError('Please sign in to save your flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
       return;
     }
 
@@ -179,6 +179,12 @@ export default function GenerateFlashcardsPage(){
       setError("Cannot export without a topic.");
       return;
     }
+
+    if (status !== 'authenticated') {
+      setError('Please sign in to export your flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+      return;
+    }
+
     setIsExporting(true);
     setError(null);
     try {
@@ -236,7 +242,7 @@ export default function GenerateFlashcardsPage(){
     }
 
     if (status !== 'authenticated') {
-      setError('Please sign in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+      setError('Please sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
       setFlashcards([]);
       return;
     }
@@ -285,6 +291,11 @@ export default function GenerateFlashcardsPage(){
     // Add these functions inside the GenerateFlashcardsPage component
 
   const handleScanStorage = () => {
+    if (status !== 'authenticated') {
+      setError('Please sign in to load your saved flashcard sets. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+      return;
+    }
+
     setError(null);
     setFlashcards([]); // Clear current cards when starting scan
     setTopic(''); // Clear current topic
@@ -380,6 +391,11 @@ export default function GenerateFlashcardsPage(){
 // Add these functions inside the GenerateFlashcardsPage component
 
 const handleTriggerUpload = () => {
+  if (status !== 'authenticated') {
+    setError('Please sign in to upload flashcards from a CSV file. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+    return;
+  }
+
   // Trigger click on the hidden file input
   fileInputRef.current?.click();
 };
