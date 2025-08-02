@@ -1,235 +1,138 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import type { Flashcard } from "@/types/flashcards";
-import { Logger, LogContext } from "@/lib/logging/logger";
-import { AnalyticsLogger } from "@/lib/logging/logger";
+import { Logger, LogContext, AnalyticsLogger } from "@/lib/logging/logger";
 import { getServerSession } from "next-auth/next";
 import clientPromise from "@/lib/db/mongodb";
 import { authOptions } from "@/lib/auth/auth";
-// import { metadata } from "@/app/layout";
+import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
+
+// Define a type for the expected request body to ensure type safety.
+interface SaveRequestBody {
+  topic: string;
+  flashcards: Flashcard[];
+}
 
 export async function POST(request: Request) {
-  const startTime = Date.now();
-  let userId = undefined;
-  let requestId = undefined;
-  let userRole = undefined;
+  const startTime = Date.now(); // Start timing the request duration.
+  let userId: string | undefined;
+  let requestId: string | null = null;
+  let userRole: string | undefined;
 
   try {
-    // Get authenticated user if available
-    console.log("\n");
-    console.log("***********************");
-    
-    
     const session = await getServerSession(authOptions);
     userId = session?.user?.id;
-    userRole = session?.user?.role;
+    // Defaulting userRole to 'Free' if not specified, aligning with schema defaults.
+    userRole = session?.user?.role || 'Free'; 
+
+    requestId = await Logger.info(
+      LogContext.FLASHCARD,
+      "Save flashcards request received",
+      { userId, userRole }
+    );
+
+    if (!userId) {
+      await Logger.warning(LogContext.FLASHCARD, "Unauthorized attempt to save flashcards.", { requestId });
+      return NextResponse.json({ error: "You must be logged in to save flashcards." }, { status: 401 });
+    }
+
+    const body: SaveRequestBody = await request.json();
+    const { topic, flashcards } = body;
+
+    if (!topic || !flashcards || !Array.isArray(flashcards) || flashcards.length === 0) {
+      await Logger.warning(LogContext.FLASHCARD, "Invalid body provided for saving flashcards.", { requestId, userId });
+      return NextResponse.json({ error: "Topic and a valid array of flashcards are required." }, { status: 400 });
+    }
 
     const client = await clientPromise;
     const db = client.db();
+    const collection = db.collection("flashcard_sets");
 
-    // Log request
-    requestId = await Logger.info(
-      LogContext.USER,
-      "User flashcard save request by userId", { userId, request }
-    );
-    if (!userId) {
-      await Logger.error(
-        LogContext.USER,
-        "Missing UserID to save flashcard. Must be AUTHENTICATED to save flashcard.", { requestId }
-      );
-      return NextResponse.json({
-        error: "Must be LOGGED IN to save flashcard."
-      }, {
-        status: 401
+    const normalizedTopic = normalizeTopicForClustering(topic);
+
+    // Always check for an existing public set first to avoid duplicates.
+    const existingPublicSet = await collection.findOne({ normalizedTopic, isPublic: true });
+
+    if (existingPublicSet) {
+      const durationMs = Date.now() - startTime;
+      await Logger.info(LogContext.FLASHCARD, "Found existing public set, returning it.", {
+        requestId,
+        userId,
+        setId: existingPublicSet._id.toString(),
+        durationMs,
       });
+      return NextResponse.json({
+        setId: existingPublicSet._id.toString(),
+        source: "shared",
+        success: true,
+      }, { status: 200 });
     }
-    const body = await request.json();
-    /*
-    body contains
-    {
-      topic: prompt text, may be title or file name of loaded csv
-      flashcards: [
-        {
-          front: 'term',
-          back: 'definition'
-        },
-        {
-          front: 'term',
-          back: 'definition'
-        },...
-      ],
-      userEmail: 'email@email.com'
-    }
-    **/
-   if (!body) {
-    await Logger.warning(
-      LogContext.USER,
-      "Body wasn't provided to save flashcard for this requestId",
-      { requestId, metadata: { body } }
-    );
-    return NextResponse.json({
-      error: "Body wasn't provided to save flashcard."
-    }, {
-      status: 400
+
+    // If no public set exists, create a new one.
+    // The `isPublic` flag is determined by the user's role.
+    const newSet = {
+      topic,
+      normalizedTopic,
+      flashcards,
+      userId,
+      isPublic: userRole === 'Free',
+      ratings: { count: 0, sum: 0, average: 0 },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const insertResult = await collection.insertOne(newSet);
+    const newSetId = insertResult.insertedId.toString();
+    const durationMs = Date.now() - startTime;
+
+    await Logger.info(LogContext.FLASHCARD, "Successfully created and saved a new flashcard set.", {
+      requestId,
+      userId,
+      newSetId,
+      isPublic: newSet.isPublic,
+      durationMs, // Log the total time taken.
     });
-   }
-    const flashcards: Flashcard = body.flashcards;
-    const topic = body.topic;
-    const userEmail = body.userEmail;
 
-    const normalizedTopic = topic.toLowerCase().replace(/[^\w\s]/g, '').trim();
-    // check if free vs paid user
-    // if free save to shared_flashcard_sets collection
-    // else save to flashcards collection
-    if (userRole === 'free') {
-      const existingSets = await db.collection("shared_flashcard_sets")
-        .find({
-          normalizedTopic: normalizedTopic,
-        })
-        .sort({
-          "ratings.average": -1,  // Highest rated first
-          usageCount: -1,
-        })
-        .limit(1)
-        .toArray();
-        await Logger.debug(
-          LogContext.USER,
-          "Searched for existing flashcard sets", 
-          { 
-            requestId, 
-            metadata: { 
-              normalizedTopic, 
-              existingSetsCount: existingSets.length,
-              firstSetId: existingSets[0]?._id?.toString()
-            }
-          }
-        );
+    await AnalyticsLogger.trackEvent({
+      userId,
+      eventType: AnalyticsLogger.EventType.FLASHCARD_SET_SAVED,
+      properties: {
+        setId: newSetId,
+        topic,
+        cardCount: flashcards.length,
+        isPublic: newSet.isPublic,
+        durationMs,
+      },
+    });
 
-      if (existingSets.length > 0) {
-        const sharedSet = existingSets[0];
-        const durationMs = Date.now() - startTime;
-        
-        // Log that a similar shared set already exists in the db.
-        await Logger.info(
-          LogContext.USER,
-          "Similar shared flashcard set already exists in the db.",
-          {
-            requestId,
-            metadata: {
-              topic,
-              sharedSetId: sharedSet._id,
-              durationMs
-            }
-          }
-        );
-        
-        // Track analytics for shared set usage
-        if (userId) {
-          await AnalyticsLogger.trackEvent({
-            userId,
-            eventType: AnalyticsLogger.EventType.SHARED_FLASHCARDS_USED,
-            properties: { 
-              setId: sharedSet._id.toString(),
-              topic: sharedSet.topic,
-              cardCount: sharedSet.flashcards.length
-            },
-          });
-        }
-        
-        // When returning existing set, include rating info
-        return NextResponse.json({ 
-          flashcards: flashcards,
-          setId: sharedSet._id.toString(),
-          source: "shared",
-          rating: {
-            average: sharedSet.ratings.average,
-            count: sharedSet.ratings.count
-          },
-          success: true
-        }, {
-          status: 200
-        });
-      }
-    } else {
-      // currenlty it does the same thing as if the 'if' statement is true. Change later to allow 'paid' users to have private collections
-      const existingSets = await db.collection("shared_flashcard_sets")
-        .find({
-          normalizedTopic: normalizedTopic,
-        })
-        .sort({
-          "ratings.average": -1,  // Highest rated first
-          usageCount: -1,
-        })
-        .limit(1)
-        .toArray();
-        await Logger.debug(
-          LogContext.USER,
-          "Searched for existing flashcard sets", 
-          { 
-            requestId, 
-            metadata: { 
-              normalizedTopic, 
-              existingSetsCount: existingSets.length,
-              firstSetId: existingSets[0]?._id?.toString()
-            }
-          }
-        );
+    return NextResponse.json({
+      setId: newSetId,
+      source: "generated",
+      success: true,
+    }, { status: 201 }); // 201 Created is more appropriate for new resources.
 
-      if (existingSets.length > 0) {
-        const sharedSet = existingSets[0];
-        
-        // Log that a similar shared set already exists in the db.
-        await Logger.info(
-          LogContext.USER,
-          "Similar shared flashcard set already exists in the db.",
-          { requestId, metadata: { topic, sharedSetId: sharedSet._id } }
-        );
-        
-        // Track analytics for shared set usage
-        if (userId) {
-          await AnalyticsLogger.trackEvent({
-            userId,
-            eventType: AnalyticsLogger.EventType.SHARED_FLASHCARDS_USED,
-            properties: { 
-              setId: sharedSet._id.toString(),
-              topic: sharedSet.topic,
-              cardCount: sharedSet.flashcards.length
-            }
-          });
-        }
-        
-        // When returning existing set, include rating info
-        return NextResponse.json({ 
-          flashcards: flashcards,
-          setId: sharedSet._id.toString(),
-          source: "shared",
-          rating: {
-            average: sharedSet.ratings.average,
-            count: sharedSet.ratings.count
-          },
-          success: true,
-        }, {
-          status: 200
-        });
-      }
-    }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    
+    const durationMs = Date.now() - startTime;
+    const errorMessage = getErrorMessage(error);
     await Logger.error(
-      LogContext.USER,
+      LogContext.FLASHCARD,
       `Error saving flashcards: ${errorMessage}`,
-      { 
-        requestId, 
-        metadata: { 
+      {
+        requestId,
+        userId,
+        durationMs,
+        metadata: {
           error,
-          stack: error instanceof Error ? error.stack : undefined
-        }
+          stack: error instanceof Error ? error.stack : undefined,
+        },
       }
     );
-    
-    return NextResponse.json({ 
-      error: 'An unexpected error occurred while generating flashcards.' 
-    }, { status: 500 });
+
+    // Check for JSON parsing errors specifically, as they are common client-side issues.
+    if (error instanceof SyntaxError && errorMessage.includes('JSON')) {
+       return NextResponse.json({ error: 'Invalid request format. Please provide valid JSON.' }, { status: 400 });
+    }
+
+    return NextResponse.json({ error: 'An unexpected error occurred while saving the flashcards.' }, { status: 500 });
   }
 }

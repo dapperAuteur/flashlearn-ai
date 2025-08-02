@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Flashcard } from "@/types/flashcards";
 import RatingStars from "@/components/RatingStars";
+import { Logger, LogContext } from "@/lib/logging/client-logger";
+
 
 // Helper function to escape fields for CSV format
 const escapeCsvField = (field: string): string => {
@@ -81,13 +83,11 @@ const extractTopicFromKey = (key: string): string => {
   return 'Unknown Topic'; // Fallback
 };
 
-
-
-
 export default function GenerateFlashcardsPage(){
   const { data: session, status } = useSession();
   const router = useRouter();
   const [topic, setTopic] = useState('');
+  const [title, setTitle] = useState(''); // New state for the flashcard set title
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -103,23 +103,33 @@ export default function GenerateFlashcardsPage(){
   const [averageRating, setAverageRating] = useState<number>(0);
   const [ratingCount, setRatingCount] = useState<number>(0);
 
+  // Use useEffect to sync topic with title, allowing title to be edited
+  useEffect(() => {
+    setTitle(topic);
+  }, [topic]);
 
   // check if user is authenticated.
   // if user is authenticated, save flashcards to database in 'shared_flashcard_sets' collection using /generate-flashcards route
   // //generate-flashcards route checks if flashcard set already exists in db.
   const handleSave = async () => {
-    console.log("save flashcards");
-    
+    Logger.log(LogContext.FLASHCARD, 'Attempting to save flashcard set', { topic, title });
+
     if (flashcards.length === 0) {
-      setError('No flashcards to save.');
+      const errorMessage = 'No flashcards to save.';
+      setError(errorMessage);
+      Logger.warning(LogContext.FLASHCARD, errorMessage);
       return;
     }
-    if (!topic.trim()) {
-      setError("Cannot save without a topic.");
+    if (!title.trim()) {
+      const errorMessage = "Cannot save without a title.";
+      setError(errorMessage);
+      Logger.warning(LogContext.FLASHCARD, errorMessage);
       return;
     }
     if (status !== 'authenticated' || !session?.user?.email) {
-      setError('Please sign in to save your flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+      const errorMessage = 'Please sign in to save your flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!';
+      setError(errorMessage);
+      Logger.warning(LogContext.AUTH, errorMessage);
       return;
     }
 
@@ -127,28 +137,30 @@ export default function GenerateFlashcardsPage(){
     setError(null);
 
     try {
-      // console.log('topic :>> ', topic);
       const response = await fetch('/api/save-flashcards', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          topic, 
+        body: JSON.stringify({
+          topic,
+          title, // Send the title to the API
           flashcards,
           userEmail: session.user.email,
         }),
       });
 
       const data = await response.json();
-      console.log('data :>> ', data);
+      Logger.log(LogContext.FLASHCARD, 'API response for saving flashcards', { data });
+
 
       if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        Logger.error(LogContext.FLASHCARD, 'Failed to save flashcards', { errorMessage });
+        throw new Error(errorMessage);
       }
 
       if (data.success) {
-        // Update flashcardSetId and rating if available
         if (data.setId) {
           setFlashcardSetId(data.setId);
         }
@@ -158,30 +170,41 @@ export default function GenerateFlashcardsPage(){
         }
         // Provide user feedback
         alert('Flashcards saved successfully!');
+        Logger.info(LogContext.FLASHCARD, 'Flashcard set saved successfully', { setId: data.setId });
       } else {
-        throw new Error(data.message || 'Failed to save flashcards.');
+        const errorMessage = data.message || 'Failed to save flashcards.';
+        Logger.error(LogContext.FLASHCARD, errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred while saving.';
       console.error("Saving failed:", error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred while saving.');
+      setError(errorMessage);
+      Logger.error(LogContext.FLASHCARD, 'Error during flashcard saving', { error });
     } finally {
       setIsExporting(false);
     }
   }
-  
 
   const handleExportCSV = () => {
+    Logger.log(LogContext.FLASHCARD, 'Attempting to export flashcard set to CSV', { topic });
     if (flashcards.length === 0) {
-      setError('No flashcards to export.');
+      const errorMessage = 'No flashcards to export.';
+      setError(errorMessage);
+      Logger.warning(LogContext.FLASHCARD, errorMessage);
       return;
     }
     if (!topic.trim()) {
-      setError("Cannot export without a topic.");
+      const errorMessage = "Cannot export without a topic.";
+      setError(errorMessage);
+      Logger.warning(LogContext.FLASHCARD, errorMessage);
       return;
     }
 
     if (status !== 'authenticated') {
-      setError('Please sign in to export your flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+      const errorMessage = 'Please sign in to export your flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!';
+      setError(errorMessage);
+      Logger.warning(LogContext.AUTH, errorMessage);
       return;
     }
 
@@ -201,11 +224,12 @@ export default function GenerateFlashcardsPage(){
       // 2. Save CSV content to localStorage with dynamic key
       try {
         localStorage.setItem(localStorageKey, csvContent);
-        console.log(`CSV content saved to localStorage under key: ${localStorageKey}`);
+        Logger.info(LogContext.FLASHCARD, `CSV content saved to localStorage under key: ${localStorageKey}`);
       } catch (storageError) {
         console.error("Failed to save CSV content to localStorage:", storageError);
         // Optionally notify the user, but proceed with download anyway
         setError("Could not save to local storage, but download will proceed.");
+        Logger.error(LogContext.SYSTEM, 'Failed to save CSV to localStorage', { storageError });
       }
       // 3. Trigger file download with dynamic filename
       // Create a Blob object containing the CSV data
@@ -227,23 +251,32 @@ export default function GenerateFlashcardsPage(){
 
       // Optional: Revoke the object URL to free up memory, though browser usually handles this
       // URL.revokeObjectURL(url);
+      Logger.info(LogContext.FLASHCARD, 'CSV file download initiated', { filename });
+
     } catch (error) {
+      const errorMessage = "An error occurred while exporting the CSV file.";
       console.error("Error exporting CSV:", error);
-      setError("An error occurred while exporting the CSV file.");
+      setError(errorMessage);
+      Logger.error(LogContext.FLASHCARD, 'Error during CSV export', { error });
     }
     setIsExporting(false);
   }
 
   const handleGenerate = async () => {
+    Logger.log(LogContext.FLASHCARD, 'Attempting to generate flashcards from AI', { topic });
     if(!topic.trim()) {
-      setError('Please enter a topic or some terms and definitions to create the front and back of your flashcards.');
+      const errorMessage = 'Please enter a topic or some terms and definitions to create the front and back of your flashcards.';
+      setError(errorMessage);
       setFlashcards([]);
+      Logger.warning(LogContext.FLASHCARD, errorMessage);
       return;
     }
 
     if (status !== 'authenticated') {
-      setError('Please sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+      const errorMessage = 'Please sign up or log in to generate flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!';
+      setError(errorMessage);
       setFlashcards([]);
+      Logger.warning(LogContext.AUTH, errorMessage);
       return;
     }
 
@@ -262,37 +295,47 @@ export default function GenerateFlashcardsPage(){
       });
 
       const data = await response.json();
+      Logger.log(LogContext.FLASHCARD, 'API response from flashcard generation', { data });
 
       if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        Logger.error(LogContext.FLASHCARD, 'Failed to generate flashcards', { errorMessage });
+        throw new Error(errorMessage);
       }
 
       if (response.ok) {
-
         if (data.flashcards && data.flashcards.length > 0) {
           setFlashcards(data.flashcards);
           setFlashcardSetId(data.setId || null);
           setAverageRating(data.rating?.average || 0);
           setRatingCount(data.rating?.count || 0);
+          Logger.info(LogContext.FLASHCARD, 'Flashcards successfully generated', { cardCount: data.flashcards.length });
         } else {
-           setError(data.error || 'No flashcards were generated. Try refining your topic.');
+           const errorMessage = data.error || 'No flashcards were generated. Try refining your topic.';
+           setError(errorMessage);
+           Logger.warning(LogContext.FLASHCARD, errorMessage);
         }
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.';
       console.error("Generation failed:", error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred.');
+      setError(errorMessage);
       setFlashcards([]);
+      Logger.error(LogContext.FLASHCARD, 'Error during flashcard generation', { error });
     } finally {
       setIsLoading(false);
     }
-      
+
     }
 
     // Add these functions inside the GenerateFlashcardsPage component
 
   const handleScanStorage = () => {
+    Logger.log(LogContext.FLASHCARD, 'Attempting to scan local storage for flashcard sets');
     if (status !== 'authenticated') {
-      setError('Please sign in to load your saved flashcard sets. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+      const errorMessage = 'Please sign in to load your saved flashcard sets. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!';
+      setError(errorMessage);
+      Logger.warning(LogContext.AUTH, errorMessage);
       return;
     }
 
@@ -313,35 +356,44 @@ export default function GenerateFlashcardsPage(){
         }
       }
     } catch (e) {
-      console.error("Could not access localStorage:", e);
-      setError("Could not access local storage. It might be disabled.");
+      const errorMessage = "Could not access local storage. It might be disabled.";
+      console.error(errorMessage, e);
+      setError(errorMessage);
+      Logger.error(LogContext.SYSTEM, 'Error accessing local storage', { error: e });
       return;
     }
 
     if (foundSets.length > 0) {
       setAvailableSets(foundSets);
       setShowLoadModal(true);
+      Logger.info(LogContext.FLASHCARD, 'Found flashcard sets in local storage', { count: foundSets.length });
     } else {
-      setError("No saved flashcard sets found in local storage.");
+      const errorMessage = "No saved flashcard sets found in local storage.";
+      setError(errorMessage);
+      Logger.info(LogContext.FLASHCARD, errorMessage);
     }
   };
 
   const loadSelectedSet = (key: string) => {
+    Logger.log(LogContext.FLASHCARD, 'Attempting to load flashcard set from local storage', { key });
     setError(null);
     try {
       const csvContent = localStorage.getItem(key);
       if (!csvContent) {
-        throw new Error("Selected set not found in storage.");
+        const errorMessage = "Selected set not found in storage.";
+        throw new Error(errorMessage);
       }
 
       const lines = csvContent.split('\n');
       if (lines.length < 2) { // Must have header + at least one data row
-        throw new Error("Invalid or empty CSV data found.");
+        const errorMessage = "Invalid or empty CSV data found.";
+        throw new Error(errorMessage);
       }
 
       const header = parseCsvRow(lines[0]); // ['Front', 'Back']
       if (header.length < 2 || header[0].toLowerCase() !== 'front' || header[1].toLowerCase() !== 'back') {
-          throw new Error("CSV header is missing or incorrect ('Front', 'Back' expected).");
+          const errorMessage = "CSV header is missing or incorrect ('Front', 'Back' expected).";
+          throw new Error(errorMessage);
       }
 
       const loadedFlashcards: Flashcard[] = [];
@@ -349,25 +401,31 @@ export default function GenerateFlashcardsPage(){
         if (lines[i].trim() === '') continue; // Skip empty lines
         const fields = parseCsvRow(lines[i]);
         if (fields.length >= 2) {
-          loadedFlashcards.push({ front: fields[0], back: fields[1] });
+          loadedFlashcards.push({ front: fields[0].trim(), back: fields[1].trim() });
         } else {
-            console.warn(`Skipping invalid CSV row ${i + 1}: ${lines[i]}`);
+            const warningMessage = `Skipping invalid CSV row ${i + 1}: ${lines[i]}`;
+            console.warn(warningMessage);
+            Logger.warning(LogContext.FLASHCARD, warningMessage);
         }
       }
 
       if (loadedFlashcards.length === 0) {
-          throw new Error("CSV file contained no valid flashcard rows.");
+          const errorMessage = "CSV file contained a valid header but no valid flashcard data rows.";
+          throw new Error(errorMessage);
       }
 
       setFlashcards(loadedFlashcards);
       setTopic(extractTopicFromKey(key)); // Set the topic based on the loaded key
       setShowLoadModal(false); // Close modal on success
       setFlippedCardIndices(new Set()); // Reset flip state
+      Logger.info(LogContext.FLASHCARD, 'Successfully loaded flashcard set from local storage', { key, cardCount: loadedFlashcards.length });
 
     } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to load or parse the selected set.";
       console.error("Error loading or parsing CSV from storage:", err);
-      setError(err instanceof Error ? err.message : "Failed to load or parse the selected set.");
+      setError(errorMessage);
       setShowLoadModal(false); // Close modal even on error
+      Logger.error(LogContext.FLASHCARD, 'Error loading flashcard set from local storage', { error: err });
     }
   };
 
@@ -377,154 +435,175 @@ export default function GenerateFlashcardsPage(){
       const newSet = new Set(prev);
       if (newSet.has(index)) {
         newSet.delete(index);
+        Logger.debug(LogContext.STUDY, 'Flipped card back', { index });
       } else {
-        console.log("else, add index to set");
-        
         newSet.add(index);
+        Logger.debug(LogContext.STUDY, 'Flipped card to front', { index });
       }
-      console.log("return new set");
-      
       return newSet;
     });
   };
 
-// Add these functions inside the GenerateFlashcardsPage component
-
-const handleTriggerUpload = () => {
-  if (status !== 'authenticated') {
-    setError('Please sign in to upload flashcards from a CSV file. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!');
-    return;
-  }
-
-  // Trigger click on the hidden file input
-  fileInputRef.current?.click();
-};
-
-const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-  setError(null); // Clear previous errors
-  setShowTemplateDownloadButton(false); // Hide template button initially
-  const file = event.target.files?.[0];
-
-  if (!file) {
-    return; // No file selected
-  }
-
-  // Basic file type check (can be improved with MIME types if needed)
-  if (!file.name.toLowerCase().endsWith('.csv')) {
-    setError("Invalid file type. Please upload a .csv file.");
-    // Clear the file input value so the user can select the same file again if needed
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    return;
-  }
-
-  setIsUploading(true);
-  setFlashcards([]); // Clear current cards
-  setTopic(''); // Clear current topic
-  setFlippedCardIndices(new Set());
-
-  const reader = new FileReader();
-
-  reader.onload = (e) => {
-    const content = e.target?.result as string;
-    if (content) {
-      processCsvContent(content, file.name); // Pass filename for topic
-    } else {
-      setError("Could not read file content.");
-    }
-    setIsUploading(false);
-    // Clear the file input value after processing
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  reader.onerror = () => {
-    setError("Error reading the file.");
-    setIsUploading(false);
-    // Clear the file input value on error
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  reader.readAsText(file);
-};
-
-const processCsvContent = (csvContent: string, originalFilename: string) => {
-  try {
-    const lines = csvContent.split('\n').filter(line => line.trim() !== ''); // Split and remove empty lines
-
-    if (lines.length < 2) {
-      setError("CSV file must contain at least a header row and one data row.");
-      setShowTemplateDownloadButton(true); // Offer template
+  const handleTriggerUpload = () => {
+    Logger.log(LogContext.FLASHCARD, 'Triggering CSV upload');
+    if (status !== 'authenticated') {
+      const errorMessage = 'Please sign in to upload flashcards from a CSV file. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!';
+      setError(errorMessage);
+      Logger.warning(LogContext.AUTH, errorMessage);
       return;
     }
 
-    const header = parseCsvRow(lines[0]);
-    const expectedHeader = ["front", "back"]; // Case-insensitive check
+    // Trigger click on the hidden file input
+    fileInputRef.current?.click();
+  };
 
-    // Validate Header
-    if (header.length < 2 || header[0].trim().toLowerCase() !== expectedHeader[0] || header[1].trim().toLowerCase() !== expectedHeader[1]) {
-      setError(`Invalid CSV header. Expected columns: "Front,Back" (case-insensitive).`);
-      setShowTemplateDownloadButton(true); // Offer template
-      return;
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null); // Clear previous errors
+    setShowTemplateDownloadButton(false); // Hide template button initially
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      Logger.warning(LogContext.FLASHCARD, 'No file selected for upload');
+      return; // No file selected
     }
 
-    // Process Data Rows
-    const loadedFlashcards: Flashcard[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      const fields = parseCsvRow(lines[i]);
-      if (fields.length >= 2 && fields[0].trim()) { // Ensure front is not empty
-        loadedFlashcards.push({ front: fields[0].trim(), back: fields[1].trim() });
-      } else {
-        console.warn(`Skipping invalid or incomplete CSV row ${i + 1}: ${lines[i]}`);
+    Logger.info(LogContext.FLASHCARD, 'File selected for upload', { filename: file.name, fileSize: file.size });
+
+    // Basic file type check (can be improved with MIME types if needed)
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      const errorMessage = "Invalid file type. Please upload a .csv file.";
+      setError(errorMessage);
+      Logger.error(LogContext.FLASHCARD, errorMessage, { filename: file.name });
+      // Clear the file input value so the user can select the same file again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-    }
-
-    if (loadedFlashcards.length === 0) {
-      setError("CSV file contained a valid header but no valid flashcard data rows.");
       return;
     }
 
-    // Success: Update state
-    setFlashcards(loadedFlashcards);
-    // Set topic based on filename (remove .csv extension and sanitize)
-    const filenameWithoutExtension = originalFilename.replace(/\.csv$/i, '');
-    setTopic(sanitizeString(filenameWithoutExtension).replace(/_/g, ' ')); // Use sanitized name for display topic
-    setError(null); // Clear any previous errors
-    setFlippedCardIndices(new Set()); // Reset flip state
+    setIsUploading(true);
+    setFlashcards([]); // Clear current cards
+    setTopic(''); // Clear current topic
+    setFlippedCardIndices(new Set());
 
-  } catch (err) {
-    console.error("Error processing CSV content:", err);
-    setError("An error occurred while processing the CSV file. Please ensure it's correctly formatted.");
-    setShowTemplateDownloadButton(true); // Offer template on generic processing error too
-  }
-};
+    const reader = new FileReader();
 
-const handleDownloadTemplate = () => {
-  const templateContent = `"Front","Back"\n"Example Front 1","Example Back 1"\n"Front with, comma","Back with ""quotes"""`;
-  const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", "flashcard_template.csv");
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (content) {
+        processCsvContent(content, file.name); // Pass filename for topic
+      } else {
+        const errorMessage = "Could not read file content.";
+        setError(errorMessage);
+        Logger.error(LogContext.FLASHCARD, errorMessage, { filename: file.name });
+      }
+      setIsUploading(false);
+      // Clear the file input value after processing
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    };
+
+    reader.onerror = () => {
+      const errorMessage = "Error reading the file.";
+      setError(errorMessage);
+      setIsUploading(false);
+      // Clear the file input value on error
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      Logger.error(LogContext.FLASHCARD, errorMessage, { filename: file.name });
+    };
+
+    reader.readAsText(file);
+  };
+
+  const processCsvContent = (csvContent: string, originalFilename: string) => {
+    try {
+      const lines = csvContent.split('\n').filter(line => line.trim() !== ''); // Split and remove empty lines
+
+      if (lines.length < 2) {
+        const errorMessage = "CSV file must contain at least a header row and one data row.";
+        setError(errorMessage);
+        setShowTemplateDownloadButton(true); // Offer template
+        Logger.warning(LogContext.FLASHCARD, errorMessage, { filename: originalFilename });
+        return;
+      }
+
+      const header = parseCsvRow(lines[0]);
+      const expectedHeader = ["front", "back"]; // Case-insensitive check
+
+      // Validate Header
+      if (header.length < 2 || header[0].trim().toLowerCase() !== expectedHeader[0] || header[1].trim().toLowerCase() !== expectedHeader[1]) {
+        const errorMessage = `Invalid CSV header. Expected columns: "Front,Back" (case-insensitive).`;
+        setError(errorMessage);
+        setShowTemplateDownloadButton(true); // Offer template
+        Logger.error(LogContext.FLASHCARD, errorMessage, { filename: originalFilename, header });
+        return;
+      }
+
+      // Process Data Rows
+      const loadedFlashcards: Flashcard[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const fields = parseCsvRow(lines[i]);
+        if (fields.length >= 2 && fields[0].trim()) { // Ensure front is not empty
+          loadedFlashcards.push({ front: fields[0].trim(), back: fields[1].trim() });
+        } else {
+          const warningMessage = `Skipping invalid or incomplete CSV row ${i + 1}: ${lines[i]}`;
+          console.warn(warningMessage);
+          Logger.warning(LogContext.FLASHCARD, warningMessage);
+        }
+      }
+
+      if (loadedFlashcards.length === 0) {
+        const errorMessage = "CSV file contained a valid header but no valid flashcard data rows.";
+        setError(errorMessage);
+        Logger.error(LogContext.FLASHCARD, errorMessage, { filename: originalFilename });
+        return;
+      }
+
+      // Success: Update state
+      setFlashcards(loadedFlashcards);
+      // Set topic based on filename (remove .csv extension and sanitize)
+      const filenameWithoutExtension = originalFilename.replace(/\.csv$/i, '');
+      const newTopic = sanitizeString(filenameWithoutExtension).replace(/_/g, ' ');
+      setTopic(newTopic); // Use sanitized name for display topic
+      setTitle(newTopic); // Also set the title to the new topic
+      setError(null); // Clear any previous errors
+      setFlippedCardIndices(new Set()); // Reset flip state
+      Logger.info(LogContext.FLASHCARD, 'Successfully processed CSV content', { filename: originalFilename, cardCount: loadedFlashcards.length });
 
 
+    } catch (err) {
+      const errorMessage = "An error occurred while processing the CSV file. Please ensure it's correctly formatted.";
+      console.error("Error processing CSV content:", err);
+      setError(errorMessage);
+      setShowTemplateDownloadButton(true); // Offer template on generic processing error too
+      Logger.error(LogContext.FLASHCARD, 'Generic error processing CSV content', { error: err });
+    }
+  };
 
+  const handleDownloadTemplate = () => {
+    Logger.log(LogContext.FLASHCARD, 'Initiating CSV template download');
+    const templateContent = `"Front","Back"\n"Example Front 1","Example Back 1"\n"Front with, comma","Back with ""quotes"""`;
+    const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "flashcard_template.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    Logger.info(LogContext.FLASHCARD, 'CSV template download started');
+  };
 
   return (
     <>
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6 text-center">Generate Flashcards with AI</h1>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
           <p className="mb-4 text-gray-600 dark:text-gray-300">
             Enter a topic or specific &quot;Front: Back&quot; pairs to generate flashcards instantly using AI.
@@ -538,6 +617,20 @@ const handleDownloadTemplate = () => {
         onChange={(e) => setTopic(e.target.value)}
         disabled={isLoading}
       />
+      <div className="mb-4">
+        <label htmlFor="titleInput" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          Flashcard Set Title
+        </label>
+        <input
+          type="text"
+          id="titleInput"
+          className="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., My Photosynthesis Flashcards"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          disabled={isLoading || flashcards.length === 0}
+        />
+      </div>
       <input
           type="file"
           ref={fileInputRef}
@@ -582,7 +675,7 @@ const handleDownloadTemplate = () => {
            id="saveButton"
            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
             onClick={handleSave}
-           disabled={isLoading || isExporting || flashcards.length === 0 || !topic.trim()}
+           disabled={isLoading || isExporting || flashcards.length === 0 || !title.trim()}
          >
            {isExporting ? 'Saving...' : 'Save Flashcards'}
          </button>
@@ -633,18 +726,18 @@ const handleDownloadTemplate = () => {
                   </div>
                 ))}
               </div>
-              
+
               {/* Rating Component */}
               {flashcardSetId && (
                 <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
                   <h3 className="text-lg font-medium mb-2">Rate These Flashcards</h3>
                   {status === 'authenticated' ? (
-                  <RatingStars 
-                    setId={flashcardSetId} 
+                  <RatingStars
+                    setId={flashcardSetId}
                     initialRating={averageRating}
                     totalRatings={ratingCount}
                     onRatingSubmitted={(newRating) => {
-                      console.log(`User submitted rating: ${newRating}`);
+                      Logger.info(LogContext.FLASHCARD, `User submitted rating: ${newRating}`, { setId: flashcardSetId, rating: newRating });
                     }}
                   />
                   ) : (
@@ -661,14 +754,6 @@ const handleDownloadTemplate = () => {
           )}
         </div>
       </div>
-       {/* Add CSS for the flip animation (e.g., in your global.css) */}
-       {/*
-          .perspective { perspective: 1000px; }
-          .transform-style-preserve-3d { transform-style: preserve-3d; }
-          .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-          .rotate-y-180 { transform: rotateY(180deg); }
-          .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
-       */}
       {showLoadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
@@ -706,6 +791,4 @@ const handleDownloadTemplate = () => {
     </div>
     </>
   );
-
-
 }
