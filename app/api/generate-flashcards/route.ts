@@ -9,7 +9,7 @@ import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLi
 import { FLASHCARD_MAX, FLASHCARD_MIN, MODEL } from '@/lib/constants';
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 import dbConnect from "@/lib/db/dbConnect";
-import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering"; // assuming this utility exists or will be created
+import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering";
 
 
 async function generateFlashcardsFromAI(topic: string, requestId: string): Promise<Flashcard[]> {
@@ -84,9 +84,7 @@ export async function POST(request: NextRequest) {
 
         const { topic } = await request.json();
         // Corrected Logger.log call
-        await Logger.log({
-            context: LogContext.AI,
-            message: "Flashcard generation request payload received.",
+        await Logger.info(LogContext.AI,"Flashcard generation request payload received.",{
             userId,
             requestId,
             metadata: { topic }
