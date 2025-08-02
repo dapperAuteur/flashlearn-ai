@@ -234,6 +234,13 @@ export default function GenerateFlashcardsPage(){
       setFlashcards([]);
       return;
     }
+
+    if (status !== 'authenticated') {
+      setError('Please sign in to generate flashcards. You get 1 free AI-generated set every 30 days!');
+      setFlashcards([]);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setFlashcards([]); // Clear previous cards
@@ -570,6 +577,11 @@ const handleDownloadTemplate = () => {
         <div className="my-4 p-3 bg-red-100 border border-red-300 rounded-md">
           <p className="text-red-600">{error}</p>
         {/* Conditional Template Download Button */}
+        {error.includes('sign in') && (
+            <Link href="/signin" className="mt-2 inline-block bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700">
+              Sign In
+            </Link>
+          )}
         {showTemplateDownloadButton && (
           <button
             onClick={handleDownloadTemplate}
