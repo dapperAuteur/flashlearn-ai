@@ -5,6 +5,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
+// Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface StudySessionResultsProps {
@@ -57,26 +58,23 @@ export default function StudySessionResults({ results, onReset }: StudySessionRe
     return `${mins}m ${secs}s`;
   };
 
-  const avgTime = results.completedCards > 0 ? results.durationSeconds / results.completedCards : 0;
+  // Log viewing results
+  Logger.log(LogContext.STUDY, "Viewing study session results", {
+    sessionId: results.sessionId,
+    accuracy: results.accuracy
+  });
 
+  // Chart data
   const chartData = {
     labels: ['Correct', 'Incorrect'],
-    datasets: [{
-      data: [results.correctCount, results.incorrectCount],
-      backgroundColor: ['#10B981', '#EF4444'],
-      borderColor: ['#FFFFFF'],
-      borderWidth: 2,
-    }],
-  };
-  
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-        legend: {
-            position: 'bottom' as const,
-        },
-    },
+    datasets: [
+      {
+        data: [results.correctCount, results.incorrectCount],
+        backgroundColor: ['#10B981', '#EF4444'],
+        borderColor: ['#059669', '#DC2626'],
+        borderWidth: 1,
+      },
+    ],
   };
 
   // Handles the reset button click, logging the event before proceeding.
@@ -105,9 +103,11 @@ export default function StudySessionResults({ results, onReset }: StudySessionRe
             <StatCard label="Avg. Time" value={formatDuration(avgTime)} />
         </div>
         
-        {/* Chart Section */}
-        <div className="relative h-64 sm:h-72">
-          <Doughnut data={chartData} options={chartOptions}/>
+        <div>
+          <h3 className="text-lg font-semibold mb-4 text-gray-700">Performance</h3>
+          <div className="w-full max-w-xs mx-auto">
+            <Doughnut data={chartData} />
+          </div>
         </div>
       </div>
 
