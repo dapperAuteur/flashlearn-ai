@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
  */
 export interface List {
   _id?: string | ObjectId;
-  name: string;                   // List name
+  title: string;                   // List name
   description: string;            // List description
   isPublic: boolean;              // Whether the list is public or private
   userId: string | ObjectId;      // Owner of this list

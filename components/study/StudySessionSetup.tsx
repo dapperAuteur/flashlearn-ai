@@ -110,7 +110,7 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
           <option value="">-- Select a List --</option>
           {lists.map((list) => (
             <option key={list._id?.toString()} value={list._id?.toString()}>
-              {list.name} ({list.cardCount} cards)
+              {list.title} ({list.cardCount} cards)
             </option>
           ))}
         </select>

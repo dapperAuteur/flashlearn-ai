@@ -21,13 +21,13 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id;
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const listName = formData.get('listName') as string;
+    const listTitle = formData.get('listTitle') as string;
     const isPublic = formData.get('isPublic') || 'false';
 
 
-    if (!file || !listName) {
-      await Logger.warning(LogContext.FLASHCARD, "Missing file or list name", { requestId });
-      return NextResponse.json({ error: 'File and list name required' }, { status: 400 });
+    if (!file || !listTitle) {
+      await Logger.warning(LogContext.FLASHCARD, "Missing file or list title", { requestId });
+      return NextResponse.json({ error: 'File and list title required' }, { status: 400 });
     }
 
     // Parse CSV
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Create the list
     const listResult = await db.collection('lists').insertOne({
-      name: listName,
+      name: listTitle,
       description: `Imported from ${file.name}`,
       userId,
       isPublic: isPublic || false,

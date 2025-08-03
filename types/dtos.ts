@@ -15,7 +15,7 @@ export interface FlashcardFormData {
  * DTO for creating or updating a list
  */
 export interface ListFormData {
-  name: string;                   // List name
+  title: string;                   // List name
   description: string;            // List description
   isPublic: boolean;              // Whether the list is public or private
   categoryId?: string;            // Optional category ID

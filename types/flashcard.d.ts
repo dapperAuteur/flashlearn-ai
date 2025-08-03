@@ -32,6 +32,8 @@ export interface IFlashcardSet {
   _id: string; // The document ID
   userId: string;
   profileId: string;
+  name?: string;
+  description?: string;
   title: string;
   isPublic: boolean;
   source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV' | 'Text' | 'Video';

@@ -12,7 +12,7 @@ interface CsvImportModalProps {
 
 export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: CsvImportModalProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [listName, setListName] = useState('');
+  const [listTitle, setListTitle] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
     
     // Extract filename without extension for default list name
     const fileName = selectedFile.name.replace(/\.[^/.]+$/, "");
-    setListName(fileName);
+    setListTitle(fileName);
 
     // Preview first few rows
     try {
@@ -44,7 +44,7 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
   };
 
   const handleImport = async () => {
-    if (!file || !listName.trim()) {
+    if (!file || !listTitle.trim()) {
       setError('Please select a file and enter a list name');
       return;
     }
@@ -55,12 +55,12 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
       
       Logger.log(LogContext.FLASHCARD, "Starting CSV import", { 
         fileName: file.name, 
-        listName 
+        listTitle 
       });
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('listName', listName.trim());
+      formData.append('listTitle', listTitle.trim());
 
       const response = await fetch('/api/lists/import-csv', {
         method: 'POST',
@@ -121,12 +121,12 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            List Name
+            List Title
           </label>
           <input
             type="text"
-            value={listName}
-            onChange={(e) => setListName(e.target.value)}
+            value={listTitle}
+            onChange={(e) => setListTitle(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter list name"
           />
@@ -173,7 +173,7 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
           </button>
           <button
             onClick={handleImport}
-            disabled={!file || !listName.trim() || isLoading}
+            disabled={!file || !listTitle.trim() || isLoading}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
           >
             {isLoading ? 'Importing...' : 'Import'}

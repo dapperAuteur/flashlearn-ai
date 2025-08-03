@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
     userId = session?.user?.id;
     // Defaulting userRole to 'Free' if not specified, aligning with schema defaults.
-    userRole = session?.user?.role || 'Free'; 
+    userRole = session?.user?.role || 'Student'; 
 
     requestId = await Logger.info(
       LogContext.FLASHCARD,

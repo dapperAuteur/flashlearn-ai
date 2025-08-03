@@ -34,6 +34,11 @@ const FlashcardSetSchema = new mongoose.Schema({
     ref: 'Profile',
     required: true,
   },
+  name: {
+    type: String,
+    required: false,
+    trim: true,
+  },
   title: {
     type: String,
     required: true,
