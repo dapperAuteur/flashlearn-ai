@@ -108,7 +108,8 @@ export default function GenerateFlashcardsPage(){
   const [averageRating, setAverageRating] = useState<number>(0);
   const [ratingCount, setRatingCount] = useState<number>(0);
 
-  // Use useEffect to sync topic with title, allowing title to be edited
+  // Set the title based on the topic only once when the topic changes.
+  // We remove the useEffect to allow the user to edit the title.
   useEffect(() => {
     setTitle(topic);
   }, [topic]);
@@ -337,7 +338,6 @@ export default function GenerateFlashcardsPage(){
       if (loadedFlashcards.length === 0) {
         const errorMessage = "CSV file contained a valid header but no valid flashcard data rows.";
         setError(errorMessage);
-        // Corrected to use a general error logging call
         Logger.error(LogContext.FLASHCARD, errorMessage, { filename: extractTopicFromKey(key) });
         return;
       }
@@ -529,6 +529,7 @@ export default function GenerateFlashcardsPage(){
     document.body.removeChild(link);
     Logger.info(LogContext.FLASHCARD, 'CSV template download started');
   };
+
   return (
     <>
     <div className="container mx-auto px-4 py-8">
@@ -559,7 +560,7 @@ export default function GenerateFlashcardsPage(){
           placeholder="e.g., My Photosynthesis Flashcards"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          disabled={isLoading || flashcards.length === 0}
+          disabled={isLoading}
         />
       </div>
       <div className="mb-4">
@@ -572,7 +573,7 @@ export default function GenerateFlashcardsPage(){
           placeholder="A brief description of this flashcard set."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          disabled={isLoading || flashcards.length === 0}
+          disabled={isLoading}
         />
       </div>
       <input
@@ -616,6 +617,8 @@ export default function GenerateFlashcardsPage(){
            {isExporting ? 'Exporting CSV...' : 'Export CSV of Flashcards'}
          </button>
       </div>
+
+
       {error && (
         <div className="my-4 p-3 bg-red-100 border border-red-300 rounded-md">
           <p className="text-red-600">{error}</p>
