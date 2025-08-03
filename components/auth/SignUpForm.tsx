@@ -8,8 +8,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import PasswordStrengthMeter from '@/components/ui/PasswordStrengthMeter';
+import { Logger, LogContext } from "@/lib/logging/client-logger";
 
-// Replace the existing signUpSchema with this enhanced version
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
@@ -28,6 +28,7 @@ const signUpSchema = z.object({
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
+// The onSuccess prop is no longer needed as the form handles its own redirection.
 export default function SignUpForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,9 +41,9 @@ export default function SignUpForm() {
   const onSubmit = async (data: SignUpFormData) => {
     setIsLoading(true);
     setError(null);
+    Logger.log(LogContext.AUTH, 'Sign-up form submitted', { email: data.email });
     
     try {
-      console.log("Registering user:", data.email);
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,27 +52,21 @@ export default function SignUpForm() {
           email: data.email,
           password: data.password
         })
-      }).catch(error => {
-        console.error("Fetch error:", error);
-        throw new Error(`Network error: ${error.message}`);
-      })
+      });
       
-      if (!response) {
-        throw new Error("No response from server");
-      }
       const result = await response.json();
       
       if (!response.ok) {
-        console.log("Registration failed:", result);
+        Logger.warning(LogContext.AUTH, 'User registration failed', { email: data.email, error: result.error });
         setError(result.error || "Registration failed");
         return;
       }
       
-      console.log("User registered successfully, redirecting to sign in");
-      // Redirect to sign-in page with success message
-      router.push("/signin?registered=true");
+      Logger.log(LogContext.AUTH, 'User registration successful', { email: data.email });
+      // Redirect to sign-in page with the correct status parameter.
+      router.push('/auth/sign-in?status=signup-success');
     } catch (error: any) {
-      console.error("Registration error:", error);
+      Logger.error(LogContext.AUTH, 'Sign-up submission error', { email: data.email, error: error.message });
       setError(`Error: ${error.message || "An unexpected error occurred"}`);
     } finally {
       setIsLoading(false);
@@ -135,7 +130,6 @@ export default function SignUpForm() {
             className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
-          {/* Add this password strength meter component */}
           <PasswordStrengthMeter password={watch("password") || ""} />
           {errors.password && (
             <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>

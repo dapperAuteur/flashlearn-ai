@@ -8,8 +8,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { Logger, LogContext } from "@/lib/logging/client-logger";
 
-// Validation schema for sign in form
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required")
@@ -29,6 +29,7 @@ export default function SignInForm() {
   const handleResendVerification = async () => {
     setResendLoading(true);
     setResendSuccess(false);
+    Logger.log(LogContext.AUTH, 'Resend verification email requested', { email: resendEmail });
     
     try {
       const response = await fetch("/api/resend-verification", {
@@ -40,19 +41,20 @@ export default function SignInForm() {
       const data = await response.json();
       
       if (response.ok) {
+        Logger.log(LogContext.AUTH, 'Resend verification email successful', { email: resendEmail });
         setResendSuccess(true);
         setError(null);
       } else {
+        Logger.warning(LogContext.AUTH, 'Resend verification email failed', { email: resendEmail, error: data.error });
         setError(data.error || "Failed to resend verification email");
       }
-    } catch (error) {
-      console.error("Resend verification error:", error);
+    } catch (error: any) {
+      Logger.error(LogContext.AUTH, 'Resend verification submission error', { email: resendEmail, error: error.message });
       setError("An unexpected error occurred");
     } finally {
       setResendLoading(false);
     }
   };
-
   
   const { register, handleSubmit, formState: { errors } } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema)
@@ -61,9 +63,9 @@ export default function SignInForm() {
   const onSubmit = async (data: SignInFormData) => {
     setIsLoading(true);
     setError(null);
+    Logger.log(LogContext.AUTH, 'Sign-in form submitted', { email: data.email });
     
     try {
-      console.log("Signing in user:", data.email);
       const result = await signIn("credentials", {
         redirect: false,
         email: data.email,
@@ -71,27 +73,23 @@ export default function SignInForm() {
       });
       
       if (result?.error) {
-        console.log("Sign in error:", result.error);
-
-        // Check for specific error types
-      if (result.error.includes("email_not_verified")) {
-        setError("Please verify your email address before signing in");
-        setShowResendButton(true);
-        setResendEmail(data.email);
-        // Redirect to error page with specific error
-        router.push("/auth/error?error=email_not_verified");
+        Logger.warning(LogContext.AUTH, 'User sign-in failed', { email: data.email, error: result.error });
+        if (result.error.includes("email_not_verified")) {
+          setError("Please verify your email address before signing in");
+          setShowResendButton(true);
+          setResendEmail(data.email);
+          router.push("/auth/error?error=email_not_verified");
+          return;
+        }
+        setError("Invalid email or password");
         return;
       }
       
-      setError("Invalid email or password");
-      return;
-    }
-      
-      console.log("User signed in successfully, redirecting to dashboard");
+      Logger.log(LogContext.AUTH, 'User sign-in successful', { email: data.email });
       router.push("/generate");
-      router.refresh(); // Refresh the page to update the session
+      router.refresh();
     } catch (error: any) {
-      console.error("Sign in error:", error);
+      Logger.error(LogContext.AUTH, 'Sign-in submission error', { email: data.email, error: error.message });
       setError(`Connection error: ${error.message || "Failed to connect to authentication server"}`);
     } finally {
       setIsLoading(false);

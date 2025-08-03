@@ -11,7 +11,6 @@ import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 import dbConnect from "@/lib/db/dbConnect";
 import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering";
 
-
 async function generateFlashcardsFromAI(topic: string, requestId: string): Promise<Flashcard[]> {
     const fullPrompt = `
       Based on the following topic, generate a set of ${FLASHCARD_MIN} to ${FLASHCARD_MAX} flashcards.
@@ -65,26 +64,32 @@ async function generateFlashcardsFromAI(topic: string, requestId: string): Promi
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
+    
+    // Moved the session check to the top and made sure it's awaited immediately.
+    // This is the primary fix for the "Dynamic server usage" error.
+    const session = await getServerSession(authOptions);
+
+    // Now we can safely get the requestId, as it no longer relies on the session context.
     const requestId = await Logger.info(
         LogContext.AI,
         "AI flashcard generation request initiated."
     ) ?? `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     try {
-        await dbConnect(); // Connect to MongoDB
-        const session = await getServerSession(authOptions);
-
         if (!session || !session.user || !session.user.id) {
             await Logger.warning(LogContext.AUTH, "Unauthorized attempt to generate flashcards.", { requestId });
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        
+        await dbConnect(); // Connect to MongoDB after the session check
 
         const userId = session.user.id;
         await Logger.info(LogContext.AUTH, "User authenticated for flashcard generation.", { requestId, userId });
 
         const { topic } = await request.json();
         // Corrected Logger.log call
-        await Logger.info(LogContext.AI,"Flashcard generation request payload received.",{
+        await Logger.info(LogContext.AI,
+            "Flashcard generation request payload received.",{
             userId,
             requestId,
             metadata: { topic }
