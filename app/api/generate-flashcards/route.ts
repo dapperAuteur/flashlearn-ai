@@ -88,8 +88,7 @@ export async function POST(request: NextRequest) {
 
         const { topic } = await request.json();
         // Corrected Logger.log call
-        await Logger.info(LogContext.AI,
-            "Flashcard generation request payload received.",{
+        await Logger.info(LogContext.AI, "Flashcard generation request payload received.",{
             userId,
             requestId,
             metadata: { topic }

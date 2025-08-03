@@ -36,6 +36,7 @@ export interface IFlashcardSet {
   description?: string;
   title: string;
   isPublic: boolean;
+  cardCount: number;
   source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV' | 'Text' | 'Video';
   flashcards: IFlashcard[];
   createdAt: Timestamp;

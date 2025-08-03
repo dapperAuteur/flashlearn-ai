@@ -108,83 +108,8 @@ export default function GenerateFlashcardsPage(){
     setTitle(topic);
   }, [topic]);
 
-  // check if user is authenticated.
-  // if user is authenticated, save flashcards to database in 'shared_flashcard_sets' collection using /generate-flashcards route
-  // //generate-flashcards route checks if flashcard set already exists in db.
-  const handleSave = async () => {
-    Logger.log(LogContext.FLASHCARD, 'Attempting to save flashcard set', { topic, title });
-
-    if (flashcards.length === 0) {
-      const errorMessage = 'No flashcards to save.';
-      setError(errorMessage);
-      Logger.warning(LogContext.FLASHCARD, errorMessage);
-      return;
-    }
-    if (!title.trim()) {
-      const errorMessage = "Cannot save without a title.";
-      setError(errorMessage);
-      Logger.warning(LogContext.FLASHCARD, errorMessage);
-      return;
-    }
-    if (status !== 'authenticated' || !session?.user?.email) {
-      const errorMessage = 'Please sign in to save your flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!';
-      setError(errorMessage);
-      Logger.warning(LogContext.AUTH, errorMessage);
-      return;
-    }
-
-    setIsExporting(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/save-flashcards', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topic,
-          title, // Send the title to the API
-          flashcards,
-          userEmail: session.user.email,
-        }),
-      });
-
-      const data = await response.json();
-      Logger.log(LogContext.FLASHCARD, 'API response for saving flashcards', { data });
-
-
-      if (!response.ok) {
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
-        Logger.error(LogContext.FLASHCARD, 'Failed to save flashcards', { errorMessage });
-        throw new Error(errorMessage);
-      }
-
-      if (data.success) {
-        if (data.setId) {
-          setFlashcardSetId(data.setId);
-        }
-        if (data.rating) {
-          setAverageRating(data.rating.average || 0);
-          setRatingCount(data.rating.count || 0);
-        }
-        // Provide user feedback
-        alert('Flashcards saved successfully!');
-        Logger.info(LogContext.FLASHCARD, 'Flashcard set saved successfully', { setId: data.setId });
-      } else {
-        const errorMessage = data.message || 'Failed to save flashcards.';
-        Logger.error(LogContext.FLASHCARD, errorMessage);
-        throw new Error(errorMessage);
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred while saving.';
-      console.error("Saving failed:", error);
-      setError(errorMessage);
-      Logger.error(LogContext.FLASHCARD, 'Error during flashcard saving', { error });
-    } finally {
-      setIsExporting(false);
-    }
-  }
+  // Removed handleSave since the generation API now saves the set
+  // const handleSave = async () => { ... };
 
   const handleExportCSV = () => {
     Logger.log(LogContext.FLASHCARD, 'Attempting to export flashcard set to CSV', { topic });
@@ -263,7 +188,7 @@ export default function GenerateFlashcardsPage(){
   }
 
   const handleGenerate = async () => {
-    Logger.log(LogContext.FLASHCARD, 'Attempting to generate flashcards from AI', { topic });
+    Logger.log(LogContext.FLASHCARD, 'Attempting to generate flashcards from AI', { topic, title });
     if(!topic.trim()) {
       const errorMessage = 'Please enter a topic or some terms and definitions to create the front and back of your flashcards.';
       setError(errorMessage);
@@ -273,7 +198,7 @@ export default function GenerateFlashcardsPage(){
     }
 
     if (status !== 'authenticated') {
-      const errorMessage = 'Please sign up or log in to generate flashcards. Sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!';
+      const errorMessage = 'Please sign up or log in to generate flashcards. You get 1 free AI-generated set every 30 days!';
       setError(errorMessage);
       setFlashcards([]);
       Logger.warning(LogContext.AUTH, errorMessage);
@@ -291,7 +216,7 @@ export default function GenerateFlashcardsPage(){
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic, title }), // Send the title to the API
       });
 
       const data = await response.json();
@@ -309,7 +234,8 @@ export default function GenerateFlashcardsPage(){
           setFlashcardSetId(data.setId || null);
           setAverageRating(data.rating?.average || 0);
           setRatingCount(data.rating?.count || 0);
-          Logger.info(LogContext.FLASHCARD, 'Flashcards successfully generated', { cardCount: data.flashcards.length });
+          Logger.info(LogContext.FLASHCARD, 'Flashcards successfully generated and saved', { cardCount: data.flashcards.length, setId: data.setId });
+          alert('Flashcards successfully generated and saved!');
         } else {
            const errorMessage = data.error || 'No flashcards were generated. Try refining your topic.';
            setError(errorMessage);
@@ -325,10 +251,7 @@ export default function GenerateFlashcardsPage(){
     } finally {
       setIsLoading(false);
     }
-
-    }
-
-    // Add these functions inside the GenerateFlashcardsPage component
+  };
 
   const handleScanStorage = () => {
     Logger.log(LogContext.FLASHCARD, 'Attempting to scan local storage for flashcard sets');
@@ -403,20 +326,27 @@ export default function GenerateFlashcardsPage(){
         if (fields.length >= 2) {
           loadedFlashcards.push({ front: fields[0].trim(), back: fields[1].trim() });
         } else {
-            const warningMessage = `Skipping invalid CSV row ${i + 1}: ${lines[i]}`;
+            const warningMessage = `Skipping invalid or incomplete CSV row ${i + 1}: ${lines[i]}`;
             console.warn(warningMessage);
             Logger.warning(LogContext.FLASHCARD, warningMessage);
         }
       }
 
       if (loadedFlashcards.length === 0) {
-          const errorMessage = "CSV file contained a valid header but no valid flashcard data rows.";
-          throw new Error(errorMessage);
+        const errorMessage = "CSV file contained a valid header but no valid flashcard data rows.";
+        setError(errorMessage);
+        Logger.error(LogContext.FLASHCARD, errorMessage, { filename: originalFilename });
+        return;
       }
 
+      // Success: Update state
       setFlashcards(loadedFlashcards);
-      setTopic(extractTopicFromKey(key)); // Set the topic based on the loaded key
-      setShowLoadModal(false); // Close modal on success
+      // Set topic based on filename (remove .csv extension and sanitize)
+      const filenameWithoutExtension = key.replace(/\.csv$/i, '');
+      const newTopic = sanitizeString(filenameWithoutExtension).replace(/_/g, ' ');
+      setTopic(newTopic); // Use sanitized name for display topic
+      setTitle(newTopic); // Also set the title to the new topic
+      setError(null); // Clear any previous errors
       setFlippedCardIndices(new Set()); // Reset flip state
       Logger.info(LogContext.FLASHCARD, 'Successfully loaded flashcard set from local storage', { key, cardCount: loadedFlashcards.length });
 
@@ -670,14 +600,6 @@ export default function GenerateFlashcardsPage(){
            disabled={isLoading || isExporting || flashcards.length === 0 || !topic.trim()}
          >
            {isExporting ? 'Exporting CSV...' : 'Export CSV of Flashcards'}
-         </button>
-         <button
-           id="saveButton"
-           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
-            onClick={handleSave}
-           disabled={isLoading || isExporting || flashcards.length === 0 || !title.trim()}
-         >
-           {isExporting ? 'Saving...' : 'Save Flashcards'}
          </button>
       </div>
 

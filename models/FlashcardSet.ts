@@ -34,14 +34,18 @@ const FlashcardSetSchema = new mongoose.Schema({
     ref: 'Profile',
     required: true,
   },
-  name: {
-    type: String,
-    required: false,
-    trim: true,
-  },
   title: {
     type: String,
     required: true,
+    trim: true,
+  },
+  cardCount: {
+    type: Number,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: false,
     trim: true,
   },
   isPublic: {
@@ -55,4 +59,4 @@ const FlashcardSetSchema = new mongoose.Schema({
   flashcards: [FlashcardSchema], // Embedding flashcards within the set
 }, { timestamps: true });
 
-export const FlashcardSet = mongoose.models.FlashcardSet || mongoose.model('FlashcardSet', FlashcardSetSchema);
+export const FlashcardSet = mongoose.models.FlashcardSet || mongoose.model('FlashcardSet', FlashcardSetSchema, 'flashcard_sets');
