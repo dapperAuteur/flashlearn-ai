@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       name,
       email,
       password: hashedPassword,
-      role: "free", // Default role
+      role: "Student", // Default role
       emailVerified: false,
       verificationToken,
       verificationExpires,
