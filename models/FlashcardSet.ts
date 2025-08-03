@@ -42,6 +42,7 @@ const FlashcardSetSchema = new mongoose.Schema({
   cardCount: {
     type: Number,
     required: true,
+    default: 0
   },
   description: {
     type: String,

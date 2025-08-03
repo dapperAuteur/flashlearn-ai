@@ -5,10 +5,14 @@ import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { Flashcard } from "@/types/flashcards";
 import RatingStars from "@/components/RatingStars";
 import { Logger, LogContext } from "@/lib/logging/client-logger";
 
+// A simple Flashcard interface to use locally
+interface Flashcard {
+  front: string;
+  back: string;
+}
 
 // Helper function to escape fields for CSV format
 const escapeCsvField = (field: string): string => {
@@ -88,6 +92,7 @@ export default function GenerateFlashcardsPage(){
   const router = useRouter();
   const [topic, setTopic] = useState('');
   const [title, setTitle] = useState(''); // New state for the flashcard set title
+  const [description, setDescription] = useState(''); // New state for the flashcard set description
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -107,9 +112,6 @@ export default function GenerateFlashcardsPage(){
   useEffect(() => {
     setTitle(topic);
   }, [topic]);
-
-  // Removed handleSave since the generation API now saves the set
-  // const handleSave = async () => { ... };
 
   const handleExportCSV = () => {
     Logger.log(LogContext.FLASHCARD, 'Attempting to export flashcard set to CSV', { topic });
@@ -188,7 +190,7 @@ export default function GenerateFlashcardsPage(){
   }
 
   const handleGenerate = async () => {
-    Logger.log(LogContext.FLASHCARD, 'Attempting to generate flashcards from AI', { topic, title });
+    Logger.log(LogContext.FLASHCARD, 'Attempting to generate flashcards from AI', { topic, title, description });
     if(!topic.trim()) {
       const errorMessage = 'Please enter a topic or some terms and definitions to create the front and back of your flashcards.';
       setError(errorMessage);
@@ -216,7 +218,7 @@ export default function GenerateFlashcardsPage(){
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ topic, title }), // Send the title to the API
+        body: JSON.stringify({ topic, title, description }), // Send the description to the API
       });
 
       const data = await response.json();
@@ -335,15 +337,15 @@ export default function GenerateFlashcardsPage(){
       if (loadedFlashcards.length === 0) {
         const errorMessage = "CSV file contained a valid header but no valid flashcard data rows.";
         setError(errorMessage);
-        Logger.error(LogContext.FLASHCARD, errorMessage, { filename: originalFilename });
+        // Corrected to use a general error logging call
+        Logger.error(LogContext.FLASHCARD, errorMessage, { filename: extractTopicFromKey(key) });
         return;
       }
 
       // Success: Update state
       setFlashcards(loadedFlashcards);
       // Set topic based on filename (remove .csv extension and sanitize)
-      const filenameWithoutExtension = key.replace(/\.csv$/i, '');
-      const newTopic = sanitizeString(filenameWithoutExtension).replace(/_/g, ' ');
+      const newTopic = extractTopicFromKey(key);
       setTopic(newTopic); // Use sanitized name for display topic
       setTitle(newTopic); // Also set the title to the new topic
       setError(null); // Clear any previous errors
@@ -527,7 +529,6 @@ export default function GenerateFlashcardsPage(){
     document.body.removeChild(link);
     Logger.info(LogContext.FLASHCARD, 'CSV template download started');
   };
-
   return (
     <>
     <div className="container mx-auto px-4 py-8">
@@ -558,6 +559,19 @@ export default function GenerateFlashcardsPage(){
           placeholder="e.g., My Photosynthesis Flashcards"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          disabled={isLoading || flashcards.length === 0}
+        />
+      </div>
+      <div className="mb-4">
+        <label htmlFor="descriptionInput" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          Description (Optional)
+        </label>
+        <textarea
+          id="descriptionInput"
+          className="w-full p-2 border border-gray-300 rounded-md mt-1 min-h-[80px] focus:ring-2 focus:ring-blue-500"
+          placeholder="A brief description of this flashcard set."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           disabled={isLoading || flashcards.length === 0}
         />
       </div>
@@ -602,8 +616,6 @@ export default function GenerateFlashcardsPage(){
            {isExporting ? 'Exporting CSV...' : 'Export CSV of Flashcards'}
          </button>
       </div>
-
-
       {error && (
         <div className="my-4 p-3 bg-red-100 border border-red-300 rounded-md">
           <p className="text-red-600">{error}</p>

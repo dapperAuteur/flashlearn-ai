@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FlashcardSet as FlashcardSetModel } from '@/models/FlashcardSet';
 import { Profile as ProfileModel } from "@/models/Profile";
-import type { Flashcard } from "@/types/flashcard";
 import { Logger, LogContext, AnalyticsLogger } from "@/lib/logging/logger";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
@@ -10,6 +9,12 @@ import { FLASHCARD_MAX, FLASHCARD_MIN, MODEL } from '@/lib/constants';
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 import dbConnect from "@/lib/db/dbConnect";
 import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering";
+
+// Define a local Flashcard interface to avoid conflicts and simplify code
+interface Flashcard {
+  front: string;
+  back: string;
+}
 
 async function generateFlashcardsFromAI(topic: string, requestId: string): Promise<Flashcard[]> {
     const fullPrompt = `
@@ -86,12 +91,12 @@ export async function POST(request: NextRequest) {
         const userId = session.user.id;
         await Logger.info(LogContext.AUTH, "User authenticated for flashcard generation.", { requestId, userId });
 
-        const { topic } = await request.json();
+        const { topic, title, description } = await request.json(); // Destructure title and description
         // Corrected Logger.log call
         await Logger.info(LogContext.AI, "Flashcard generation request payload received.",{
             userId,
             requestId,
-            metadata: { topic }
+            metadata: { topic, title, description }
         });
 
         if (!topic || typeof topic !== 'string' || topic.trim() === '') {
@@ -174,7 +179,8 @@ export async function POST(request: NextRequest) {
 
         const newSet = await FlashcardSetModel.create({
             profile: userProfile._id,
-            title: topic,
+            title: title || topic,
+            description: description || '',
             isPublic: true,
             source: 'Prompt',
             flashcards: flashcards.map(card => ({
@@ -186,6 +192,7 @@ export async function POST(request: NextRequest) {
                     nextReviewDate: new Date(),
                 }
             })),
+            cardCount: flashcards.length,
         });
 
         await Logger.info(
