@@ -9,6 +9,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { Logger, LogContext } from "@/lib/logging/client-logger";
+import { Eye, EyeOff } from "lucide-react";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -21,6 +22,7 @@ export default function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
   const [resendEmail, setResendEmail] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
@@ -126,17 +128,24 @@ export default function SignInForm() {
           )}
         </div>
         
-        <div>
+        <div className="relative">
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Password
           </label>
           <input
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             {...register("password")}
             className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
           {errors.password && (
             <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
           )}
@@ -171,7 +180,6 @@ export default function SignInForm() {
               Remember me
             </label>
           </div>
-          
           <div className="text-sm">
             <Link href="/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
               Forgot your password?

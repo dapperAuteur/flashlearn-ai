@@ -9,6 +9,7 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 import PasswordStrengthMeter from '@/components/ui/PasswordStrengthMeter';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
+import { Eye, EyeOff } from "lucide-react";
 
 const resetPasswordSchema = z.object({
     password: z
@@ -32,6 +33,8 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
@@ -123,25 +126,44 @@ export default function ResetPasswordPage() {
             </label>
             <input
               id="password"
-              type="password"
+            type={showPassword ? "text" : "password"}
               {...register('password')}
               className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <button
+            type="button"
+            className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
             <PasswordStrengthMeter password={watch("password") || ""} />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-            )}
+            {errors.password ? (
+            <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          ) : (
+            <p className="mt-1 text-xs text-gray-500">
+              Must be 10+ characters and include an uppercase, lowercase, number, and special character.
+            </p>
+          )}
           </div>
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
               Confirm New Password
             </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              {...register('confirmPassword')}
-              className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <input
+            id="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            {...register("confirmPassword")}
+            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="********"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
             )}
