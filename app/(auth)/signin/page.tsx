@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense,useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
 import SignInForm from '@/components/auth/SignInForm';
@@ -42,7 +42,9 @@ export default function SignInPage() {
           </h2>
           <p className="mt-2 text-gray-600">Welcome back to FlashLearn AI</p>
         </div>
-        <SignInForm />
+        <Suspense fallback={<div>Loading form...</div>}>
+          <SignInForm />
+        </Suspense>
       </div>
     </div>
   );
