@@ -132,9 +132,9 @@ export default function DashboardPage() {
       {/* Subscription Status */}
       <div className="mt-8 bg-white shadow rounded-lg p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-2">Your Subscription</h2>
-        <p className="text-gray-600">{user.role === 'free' ? 'Free Plan' : 'Premium Plan'}</p>
+        <p className="text-gray-600">{user.role === 'Student' ? 'Free Plan' : 'Premium Plan'}</p>
         
-        {user.role === 'free' && (
+        {user.role === 'Student' && (
           <div className="mt-4">
             <Link 
               href="/pricing"

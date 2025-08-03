@@ -1,11 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import mongoose from 'mongoose';
+import { Schema, model, models } from 'mongoose';
+import { IUser } from '@/types/user';
+
 
 // ============================
 // Main User Account Schema
 // A single user login can have multiple profiles (e.g., for different subjects).
 // ============================
-const UserSchema = new mongoose.Schema({
+// Define the Mongoose schema for the User model
+const UserSchema = new Schema<IUser>({
+  name: {
+    type: String,
+    required: [true, 'Name is required.'],
+  },
   email: {
     type: String,
     required: [true, 'Email is required.'],
@@ -15,28 +22,27 @@ const UserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required.'],
+    // Password is not strictly required because of potential OAuth providers in the future
   },
   role: {
     type: String,
-    enum: ['Student', 'Admin'], // MVP focuses on Student role
+    enum: ['Student', 'Admin'],
     default: 'Student',
   },
+  subscriptionTier: {
+    type: String,
+    enum: ['Free', 'Lifetime Learner'],
+    default: 'Free',
+  },
   profiles: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Profile',
   }],
   stripeCustomerId: {
     type: String,
     unique: true,
-    sparse: true, // Allows multiple null values, but unique if valued
+    sparse: true, // Allows multiple null values, but ensures uniqueness if a value exists
   },
-  subscriptionTier: {
-    type: String,
-    enum: ['Free', 'Lifetime Learner'], // As per PRD
-    default: 'Free',
-  },
-  // Rate Limiting Fields for AI Generation
   aiGenerationCount: {
     type: Number,
     default: 0,
@@ -44,7 +50,15 @@ const UserSchema = new mongoose.Schema({
   lastAiGenerationDate: {
     type: Date,
   },
-}, { timestamps: true });
+  // Fields for the password reset functionality
+  resetPasswordToken: {
+    type: String,
+  },
+  resetPasswordExpires: {
+    type: Date,
+  },
+}, { timestamps: true }); // Automatically adds createdAt and updatedAt timestamps
 
-// Exporting models
-export const User = mongoose.models.User || mongoose.model('User', UserSchema);
+// Create and export the User model. If the model already exists, use the existing one.
+// This prevents Mongoose from recompiling the model on every hot-reload in development.
+export const User = models.User || model<IUser>('User', UserSchema);
