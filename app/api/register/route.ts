@@ -7,7 +7,7 @@ import { z } from "zod";
 import { generateVerificationToken } from "@/lib/tokens";
 // import { sendEmail } from "@/lib/email/sendEmail";
 // import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
-import { getClientIp } from "@/lib/utils";
+import { getClientIp } from "@/lib/utils/utils";
 import { rateLimitRequest } from "@/lib/ratelimit/rateLimitAPI";
 import { logAuthEvent } from "@/lib/logging/authLogger";
 import { AuthEventType } from "@/models/AuthLog";
