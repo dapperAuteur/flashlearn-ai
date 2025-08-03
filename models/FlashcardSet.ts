@@ -15,13 +15,6 @@ const FlashcardSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  // This field will hold ML-specific data for spaced repetition scheduling
-  mlData: {
-    easinessFactor: { type: Number, default: 2.5 },
-    interval: { type: Number, default: 0 },
-    repetitions: { type: Number, default: 0 },
-    nextReviewDate: { type: Date, default: Date.now },
-  },
 });
 
 // ============================
