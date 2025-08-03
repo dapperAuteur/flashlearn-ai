@@ -27,6 +27,13 @@ export interface Flashcard {
   updatedAt: Date;
 }
 
+export interface ISimpleFlashcard {
+  _id?: string | ObjectId;
+  id?: string | ObjectId;
+  front: string;                  // Front content (question/term)
+  back: string;
+}
+
 export interface IFlashcardSet {
   id: string; // The document ID
   _id: string; // The document ID
@@ -36,6 +43,7 @@ export interface IFlashcardSet {
   description?: string;
   title: string;
   isPublic: boolean;
+  cardCount: number;
   source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV' | 'Text' | 'Video';
   flashcards: IFlashcard[];
   createdAt: Timestamp;
