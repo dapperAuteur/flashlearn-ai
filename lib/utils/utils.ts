@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
 /**
  * Get the client IP address from a request
  */
@@ -13,4 +14,15 @@ export function getClientIp(request: NextRequest): string {
   
   // Fallback to local IP from connection
   return "127.0.0.1";
+}
+
+/**
+ * A utility function to conditionally join class names.
+ * It uses `clsx` to handle conditional classes and `tailwind-merge`
+ * to intelligently merge Tailwind CSS classes without style conflicts.
+ * * @param inputs - A list of class values to be combined.
+ * @returns A string of merged and optimized class names.
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
