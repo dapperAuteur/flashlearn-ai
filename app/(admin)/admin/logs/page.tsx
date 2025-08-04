@@ -82,18 +82,18 @@ export default function AdminLogsPage() {
   //   return <div className="p-6">Loading logs...</div>;
   // }
   // // FIX: Corrected the function definition.
-  // const formatDate = (dateString: string) => {
-  //   return new Date(dateString).toLocaleString();
-  // };
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
 
-  // const getLevelBadgeClass = (level: string) => {
-  //   switch (level.toLowerCase()) {
-  //     case 'error': return 'bg-red-100 text-red-800';
-  //     case 'warning': return 'bg-yellow-100 text-yellow-800';
-  //     case 'info': return 'bg-blue-100 text-blue-800';
-  //     default: return 'bg-gray-100 text-gray-800';
-  //   }
-  // };
+  const getLevelBadgeClass = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'error': return 'bg-red-100 text-red-800';
+      case 'warning': return 'bg-yellow-100 text-yellow-800';
+      case 'info': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   // return (
   //   <div className="p-6 bg-gray-50 min-h-screen">
