@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
             let totalSessionTime = 0;
             for (const result of results) {
                 totalSessionTime += result.timeStudied;
-                constt cardPerf = analytics.cardPerformance.find((p: any) => p.cardId.toString() === result.cardId);
+                const cardPerf = analytics.cardPerformance.find((p: any) => p.cardId.toString() === result.cardId);
                 if (cardPerf) {
                     cardPerf.totalTimeStudied += result.timeStudied;
                     if (result.isCorrect) {
