@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from "next/server";
-import { Logger, LogContext, LogLevel } from "./logger";import { AnalyticsLogger } from "./logger";
+import { Logger, LogContext, LogLevel } from "./logger";
+import { AnalyticsLogger } from "./logger";
 import clientPromise from "@/lib/db/mongodb";
 import { AuthEventType, AuthLog } from "@/models/AuthLog";
 import { getClientIp } from "@/lib/utils/utils";
@@ -82,7 +83,8 @@ export async function logAuthEvent({
     };
     
     // Insert into database
-    const result = await db.collection("auth_logs").insertOne(logEntry);
+    const authLogsCollection = db.collection<AuthLog>("auth_logs");
+    const result = await authLogsCollection.insertOne(logEntry);
     
     return result.insertedId.toString();
   } catch (error) {
@@ -102,12 +104,13 @@ export async function checkSuspiciousActivity(
   try {
     const client = await clientPromise;
     const db = client.db();
+    const authLogsCollection = db.collection<AuthLog>("auth_logs");
     
     // Look back 24 hours
     const lookbackTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
     // Check for multiple failed login attempts
-    const failedLogins = await db.collection("auth_logs").countDocuments({
+    const failedLogins = await authLogsCollection.countDocuments({
       event: AuthEventType.LOGIN_FAILURE,
       email,
       timestamp: { $gte: lookbackTime },
@@ -121,8 +124,7 @@ export async function checkSuspiciousActivity(
     }
     
     // Check for logins from different locations
-    const distinctIps = await db
-      .collection("auth_logs")
+    const distinctIps = await authLogsCollection
       .distinct("ipAddress", {
         event: AuthEventType.LOGIN,
         email,
@@ -140,8 +142,7 @@ export async function checkSuspiciousActivity(
     
     // Check for account creation and login across multiple accounts from same IP
     if (ipAddress) {
-      const accountsFromIp = await db
-        .collection("auth_logs")
+      const accountsFromIp = await authLogsCollection
         .distinct("email", {
           ipAddress,
           event: AuthEventType.REGISTER,
@@ -170,15 +171,15 @@ export async function getUserAuthLogs(userId: string, limit: number = 20): Promi
   try {
     const client = await clientPromise;
     const db = client.db();
+    const authLogsCollection = db.collection<AuthLog>("auth_logs");
     
-    const logs = await db
-      .collection("auth_logs")
+    const logs = await authLogsCollection
       .find({ userId })
       .sort({ timestamp: -1 })
       .limit(limit)
       .toArray();
     
-    return logs as AuthLog[];
+    return logs;
   } catch (error) {
     console.error("Failed to get user auth logs:", error);
     return [];
@@ -192,15 +193,15 @@ export async function getRecentFailedLogins(limit: number = 20): Promise<AuthLog
   try {
     const client = await clientPromise;
     const db = client.db();
+    const authLogsCollection = db.collection<AuthLog>("auth_logs");
     
-    const logs = await db
-      .collection("auth_logs")
+    const logs = await authLogsCollection
       .find({ event: AuthEventType.LOGIN_FAILURE })
       .sort({ timestamp: -1 })
       .limit(limit)
       .toArray();
     
-    return logs as AuthLog[];
+    return logs;
   } catch (error) {
     console.error("Failed to get recent failed logins:", error);
     return [];
@@ -214,15 +215,15 @@ export async function getSuspiciousActivityLogs(limit: number = 20): Promise<Aut
   try {
     const client = await clientPromise;
     const db = client.db();
+    const authLogsCollection = db.collection<AuthLog>("auth_logs");
     
-    const logs = await db
-      .collection("auth_logs")
+    const logs = await authLogsCollection
       .find({ event: AuthEventType.SUSPICIOUS_ACTIVITY })
       .sort({ timestamp: -1 })
       .limit(limit)
       .toArray();
     
-    return logs as AuthLog[];
+    return logs;
   } catch (error) {
     console.error("Failed to get suspicious activity logs:", error);
     return [];
