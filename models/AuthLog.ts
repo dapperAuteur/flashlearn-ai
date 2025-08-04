@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ObjectId } from 'mongodb';
+// models/AuthLog.ts
 
 /**
  * Defines the types of authentication-related events that can be logged.
@@ -7,20 +7,21 @@ import { ObjectId } from 'mongodb';
 export enum AuthEventType {
   LOGIN = "login",
   LOGIN_FAILURE = "login_failure",
+  LOGOUT = "logout",
   REGISTER = "register",
+  REGISTER_FAILURE = "register_failure", // The missing member
+  VERIFY_EMAIL = "verify_email",
+  VERIFY_EMAIL_FAILURE = "verify_email_failure",
   PASSWORD_RESET_REQUEST = "password_reset_request",
   PASSWORD_RESET_SUCCESS = "password_reset_success",
+  PASSWORD_RESET_FAILURE = "password_reset_failure",
   SUSPICIOUS_ACTIVITY = "suspicious_activity",
-  LOGIN_FROM_NEW_LOCATION = "new_location_login",
-  MFA_DISABLED = "mfa_disabled",
-  SECURITY_ALERT_SENT = "security_alert_sent"
 }
 
 /**
- * Describes the structure of a log entry in the `auth_logs` collection.
+ * Defines the structure for an authentication log entry in the database.
  */
 export interface AuthLog {
-  _id?: ObjectId;
   event: AuthEventType;
   userId?: string;
   email?: string;

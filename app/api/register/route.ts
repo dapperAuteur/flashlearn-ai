@@ -1,17 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
 import { z } from "zod";
 import { generateVerificationToken } from "@/lib/tokens";
-// import { sendEmail } from "@/lib/email/sendEmail";
-// import { getVerificationEmailTemplate } from "@/lib/email/templates/verification";
 import { getClientIp } from "@/lib/utils/utils";
-import { rateLimitRequest } from "@/lib/ratelimit/rateLimitAPI";
+import { getRateLimiter } from "@/lib/ratelimit/rateLimitAPI";
 import { logAuthEvent } from "@/lib/logging/authLogger";
-import { AuthEventType } from "@/models/AuthLog";
+import { AuthEventType } from "@/models/AuthLog"; // Correctly imports the full enum
 import { sendVerificationEmail } from "@/lib/email/mailgun";
+import { Logger, LogContext } from "@/lib/logging/logger";
 
 // Validation schema for user registration
 const userSchema = z.object({
@@ -27,20 +25,18 @@ const userSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-
-  // Get client IP for rate limiting
-  const ip = getClientIp(request);
+  const ip = getClientIp(request) ?? "127.0.0.1";
 
   // Apply rate limiting (5 registration attempts per 10 minutes)
-  const rateLimitResult = await rateLimitRequest(ip, "register", 5, 600);
+  const limiter = getRateLimiter("register", 5, 600);
+  const rateLimitResult = await limiter.limit(ip);
 
   // If rate limit exceeded, return 429 Too Many Requests
   if (!rateLimitResult.success) {
-    console.log(`Rate limit exceeded for IP ${ip} on registration endpoint`);
+    await Logger.warning(LogContext.AUTH, "Rate limit exceeded for registration", { ip });
     return NextResponse.json(
       { 
         error: "Too many registration attempts. Please try again later.", 
-        retryAfter: rateLimitResult.reset 
       },
       { 
         status: 429,
@@ -52,28 +48,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Parse the request body
     const body = await request.json();
-    console.log("Registration attempt:", body.email);
+    await Logger.info(LogContext.AUTH, "Registration attempt started.", { email: body.email, ip });
     
     // Validate input
     const result = userSchema.safeParse(body);
     if (!result.success) {
-      console.log("Validation error:", result.error.errors);
-
-      // Log failed registration
       await logAuthEvent({
         request,
-        event: AuthEventType.REGISTER_FAILURE,
+        event: AuthEventType.REGISTER_FAILURE, // This will now work
         email: body.email,
         status: "failure",
         reason: "Validation error",
-        metadata: { validationErrors: result.error.errors }
+        metadata: { validationErrors: result.error.formErrors.fieldErrors }
       });
-
-
       return NextResponse.json(
-        { error: "Validation error", details: result.error.errors },
+        { error: "Validation error", details: result.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -87,20 +77,15 @@ export async function POST(request: NextRequest) {
     // Check if user already exists
     const existingUser = await db.collection("users").findOne({ email });
     if (existingUser) {
-      console.log("User already exists:", email);
-
-      // Log failed registration
       await logAuthEvent({
         request,
-        event: AuthEventType.REGISTER_FAILURE,
+        event: AuthEventType.REGISTER_FAILURE, // This will now work
         email,
         status: "failure",
         reason: "User already exists"
       });
-
-
       return NextResponse.json(
-        { error: "User already exists" },
+        { error: "User with this email already exists" },
         { status: 409 }
       );
     }
@@ -122,14 +107,13 @@ export async function POST(request: NextRequest) {
       verificationToken,
       verificationExpires,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      profiles: [],
+      subscriptionTier: 'Free'
     });
     
     const userId = newUser.insertedId.toString();
 
-    console.log("User created successfully:", userId);
-
-    // Log successful registration
     await logAuthEvent({
       request,
       event: AuthEventType.REGISTER,
@@ -139,36 +123,43 @@ export async function POST(request: NextRequest) {
       metadata: { name }
     });
 
-    // Create verification URL
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const verificationUrl = `${baseUrl}/api/verify-email?token=${verificationToken}`; 
-
-
     // Send verification email
     await sendVerificationEmail(email, name, verificationToken);
     
     return NextResponse.json(
       { 
         message: "User created successfully. Please check your email to verify your account.",
-        userId: newUser.insertedId.toString() 
+        userId
       },
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Registration error:", error);
-
-    // Log registration error
+    let email: string | undefined;
+    try {
+        // We clone the request because the body can only be read once.
+        const body = await request.clone().json();
+        email = body.email;
+    } catch (e) {
+      await logAuthEvent({
+      request,
+      event: AuthEventType.REGISTER,
+      email,
+      status: "success",
+      metadata: { name, e }
+    });
+        // It's okay if we can't get the email, we'll just log without it.
+    }
     await logAuthEvent({
       request,
-      event: AuthEventType.REGISTER_FAILURE,
-      email: request.body ? (await request.json()).email : undefined,
+      event: AuthEventType.REGISTER_FAILURE, // This will now work
+      email: email,
       status: "failure",
-      reason: "Server error",
-      metadata: { error: error.message }
+      reason: "Internal server error",
+      metadata: { error: error.message, stack: error.stack }
     });
     
     return NextResponse.json(
-      { error: "Internal server error", details: error.message },
+      { error: "An unexpected error occurred on the server." },
       { status: 500 }
     );
   }
