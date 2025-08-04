@@ -7,14 +7,13 @@ import mongoose from 'mongoose';
 import clientPromise from '@/lib/db/mongodb';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { authOptions } from '@/lib/auth/auth';
-import { StudyAnalytics } from '@/models/StudyAnalytics'; // Assuming this model is defined
-import { User } from '@/models/User'; // Assuming this model is defined
+import { StudyAnalytics } from '@/models/StudyAnalytics';
+import { User } from '@/models/User';
 
-// Interface for the offline sync payload
 interface CardResult {
   cardId: string;
   isCorrect: boolean;
-  timeStudied: number; // in seconds
+  timeStudied: number;
 }
 
 interface SyncPayload {
@@ -22,10 +21,20 @@ interface SyncPayload {
   results: CardResult[];
 }
 
-// ** FIX: Define a type for the user object returned by the lean query **
 interface LeanUser {
   _id: mongoose.Types.ObjectId;
   profiles: mongoose.Types.ObjectId[];
+}
+
+/**
+ * Shuffles an array in-place using the Fisher-Yates (aka Knuth) shuffle algorithm.
+ * @param array The array to shuffle.
+ */
+function shuffleArray(array: any[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    }
 }
 
 
@@ -33,10 +42,7 @@ export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const body = await request.json();
 
-  // ==================================================================
   // LOGIC 1: Handle Offline Study Session Synchronization
-  // If the payload contains 'results', it's a sync request.
-  // ==================================================================
   if (body.results && body.setId) {
     const payload: SyncPayload = body;
     
@@ -51,7 +57,6 @@ export async function POST(request: NextRequest) {
     try {
         let responseData;
         await mongoSession.withTransaction(async () => {
-            // ** FIX: Cast the result of the lean query to our defined type **
             const user = await User.findById(userId).select('profiles').lean().session(mongoSession) as LeanUser | null;
             
             if (!user?.profiles?.length) {
@@ -112,10 +117,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // ==================================================================
-  // LOGIC 2: Handle Creating a New Study Session (Your Original Logic)
-  // If the payload contains 'listId', it's a create request.
-  // ==================================================================
+  // LOGIC 2: Handle Creating a New Study Session
   if (body.listId) {
     const requestId = await Logger.info(LogContext.STUDY, "Create study session request");
     try {
@@ -143,6 +145,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "This flashcard set contains no cards." }, { status: 400 });
         }
         
+        // ** NEW: Shuffle the flashcards before sending them to the client **
+        shuffleArray(flashcards);
+
         const studySession = {
             userId: userId || new ObjectId(),
             listId: new ObjectId(listId),
