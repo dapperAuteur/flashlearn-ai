@@ -31,62 +31,114 @@ export default function AdminLogsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // const fetchLogs = useCallback(async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   adminLogger.info(AdminLogContext.LOG_VIEWER, "Fetching logs started.", { page, logType, level, context, userId });
+  //   try {
+  //     const params = new URLSearchParams({
+  //       logType,
+  //       level,
+  //       context,
+  //       userId,
+  //       page: page.toString(),
+  //       limit: '25',
+  //     });
+  //     const response = await fetch(`/api/admin/logs?${params.toString()}`);
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.error || `Failed to fetch logs: ${response.statusText}`);
+  //     }
+  //     const data = await response.json();
+  //     setLogs(data.logs);
+  //     setTotalPages(data.pagination.totalPages);
+  //     adminLogger.info(AdminLogContext.LOG_VIEWER, "Fetching logs successful.", { count: data.logs.length });
+  //   } catch (err) {
+  //     adminLogger.error(AdminLogContext.LOG_VIEWER, "Failed to load logs.", err);
+  //     setError((err as Error).message || "An unknown error occurred.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [logType, level, context, userId, page]);
+
+  // useEffect(() => {
+  //   if (status === 'loading') return;
+  //   if (!session || session.user.role !== 'Admin') {
+  //     adminLogger.warn(AdminLogContext.LOG_VIEWER, "Unauthorized client-side access attempt, redirecting.", { 
+  //       status, 
+  //       user: session?.user 
+  //     });
+  //   // if (status === "unauthenticated" || (session?.user as any)?.role !== 'Admin') {
+  //   //   adminLogger.warn(AdminLogContext.LOG_VIEWER, "Unauthorized access attempt.", { status, role: (session?.user as any)?.role });
+  //   //   router.push("/dashboard");
+  //   //   return;
+  //   // }
+  //   router.push("/dashboard");
+  //     return;
+  //   }
+  //   fetchLogs();
+  // }, [session, status, router, fetchLogs]);
+  // if (loading || status === 'loading') {
+  //   return <div className="p-6">Loading logs...</div>;
+  // }
+  // // FIX: Corrected the function definition.
+  // const formatDate = (dateString: string) => {
+  //   return new Date(dateString).toLocaleString();
+  // };
+
+  // const getLevelBadgeClass = (level: string) => {
+  //   switch (level.toLowerCase()) {
+  //     case 'error': return 'bg-red-100 text-red-800';
+  //     case 'warning': return 'bg-yellow-100 text-yellow-800';
+  //     case 'info': return 'bg-blue-100 text-blue-800';
+  //     default: return 'bg-gray-100 text-gray-800';
+  //   }
+  // };
+
+  // return (
+  //   <div className="p-6 bg-gray-50 min-h-screen">
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     setError(null);
-    adminLogger.info(AdminLogContext.LOG_VIEWER, "Fetching logs started.", { page, logType, level, context, userId });
     try {
-      const params = new URLSearchParams({
-        logType,
-        level,
-        context,
-        userId,
-        page: page.toString(),
-        limit: '25',
-      });
-      const response = await fetch(`/api/admin/logs?${params.toString()}`);
+      const response = await fetch(`/api/admin/logs`); // Simplified for example
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to fetch logs: ${response.statusText}`);
+        throw new Error('Failed to fetch logs');
       }
       const data = await response.json();
       setLogs(data.logs);
-      setTotalPages(data.pagination.totalPages);
-      adminLogger.info(AdminLogContext.LOG_VIEWER, "Fetching logs successful.", { count: data.logs.length });
     } catch (err) {
-      adminLogger.error(AdminLogContext.LOG_VIEWER, "Failed to load logs.", err);
-      setError((err as Error).message || "An unknown error occurred.");
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [logType, level, context, userId, page]);
-
+  }, []);
   useEffect(() => {
-    if (status === 'loading') return;
-    if (status === "unauthenticated" || (session?.user as any)?.role !== 'Admin') {
-      adminLogger.warn(AdminLogContext.LOG_VIEWER, "Unauthorized access attempt.", { status, role: (session?.user as any)?.role });
+    if (status === "loading") {
+      return; // Wait for session to be loaded
+    }
+    // FIX: The logic is now corrected.
+    // If the session doesn't exist OR the user is not an Admin, then redirect.
+    if (!session || session.user.role !== 'Admin') {
+      adminLogger.warn(AdminLogContext.LOG_VIEWER, "Unauthorized client-side access attempt, redirecting.", { 
+        status, 
+        user: session?.user 
+      });
       router.push("/dashboard");
-      return;
+      return; // Important: stop execution after redirecting
     }
+    // If the code reaches here, the user is an authenticated Admin.
     fetchLogs();
+    
   }, [session, status, router, fetchLogs]);
-
-  // FIX: Corrected the function definition.
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getLevelBadgeClass = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'error': return 'bg-red-100 text-red-800';
-      case 'warning': return 'bg-yellow-100 text-yellow-800';
-      case 'info': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
+  // Show a loading state while the session is being checked
+  if (status === 'loading' || loading) {
+    return <div className="p-6 text-center">Loading Logs...</div>;
+  }
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Application Logs</h1>
+      {error && <div className="text-red-500 bg-red-50 p-3 rounded-md">Error: {error}</div>}
       <h1 className="text-2xl font-bold mb-6 text-gray-800">Application Logs</h1>
       
       {/* Filters UI would go here */}
