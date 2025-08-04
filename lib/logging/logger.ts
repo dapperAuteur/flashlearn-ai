@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from "next/server";
 import clientPromise from "@/lib/db/mongodb";
-import { getClientIp } from "@/lib/utils";
+import { getClientIp } from "@/lib/utils/utils";
 
 // Log severity levels
 export enum LogLevel {

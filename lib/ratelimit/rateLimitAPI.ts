@@ -1,29 +1,33 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { Logger, LogContext } from "@/lib/logging/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { getClientIp } from "@/lib/utils/utils";
 
-// Create a Redis instance using environment variables
-// For development without Redis, we'll use a simpler in-memory version
 let redis: Redis | undefined;
 const ratelimits: Record<string, Ratelimit> = {};
 
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-  // Use Upstash Redis if credentials are provided
-  redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
-  Logger.info(LogContext.SYSTEM, "Redis initialized for rate limiting");
+  try {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+    Logger.info(LogContext.SYSTEM, "Upstash Redis initialized for API rate limiting.");
+  } catch (error) {
+    Logger.error(LogContext.SYSTEM, "Failed to initialize Upstash Redis.", { error });
+  }
 } else {
-  Logger.warning(LogContext.SYSTEM, "Redis credentials not found, using in-memory rate limiting (not for production)");
+  Logger.warning(LogContext.SYSTEM, "Redis credentials not found. Using in-memory rate limiting (NOT FOR PRODUCTION).");
 }
 
 /**
- * A simple in-memory rate limiter for development environments.
+ * A simple in-memory rate limiter for development environments where Redis is not available.
  * This class mimics the necessary parts of the Upstash Ratelimit interface.
  */
 class InMemoryRateLimiter {
-  private map = new Map<string, { count: number; reset: number }>();
+  private requests = new Map<string, { count: number; reset: number }>();
+  // FIX: Renamed property to avoid conflict with the 'limit' method name.
   private limitCount: number;
   private windowSeconds: number;
 
@@ -32,79 +36,67 @@ class InMemoryRateLimiter {
     this.windowSeconds = window;
   }
 
-  async limit(key: string) {
+  async limit(identifier: string): Promise<{ success: boolean; limit: number; remaining: number; reset: number }> {
     const now = Date.now();
     const windowMs = this.windowSeconds * 1000;
-    const resetTime = now + windowMs;
+    const record = this.requests.get(identifier);
 
-    const keyData = this.map.get(key) || { count: 0, reset: resetTime };
-
-    if (now > keyData.reset) {
-      keyData.count = 0;
-      keyData.reset = resetTime;
+    if (!record || now > record.reset) {
+      this.requests.set(identifier, { count: 1, reset: now + windowMs });
+      return { success: true, limit: this.limitCount, remaining: this.limitCount - 1, reset: now + windowMs };
     }
 
-    keyData.count += 1;
-    this.map.set(key, keyData);
-
-    const success = keyData.count <= this.limitCount;
-    const remaining = Math.max(0, this.limitCount - keyData.count);
-    const reset = Math.ceil((keyData.reset - now) / 1000);
-
-    return {
-      success, limit: this.limitCount, remaining, reset,
-    };
+    record.count++;
+    const success = record.count <= this.limitCount;
+    const remaining = Math.max(0, this.limitCount - record.count);
+    return { success, limit: this.limitCount, remaining, reset: record.reset };
   }
 }
 
-/**
- * Create a rate limiter instance
- * @param identifier Unique identifier for this rate limiter
- * @param limit Number of requests allowed
- * @param window Time window in seconds
- */
-export function getRateLimiter(identifier: string, limit: number, window: number) {
-  // Return existing instance if already created
+export function getRateLimiter(identifier: string, limit: number, window: number): Ratelimit {
   if (ratelimits[identifier]) {
     return ratelimits[identifier];
   }
-
   if (redis) {
-    // Create a Redis-backed rate limiter
     ratelimits[identifier] = new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(limit, `${window} s`),
       analytics: true,
+      prefix: `ratelimit:${identifier}`
     });
   } else {
-    // Use the type-safe in-memory rate limiter for development
     ratelimits[identifier] = new InMemoryRateLimiter(limit, window) as unknown as Ratelimit;
   }
-  
-  Logger.info(LogContext.SYSTEM, `Rate limiter created: ${identifier}`, {
-    limit, window
-  });
+  Logger.info(LogContext.SYSTEM, `Rate limiter created: ${identifier}`, { limit, window, redis: !!redis });
   return ratelimits[identifier];
 }
 
-/**
- * Rate limit middleware for Next.js API routes
- */
-export async function rateLimitRequest(
-  ip: string,
-  identifier: string = "api",
-  limit: number = 10,
-  window: number = 60
+export function withRateLimit(
+  handler: (req: NextRequest) => Promise<NextResponse>,
+  identifier: string,
+  limit: number,
+  window: number
 ) {
-  const rateLimiter = getRateLimiter(identifier, limit, window);
-  
-  const key = `${identifier}:${ip}`;
-  const { success, limit: rateLimit, remaining, reset } = await rateLimiter.limit(key);
-  
-  return {
-    success,
-    limit: rateLimit,
-    remaining,
-    reset,
+  return async (request: NextRequest) => {
+    const ip = getClientIp(request) ?? '127.0.0.1';
+    const limiter = getRateLimiter(identifier, limit, window);
+    
+    const { success, limit: returnedLimit, remaining, reset } = await limiter.limit(ip);
+
+    if (!success) {
+      Logger.warning(LogContext.SYSTEM, `Rate limit exceeded for ${identifier}`, { ip });
+      const resetDate = new Date(reset).toUTCString();
+      return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Ratelimit-Limit': returnedLimit.toString(),
+          'X-Ratelimit-Remaining': remaining.toString(),
+          'X-Ratelimit-Reset': resetDate,
+        },
+      });
+    }
+
+    return handler(request);
   };
 }

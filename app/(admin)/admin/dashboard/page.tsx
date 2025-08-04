@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { adminLogger, AdminLogContext } from "@/lib/logging/admin-logger";
 
 interface DashboardStats {
   totalUsers: number;
@@ -20,35 +21,35 @@ export default function AdminDashboardPage() {
   
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    // Redirect if not authenticated or not admin
-    if (status === "unauthenticated") {
-      router.push("/signin");
+    if (status === "loading") {
+      return; // Wait until the session is loaded
+    }
+    
+    // FIX: Changed check from 'admin' to 'Admin' to match the role in the session.
+    if (!session || session.user.role !== 'Admin') {
+      adminLogger.warn(AdminLogContext.DASHBOARD, "Unauthorized client-side access attempt, redirecting.", { 
+        status, 
+        user: session?.user 
+      });
+      router.push("/dashboard"); // Redirect non-admins or unauthenticated users
       return;
     }
     
-    if (session?.user && (session.user as any).role !== "admin") {
-      router.push("/generate");
-      return;
-    }
-    
-    // Fetch dashboard stats
+    // If we reach here, the user is an authenticated admin.
     const fetchStats = async () => {
       setLoading(true);
-      
       try {
-        // In a real implementation, this would be an API call
-        // For demo purposes, we'll use dummy data
-        setStats({
-          totalUsers: 120,
-          newUsers24h: 8,
-          totalLogins: 450,
-          failedLogins24h: 12,
-          suspiciousActivity24h: 3
-        });
-      } catch (error) {
-        console.error("Error fetching stats:", error);
+        const response = await fetch('/api/admin/analytics');
+        if (!response.ok) throw new Error('Failed to fetch stats');
+        const data = await response.json();
+        setStats(data.stats);
+      } catch (err) {
+        adminLogger.error(AdminLogContext.DASHBOARD, "Error fetching dashboard stats", err);
+        setError((err as Error).message || "An unknown error occurred.");
+
       } finally {
         setLoading(false);
       }
@@ -58,120 +59,66 @@ export default function AdminDashboardPage() {
   }, [session, status, router]);
   
   if (loading) {
-    return <div className="p-6">Loading dashboard data...</div>;
+    return <div className="p-6 text-center">Loading dashboard data...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-center text-red-600 bg-red-50 rounded-md">{error}</div>;
   }
   
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
       
-      {/* Stats cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Total Users
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
-              {stats?.totalUsers}
-            </dd>
-          </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              New Users (24h)
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
-              {stats?.newUsers24h}
-            </dd>
-          </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Total Logins
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
-              {stats?.totalLogins}
-            </dd>
-          </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Failed Logins (24h)
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-text-red-600">
-              {stats?.failedLogins24h}
-            </dd>
-          </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Suspicious Activity (24h)
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-orange-500">
-              {stats?.suspiciousActivity24h}
-            </dd>
-          </div>
-        </div>
+        {/* Stat Cards */}
+        <StatCard title="Total Users" value={stats?.totalUsers} />
+        <StatCard title="New Users (24h)" value={stats?.newUsers24h} />
+        <StatCard title="Total Successful Logins" value={stats?.totalLogins} />
+        <StatCard title="Failed Logins (24h)" value={stats?.failedLogins24h} isError />
+        <StatCard title="Suspicious Activity (24h)" value={stats?.suspiciousActivity24h} isWarning />
       </div>
       
-      {/* Quick actions */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-        
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Link
-            href="/admin/logs?type=failed_logins"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            View Failed Logins
+          <Link href="/admin/logs" className="block text-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+            View All Logs
           </Link>
-          
-          <Link
-            href="/admin/logs?type=suspicious"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            View Suspicious Activity
-          </Link>
-          
-          <Link
-            href="/admin/users"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
+          <Link href="/admin/users" className="block text-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
             Manage Users
           </Link>
-          
-          <Link
-            href="/admin/settings"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Security Settings
+          <Link href="/admin/settings" className="block text-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+            App Configuration
           </Link>
         </div>
       </div>
-      
-      {/* Recent activity summary */}
+
+      {/* Placeholder for charts */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Recent Security Events</h2>
-        
-        <p className="text-sm text-gray-500 mb-4">
-          This is a placeholder for a chart or timeline of recent security events.
-          In a real implementation, this would display trending data about logins,
-          failed attempts, and suspicious activities.
-        </p>
-        
+        <h2 className="text-lg font-semibold mb-4">Usage Analytics</h2>
         <div className="h-64 bg-gray-100 rounded-md flex items-center justify-center">
-          <span className="text-gray-400">Security events visualization would appear here</span>
+          <span className="text-gray-400">Charts and visualizations will appear here.</span>
         </div>
       </div>
     </div>
   );
 }
+
+// Helper component for stat cards
+const StatCard = ({ title, value, isError = false, isWarning = false }: { title: string, value?: number, isError?: boolean, isWarning?: boolean }) => {
+  let valueClass = "text-gray-900";
+  if (isError && (value ?? 0) > 0) valueClass = "text-red-600";
+  if (isWarning && (value ?? 0) > 0) valueClass = "text-orange-500";
+
+  return (
+    <div className="bg-white overflow-hidden shadow rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
+        <dd className={`mt-1 text-3xl font-semibold ${valueClass}`}>
+          {value ?? 0}
+        </dd>
+      </div>
+    </div>
+  );
+};

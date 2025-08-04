@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
 import { NextAuthOptions } from "next-auth";
 import type { User } from "next-auth";
+import { Logger, LogContext } from "@/lib/logging/logger";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -19,34 +19,30 @@ export const authOptions: NextAuthOptions = {
         const { email, password } = credentials;
         
         try {
-          console.log("Authenticating user:", email);
           const client = await clientPromise;
           const db = client.db();
           const userDoc = await db.collection("users").findOne({ email });
           
           if (!userDoc) {
-            console.log("No user found with email:", email);
+            Logger.warning(LogContext.AUTH, "Authorize failed: No user found.", { email });
             return null;
           }
           
           const isPasswordValid = await compare(password, userDoc.password);
           
           if (!isPasswordValid) {
-            console.log("Invalid password for user:", email);
+            Logger.warning(LogContext.AUTH, "Authorize failed: Invalid password.", { email });
             return null;
           }
           
-          console.log("User authenticated successfully:", email);
+          Logger.info(LogContext.AUTH, "User authorized successfully. Preparing data for JWT.", { email, role: userDoc.role });
+          // This object is passed to the `jwt` callback's `user` parameter
           return {
             id: userDoc._id.toString(),
-            email: userDoc.email || null,
-            name: userDoc.name,
-            role: userDoc.role,
-            image: userDoc.image || null,
-            // emailVerified: null
+            role: userDoc.role, // This is the custom property
           };
         } catch (error) {
-          console.error("Authentication error:", error);
+          Logger.error(LogContext.AUTH, "Error during authorization.", { error });
           return null;
         }
       }
@@ -54,7 +50,10 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // The `user` object is only passed on the initial sign-in.
       if (user) {
+        // This log is critical. It confirms the role is being added to the token.
+        Logger.info(LogContext.AUTH, "JWT callback: Adding user data to token.", { userId: user.id, role: user.role });
         token.id = user.id;
         token.role = user.role;
       }
@@ -62,20 +61,17 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.id = token.id;
+        session.user.role = token.role;
       }
       return session;
     }
   },
   pages: {
-    signIn: "/signin",
-    signOut: "/signout",
-    error: "/error",
+    signIn: "/auth/signin",
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

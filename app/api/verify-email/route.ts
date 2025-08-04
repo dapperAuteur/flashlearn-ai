@@ -3,6 +3,7 @@ import clientPromise from "@/lib/db/mongodb";
 import { logAuthEvent } from "@/lib/logging/authLogger";
 import { AuthEventType } from "@/models/AuthLog";
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
+import { Logger, LogContext } from "@/lib/logging/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,80 +12,73 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get("token");
     
     if (!token) {
-      console.log("No verification token provided");
-
-      // Log verification failure
       await logAuthEvent({
         request,
-        event: AuthEventType.EMAIL_VERIFICATION_FAILURE,
+        event: AuthEventType.VERIFY_EMAIL_FAILURE, // Corrected from EMAIL_VERIFICATION_FAILURE
         status: "failure",
-        reason: "No token provided"
+        reason: "No token provided in verification link"
       });
 
-      return NextResponse.redirect(new URL("/verification-error", request.url));
+      // Redirect to a user-friendly error page
+      return NextResponse.redirect(new URL("/verification-error?reason=no-token", request.url));
     }
     
-    console.log("Processing verification token:", token);
+    await Logger.info(LogContext.AUTH, "Processing email verification token.", { token });
     
     // Connect to database
     const client = await clientPromise;
     const db = client.db();
     
-    // Find user with this token
+    // Find user with this token that has not expired
     const user = await db.collection("users").findOne({
       verificationToken: token,
-      verificationExpires: { $gt: new Date() } // Token must not be expired
+      verificationExpires: { $gt: new Date() } 
     });
     
     if (!user) {
-      console.log("Invalid or expired verification token");
-
-      // Log verification failure
       await logAuthEvent({
         request,
-        event: AuthEventType.EMAIL_VERIFICATION_FAILURE,
+        event: AuthEventType.VERIFY_EMAIL_FAILURE, // Corrected from EMAIL_VERIFICATION_FAILURE
         status: "failure",
         reason: "Invalid or expired token"
       });
 
-      return NextResponse.redirect(new URL("/verification-error", request.url));
+      return NextResponse.redirect(new URL("/verification-error?reason=invalid-token", request.url));
     }
     
-    // Update user to mark email as verified
+    // Update user to mark email as verified and remove token details
     await db.collection("users").updateOne(
       { _id: user._id },
       {
-        $set: { emailVerified: true },
+        $set: { emailVerified: true, updatedAt: new Date() },
         $unset: { verificationToken: "", verificationExpires: "" }
       }
     );
     
-    console.log("Email verified successfully for user:", user.email);
-
-    // Log successful verification
     await logAuthEvent({
       request,
-      event: AuthEventType.EMAIL_VERIFICATION,
+      event: AuthEventType.VERIFY_EMAIL, // Corrected from EMAIL_VERIFICATION
       userId: user._id.toString(),
       email: user.email,
       status: "success"
     });
     
-    // Redirect to success page
+    // Redirect to the sign-in page with a success message
     return NextResponse.redirect(new URL("/signin?verified=true", request.url));
+
   } catch (error) {
     const errorMessage = getErrorMessage(error);
-    console.error("Verification error:", errorMessage);
+    await Logger.error(LogContext.AUTH, "Server error during email verification.", { error: errorMessage });
 
-    // Log verification error
     await logAuthEvent({
       request,
-      event: AuthEventType.EMAIL_VERIFICATION_FAILURE,
+      event: AuthEventType.VERIFY_EMAIL_FAILURE, // Corrected from EMAIL_VERIFICATION_FAILURE
       status: "failure",
-      reason: "Server error",
+      reason: "Server error during verification",
       metadata: { error: errorMessage }
     });
     
-    return NextResponse.redirect(new URL("/verification-error", request.url));
+    // Redirect to a generic error page
+    return NextResponse.redirect(new URL("/verification-error?reason=server-error", request.url));
   }
 }
