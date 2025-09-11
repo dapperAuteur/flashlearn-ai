@@ -6,6 +6,7 @@ import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import CsvImportModal from '../flashcards/CsvImportModal';
 import { Flashcard } from '@/types/flashcard';
+import { shuffleArray } from '@/lib/utils/arrayUtils';
 
 interface StudySessionSetupProps {
   onStartSession: (sessionId: string, cards: Flashcard[]) => void;
@@ -65,6 +66,20 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
       Logger.log(LogContext.STUDY, "Retrieved Flashcards", {
         data
       });
+
+      // Shuffle Flashcards before starting session.
+
+      Logger.log(LogContext.STUDY, "Shuffling Flashcards", {
+        data
+      });
+
+      const shuffledFlashcards = shuffleArray(data.flashcards);
+
+      Logger.log(LogContext.STUDY, "Shuffled Flashcards", {
+        shuffledFlashcards
+      });
+
+      data.flashcards = shuffledFlashcards;
       
       // 3. Call the onStartSession function from the parent with the new data
       // This lifts the state up to the StudySession component.

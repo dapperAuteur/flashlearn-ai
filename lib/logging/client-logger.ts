@@ -6,7 +6,8 @@ export enum LogContext {
   AUTH = "auth",
   FLASHCARD = "flashcard",
   STUDY = "study",
-  SYSTEM = "system"
+  SYSTEM = "system",
+  UTILS = "utils"
 }
 
 export const Logger = {
