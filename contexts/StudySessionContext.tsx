@@ -10,6 +10,8 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // --- 1. DEFINE THE SHAPE OF OUR CONTEXT STATE ---
 
+type LastCardResult = 'correct' | 'incorrect' | null;
+
 interface StudySessionState {
   // Session Status
   sessionId: string | null;
@@ -25,9 +27,12 @@ interface StudySessionState {
   // Timer Data
   sessionStartTime: number | null;
 
+  lastCardResult: LastCardResult;
+
   // Actions (functions to modify the state)
   startSession: (listId: string) => Promise<void>;
   recordCardResult: (isCorrect: boolean, timeSeconds: number) => Promise<void>;
+  showNextCard: () => void;
   resetSession: () => void;
 }
 
@@ -41,7 +46,7 @@ interface StudySessionProviderProps {
   children: ReactNode;
 }
 
-export const StudySessionProvider = ({ children }: StudySessionProviderProps) => {
+export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   const { data: authSession } = useSession();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -51,6 +56,7 @@ export const StudySessionProvider = ({ children }: StudySessionProviderProps) =>
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [lastCardResult, setLastCardResult] = useState<LastCardResult>(null);
 
   // --- LOGIC MOVED FROM OLD COMPONENTS ---
 
@@ -113,22 +119,27 @@ export const StudySessionProvider = ({ children }: StudySessionProviderProps) =>
     const currentCard = flashcards[currentIndex];
     const result: CardResult = { sessionId, flashcardId: String(currentCard._id), isCorrect, timeSeconds };
 
-    const newResults = [...cardResults, result];
-    setCardResults(newResults);
-    await saveResult(result); // Save to IndexedDB for persistence
+    setCardResults(prev => [...prev, result]);
+    await saveResult(result);
 
+    // Instead of incrementing currentIndex, we set the result for the feedback screen.
+    setLastCardResult(isCorrect ? 'correct' : 'incorrect');
+  }, [sessionId, currentIndex, flashcards]);
+
+  // NEW: This action is called by the feedback screen to advance the session.
+  const showNextCard = useCallback(() => {
+    setLastCardResult(null); // Hide the feedback screen
     const nextIndex = currentIndex + 1;
     if (nextIndex < flashcards.length) {
       setCurrentIndex(nextIndex);
     } else {
-      await completeSession(newResults);
+      // If that was the last card, complete the session.
+      completeSession();
     }
-  }, [sessionId, currentIndex, flashcards, cardResults, completeSession]);
+  }, [currentIndex, flashcards.length, completeSession]);
 
   const resetSession = useCallback(() => {
-    if (sessionId) {
-      clearResults(sessionId);
-    }
+    if (sessionId) clearResults(sessionId);
     setSessionId(null);
     setFlashcards([]);
     setCardResults([]);
@@ -136,28 +147,16 @@ export const StudySessionProvider = ({ children }: StudySessionProviderProps) =>
     setIsComplete(false);
     setError(null);
     setSessionStartTime(null);
-    Logger.log(LogContext.STUDY, "Session has been reset by the user.");
+    setLastCardResult(null);
   }, [sessionId]);
 
-  // --- 4. PROVIDE THE STATE AND ACTIONS TO CHILDREN ---
   const value = {
-    sessionId,
-    isLoading,
-    isComplete,
-    error,
-    flashcards,
-    currentIndex,
-    cardResults,
-    sessionStartTime,
-    startSession,
-    recordCardResult,
-    resetSession,
+    sessionId, isLoading, isComplete, error, flashcards, currentIndex, cardResults,
+    sessionStartTime, lastCardResult, startSession, recordCardResult, showNextCard, resetSession,
   };
 
   return (
-    <StudySessionContext.Provider value={value}>
-      {children}
-    </StudySessionContext.Provider>
+    <StudySessionContext.Provider value={value}>{children}</StudySessionContext.Provider>
   );
 };
 

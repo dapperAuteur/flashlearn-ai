@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
+import React, { useState, useEffect } from 'react'; // Add useCallback
 import { useStudySession } from '@/contexts/StudySessionContext';
 import StudySessionSetup from './StudySessionSetup';
 import StudyCard from './StudyCard';
 import StudySessionResults from './StudySessionResults';
+import CardFeedback from './CardFeedback';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // --- (formatTime helper remains the same) ---
@@ -26,6 +27,7 @@ export default function StudySessionManager() {
     sessionStartTime,
     recordCardResult,
     resetSession,
+    lastCardResult,
   } = useStudySession();
 
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -47,14 +49,6 @@ export default function StudySessionManager() {
     }, 1000);
     return () => clearInterval(timerInterval);
   }, [sessionStartTime, isComplete]);
-  
-  // NEW: This handler wraps the context action. We use useCallback for performance.
-  const handleRecordResult = useCallback(async (isCorrect: boolean, timeSeconds: number) => {
-    // We don't need to manually set isFlipped to false here, because the
-    // `useEffect` above will handle it automatically when `currentIndex` changes
-    // as a result of calling recordCardResult.
-    await recordCardResult(isCorrect, timeSeconds);
-  }, [recordCardResult]);
   
   // --- (Conditional rendering logic remains the same) ---
 
@@ -83,6 +77,15 @@ export default function StudySessionManager() {
       return <StudySessionResults />;
     }
 
+    if (lastCardResult) {
+      return (
+        <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
+          <div className="mb-4 h-5"></div> {/* Placeholder to keep layout consistent */}
+          <CardFeedback />
+        </div>
+      );
+    }
+
     if (flashcards.length > 0 && currentIndex < flashcards.length) {
       return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
@@ -98,7 +101,7 @@ export default function StudySessionManager() {
             flashcard={flashcards[currentIndex]}
             isFlipped={isFlipped}
             onFlip={() => setIsFlipped(!isFlipped)} // The toggle logic now lives here
-            onResult={handleRecordResult}
+            onResult={recordCardResult}
             onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
             onEndSession={resetSession}
           />
