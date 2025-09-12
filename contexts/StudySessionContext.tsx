@@ -10,6 +10,7 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // --- 1. DEFINE THE SHAPE OF OUR CONTEXT STATE ---
 
+type StudyDirection = 'front-to-back' | 'back-to-front';
 type LastCardResult = 'correct' | 'incorrect' | null;
 
 interface StudySessionState {
@@ -29,8 +30,12 @@ interface StudySessionState {
 
   lastCardResult: LastCardResult;
 
+  // studyDirection
+  studyDirection: StudyDirection;
+  setStudyDirection: (direction: StudyDirection) => void;
+
   // Actions (functions to modify the state)
-  startSession: (listId: string) => Promise<void>;
+  startSession: (listId: string, direction: StudyDirection) => Promise<void>;
   recordCardResult: (isCorrect: boolean, timeSeconds: number) => Promise<void>;
   showNextCard: () => void;
   resetSession: () => void;
@@ -56,13 +61,15 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [studyDirection, setStudyDirection] = useState<StudyDirection>('front-to-back');
   const [lastCardResult, setLastCardResult] = useState<LastCardResult>(null);
 
   // --- LOGIC MOVED FROM OLD COMPONENTS ---
 
-  const startSession = useCallback(async (listId: string) => {
+  const startSession = useCallback(async (listId: string, direction: StudyDirection) => {
     setIsLoading(true);
     setError(null);
+    setStudyDirection(direction);
     try {
       Logger.log(LogContext.STUDY, "Attempting to start a new session.", { listId });
       const response = await fetch('/api/study/sessions', {
@@ -151,8 +158,21 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   }, [sessionId]);
 
   const value = {
-    sessionId, isLoading, isComplete, error, flashcards, currentIndex, cardResults,
-    sessionStartTime, lastCardResult, startSession, recordCardResult, showNextCard, resetSession,
+    sessionId,
+    isLoading,
+    isComplete,
+    error,
+    flashcards,
+    currentIndex,
+    cardResults,
+    sessionStartTime,
+    lastCardResult,
+    startSession,
+    recordCardResult,
+    showNextCard,
+    resetSession,
+    studyDirection,
+    setStudyDirection,
   };
 
   return (

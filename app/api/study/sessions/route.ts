@@ -9,6 +9,7 @@ import { Logger, LogContext } from '@/lib/logging/logger';
 import { authOptions } from '@/lib/auth/auth';
 import { StudyAnalytics } from '@/models/StudyAnalytics';
 import { User } from '@/models/User';
+import { StudyDirection } from '@/models/StudySession';
 
 interface CardResult {
   cardId: string;
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
     const requestId = await Logger.info(LogContext.STUDY, "Create study session request");
     try {
         const userId = session?.user?.id ? new ObjectId(session.user.id) : null;
-        const { listId } = body;
+        const { listId, studyDirection }: { listId: string, studyDirection: StudyDirection } = body;
 
         const client = await clientPromise;
         const db = client.db();
@@ -154,6 +155,7 @@ export async function POST(request: NextRequest) {
             startTime: new Date(),
             status: 'active',
             totalCards: flashcards.length,
+            studyDirection: studyDirection || 'front-to-back',
             correctCount: 0,
             incorrectCount: 0,
             completedCards: 0,
@@ -163,7 +165,7 @@ export async function POST(request: NextRequest) {
         
         const result = await db.collection('studySessions').insertOne(studySession);
         
-        await Logger.info(LogContext.STUDY, "Study session created successfully", { requestId, userId: session?.user?.id, isAnonymous: !userId, metadata: { sessionId: result.insertedId.toString(), cardCount: flashcards.length } });
+        await Logger.info(LogContext.STUDY, "Study session created successfully", { requestId, userId: session?.user?.id, isAnonymous: !userId, metadata: { sessionId: result.insertedId.toString(), studyDirection, cardCount: flashcards.length } });
         
         return NextResponse.json({
             sessionId: result.insertedId.toString(),
