@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'; // Add useCallback
+import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import StudySessionSetup from './StudySessionSetup';
 import StudyCard from './StudyCard';
@@ -24,11 +25,13 @@ export default function StudySessionManager() {
     error,
     flashcards,
     currentIndex,
+    studyDirection,
     sessionStartTime,
     recordCardResult,
     resetSession,
     lastCardResult,
   } = useStudySession();
+  const { status } = useSession();
 
   const [elapsedTime, setElapsedTime] = useState(0);
   // NEW: The manager now owns the isFlipped state for the current card.
@@ -87,6 +90,12 @@ export default function StudySessionManager() {
     }
 
     if (flashcards.length > 0 && currentIndex < flashcards.length) {
+      const currentCard = flashcards[currentIndex];
+      const isInverse = studyDirection === 'back-to-front';
+      const canBeInverse = status === 'authenticated';
+      const cardToShow = (isInverse && canBeInverse)
+        ? { ...currentCard, front: currentCard.back, back: currentCard.front }
+        : currentCard;
       return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
           <div className="mb-4 flex justify-between items-center text-white">
@@ -98,9 +107,9 @@ export default function StudySessionManager() {
           </div>
           {/* MODIFIED: Pass the new state and handlers down to StudyCard */}
           <StudyCard
-            flashcard={flashcards[currentIndex]}
+            flashcard={cardToShow}
             isFlipped={isFlipped}
-            onFlip={() => setIsFlipped(!isFlipped)} // The toggle logic now lives here
+            onFlip={() => setIsFlipped(!isFlipped)}
             onResult={recordCardResult}
             onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
             onEndSession={resetSession}

@@ -8,6 +8,7 @@ Add the ability to pause session and pause time for session and create a paused 
 import mongoose, { Schema, Document } from 'mongoose';
 
 // const opts = { toJSON: { virtuals: true } };
+export type StudyDirection = 'front-to-back' | 'back-to-front';
 
 export interface IStudySession extends Document {
   userId: mongoose.Types.ObjectId;
@@ -19,6 +20,7 @@ export interface IStudySession extends Document {
   correctCount: number;
   incorrectCount: number;
   completedCards: number;
+  studyDirection?: StudyDirection;
   
   // Virtual properties
   isComplete: boolean;
@@ -36,7 +38,12 @@ const StudySessionSchema: Schema = new Schema(
     totalCards: { type: Number, default: 0 },
     correctCount: { type: Number, default: 0 },
     incorrectCount: { type: Number, default: 0 },
-    completedCards: { type: Number, default: 0 }
+    completedCards: { type: Number, default: 0 },
+    studyDirection: {
+      type: String,
+      enum: ['front-to-back', 'back-to-front'],
+      default: 'front-to-back'
+    }
   },
   { timestamps: true }
 );
