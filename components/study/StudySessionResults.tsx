@@ -1,110 +1,91 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+// NEW: Import the custom hook to access our context
+import { useStudySession } from '@/contexts/StudySessionContext';
 
-// Register Chart.js components
+// REMOVED: The component no longer accepts props.
+// interface StudySessionResultsProps { ... }
+
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-interface StudySessionResultsProps {
-  results: {
-    sessionId: string;
-    totalCards: number;
-    completedCards: number;
-    correctCount: number;
-    incorrectCount: number;
-    accuracy: number;
-    durationSeconds: number;
-  };
-  onReset: () => void;
-}
+// The component is now self-contained.
+export default function StudySessionResults() {
+  // NEW: Connect to the context to get all necessary data and actions.
+  const { sessionId, flashcards, cardResults, resetSession } = useStudySession();
 
-export default function StudySessionResults({ results, onReset }: StudySessionResultsProps) {
-  // Log the study session results when the component mounts.
+  // NEW: Derive the results object directly from the context state.
+  const results = useMemo(() => ({
+    sessionId: sessionId || 'unknown-session',
+    totalCards: flashcards.length,
+    completedCards: cardResults.length,
+    correctCount: cardResults.filter(r => r.isCorrect).length,
+    incorrectCount: cardResults.filter(r => !r.isCorrect).length,
+    accuracy: cardResults.length > 0
+      ? (cardResults.filter(r => r.isCorrect).length / cardResults.length) * 100
+      : 0,
+    durationSeconds: Math.round(cardResults.reduce((total, result) => total + result.timeSeconds, 0)),
+  }), [sessionId, flashcards, cardResults]);
+
   useEffect(() => {
-    // This provides a comprehensive record of the user's performance for analytics.
+    // This logging logic remains the same and is still valuable.
+    if (results.sessionId !== 'unknown-session') {
+      Logger.log(
+        LogContext.STUDY,
+        `Study session results displayed for session ID: ${results.sessionId}`,
+        { ...results }
+      );
+    }
+  }, [results]); // Depend on sessionId from the derived results
+
+  const handleResetClick = () => {
     Logger.log(
       LogContext.STUDY,
-      `Study session results displayed for session ID: ${results.sessionId}`,
-      {
-        sessionId: results.sessionId,
-        accuracy: results.accuracy,
-        correctCount: results.correctCount,
-        incorrectCount: results.incorrectCount,
-        durationSeconds: results.durationSeconds,
-        completedCards: results.completedCards,
-        totalCards: results.totalCards,
-      }
+      `User clicked 'Study Another Set' after session ID: ${results.sessionId}`
     );
-  }, [results]); // Dependency array ensures this logs once per result set.
+    // MODIFIED: Call the reset function from the context.
+    resetSession();
+  };
+
+  // The rest of the component's JSX and helper functions remain exactly the same.
+  // ... (formatDuration, chartData, StatCard, and the main return statement)
 
   const formatDuration = (seconds: number) => {
-    // If the duration is not a valid number, log an error for debugging.
     if (isNaN(seconds) || seconds < 0) {
-      Logger.error(
-        LogContext.STUDY,
-        'Invalid duration value received in StudySessionResults',
-        {
-          sessionId: results.sessionId,
-          invalidSecondsValue: seconds,
-        }
-      );
+      Logger.error(LogContext.STUDY, 'Invalid duration value received.', { seconds });
       return '0m 0s';
     }
     const mins = Math.floor(seconds / 60);
     const secs = Math.round(seconds % 60);
     return `${mins}m ${secs}s`;
   };
-  const avgTime = results.completedCards > 0 ? results.durationSeconds / results.completedCards : 0;
 
-
-  // Log viewing results
-  Logger.log(LogContext.STUDY, "Viewing study session results", {
-    sessionId: results.sessionId,
-    accuracy: results.accuracy
-  });
-
-  // Chart data
   const chartData = {
     labels: ['Correct', 'Incorrect'],
-    datasets: [
-      {
-        data: [results.correctCount, results.incorrectCount],
-        backgroundColor: ['#10B981', '#EF4444'],
-        borderColor: ['#059669', '#DC2626'],
-        borderWidth: 1,
-      },
-    ],
+    datasets: [{
+      data: [results.correctCount, results.incorrectCount],
+      backgroundColor: ['#10B981', '#EF4444'],
+      borderColor: ['#059669', '#DC2626'],
+      borderWidth: 1,
+    }],
   };
-
-  // Handles the reset button click, logging the event before proceeding.
-  const handleResetClick = () => {
-    Logger.log(
-      LogContext.STUDY,
-      `User clicked 'Study Another Set' after session ID: ${results.sessionId}`,
-      { sessionId: results.sessionId }
-    );
-    onReset();
-  };
-
+  
   return (
     <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
       <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 text-center">Session Complete!</h2>
       <p className="text-gray-600 mb-8 text-center">Here&apos;s how you did:</p>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        {/* Stats Section */}
         <div className="grid grid-cols-2 gap-4">
-            <StatCard label="Accuracy" value={`${results.accuracy.toFixed(0)}%`} color="text-blue-600" />
-            <StatCard label="Correct" value={results.correctCount} color="text-green-600" />
-            <StatCard label="Incorrect" value={results.incorrectCount} color="text-red-600" />
-            <StatCard label="Total Cards" value={`${results.completedCards}/${results.totalCards}`} />
-            <StatCard label="Total Time" value={formatDuration(results.durationSeconds)} />
-            <StatCard label="Avg. Time" value={formatDuration(avgTime)} />
+          <StatCard label="Accuracy" value={`${results.accuracy.toFixed(0)}%`} color="text-blue-600" />
+          <StatCard label="Correct" value={results.correctCount} color="text-green-600" />
+          <StatCard label="Incorrect" value={results.incorrectCount} color="text-red-600" />
+          <StatCard label="Total Cards" value={`${results.completedCards}/${results.totalCards}`} />
+          <StatCard label="Total Time" value={formatDuration(results.durationSeconds)} />
+          <StatCard label="Avg. Time" value={`${formatDuration(results.completedCards > 0 ? results.durationSeconds / results.completedCards : 0)}/card`} />
         </div>
-        
         <div>
           <h3 className="text-lg font-semibold mb-4 text-gray-700">Performance</h3>
           <div className="w-full max-w-xs mx-auto">
@@ -112,7 +93,6 @@ export default function StudySessionResults({ results, onReset }: StudySessionRe
           </div>
         </div>
       </div>
-
       <div className="mt-8 text-center">
         <button
           onClick={handleResetClick}
@@ -125,10 +105,9 @@ export default function StudySessionResults({ results, onReset }: StudySessionRe
   );
 }
 
-// Helper component for individual stats
 const StatCard = ({ label, value, color = 'text-gray-800' }: { label: string, value: string | number, color?: string }) => (
-    <div className="bg-gray-100 p-4 rounded-lg text-center sm:text-left">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
-    </div>
+  <div className="bg-gray-100 p-4 rounded-lg text-center sm:text-left">
+    <p className="text-sm text-gray-500">{label}</p>
+    <p className={`text-2xl font-bold ${color}`}>{value}</p>
+  </div>
 );
