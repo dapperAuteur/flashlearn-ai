@@ -1,38 +1,40 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import CsvImportModal from '../flashcards/CsvImportModal';
-import { Flashcard } from '@/types/flashcard';
-import { shuffleArray } from '@/lib/utils/arrayUtils';
+// NEW: Import the custom hook to access our context
+import { useStudySession } from '@/contexts/StudySessionContext';
 
-interface StudySessionSetupProps {
-  onStartSession: (sessionId: string, cards: Flashcard[]) => void;
-}
+// REMOVED: The onStartSession prop is no longer needed.
+// interface StudySessionSetupProps {
+//   onStartSession: (sessionId: string, cards: Flashcard[]) => void;
+// }
 
-export default function StudySessionSetup({ onStartSession }: StudySessionSetupProps) {
-  const router = useRouter();
+// The component no longer accepts any props.
+export default function StudySessionSetup() {
+  // NEW: Connect to the context to get the startSession action and loading state.
+  const { startSession, isLoading } = useStudySession();
+
   const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
 
-  // Fetch user's lists
   const fetchLists = async () => {
+    // This data fetching logic remains the same.
     try {
-        const response = await fetch('/api/lists');
-        if (!response.ok) throw new Error('Failed to fetch lists');
-        const data = await response.json();
-        console.log('StudySessionSetup data :>> ', data);
-        setLists(data);
-      } catch (error) {
-        setError('Failed to load lists. Please try again.');
-        console.error('Error fetching lists:', error);
-      }
-  }
+      const response = await fetch('/api/lists');
+      if (!response.ok) throw new Error('Failed to fetch lists');
+      const data = await response.json();
+      setLists(data);
+    } catch (error) {
+      setError('Failed to load lists. Please try again.');
+      Logger.error(LogContext.STUDY, 'Error fetching lists in StudySessionSetup', { error });
+    }
+  };
+
   useEffect(() => {
     fetchLists();
   }, []);
@@ -42,83 +44,33 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
       setError('Please select a list to study');
       return;
     }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      Logger.log(LogContext.STUDY, "Starting study session", {
-        listId: selectedListId
-      });
-      
-      const response = await fetch('/api/study/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listId: selectedListId })
-      });
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to start study session');
-      }
-      
-      const data = await response.json(); // Expecting { sessionId, cards }
-      Logger.log(LogContext.STUDY, "Retrieved Flashcards", {
-        data
-      });
-
-      // Shuffle Flashcards before starting session.
-
-      Logger.log(LogContext.STUDY, "Shuffling Flashcards", {
-        data
-      });
-
-      const shuffledFlashcards = shuffleArray(data.flashcards);
-
-      Logger.log(LogContext.STUDY, "Shuffled Flashcards", {
-        shuffledFlashcards
-      });
-
-      data.flashcards = shuffledFlashcards;
-      
-      // 3. Call the onStartSession function from the parent with the new data
-      // This lifts the state up to the StudySession component.
-      onStartSession(data.sessionId, data.flashcards);
-      
-      Logger.log(LogContext.STUDY, "Study session started", { sessionId: data.sessionId });
-
-      router.push(`/dashboard/study/session/${data.sessionId}`);
-                  
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to start session';
-      setError(message);
-      Logger.error(LogContext.STUDY, `Error starting study session: ${message}`);
-    } finally {
-      setIsLoading(false);
-    }
+    setError(null);
+    // MODIFIED: Instead of calling a prop, we call the startSession function
+    // directly from our context. All the complex logic is now handled there.
+    await startSession(selectedListId);
   };
 
   const handleImportSuccess = () => {
-    fetchLists(); // Refresh the lists
-  }
+    fetchLists(); // Refresh the lists after a successful import.
+  };
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Study Session</h2>
-      
+    <div className="bg-gray-800 rounded-lg shadow-lg p-6">
+      <h2 className="text-xl font-bold mb-4 text-white">Choose a Set to Study</h2>
+
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
         </div>
       )}
-      
-      <div className="mb-6">
+
+      <div className="mb-4">
         <label htmlFor="listSelect" className="block mb-2 text-sm font-medium text-gray-300">
-          Select a List to Study
+          Select a List
         </label>
         <select
           id="listSelect"
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          className="w-full p-2 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-blue-500 focus:border-blue-500"
           value={selectedListId}
           onChange={(e) => setSelectedListId(e.target.value)}
         >
@@ -135,23 +87,23 @@ export default function StudySessionSetup({ onStartSession }: StudySessionSetupP
         <button
           type="button"
           onClick={() => setShowImportModal(true)}
-          className="w-full px-4 py-2 border border-gray-300 text-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border border-gray-600 text-gray-300 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Import New List from CSV
         </button>
       </div>
 
-      
       <div className="flex justify-end">
         <button
           type="button"
           onClick={handleStartSession}
           disabled={isLoading || !selectedListId}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Starting...' : 'Start Studying'}
         </button>
       </div>
+
       <CsvImportModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
