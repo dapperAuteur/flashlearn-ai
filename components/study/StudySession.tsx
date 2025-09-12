@@ -82,6 +82,7 @@ export default function StudySession() {
     if (authSession?.user && isOnline) {
       try {
         Logger.log(LogContext.STUDY, "Attempting to submit session results to server.", { sessionId });
+        // there isn't a 'study-sessions' directory in the api?
         const response = await fetch(`/api/study-sessions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
