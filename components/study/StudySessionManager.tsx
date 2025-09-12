@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
 import { useStudySession } from '@/contexts/StudySessionContext';
 import StudySessionSetup from './StudySessionSetup';
 import StudyCard from './StudyCard';
@@ -29,19 +29,34 @@ export default function StudySessionManager() {
   } = useStudySession();
 
   const [elapsedTime, setElapsedTime] = useState(0);
+  // NEW: The manager now owns the isFlipped state for the current card.
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  // THIS IS THE FIX: This effect *guarantees* that whenever the card changes
+  // (i.e., currentIndex changes), the isFlipped state is reset to false.
+  // Because the parent controls this, it happens before the child can render.
+  useEffect(() => {
+    setIsFlipped(false);
+  }, [currentIndex]);
 
   // --- (timer useEffect remains the same) ---
   useEffect(() => {
-    if (!sessionStartTime || isComplete) {
-      return;
-    }
+    if (!sessionStartTime || isComplete) { return; }
     const timerInterval = setInterval(() => {
       setElapsedTime(Date.now() - sessionStartTime);
     }, 1000);
     return () => clearInterval(timerInterval);
   }, [sessionStartTime, isComplete]);
   
-  // --- Conditional rendering logic is now refactored ---
+  // NEW: This handler wraps the context action. We use useCallback for performance.
+  const handleRecordResult = useCallback(async (isCorrect: boolean, timeSeconds: number) => {
+    // We don't need to manually set isFlipped to false here, because the
+    // `useEffect` above will handle it automatically when `currentIndex` changes
+    // as a result of calling recordCardResult.
+    await recordCardResult(isCorrect, timeSeconds);
+  }, [recordCardResult]);
+  
+  // --- (Conditional rendering logic remains the same) ---
 
   if (isLoading) {
     return (
@@ -63,14 +78,11 @@ export default function StudySessionManager() {
     );
   }
 
-  // NEW LOGIC: The primary check is now "is there an active session?"
   if (sessionId) {
-    // If the session is marked as complete, show the results.
     if (isComplete) {
       return <StudySessionResults />;
     }
 
-    // If there's an active session that is NOT complete, show the card.
     if (flashcards.length > 0 && currentIndex < flashcards.length) {
       return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
@@ -81,9 +93,12 @@ export default function StudySessionManager() {
               End Session
             </button>
           </div>
+          {/* MODIFIED: Pass the new state and handlers down to StudyCard */}
           <StudyCard
             flashcard={flashcards[currentIndex]}
-            onResult={recordCardResult}
+            isFlipped={isFlipped}
+            onFlip={() => setIsFlipped(!isFlipped)} // The toggle logic now lives here
+            onResult={handleRecordResult}
             onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
             onEndSession={resetSession}
           />
@@ -92,6 +107,5 @@ export default function StudySessionManager() {
     }
   }
 
-  // If there is no active session (sessionId is null), show the setup screen.
   return <StudySessionSetup />;
 }

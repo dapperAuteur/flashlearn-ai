@@ -6,69 +6,54 @@ import { motion } from 'framer-motion';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { Flashcard } from '@/types/flashcard';
 
-// interface StudySessionProps {
-//   flashcards: Flashcard[];
-// }
-
 interface StudyCardProps {
   flashcard: Flashcard;
+  // NEW: The component now receives its flipped status and a handler from the parent.
+  isFlipped: boolean;
+  onFlip: () => void;
   onResult: (isCorrect: boolean, timeSeconds: number) => void;
   onPrevious: () => void;
   onEndSession: () => void;
 }
 
-export default function StudyCard({ 
-  flashcard, 
+export default function StudyCard({
+  flashcard,
+  isFlipped,  // Receive state as a prop
+  onFlip,      // Receive handler as a prop
   onResult,
   onPrevious,
   onEndSession
 }: StudyCardProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
   const [startTime, setStartTime] = useState<number>(Date.now());
-
   const cardId = String(flashcard._id);
-  
-  // Reset timer when a new flashcard is shown
+
+  // REMOVED: The useEffect that controlled isFlipped is gone.
+  // The only responsibility of this effect is to reset the timer.
   useEffect(() => {
-    setIsFlipped(false);
     setStartTime(Date.now());
   }, [cardId]);
 
-  const handleFlip = useCallback(() => {
-    if (!isFlipped) {
-      setIsFlipped(true);
-      Logger.log(LogContext.STUDY, "Card flipped", { cardId });
-    }
-  }, [isFlipped, cardId]);
-
   const handleResult = useCallback((correct: boolean) => {
-    // Calculate time spent on this card in seconds
     const timeSeconds = Math.round((Date.now() - startTime) / 1000);
-    
-    Logger.log(LogContext.STUDY, "Result selected", { 
-      cardId,
-      correct,
-      timeSeconds
-    });
-    
+    Logger.log(LogContext.STUDY, "Result selected", { cardId, correct, timeSeconds });
     onResult(correct, timeSeconds);
   }, [startTime, cardId, onResult]);
 
+  // MODIFIED: The keydown handler now calls the onFlip prop.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ignore keyboard events if an input element is focused
-      if (event.target instanceof HTMLInputElement || 
+      if (event.target instanceof HTMLInputElement ||
           event.target instanceof HTMLTextAreaElement ||
           event.target instanceof HTMLSelectElement) {
         return;
       }
-
       switch (event.key) {
         case ' ':
         case 'Enter':
-          event.preventDefault(); // Prevent default space bar scroll
-          handleFlip();
+          event.preventDefault();
+          onFlip(); // Call the parent's flip handler
           break;
+        // ... (other cases remain the same)
         case 'ArrowLeft':
         case '1':
           if (isFlipped) handleResult(false);
@@ -85,10 +70,9 @@ export default function StudyCard({
           break;
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFlipped, handleFlip, handleResult, onPrevious, onEndSession]);
+  }, [isFlipped, handleResult, onPrevious, onEndSession, onFlip]);
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -98,39 +82,27 @@ export default function StudyCard({
           Keyboard: Space, &larr;, &rarr;, &uarr;, Esc
         </div>
       </div>
-      
       <div className="mb-8">
+        {/* MODIFIED: The onClick handler now calls the onFlip prop */}
         <motion.div
           className="w-full h-80 cursor-pointer perspective-1000"
-          onClick={handleFlip}
+          onClick={onFlip}
         >
+          {/* MODIFIED: The animation directly uses the isFlipped prop */}
           <motion.div
             className="relative w-full h-full transform-style-preserve-3d transition-transform duration-500"
             animate={{ rotateY: isFlipped ? 180 : 0 }}
           >
-            {/* Front of card */}
+            {/* Front and Back of card JSX remains the same */}
             <div className="absolute w-full h-full backface-hidden bg-gray-700 border border-gray-200 rounded-lg p-6 flex flex-col justify-center shadow-md">
               <div className="overflow-auto">
                 <div 
                   className="text-center text-lg prose prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: flashcard.front }}
                 />
-                
-                {flashcard.frontImage && (
-                  <div className="mt-4 flex justify-center">
-                    <Image 
-                      src={flashcard.frontImage} 
-                      alt="Front visual" 
-                      className="max-h-48 object-contain"
-                      width={400}
-                      height={400}
-                    />
-                  </div>
-                )}
+                {flashcard.frontImage && <div className="mt-4 flex justify-center"><Image src={flashcard.frontImage} alt="Front visual" className="max-h-48 object-contain" width={400} height={400} /></div>}
               </div>
             </div>
-            
-            {/* Back of card */}
             <motion.div 
               className="absolute w-full h-full backface-hidden bg-gray-800 border border-gray-600 rounded-lg p-6 flex flex-col justify-center shadow-md"
               style={{ rotateY: 180 }}
@@ -140,37 +112,19 @@ export default function StudyCard({
                   className="text-center text-lg prose prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: flashcard.back }}
                 />
-                
-                {flashcard.backImage && (
-                  <div className="mt-4 flex justify-center">
-                    <Image 
-                      src={flashcard.backImage} 
-                      alt="Back visual" 
-                      className="max-h-48 object-contain"
-                      width={400}
-                      height={400}
-                    />
-                  </div>
-                )}
+                {flashcard.backImage && <div className="mt-4 flex justify-center"><Image src={flashcard.backImage} alt="Back visual" className="max-h-48 object-contain" width={400} height={400} /></div>}
               </div>
             </motion.div>
           </motion.div>
         </motion.div>
       </div>
-      
+      {/* MODIFIED: The result buttons are still conditional on the isFlipped prop */}
       {isFlipped && (
         <div className="flex space-x-4 justify-center">
-          <button
-            onClick={() => handleResult(false)}
-            className="px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
-          >
+          <button onClick={() => handleResult(false)} className="px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500">
             Got it Wrong
           </button>
-          
-          <button
-            onClick={() => handleResult(true)}
-            className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
+          <button onClick={() => handleResult(true)} className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
             Got it Right
           </button>
         </div>
