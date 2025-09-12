@@ -108,11 +108,64 @@ export default function GenerateFlashcardsPage(){
   const [averageRating, setAverageRating] = useState<number>(0);
   const [ratingCount, setRatingCount] = useState<number>(0);
 
-  // Set the title based on the topic only once when the topic changes.
-  // We remove the useEffect to allow the user to edit the title.
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
+
+
   useEffect(() => {
-    setTitle(topic);
-  }, [topic]);
+    // Only set the title from the topic if the title is empty
+    if (topic && !title) {
+        setTitle(topic);
+    }
+  }, [topic, title]);
+  // NEW: Handler for saving the flashcard set
+  const handleSaveSet = async () => {
+    Logger.log(LogContext.FLASHCARD, 'Attempting to save flashcard set to account');
+    if (!title.trim()) {
+        setSaveError("A title is required to save the flashcard set.");
+        return;
+    }
+    if (flashcards.length === 0) {
+        setSaveError("There are no flashcards to save.");
+        return;
+    }
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccessMessage(null);
+    try {
+        const response = await fetch('/api/flashcards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title,
+                description,
+                isPublic,
+                flashcards,
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || `Failed to save: ${response.statusText}`);
+        }
+        
+        const numSets = data.createdSets?.length || 1;
+        const message = `Successfully saved "${title}" and ${numSets - 1} study set(s)! Navigating to study dashboard...`;
+        setSaveSuccessMessage(message);
+        Logger.info(LogContext.FLASHCARD, message, { count: numSets });
+        // Redirect to the study dashboard after a short delay
+        setTimeout(() => {
+            router.push('/dashboard/study');
+        }, 2500);
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred while saving.";
+        setSaveError(errorMessage);
+        Logger.error(LogContext.FLASHCARD, 'Error saving flashcard set', { error: err });
+    } finally {
+        setIsSaving(false);
+    }
+  };
 
   const handleExportCSV = () => {
     Logger.log(LogContext.FLASHCARD, 'Attempting to export flashcard set to CSV', { topic });
@@ -350,6 +403,7 @@ export default function GenerateFlashcardsPage(){
       setTitle(newTopic); // Also set the title to the new topic
       setError(null); // Clear any previous errors
       setFlippedCardIndices(new Set()); // Reset flip state
+      setShowLoadModal(false);
       Logger.info(LogContext.FLASHCARD, 'Successfully loaded flashcard set from local storage', { key, cardCount: loadedFlashcards.length });
 
     } catch (err: unknown) {
@@ -547,7 +601,7 @@ export default function GenerateFlashcardsPage(){
         placeholder="e.g., Photosynthesis, Capital cities of Europe, useState Hook: React state management..."
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
-        disabled={isLoading}
+        disabled={isLoading || isSaving}
       />
       <div className="mb-4">
         <label htmlFor="titleInput" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -560,7 +614,7 @@ export default function GenerateFlashcardsPage(){
           placeholder="e.g., My Photosynthesis Flashcards"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || isSaving}
         />
       </div>
       <div className="mb-4">
@@ -573,7 +627,7 @@ export default function GenerateFlashcardsPage(){
           placeholder="A brief description of this flashcard set."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || isSaving}
         />
       </div>
       <input
@@ -588,7 +642,7 @@ export default function GenerateFlashcardsPage(){
            id="generateButton"
            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
             onClick={handleGenerate}
-           disabled={isLoading || isExporting || isUploading}
+           disabled={isLoading || isExporting || isUploading || isSaving}
          >
            {isLoading ? 'Generating...' : 'Generate Flashcards w/AI'}
          </button>
@@ -596,7 +650,7 @@ export default function GenerateFlashcardsPage(){
           id="uploadButton"
           className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
           onClick={handleTriggerUpload} // Trigger the hidden input
-          disabled={isLoading || isExporting || isUploading}
+          disabled={isLoading || isExporting || isUploading || isSaving}
         >
           {isUploading ? 'Uploading...' : 'Upload CSV'}
         </button>
@@ -604,9 +658,9 @@ export default function GenerateFlashcardsPage(){
            id="loadButton"
            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md disabled:opacity-50"
             onClick={handleScanStorage}
-           disabled={isLoading || isExporting || isUploading} // Disable while generating/exporting
+           disabled={isLoading || isExporting || isUploading || isSaving} // Disable while generating/exporting
          >
-           Load from Storage
+           Load from Local Storage
          </button>
          <button
            id="exportCSVButton"
@@ -638,11 +692,40 @@ export default function GenerateFlashcardsPage(){
         )}
       </div>
       )}
+      </div>
+        {/* NEW: Sticky Save Controls and Status Display */}
+        {flashcards.length > 0 && status === 'authenticated' && (
+            <div className="sticky top-4 z-10 bg-white dark:bg-gray-900 p-4 rounded-lg shadow-lg border dark:border-gray-700 mb-8">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center space-x-3">
+                        <label htmlFor="isPublicToggle" className="font-medium text-gray-700 dark:text-gray-200">Make Public:</label>
+                        <input
+                            type="checkbox"
+                            id="isPublicToggle"
+                            className="h-6 w-11 rounded-full bg-gray-300 dark:bg-gray-600 appearance-none checked:bg-blue-600 transition duration-200 ease-in-out relative cursor-pointer"
+                            checked={isPublic}
+                            onChange={(e) => setIsPublic(e.target.checked)}
+                            disabled={isSaving}
+                        />
+                    </div>
+                    <button
+                        onClick={handleSaveSet}
+                        className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isSaving || !title.trim()}
+                    >
+                        {isSaving ? 'Saving...' : 'Save to Account'}
+                    </button>
+                </div>
+                {/* Save Status Messages */}
+                {saveError && <p className="text-red-600 mt-3 text-sm text-center">{saveError}</p>}
+                {saveSuccessMessage && <p className="text-green-600 mt-3 text-sm text-center">{saveSuccessMessage}</p>}
+            </div>
+        )}
 
       {/* Flashcard Grid */}
       {flashcards.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Generated Flashcards</h2>
+              <h2 className="text-xl font-semibold mb-4">Current Flashcards ({flashcards.length})</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 perspective">
                 {flashcards.map((card, index) => (
                   <div
@@ -689,7 +772,7 @@ export default function GenerateFlashcardsPage(){
               )}
             </div>
           )}
-        </div>
+        
       </div>
       {showLoadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
