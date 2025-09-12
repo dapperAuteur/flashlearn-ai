@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -18,7 +18,7 @@ export default function StudySessionResults() {
   const { sessionId, flashcards, cardResults, resetSession } = useStudySession();
 
   // NEW: Derive the results object directly from the context state.
-  const results = {
+  const results = useMemo(() => ({
     sessionId: sessionId || 'unknown-session',
     totalCards: flashcards.length,
     completedCards: cardResults.length,
@@ -28,7 +28,7 @@ export default function StudySessionResults() {
       ? (cardResults.filter(r => r.isCorrect).length / cardResults.length) * 100
       : 0,
     durationSeconds: Math.round(cardResults.reduce((total, result) => total + result.timeSeconds, 0)),
-  };
+  }), [sessionId, flashcards, cardResults]);
 
   useEffect(() => {
     // This logging logic remains the same and is still valuable.
@@ -39,7 +39,7 @@ export default function StudySessionResults() {
         { ...results }
       );
     }
-  }, [results.sessionId]); // Depend on sessionId from the derived results
+  }, [results]); // Depend on sessionId from the derived results
 
   const handleResetClick = () => {
     Logger.log(

@@ -105,13 +105,13 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const completeSession = useCallback(async (finalResults: CardResult[]) => {
+  const completeSession = useCallback(async () => {
     if (!sessionId) return;
     // For now, we'll just handle local queuing. Server sync logic can be added later.
     Logger.log(LogContext.STUDY, "Session completed. Queuing for sync.", { sessionId });
     await queueSessionForSync(sessionId);
     setIsComplete(true);
-  }, [sessionId, authSession]);
+  }, [sessionId]);
 
   const recordCardResult = useCallback(async (isCorrect: boolean, timeSeconds: number) => {
     if (!sessionId || currentIndex >= flashcards.length) return;
