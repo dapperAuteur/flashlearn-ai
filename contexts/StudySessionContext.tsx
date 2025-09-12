@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Flashcard } from '@/types/flashcard';
 import { CardResult, saveResult, getResults, clearResults, queueSessionForSync } from '@/lib/db/indexeddb';
@@ -71,6 +71,14 @@ export const StudySessionProvider = ({ children }: StudySessionProviderProps) =>
       }
 
       const data: { sessionId: string; flashcards: Flashcard[] } = await response.json();
+
+      if (!data.flashcards || data.flashcards.length === 0) {
+        Logger.warning(LogContext.STUDY, "Attempted to start a session with an empty list.", { listId });
+        setError("This list has no flashcards. Please add cards to it or choose another list.");
+        setIsLoading(false);
+        return; // Stop execution here.
+      }
+
       const shuffledCards = shuffleArray(data.flashcards);
 
       await clearResults(data.sessionId); // Clear any old data for this session

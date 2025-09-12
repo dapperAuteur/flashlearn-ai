@@ -4,37 +4,54 @@ import { useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-// NEW: Import the custom hook
+// NEW: Import the custom hook to access our context
 import { useStudySession } from '@/contexts/StudySessionContext';
 
-// REMOVED: The props interface is no longer needed as data will come from context.
+// REMOVED: The component no longer accepts props.
 // interface StudySessionResultsProps { ... }
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+// The component is now self-contained.
 export default function StudySessionResults() {
-  // NEW: Connect to the context to get results data and the reset action.
+  // NEW: Connect to the context to get all necessary data and actions.
   const { sessionId, flashcards, cardResults, resetSession } = useStudySession();
 
-  // Create the results object based on the data from the context.
+  // NEW: Derive the results object directly from the context state.
   const results = {
-    sessionId: sessionId || 'unknown',
+    sessionId: sessionId || 'unknown-session',
     totalCards: flashcards.length,
     completedCards: cardResults.length,
     correctCount: cardResults.filter(r => r.isCorrect).length,
     incorrectCount: cardResults.filter(r => !r.isCorrect).length,
-    accuracy: cardResults.length > 0 ? (cardResults.filter(r => r.isCorrect).length / cardResults.length) * 100 : 0,
-    durationSeconds: Math.round(cardResults.reduce((total, r) => total + r.timeSeconds, 0)),
+    accuracy: cardResults.length > 0
+      ? (cardResults.filter(r => r.isCorrect).length / cardResults.length) * 100
+      : 0,
+    durationSeconds: Math.round(cardResults.reduce((total, result) => total + result.timeSeconds, 0)),
   };
 
   useEffect(() => {
-    // This logging logic remains valuable.
+    // This logging logic remains the same and is still valuable.
+    if (results.sessionId !== 'unknown-session') {
+      Logger.log(
+        LogContext.STUDY,
+        `Study session results displayed for session ID: ${results.sessionId}`,
+        { ...results }
+      );
+    }
+  }, [results.sessionId]); // Depend on sessionId from the derived results
+
+  const handleResetClick = () => {
     Logger.log(
       LogContext.STUDY,
-      `Study session results displayed for session ID: ${results.sessionId}`,
-      { ...results }
+      `User clicked 'Study Another Set' after session ID: ${results.sessionId}`
     );
-  }, [results.sessionId]); // Depend on sessionId from the results object
+    // MODIFIED: Call the reset function from the context.
+    resetSession();
+  };
+
+  // The rest of the component's JSX and helper functions remain exactly the same.
+  // ... (formatDuration, chartData, StatCard, and the main return statement)
 
   const formatDuration = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) {
@@ -48,38 +65,26 @@ export default function StudySessionResults() {
 
   const chartData = {
     labels: ['Correct', 'Incorrect'],
-    datasets: [
-      {
-        data: [results.correctCount, results.incorrectCount],
-        backgroundColor: ['#10B981', '#EF4444'],
-        borderColor: ['#059669', '#DC2626'],
-        borderWidth: 1,
-      },
-    ],
+    datasets: [{
+      data: [results.correctCount, results.incorrectCount],
+      backgroundColor: ['#10B981', '#EF4444'],
+      borderColor: ['#059669', '#DC2626'],
+      borderWidth: 1,
+    }],
   };
-
-  const handleResetClick = () => {
-    Logger.log(
-      LogContext.STUDY,
-      `User clicked 'Study Another Set' after session ID: ${results.sessionId}`
-    );
-    // MODIFIED: Call the reset function directly from the context.
-    resetSession();
-  };
-
+  
   return (
     <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
       <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 text-center">Session Complete!</h2>
       <p className="text-gray-600 mb-8 text-center">Here&apos;s how you did:</p>
-      {/* The rest of the JSX remains the same */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         <div className="grid grid-cols-2 gap-4">
-            <StatCard label="Accuracy" value={`${results.accuracy.toFixed(0)}%`} color="text-blue-600" />
-            <StatCard label="Correct" value={results.correctCount} color="text-green-600" />
-            <StatCard label="Incorrect" value={results.incorrectCount} color="text-red-600" />
-            <StatCard label="Total Cards" value={`${results.completedCards}/${results.totalCards}`} />
-            <StatCard label="Total Time" value={formatDuration(results.durationSeconds)} />
-            <StatCard label="Avg. Time" value={`${formatDuration(results.completedCards > 0 ? results.durationSeconds / results.completedCards : 0)}/card`} />
+          <StatCard label="Accuracy" value={`${results.accuracy.toFixed(0)}%`} color="text-blue-600" />
+          <StatCard label="Correct" value={results.correctCount} color="text-green-600" />
+          <StatCard label="Incorrect" value={results.incorrectCount} color="text-red-600" />
+          <StatCard label="Total Cards" value={`${results.completedCards}/${results.totalCards}`} />
+          <StatCard label="Total Time" value={formatDuration(results.durationSeconds)} />
+          <StatCard label="Avg. Time" value={`${formatDuration(results.completedCards > 0 ? results.durationSeconds / results.completedCards : 0)}/card`} />
         </div>
         <div>
           <h3 className="text-lg font-semibold mb-4 text-gray-700">Performance</h3>
@@ -101,8 +106,8 @@ export default function StudySessionResults() {
 }
 
 const StatCard = ({ label, value, color = 'text-gray-800' }: { label: string, value: string | number, color?: string }) => (
-    <div className="bg-gray-100 p-4 rounded-lg text-center sm:text-left">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
-    </div>
+  <div className="bg-gray-100 p-4 rounded-lg text-center sm:text-left">
+    <p className="text-sm text-gray-500">{label}</p>
+    <p className={`text-2xl font-bold ${color}`}>{value}</p>
+  </div>
 );
