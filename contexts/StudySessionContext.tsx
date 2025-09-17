@@ -21,6 +21,7 @@ interface StudySessionState {
   error: string | null;
 
   // Session Data
+  flashcardSetName: string | null;
   flashcards: Flashcard[];
   currentIndex: number;
   cardResults: CardResult[];
@@ -54,6 +55,7 @@ interface StudySessionProviderProps {
 export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   const { data: authSession } = useSession();
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [flashcardSetName, setFlashcardSetName] = useState<string | null>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [cardResults, setCardResults] = useState<CardResult[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -83,7 +85,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.error || 'Failed to start study session');
       }
 
-      const data: { sessionId: string; flashcards: Flashcard[] } = await response.json();
+      const data: { sessionId: string; setName: string; flashcards: Flashcard[] } = await response.json();
 
       if (!data.flashcards || data.flashcards.length === 0) {
         Logger.warning(LogContext.STUDY, "Attempted to start a session with an empty list.", { listId });
@@ -98,6 +100,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
 
       setSessionId(data.sessionId);
       setFlashcards(shuffledCards);
+      setFlashcardSetName(data.setName);
       setCardResults([]);
       setCurrentIndex(0);
       setIsComplete(false);
@@ -159,6 +162,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     sessionId,
+    flashcardSetName,
     isLoading,
     isComplete,
     error,

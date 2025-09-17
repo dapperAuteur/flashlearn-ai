@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 // ============================
 // Embedded Flashcard Document
@@ -19,6 +19,7 @@ const FlashcardSchema = new mongoose.Schema({
 
 // Interface for a single flashcard
 export interface IFlashcard {
+  _id?: Types.ObjectId;
   front: string;
   back: string;
 }

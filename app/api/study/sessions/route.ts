@@ -169,6 +169,7 @@ export async function POST(request: NextRequest) {
         
         return NextResponse.json({
             sessionId: result.insertedId.toString(),
+            setName: flashcardSet.title,
             flashcards: flashcards.map((card: any) => ({ _id: card._id.toString(), front: card.front, back: card.back, frontImage: card.frontImage, backImage: card.backImage }))
         });
         
