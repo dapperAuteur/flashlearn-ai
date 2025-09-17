@@ -51,7 +51,7 @@ Now we'll update the components to use our new sync service and provide feedback
 
 ### **Phase 4: Update the Backend API**
 
-# The API needs to be able to handle a batch of results for a session.**File to Modify:** app/api/study-sessions/route.ts (or a more specific route like app/api/study-sessions/\[sessionId]/route.ts)**1. Modify the POST Handler:*** Ensure the endpoint can accept an array of CardResult objects in the request body.
+# The API needs to be able to handle a batch of results for a session.**File to Modify:** app/api/study/sessions/route.ts (or a more specific route like app/api/study/sessions/\[sessionId]/route.ts)**1. Modify the POST Handler:*** Ensure the endpoint can accept an array of CardResult objects in the request body.
 
 * The handler should loop through the array and save each result to the main database (e.g., MongoDB).
 

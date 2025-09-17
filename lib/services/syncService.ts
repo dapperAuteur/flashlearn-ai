@@ -36,7 +36,7 @@ export async function syncOfflineData(): Promise<void> {
                 }
 
                 // Attempt to send the results to the server
-                const response = await fetch(`/api/study-sessions`, {
+                const response = await fetch(`/api/study/sessions`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

@@ -18,7 +18,7 @@ const StudyAnalyticsSchema = new mongoose.Schema({
   profile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profile',
-    required: true,
+    required: false,
   },
   set: {
     type: mongoose.Schema.Types.ObjectId,
