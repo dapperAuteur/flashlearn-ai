@@ -40,7 +40,7 @@ export async function syncOfflineData(): Promise<void> {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        sessionId,
+                        setId: sessionId, // **FIXED: Changed key from 'sessionId' to 'setId'**
                         results: resultsToSync
                     }),
                 });
