@@ -45,7 +45,13 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
         cacheBust: true, 
         width: 1080, 
         height: 1080,
-        style: { margin: '0' } 
+        style: { 
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '2rem', // Add some padding
+        }  
       });
       const response = await fetch(imageUrl);
       const blob = await response.blob();
@@ -90,7 +96,9 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
 
   return (
     <div>
-      <div ref={cardRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
+        <div ref={cardRef} className="flex flex-col justify-between h-full">
+            
         <div>
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 text-center">Session Complete!</h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8 text-center">
@@ -117,6 +125,7 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
             <p className="text-lg font-bold text-gray-800 dark:text-gray-200">Flashlearn AI</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">{typeof window !== 'undefined' ? window.location.host : ''}</p>
         </div>
+      </div>
       </div>
       <div className="mt-8 text-center">
         {/* You may want to add the resetSession button back here if needed */}
