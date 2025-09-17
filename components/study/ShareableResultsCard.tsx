@@ -2,22 +2,22 @@
 
 import { useRef, useState, useMemo } from 'react';
 import { toPng } from 'html-to-image';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+// REMOVED: No longer need to import from 'chart.js' directly
 import { Doughnut } from 'react-chartjs-2';
 import { IStudySession } from '@/models/StudySession';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+// REMOVED: The registration line is no longer needed here.
+// ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface ShareableResultsCardProps {
-  initialResults: IStudySession;
+  initialResults: IStudySession & { setName?: string };
 }
 
 export default function ShareableResultsCard({ initialResults }: ShareableResultsCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
 
-  // Use useMemo to calculate derived stats only when initialResults changes
   const results = useMemo(() => {
     const accuracy = initialResults.totalCards > 0 
       ? (initialResults.correctCount / initialResults.totalCards) * 100 
@@ -26,6 +26,7 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
   }, [initialResults]);
 
   const formatDuration = (seconds: number) => {
+    if (isNaN(seconds) || seconds < 0) return '0m 0s';
     const mins = Math.floor(seconds / 60);
     const secs = Math.round(seconds % 60);
     return `${mins}m ${secs}s`;
@@ -40,14 +41,22 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
     Logger.log(LogContext.STUDY, "Attempting to generate and share results image.");
 
     try {
-      const imageUrl = await toPng(cardRef.current, { cacheBust: true });
+      const imageUrl = await toPng(cardRef.current, { 
+        cacheBust: true, 
+        width: 1080, 
+        height: 1080,
+        style: { margin: '0' } 
+      });
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const file = new File([blob], 'study-results.png', { type: 'image/png' });
+      
+      const domain = window.location.host;
+      const setName = results.setName || 'a flashcard set';
 
       const shareData = {
-        title: 'My Study Results!',
-        text: `I just studied ${results.totalCards} flashcards on Flashlearn AI. Check out my results!`,
+        title: `My results for ${setName}!`,
+        text: `I just studied "${setName}" on ${domain}. Check out my results!`,
         files: [file],
       };
 
@@ -55,10 +64,7 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
         await navigator.share(shareData);
         Logger.info(LogContext.STUDY, "Successfully shared results via Web Share API.");
       } else {
-        // Fallback for browsers that don't support Web Share API
-        // For simplicity, we'll just log a message. A real app might open a modal with the image.
         Logger.warning(LogContext.STUDY, "Web Share API not supported. Fallback triggered.");
-        alert("Sharing is not supported on your browser, but you can save the image!");
         const link = document.createElement('a');
         link.href = imageUrl;
         link.download = 'study-results.png';
@@ -86,7 +92,9 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
     <div>
       <div ref={cardRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 text-center">Session Complete!</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8 text-center">Here&apos;s how you did:</p>
+        <p className="text-gray-600 dark:text-gray-400 mb-8 text-center">
+          Results for: <span className="font-semibold">{results.setName || 'this set'}</span>
+        </p>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           <div className="grid grid-cols-2 gap-4">
             <StatCard label="Accuracy" value={`${results.accuracy.toFixed(0)}%`} color="text-blue-600" />
@@ -105,6 +113,7 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
         </div>
       </div>
       <div className="mt-8 text-center">
+        {/* You may want to add the resetSession button back here if needed */}
         <button
           onClick={handleShare}
           disabled={isSharing}
@@ -123,3 +132,4 @@ const StatCard = ({ label, value, color = 'text-gray-800' }: { label: string, va
     <p className={`text-2xl font-bold ${color} dark:text-white`}>{value}</p>
   </div>
 );
+

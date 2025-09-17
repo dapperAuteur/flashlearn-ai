@@ -6,10 +6,14 @@ import { useSession } from 'next-auth/react';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import StudySessionSetup from './StudySessionSetup';
 import StudyCard from './StudyCard';
-// REMOVED: import StudySessionResults from './StudySessionResults';
-import ShareableResultsCard from './ShareableResultsCard'; // IMPORT THE NEW COMPONENT
+import ShareableResultsCard from './ShareableResultsCard';
 import CardFeedback from './CardFeedback';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+
+// THIS IS THE FIX: Register Chart.js elements in the parent component.
+// This ensures they are available before any child component tries to render a chart.
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const formatTime = (milliseconds: number): string => {
   const totalSeconds = Math.floor(milliseconds / 1000);
@@ -32,7 +36,7 @@ export default function StudySessionManager() {
     recordCardResult,
     resetSession,
     lastCardResult,
-    cardResults, // Get cardResults to build the results object
+    cardResults,
   } = useStudySession();
   const { status } = useSession();
 
@@ -74,12 +78,10 @@ export default function StudySessionManager() {
   }
 
   if (sessionId) {
-    // THIS IS THE FIX: When the session is complete, render the ShareableResultsCard
     if (isComplete) {
-      // We need to construct the IStudySession object that the ShareableResultsCard expects
       const resultsData = {
         _id: sessionId,
-        listId: 'unknown', // This data isn't in the context, but not critical for display
+        listId: 'unknown',
         userId: 'unknown',
         startTime: new Date(sessionStartTime || 0),
         status: 'completed' as const,
@@ -88,8 +90,8 @@ export default function StudySessionManager() {
         incorrectCount: cardResults.filter(r => !r.isCorrect).length,
         completedCards: cardResults.length,
         durationSeconds: Math.round(cardResults.reduce((total, result) => total + result.timeSeconds, 0)),
+        setName: flashcardSetName,
       };
-      // Cast to any to satisfy the IStudySession document properties we don't have
       return <ShareableResultsCard initialResults={resultsData as any} />;
     }
 
