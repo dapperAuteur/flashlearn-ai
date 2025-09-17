@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ export default function GenerateFlashcardsPage(){
     flashcards, setFlashcards,
     isLoading, isSaving, isExporting,
     apiError,
+    saveSuccessMessage,
     savedSetData,
     handleGenerate,
     handleSave,
@@ -198,16 +200,20 @@ export default function GenerateFlashcardsPage(){
 
         {/* Flashcard Display */}
         {flashcards.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 perspective">
             {flashcards.map((card, index) => (
-              <div key={index} className="flashcard h-40" onClick={() => toggleFlip(index)}>
-                <div className={`flashcard-inner ${flippedCardIndices.has(index) ? 'flipped' : ''}`}>
-                    <div className="flashcard-front">
-                        {card.front}
-                    </div>
-                    <div className="flashcard-back">
-                        {card.back}
-                    </div>
+              <div
+                key={index}
+                className="flashcard cursor-pointer h-40 rounded-lg shadow-md"
+                onClick={() => toggleFlip(index)}
+              >
+                <div className={`flashcard-inner relative w-full h-full text-center transition-transform duration-700 transform-style-preserve-3d ${flippedCardIndices.has(index) ? 'flipped' : ''}`}>
+                  <div className="flashcard-front absolute w-full h-full backface-hidden flex flex-col justify-center items-center p-4 bg-blue-100 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                    <div className="front font-semibold text-lg text-blue-900 dark:text-blue-100">{card.front}</div>
+                  </div>
+                  <div className="flashcard-back absolute w-full h-full backface-hidden flex flex-col justify-center items-center p-4 bg-green-100 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg transform rotate-y-180">
+                    <div className="back text-sm text-green-900 dark:text-green-100">{card.back}</div>
+                  </div>
                 </div>
               </div>
             ))}

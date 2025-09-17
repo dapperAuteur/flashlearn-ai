@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import clientPromise from '@/lib/db/mongodb';
@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
   );
 
   try {
-    // Attempt to get the session, but don't require it.
     const session = await getServerSession(authOptions);
     const client = await clientPromise;
     const db = client.db();
@@ -25,26 +24,35 @@ export async function GET(request: NextRequest) {
 
     if (session?.user) {
       // --- AUTHENTICATED USER ---
-      // Retrieve all public sets AND the user's private sets.
       userIdForLogging = session.user.id;
       const userId = new ObjectId(userIdForLogging);
-      
-      query = {
-        $or: [
-          { isPublic: true },
-          { userId: userId }
-        ]
-      };
 
       await Logger.debug(
         LogContext.FLASHCARD, 
-        "Processing authenticated request for flashcard sets", 
+        "Processing authenticated request. Fetching user profiles.", 
         { userId: userIdForLogging, requestId }
       );
 
+      // Step 1 & 2: Find all profiles for the current user and extract their IDs.
+      const userProfiles = await db.collection('profiles').find({ user: userId }).project({ _id: 1 }).toArray();
+      const userProfileIds = userProfiles.map(p => p._id);
+      
+      await Logger.debug(
+        LogContext.FLASHCARD, 
+        `Found ${userProfileIds.length} profiles for user.`, 
+        { userId: userIdForLogging, requestId }
+      );
+
+      // Step 3: Build the query to retrieve all public sets OR sets belonging to the user's profiles.
+      query = {
+        $or: [
+          { isPublic: true },
+          { profile: { $in: userProfileIds } }
+        ]
+      };
+
     } else {
       // --- UNAUTHENTICATED USER ---
-      // Retrieve only public sets.
       query = { isPublic: true };
       
       await Logger.debug(
@@ -54,16 +62,15 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Execute the query against the 'flashcard_sets' collection.
-    const flashcardSets = await db.collection('flashcard_sets')
+    // Execute the final query against the correct 'flashcardsets' collection.
+    const flashcardSets = await db.collection('flashcard_sets') // CORRECTED COLLECTION NAME
       .find(query)
       .sort({ updatedAt: -1 })
       .toArray();
     
-    // Track analytics (optional for unauthenticated users, but good to know)
     await AnalyticsLogger.trackEvent({
       userId: userIdForLogging,
-      eventType: "public_lists_viewed",
+      eventType: "lists_viewed",
       properties: {
         count: flashcardSets.length,
         isAuthenticated: !!userIdForLogging
