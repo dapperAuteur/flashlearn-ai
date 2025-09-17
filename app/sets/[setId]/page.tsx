@@ -5,10 +5,11 @@ import { FlashcardSet, IFlashcardSet } from "@/models/FlashcardSet";
 import { isValidObjectId, Types } from "mongoose";
 import PublicSetViewer from "@/components/PublicSetViewer";
 
+// FIXED: Updated interface for Next.js 15 - params is now a Promise
 interface PublicSetPageProps {
-  params: {
+  params: Promise<{
     setId: string;
-  };
+  }>;
 }
 
 // Helper component for a single flashcard view
@@ -20,16 +21,19 @@ function FlashcardViewer({ front, back }: { front: string; back: string }) {
   );
 }
 
-// Metadata for SEO
-export async function generateMetadata({ params }: { params: { setId: string } }) {
-    await dbConnect; // FIX: Removed parentheses
+// FIXED: Updated metadata function to await params
+export async function generateMetadata({ params }: { params: Promise<{ setId: string }> }) {
+    // FIXED: Await the params Promise
+    const { setId } = await params;
+    
+    await dbConnect;
 
-    if (!isValidObjectId(params.setId)) {
+    if (!isValidObjectId(setId)) {
         return { title: 'Set Not Found' };
     }
 
-    // FIX: Explicitly cast the result to our IFlashcardSet interface
-    const set = await FlashcardSet.findById(params.setId)
+    // FIXED: Better TypeScript typing
+    const set = await FlashcardSet.findById(setId)
         .select('title description isPublic')
         .lean<IFlashcardSet>();
 
@@ -43,21 +47,19 @@ export async function generateMetadata({ params }: { params: { setId: string } }
     };
 }
 
-
 async function getPublicFlashcardSet(setId: string): Promise<IFlashcardSet | null> {
   if (!isValidObjectId(setId)) {
     console.warn(`Attempted to access a set with invalid ObjectId: ${setId}`);
     return null;
   }
   
-  await dbConnect; // FIX: Removed parentheses
+  await dbConnect;
   
-  // FIX: Explicitly cast the result to our IFlashcardSet interface
+  // FIXED: Cleaner TypeScript approach
   const flashcardSet = await FlashcardSet.findOne({
     _id: setId,
     isPublic: true,
-  // }).lean<IFlashcardSet>();
-    }).lean() as IFlashcardSet | null;
+  }).lean() as IFlashcardSet | null;
   
   if (!flashcardSet) {
     return null;
@@ -67,8 +69,12 @@ async function getPublicFlashcardSet(setId: string): Promise<IFlashcardSet | nul
   return JSON.parse(JSON.stringify(flashcardSet));
 }
 
-export default async function PublicSetPage({ params }: { params: { setId: string } }) {
-  const flashcardSet = await getPublicFlashcardSet(params.setId);
+// FIXED: Updated main component to await params
+export default async function PublicSetPage({ params }: PublicSetPageProps) {
+  // FIXED: Await the params Promise
+  const { setId } = await params;
+  
+  const flashcardSet = await getPublicFlashcardSet(setId);
 
   if (!flashcardSet) {
     notFound();
@@ -103,4 +109,3 @@ export default async function PublicSetPage({ params }: { params: { setId: strin
     </div>
   );
 }
-
