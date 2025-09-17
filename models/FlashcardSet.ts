@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 // ============================
 // Embedded Flashcard Document
@@ -15,15 +15,36 @@ const FlashcardSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-});
+}, { _id: true });
+
+// Interface for a single flashcard
+export interface IFlashcard {
+  _id?: Types.ObjectId;
+  front: string;
+  back: string;
+}
+
+// Interface for the FlashcardSet document
+export interface IFlashcardSet extends Document {
+  profile: mongoose.Types.ObjectId;
+  title: string;
+  cardCount: number;
+  description?: string;
+  isPublic: boolean;
+  source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV';
+  flashcards: IFlashcard[];
+  parentSetId?: mongoose.Types.ObjectId; // Optional link to the original, complete set
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // ============================
 // Flashcard Set Schema
 // A collection of flashcards, belonging to a single profile.
 // ============================
-const FlashcardSetSchema = new mongoose.Schema({
+const FlashcardSetSchema = new Schema<IFlashcardSet>({
   profile: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Profile',
     required: true,
   },
@@ -48,9 +69,15 @@ const FlashcardSetSchema = new mongoose.Schema({
   },
   source: {
     type: String,
-    enum: ['Prompt', 'PDF', 'YouTube', 'Audio', 'Image', 'CSV'], // All sources from PRD
+    enum: ['Prompt', 'PDF', 'YouTube', 'Audio', 'Image', 'CSV'],
+    required: true,
   },
   flashcards: [FlashcardSchema], // Embedding flashcards within the set
+  parentSetId: { // This is the new field
+    type: Schema.Types.ObjectId,
+    ref: 'FlashcardSet',
+    required: false, // It's only required for subsets
+  }
 }, { timestamps: true });
 
 export const FlashcardSet = mongoose.models.FlashcardSet || mongoose.model('FlashcardSet', FlashcardSetSchema, 'flashcard_sets');

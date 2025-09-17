@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import RatingStars from "@/components/RatingStars";
 import { Logger, LogContext } from "@/lib/logging/client-logger";
+import ShareModal from "@/components/ShareModal"; // Assuming ShareModal is in components
+import { Switch } from '@headlessui/react'; // Using a common UI library for a better toggle
+
 
 // A simple Flashcard interface to use locally
 interface Flashcard {
@@ -108,11 +111,80 @@ export default function GenerateFlashcardsPage(){
   const [averageRating, setAverageRating] = useState<number>(0);
   const [ratingCount, setRatingCount] = useState<number>(0);
 
-  // Set the title based on the topic only once when the topic changes.
-  // We remove the useEffect to allow the user to edit the title.
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
+  const [showPostSaveOptions, setShowPostSaveOptions] = useState(false);
+  const [savedSetData, setSavedSetData] = useState<{ id: string, title: string, isPublic: boolean } | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  
+
+
   useEffect(() => {
-    setTitle(topic);
-  }, [topic]);
+    // Only set the title from the topic if the title is empty
+    if (title === '' || title === topic.replace(/_/g, ' ')) {
+      setTitle(topic);
+    }
+  }, [topic, title]);
+
+  const handleStartOver = () => {
+    setShowPostSaveOptions(false);
+    setSavedSetData(null);
+    setFlashcards([]);
+    setTopic('');
+    setTitle('');
+    setDescription('');
+    setError(null);
+    setSaveError(null);
+  };
+
+  // NEW: Handler for saving the flashcard set
+  const handleSaveSet = async () => {
+    Logger.log(LogContext.FLASHCARD, 'Attempting to save flashcard set to account');
+    if (!title.trim()) {
+        setSaveError("A title is required to save the flashcard set.");
+        return;
+    }
+    if (flashcards.length === 0) {
+        setSaveError("There are no flashcards to save.");
+        return;
+    }
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccessMessage(null);
+    try {
+        const response = await fetch('/api/flashcards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title,
+                description,
+                isPublic,
+                flashcards,
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || `Failed to save: ${response.statusText}`);
+        }
+        
+        const numSets = data.createdSets?.length || 1;
+        const message = `Successfully saved "${title}" and ${numSets - 1} study set(s)! Navigating to study dashboard...`;
+        setSaveSuccessMessage(message);
+        Logger.info(LogContext.FLASHCARD, message, { count: numSets });
+        // Redirect to the study dashboard after a short delay
+        Logger.info(LogContext.FLASHCARD, 'Successfully saved flashcard set', { setId: data.savedSet._id });
+        setSavedSetData({ id: data.savedSet._id, title: data.savedSet.title, isPublic: data.savedSet.isPublic });
+        setShowPostSaveOptions(true);
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred while saving.";
+        setSaveError(errorMessage);
+        Logger.error(LogContext.FLASHCARD, 'Error saving flashcard set', { error: err });
+    } finally {
+        setIsSaving(false);
+    }
+  };
 
   const handleExportCSV = () => {
     Logger.log(LogContext.FLASHCARD, 'Attempting to export flashcard set to CSV', { topic });
@@ -350,6 +422,7 @@ export default function GenerateFlashcardsPage(){
       setTitle(newTopic); // Also set the title to the new topic
       setError(null); // Clear any previous errors
       setFlippedCardIndices(new Set()); // Reset flip state
+      setShowLoadModal(false);
       Logger.info(LogContext.FLASHCARD, 'Successfully loaded flashcard set from local storage', { key, cardCount: loadedFlashcards.length });
 
     } catch (err: unknown) {
@@ -534,8 +607,41 @@ export default function GenerateFlashcardsPage(){
     <>
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
+        
         <h1 className="text-2xl font-bold mb-6 text-center">Generate Flashcards with AI</h1>
 
+        {showPostSaveOptions && savedSetData ? (
+            // --- POST-SAVE UI ---
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 text-center border border-green-300 dark:border-green-700 transition-opacity duration-500 animate-fade-in">
+                <h2 className="text-2xl font-bold mb-4 text-green-600 dark:text-green-400">Success!</h2>
+                <p className="text-gray-700 dark:text-gray-300 mb-6">
+                  Your flashcard set &quot;{savedSetData.title}&quot; has been saved.
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <button
+                        onClick={() => router.push('/dashboard/study')}
+                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105"
+                    >
+                        Study This Set
+                    </button>
+                    
+                    {savedSetData.isPublic && (
+                        <button
+                            onClick={() => setIsShareModalOpen(true)}
+                            className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105"
+                        >
+                            Share This Set
+                        </button>
+                    )}
+                </div>
+                <div className="mt-8">
+                    <button onClick={handleStartOver} className="text-sm text-gray-500 hover:underline">
+                      Import another set
+                    </button>
+                </div>
+            </div>
+        ):(
+        <Fragment>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
           <p className="mb-4 text-gray-600 dark:text-gray-300">
             Enter a topic or specific &quot;Front: Back&quot; pairs to generate flashcards instantly using AI.
@@ -547,7 +653,7 @@ export default function GenerateFlashcardsPage(){
         placeholder="e.g., Photosynthesis, Capital cities of Europe, useState Hook: React state management..."
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
-        disabled={isLoading}
+        disabled={isLoading || isSaving}
       />
       <div className="mb-4">
         <label htmlFor="titleInput" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -560,7 +666,7 @@ export default function GenerateFlashcardsPage(){
           placeholder="e.g., My Photosynthesis Flashcards"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || isSaving}
         />
       </div>
       <div className="mb-4">
@@ -573,7 +679,7 @@ export default function GenerateFlashcardsPage(){
           placeholder="A brief description of this flashcard set."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || isSaving}
         />
       </div>
       <input
@@ -588,7 +694,7 @@ export default function GenerateFlashcardsPage(){
            id="generateButton"
            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
             onClick={handleGenerate}
-           disabled={isLoading || isExporting || isUploading}
+           disabled={isLoading || isExporting || isUploading || isSaving}
          >
            {isLoading ? 'Generating...' : 'Generate Flashcards w/AI'}
          </button>
@@ -596,7 +702,7 @@ export default function GenerateFlashcardsPage(){
           id="uploadButton"
           className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
           onClick={handleTriggerUpload} // Trigger the hidden input
-          disabled={isLoading || isExporting || isUploading}
+          disabled={isLoading || isExporting || isUploading || isSaving}
         >
           {isUploading ? 'Uploading...' : 'Upload CSV'}
         </button>
@@ -604,9 +710,9 @@ export default function GenerateFlashcardsPage(){
            id="loadButton"
            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md disabled:opacity-50"
             onClick={handleScanStorage}
-           disabled={isLoading || isExporting || isUploading} // Disable while generating/exporting
+           disabled={isLoading || isExporting || isUploading || isSaving} // Disable while generating/exporting
          >
-           Load from Storage
+           Load from Local Storage
          </button>
          <button
            id="exportCSVButton"
@@ -638,11 +744,42 @@ export default function GenerateFlashcardsPage(){
         )}
       </div>
       )}
+      </div>
+        {/* NEW: Sticky Save Controls and Status Display */}
+        {flashcards.length > 0 && status === 'authenticated' && (
+              <div className="sticky top-4 z-10 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg mb-8 flex flex-col sm:flex-row items-center justify-end gap-4 border dark:border-gray-700">
+                <div className="flex items-center">
+                  <Switch
+                    checked={isPublic}
+                    onChange={setIsPublic}
+                    className={`${isPublic ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'} relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75`}
+                  >
+                    <span className="sr-only">Make Public</span>
+                    <span
+                      aria-hidden="true"
+                      className={`${isPublic ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out`}
+                    />
+                  </Switch>
+                  <label className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    Share with others
+                  </label>
+                </div>
+                <button
+                  id="saveButton"
+                  onClick={handleSaveSet}
+                  disabled={isSaving}
+                  className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSaving ? 'Saving...' : 'Save to Account'}
+                </button>
+              </div>
+          )}
 
       {/* Flashcard Grid */}
+      {saveError && <div className="my-4 p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-md border border-red-200 dark:border-red-800">{saveError}</div>}
       {flashcards.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Generated Flashcards</h2>
+              <h2 className="text-xl font-semibold mb-4">Current Flashcards ({flashcards.length})</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 perspective">
                 {flashcards.map((card, index) => (
                   <div
@@ -688,8 +825,11 @@ export default function GenerateFlashcardsPage(){
                 </div>
               )}
             </div>
+            
           )}
-        </div>
+        </Fragment>
+        )}
+        
       </div>
       {showLoadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
@@ -726,6 +866,14 @@ export default function GenerateFlashcardsPage(){
       )}
       {/* End Load from Storage Modal */}
     </div>
+    {savedSetData && (
+        <ShareModal
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
+            shareUrl={`${window.location.origin}/sets/${savedSetData.id}`}
+            title={savedSetData.title}
+        />
+    )}
     </>
   );
 }

@@ -20,6 +20,7 @@ const formatTime = (milliseconds: number): string => {
 export default function StudySessionManager() {
   const {
     sessionId,
+    flashcardSetName,
     isLoading,
     isComplete,
     error,
@@ -98,7 +99,11 @@ export default function StudySessionManager() {
         : currentCard;
       return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
+          <div><h3 className="font-bold text-lg truncate" title={flashcardSetName || 'Study Set'}>
+                {flashcardSetName || 'Study Set'}
+              </h3></div>
           <div className="mb-4 flex justify-between items-center text-white">
+            
             <span>Card {currentIndex + 1} of {flashcards.length}</span>
             <span>Time: {formatTime(elapsedTime)}</span>
             <button onClick={resetSession} className="text-sm text-blue-400 hover:text-blue-300">
