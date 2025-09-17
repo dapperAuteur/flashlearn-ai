@@ -5,6 +5,12 @@ import { FlashcardSet, IFlashcardSet } from "@/models/FlashcardSet";
 import { isValidObjectId, Types } from "mongoose";
 import PublicSetViewer from "@/components/PublicSetViewer";
 
+interface PublicSetPageProps {
+  params: {
+    setId: string;
+  };
+}
+
 // Helper component for a single flashcard view
 function FlashcardViewer({ front, back }: { front: string; back: string }) {
   return (
