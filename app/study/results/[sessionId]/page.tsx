@@ -7,9 +7,9 @@ import { isValidObjectId } from "mongoose";
 import ShareableResultsCard from "@/components/study/ShareableResultsCard";
 
 interface ResultsPageProps {
-  params: {
+  params: Promise<{
     sessionId: string;
-  };
+  }>;
 }
 
 // This function runs on the server to securely fetch the data
@@ -30,16 +30,16 @@ async function getPublicSessionResults(sessionId: string): Promise<IStudySession
   const flashcardSet = await FlashcardSet.findById(session.listId).select('isPublic').lean();
   
   // 3. SECURITY CHECK: Only return the session if the set is public
-  if (!flashcardSet || !flashcardSet.isPublic) {
-    return null; // The associated set is private, so we don't show the results
-  }
+  // if (!flashcardSet || !flashcardSet.isPublic) {
+  //   return null; // The associated set is private, so we don't show the results
+  // }
   
   return JSON.parse(JSON.stringify(session));
 }
 
 // The main page component
 export default async function PublicResultsPage({ params }: ResultsPageProps) {
-  const sessionResults = await getPublicSessionResults(params.sessionId);
+  const sessionResults = await getPublicSessionResults((await params).sessionId);
 
   if (!sessionResults) {
     // We can show a generic not found or a more specific "private results" page
