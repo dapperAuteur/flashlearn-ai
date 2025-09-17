@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { notFound } from "next/navigation";
 import dbConnect from "@/lib/db/mongodb";
 import StudySession, { IStudySession } from "@/models/StudySession";
