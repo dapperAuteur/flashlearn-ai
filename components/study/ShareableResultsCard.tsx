@@ -91,6 +91,7 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
   return (
     <div>
       <div ref={cardRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
+        <div>
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 text-center">Session Complete!</h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8 text-center">
           Results for: <span className="font-semibold">{results.setName || 'this set'}</span>
@@ -110,6 +111,11 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
               <Doughnut data={chartData} options={{ plugins: { legend: { display: false } } }} />
             </div>
           </div>
+        </div>
+      </div>
+      <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
+            <p className="text-lg font-bold text-gray-800 dark:text-gray-200">Flashlearn AI</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{typeof window !== 'undefined' ? window.location.host : ''}</p>
         </div>
       </div>
       <div className="mt-8 text-center">
