@@ -7,9 +7,9 @@ import { isValidObjectId, Types } from "mongoose";
 import ShareableResultsCard from "@/components/study/ShareableResultsCard";
 
 interface ResultsPageProps {
-  params: {
+  params: Promise<{
     sessionId: string;
-  };
+  }>;
 }
 
 // Define the shape of the populated session data
@@ -50,7 +50,7 @@ async function getPublicSessionResults(sessionId: string): Promise<(IStudySessio
 
 // The main page component
 export default async function PublicResultsPage({ params }: ResultsPageProps) {
-  const sessionResults = await getPublicSessionResults(params.sessionId);
+  const sessionResults = await getPublicSessionResults((await params).sessionId);
 
   if (!sessionResults) {
     return (
