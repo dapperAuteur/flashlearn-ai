@@ -14,6 +14,13 @@ interface ShareableResultsCardProps {
   initialResults: IStudySession & { setName?: string };
 }
 
+const formatDateTime = (date: Date): string => {
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+};
+
 export default function ShareableResultsCard({ initialResults }: ShareableResultsCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
@@ -22,7 +29,8 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
     const accuracy = initialResults.totalCards > 0 
       ? (initialResults.correctCount / initialResults.totalCards) * 100 
       : 0;
-    return { ...initialResults, accuracy };
+      const sessionDate = new Date();
+    return { ...initialResults, accuracy, sessionDate };
   }, [initialResults]);
 
   const formatDuration = (seconds: number) => {
@@ -122,8 +130,11 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
         </div>
       </div>
       <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
-            <p className="text-lg font-bold text-gray-800 dark:text-gray-200">Flashlearn AI</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{typeof window !== 'undefined' ? window.location.host : ''}</p>
+        <p className="text-lg font-bold text-gray-800 dark:text-gray-200">Flashlearn AI</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{typeof window !== 'undefined' ? window.location.host : ''}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {results.sessionDate ? formatDateTime(results.sessionDate) : (typeof window !== 'undefined' ? window.location.host : '')}
+        </p>
         </div>
       </div>
       </div>
