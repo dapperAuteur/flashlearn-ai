@@ -141,6 +141,7 @@ export async function POST(request: NextRequest) {
         email = body.email;
     } catch (e) {
       // It's okay if we can't get the email, we'll just log without it.
+      console.error('error :', e);
     }
     await logAuthEvent({
       request,
@@ -148,7 +149,10 @@ export async function POST(request: NextRequest) {
       email: email,
       status: "failure",
       reason: "Internal server error",
-      metadata: { error: error.message, stack: error.stack }
+      metadata: {
+        error: error.message,
+        stack: error.stack
+      }
     });
     
     return NextResponse.json(
