@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/db/mongodb";
 import { generateVerificationToken } from "@/lib/tokens";
 import { getClientIp } from "@/lib/utils/utils";
-import { getRateLimiter } from "@/lib/ratelimit/rateLimitAPI"; // Corrected import
+import { getRateLimiter } from "@/lib/ratelimit/ratelimit"; // Corrected import path
 import { sendVerificationEmail } from "@/lib/email/mailgun";
 import { Logger, LogContext } from "@/lib/logging/logger";
 import { logAuthEvent } from "@/lib/logging/authLogger";
@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
 
   // Apply rate limiting (3 resend attempts per 10 minutes)
   const limiter = getRateLimiter("resend-verification", 3, 600);
-  const rateLimitResult = await limiter.limit(ip);
+  const { success, reset } = await limiter.limit(ip);
   
   // If rate limit exceeded, return 429 Too Many Requests
-  if (!rateLimitResult.success) {
+  if (!success) {
     await Logger.warning(LogContext.AUTH, "Rate limit exceeded for resend verification", { ip });
     return NextResponse.json(
       { 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       { 
         status: 429,
         headers: {
-          "Retry-After": rateLimitResult.reset.toString(),
+          "Retry-After": reset.toString(),
         }
       }
     );
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Send verification email
-    await sendVerificationEmail(user.email, user.name, verificationToken);
+    await sendVerificationEmail(user.name, user.email, verificationToken);
     
     await logAuthEvent({
         request,
