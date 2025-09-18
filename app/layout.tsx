@@ -1,31 +1,27 @@
-'use client';
+// app/layout.tsx
+import NextAuthProvider from '@/components/providers/session-provider';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/auth';
 
-import { Inter } from 'next/font/google';
-import './globals.css';
-import { AuthProvider } from '@/components/providers/AuthProvider';
-import PublicHeader from '@/components/layout/PublicHeader';
-import { usePathname } from 'next/navigation';
-
-const inter = Inter({ subsets: ['latin'] });
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  
-  // Show public header for these routes
-  const publicRoutes = ['/study', '/generate', '/'];
-  const showPublicHeader = publicRoutes.includes(pathname);
+  const session = await getServerSession(authOptions);
 
+
+  // Show public header for these routes
+  // const pathname = usePathname();
+  // const publicRoutes = ['/study', '/generate', '/'];
+  // const showPublicHeader = publicRoutes.includes(pathname);
+  
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <AuthProvider>
-          {showPublicHeader && <PublicHeader />}
+      <body>
+        <NextAuthProvider session={session}>
           {children}
-        </AuthProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );
