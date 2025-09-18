@@ -72,7 +72,7 @@ export default function GenerateFlashcardsPage(){
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                     <button
-                        onClick={() => router.push('/dashboard/study')}
+                        onClick={() => router.push('/study')}
                         className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
                     >
                         Study This Set
@@ -173,7 +173,7 @@ export default function GenerateFlashcardsPage(){
             {effectiveError && (
                 <div className="my-4 p-3 bg-red-100 border-red-300 rounded-md text-red-600">
                     <p>{effectiveError}</p>
-                    {status !== 'authenticated' && <Link href="/signin" className="font-bold underline">Please sign in.</Link>}
+                    {status !== 'authenticated' && <Link href="/auth/signin" className="font-bold underline">Please sign in.</Link>}
                     {showTemplateButton && <button onClick={downloadTemplate} className="mt-2 font-bold underline">Download Template</button>}
                 </div>
             )}

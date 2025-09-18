@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     });
     
     // Redirect to the sign-in page with a success message
-    return NextResponse.redirect(new URL("/signin?verified=true", request.url));
+    return NextResponse.redirect(new URL("/auth/signin?verified=true", request.url));
 
   } catch (error) {
     const errorMessage = getErrorMessage(error);

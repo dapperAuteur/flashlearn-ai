@@ -19,7 +19,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/flashcards', label: 'My Flashcards' }, // Assuming this will be a future page
     { href: '/generate', label: 'Generate Flashcards' },
-    { href: '/dashboard/study', label: 'Study' },
+    { href: '/study', label: 'Study' },
   ];
 
   return (
@@ -71,13 +71,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
               ) : (
                 <div className="space-x-2">
                   <Link
-                    href="/signin"
+                    href="/auth/signin"
                     className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
                   >
                     Sign in
                   </Link>
                   <Link
-                    href="/signup"
+                    href="/auth/signup"
                     className="px-3 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md"
                   >
                     Sign up
@@ -148,8 +148,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     </div>
                 ) : (
                     <div className="px-2 space-y-1">
-                        <Link href="/signin" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">Sign In</Link>
-                        <Link href="/signup" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">Sign Up</Link>
+                        <Link href="/auth/signin" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">Sign In</Link>
+                        <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">Sign Up</Link>
                     </div>
                 )}
             </div>

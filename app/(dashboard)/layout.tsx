@@ -1,46 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useSync } from '@/hooks/useSync';
 import OfflineIndicator from '@/components/ui/OfflineIndicator';
-import Sidebar from '@/components/layout/Sidebar';
-import MobileHeader from '@/components/ui/MobileHeader';
+import Header from '@/components/layout/Header';
 import { Toaster } from '@/components/ui/toaster';
 
 /**
- * The main layout for the authenticated part of the application.
- * It now includes state management for the mobile sidebar and uses
- * the useSync hook to manage and display offline status.
+ * Dashboard layout with authentication check and context-aware navigation.
  */
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { status } = useSession();
+  const router = useRouter();
   const { isOnline } = useSync();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Redirect unauthenticated users
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/signin');
+    }
+  }, [status, router]);
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-3 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render for unauthenticated users
+  if (status === 'unauthenticated') {
+    return null;
+  }
 
   return (
-    <div className="h-full relative">
-      {/* --- Desktop Sidebar (always visible) --- */}
-      <div className="hidden md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-40">
-        {/* The Sidebar component for desktop doesn't need props in this setup,
-            but we pass them for consistency with mobile. */}
-        <Sidebar isOpen={true} closeSidebar={() => {}} />
-      </div>
-
-      {/* --- Mobile Sidebar (conditionally rendered) --- */}
-      {/* This uses the same Sidebar component, but its visibility is controlled by state */}
-      <div className="md:hidden">
-        <Sidebar 
-          isOpen={isSidebarOpen} 
-          closeSidebar={() => setIsSidebarOpen(false)} 
-        />
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
       
-      <main className="md:pl-72">
-        <MobileHeader onOpen={() => setIsSidebarOpen(true)} />
-        {children}
+      <main className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {children}
+        </div>
       </main>
 
       <OfflineIndicator isOnline={isOnline} />

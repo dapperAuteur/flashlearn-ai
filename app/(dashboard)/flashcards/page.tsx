@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { PlusIcon } from "@heroicons/react/24/outline";
@@ -16,11 +15,11 @@ export default async function FlashcardsPage() {
   // Server-side authentication check
   if (!user) {
     console.log("User not authenticated (server-side), redirecting to sign in");
-    redirect("/signin");
+    redirect("/auth/signin");
   }
   
   return (
-    <DashboardLayout>
+    <div>
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Flashcards</h1>
@@ -124,6 +123,6 @@ export default async function FlashcardsPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

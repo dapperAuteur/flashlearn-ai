@@ -29,7 +29,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // If not authenticated, redirect to login
   if (status === "unauthenticated") {
     console.log("User not authenticated, redirecting to sign in page");
-    router.push("/signin");
+    router.push("/auth/signin");
     return null;
   }
   

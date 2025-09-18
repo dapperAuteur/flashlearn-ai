@@ -29,7 +29,7 @@ export async function requireAuth() {
   
   if (!user) {
     console.log("User not authenticated, redirecting to sign in");
-    redirect("/signin");
+    redirect("/auth/signin");
   }
   
   return user;

@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatisticCard from '@/components/ui/StatisticCard';
 import { useSession } from 'next-auth/react';
 
@@ -16,15 +15,12 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function DashboardPage() {
-  
   const { data: session, status } = useSession();
   const user = session?.user;
   const router = useRouter();
   
   useEffect(() => {
     if (status === 'unauthenticated') {
-      // router.push('/signin');
-      // NOT Hitting here BUG
       console.log('DashboardPage() status :>> ', status);
     }
   }, [status, router]);
@@ -53,7 +49,7 @@ export default function DashboardPage() {
   }
   
   return (
-    <DashboardLayout>
+    <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name}!</h1>
         <p className="mt-1 text-gray-600">
@@ -62,7 +58,7 @@ export default function DashboardPage() {
       </div>
       
       {/* Statistics Section */}
-      <div className="mb-8">
+      <div className="mb-8" data-onboarding="stats">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Your Statistics</h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <StatisticCard
@@ -78,7 +74,7 @@ export default function DashboardPage() {
             title="Study Sessions"
             value={stats.studySessions}
             icon={<ClockIcon className="h-6 w-6" />}
-            linkHref="/dashboard/study"
+            linkHref="/study"
             linkText="Start studying"
             color="green"
           />
@@ -103,7 +99,7 @@ export default function DashboardPage() {
       </div>
       
       {/* Quick Actions Section */}
-      <div>
+      <div data-onboarding="actions">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
@@ -121,7 +117,7 @@ export default function DashboardPage() {
             Import Flashcards
           </Link>
           <Link
-            href="/dashboard/study"
+            href="/study"
             className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Start Studying
@@ -153,6 +149,6 @@ export default function DashboardPage() {
           <p className="text-gray-500">No recent activity to show.</p>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

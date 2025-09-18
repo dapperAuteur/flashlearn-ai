@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { getCurrentUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
@@ -14,11 +13,11 @@ export default async function AnalyticsPage() {
   // Server-side authentication check
   if (!user) {
     console.log("User not authenticated (server-side), redirecting to sign in");
-    redirect("/signin");
+    redirect("/auth/signin");
   }
   
   return (
-    <DashboardLayout>
+    <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
         <p className="mt-1 text-gray-600">
@@ -77,6 +76,6 @@ export default async function AnalyticsPage() {
           <p className="text-gray-500">No learning data available yet.</p>
         </div>
       </div>
-    </DashboardLayout>
+      </div>
   );
 }

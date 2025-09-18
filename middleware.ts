@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
     '/auth/signup',
     '/auth/forgot-password',
     '/auth/reset-password',
-    '/dashboard/study',
+    '/study',
     '/generate',
     '/'
   ];
