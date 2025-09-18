@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { getCurrentUser } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export const metadata: Metadata = {
   title: 'Lists | FlashLearn AI',
@@ -16,7 +15,7 @@ export default async function ListsPage() {
   }
   
   return (
-    <DashboardLayout>
+    <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Your Lists</h1>
         <p className="mt-1 text-gray-600">
@@ -54,6 +53,6 @@ export default async function ListsPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

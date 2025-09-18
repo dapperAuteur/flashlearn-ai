@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatisticCard from '@/components/ui/StatisticCard';
 import { useSession } from 'next-auth/react';
 
@@ -53,7 +52,7 @@ export default function DashboardPage() {
   }
   
   return (
-    <DashboardLayout>
+    <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name}!</h1>
         <p className="mt-1 text-gray-600">
@@ -153,6 +152,6 @@ export default function DashboardPage() {
           <p className="text-gray-500">No recent activity to show.</p>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
