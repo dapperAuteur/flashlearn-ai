@@ -36,8 +36,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // If not admin, redirect to dashboard
   const user = session?.user as any;
   if (user?.role !== "admin") {
-    console.log("User not admin, redirecting to dashboard");
-    router.push("/generate");
+    console.log("User not admin, redirecting to study page");
+    router.push("/study");
     return null;
   }
   

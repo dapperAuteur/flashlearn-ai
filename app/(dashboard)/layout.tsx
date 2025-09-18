@@ -7,6 +7,8 @@ import { useSync } from '@/hooks/useSync';
 import OfflineIndicator from '@/components/ui/OfflineIndicator';
 import Header from '@/components/layout/Header';
 import { Toaster } from '@/components/ui/toaster';
+import { useOnboarding } from '@/hooks/OnboardingHooks';
+import OnboardingModal from '@/components/ui/OnboardingModal';
 
 /**
  * Dashboard layout with authentication check and context-aware navigation.
@@ -19,6 +21,14 @@ export default function DashboardLayout({
   const { status } = useSession();
   const router = useRouter();
   const { isOnline } = useSync();
+  const {
+  showOnboarding,
+  currentStep,
+  nextStep,
+  previousStep,
+  completeOnboarding,
+  skipOnboarding,
+} = useOnboarding();
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -56,6 +66,14 @@ export default function DashboardLayout({
 
       <OfflineIndicator isOnline={isOnline} />
       <Toaster />
+      <OnboardingModal
+        isOpen={showOnboarding}
+        currentStep={currentStep}
+        onNext={nextStep}
+        onPrevious={previousStep}
+        onComplete={completeOnboarding}
+        onSkip={skipOnboarding}
+      />
     </div>
   );
 }
