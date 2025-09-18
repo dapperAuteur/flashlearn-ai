@@ -14,7 +14,7 @@ export function usePageActions(): PageActions {
         return {
           primary: {
             label: 'Create Flashcard',
-            href: '/flashcards/new',
+            href: '/generate',
             icon: Plus,
             variant: 'primary',
             mobile: true,
@@ -23,7 +23,7 @@ export function usePageActions(): PageActions {
           secondary: [
             {
               label: 'Import',
-              href: '/flashcards/import',
+              href: '/generate',
               icon: Upload,
               variant: 'secondary',
               mobile: false,
@@ -44,7 +44,7 @@ export function usePageActions(): PageActions {
         return {
           primary: {
             label: 'Create',
-            href: '/flashcards/new',
+            href: '/generate',
             icon: Plus,
             variant: 'primary',
             mobile: true,
@@ -53,7 +53,7 @@ export function usePageActions(): PageActions {
           secondary: [
             {
               label: 'Import',
-              href: '/flashcards/import',
+              href: '/generate',
               icon: Upload,
               variant: 'secondary',
               mobile: false,
