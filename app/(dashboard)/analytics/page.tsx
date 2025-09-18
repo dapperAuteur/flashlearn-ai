@@ -13,7 +13,7 @@ export default async function AnalyticsPage() {
   // Server-side authentication check
   if (!user) {
     console.log("User not authenticated (server-side), redirecting to sign in");
-    redirect("/signin");
+    redirect("/auth/signin");
   }
   
   return (

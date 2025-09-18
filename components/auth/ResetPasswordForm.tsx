@@ -100,7 +100,7 @@ export default function ResetPasswordForm() {
             <p className="mt-2 text-sm text-gray-600">
                 Your password has been updated successfully.
             </p>
-            <Link href="/auth/sign-in" className="font-medium text-blue-600 hover:text-blue-500 inline-block mt-4">
+            <Link href="/auth/signin" className="font-medium text-blue-600 hover:text-blue-500 inline-block mt-4">
                 Proceed to Sign In
             </Link>
         </div>

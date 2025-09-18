@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import SignInPageClient from '@/app/auth/sign-in/SignInPageClient';
+import SignInPageClient from '@/app/(auth)/auth/signin/SignInPageClient';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function SignInSkeleton() {

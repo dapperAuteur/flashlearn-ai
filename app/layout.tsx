@@ -1,32 +1,30 @@
-import { Inter } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next"
-import type { Metadata } from "next";
-import { AuthProvider } from "@/components/providers/AuthProvider";
-import "./globals.css";
-import MainLayout from "@/components/layout/MainLayout";
-import ConsoltoChat from "@/components/ConsoltoChat";
+'use client';
 
-const inter = Inter({ subsets: ["latin"] });
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { AuthProvider } from '@/components/providers/AuthProvider';
+import PublicHeader from '@/components/layout/PublicHeader';
+import { usePathname } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: "FlashLearn AI",
-  description: "AI-powered flashcard learning system",
-};
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  
+  // Show public header for these routes
+  const publicRoutes = ['/study', '/generate', '/'];
+  const showPublicHeader = publicRoutes.includes(pathname);
+
   return (
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <MainLayout>
-            {children}
-            <Analytics />
-            <ConsoltoChat />
-          </MainLayout>
+          {showPublicHeader && <PublicHeader />}
+          {children}
         </AuthProvider>
       </body>
     </html>

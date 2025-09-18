@@ -14,7 +14,7 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
 
   const handleSignUp = () => {
     onClose();
-    router.push('/signup'); // Or your registration page
+    router.push('/auth/signup'); // Or your registration page
   };
 
   if (!isOpen) return null;

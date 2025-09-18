@@ -65,7 +65,7 @@ export default function SignUpForm() {
       }
       
       Logger.log(LogContext.AUTH, 'User registration successful', { email: data.email });
-      router.push('/auth/sign-in?status=signup-success');
+      router.push('/auth/signin?status=signup-success');
     } catch (error: any) {
       Logger.error(LogContext.AUTH, 'Sign-up submission error', { email: data.email, error: error.message });
       setError(`Error: ${error.message || "An unexpected error occurred"}`);
@@ -184,7 +184,7 @@ export default function SignUpForm() {
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{" "}
-            <Link href="/auth/sign-in" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/auth/signin" className="font-medium text-blue-600 hover:text-blue-500">
               Sign in
             </Link>
           </p>

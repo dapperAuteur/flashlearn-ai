@@ -11,7 +11,7 @@ export default async function ListsPage() {
   const user = await getCurrentUser();
   
   if (!user) {
-    redirect('/signin');
+    redirect('/auth/signin');
   }
   
   return (

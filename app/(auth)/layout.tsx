@@ -1,13 +1,16 @@
-import React from 'react';
+'use client';
 
-    export default function AuthLayout({
-      children,
-    }: {
-      children: React.ReactNode;
-    }) {
-      return (
-        <main className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4">
-          {children}
-        </main>
-      );
-    }
+import PublicHeader from '@/components/layout/PublicHeader';
+
+export default function AuthLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <PublicHeader />
+      {children}
+    </div>
+  );
+}
