@@ -50,5 +50,26 @@ The project is currently in active development. Here's what's been completed:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/flashlearn-ai.git
+   git clone https://github.com/dapperAuteur/flashlearn-ai.git
    cd flashlearn-ai
+
+Set up Environment Variables:Create a file named .env.local in the root of the project and add the following variables. Do not commit this file to Git.# .env.local
+# MongoDB
+MONGODB_URI="your_mongodb_connection_string"
+# Upstash Redis for Rate Limiting
+# Get these from your Upstash Redis database dashboard
+UPSTASH_REDIS_REST_URL="your_upstash_redis_url"
+UPSTASH_REDIS_REST_TOKEN="your_upstash_redis_token"
+# NextAuth.js (for authentication)
+# Generate a secret: openssl rand -base64 32
+NEXTAUTH_SECRET="your_nextauth_secret"
+NEXTAUTH_URL="http://localhost:3000"
+# Google Gemini API
+GEMINI_API_KEY="your_gemini_api_key"
+# Stripe
+STRIPE_SECRET_KEY="your_stripe_secret_key"
+STRIPE_WEBHOOK_SECRET="your_stripe_webhook_secret"
+# This is the price ID from your Stripe dashboard for the Lifetime Learner tier
+STRIPE_LIFETIME_PRICE_ID="price_xxxxxxxxxxxxxx"
+Run the development server:npm run dev
+Open http://localhost:3000 with your browser to see the result.🤝 ContributingContributions are welcome! Please see CONTRIBUTING.md for guidelines on how to get started. Also, review our CODE_OF_CONDUCT.md and CODING_STYLE_GUIDE.md.
