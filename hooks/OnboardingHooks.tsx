@@ -20,6 +20,18 @@ export function useOnboarding() {
     }
   }, [status, session]);
 
+  useEffect(() => {
+  console.log('Onboarding check:', { status, hasUser: !!session?.user });
+  if (status === 'authenticated' && session?.user) {
+    const completed = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    console.log('Onboarding completed:', completed);
+    if (!completed) {
+      console.log('Starting onboarding...');
+      setShowOnboarding(true);
+    }
+  }
+}, [status, session]);
+
   const completeOnboarding = () => {
     localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
     setShowOnboarding(false);
