@@ -15,15 +15,12 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function DashboardPage() {
-  
   const { data: session, status } = useSession();
   const user = session?.user;
   const router = useRouter();
   
   useEffect(() => {
     if (status === 'unauthenticated') {
-      // router.push('/auth/signin');
-      // NOT Hitting here BUG
       console.log('DashboardPage() status :>> ', status);
     }
   }, [status, router]);
@@ -61,7 +58,7 @@ export default function DashboardPage() {
       </div>
       
       {/* Statistics Section */}
-      <div className="mb-8">
+      <div className="mb-8" data-onboarding="stats">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Your Statistics</h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <StatisticCard
@@ -102,7 +99,7 @@ export default function DashboardPage() {
       </div>
       
       {/* Quick Actions Section */}
-      <div>
+      <div data-onboarding="actions">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
