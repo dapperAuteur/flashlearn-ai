@@ -5,9 +5,9 @@ import clientPromise from "@/lib/db/mongodb";
 import { z } from "zod";
 import { generateVerificationToken } from "@/lib/tokens";
 import { getClientIp } from "@/lib/utils/utils";
-import { getRateLimiter } from "@/lib/ratelimit/rateLimitAPI";
+import { getRateLimiter } from "@/lib/ratelimit/ratelimit"; // Corrected import path
 import { logAuthEvent } from "@/lib/logging/authLogger";
-import { AuthEventType } from "@/models/AuthLog"; // Correctly imports the full enum
+import { AuthEventType } from "@/models/AuthLog";
 import { sendVerificationEmail } from "@/lib/email/mailgun";
 import { Logger, LogContext } from "@/lib/logging/logger";
 
@@ -29,10 +29,10 @@ export async function POST(request: NextRequest) {
 
   // Apply rate limiting (5 registration attempts per 10 minutes)
   const limiter = getRateLimiter("register", 5, 600);
-  const rateLimitResult = await limiter.limit(ip);
+  const { success, reset } = await limiter.limit(ip);
 
   // If rate limit exceeded, return 429 Too Many Requests
-  if (!rateLimitResult.success) {
+  if (!success) {
     await Logger.warning(LogContext.AUTH, "Rate limit exceeded for registration", { ip });
     return NextResponse.json(
       { 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       { 
         status: 429,
         headers: {
-          "Retry-After": rateLimitResult.reset.toString(),
+          "Retry-After": reset.toString(),
         }
       }
     );
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       await logAuthEvent({
         request,
-        event: AuthEventType.REGISTER_FAILURE, // This will now work
+        event: AuthEventType.REGISTER_FAILURE,
         email: body.email,
         status: "failure",
         reason: "Validation error",
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       await logAuthEvent({
         request,
-        event: AuthEventType.REGISTER_FAILURE, // This will now work
+        event: AuthEventType.REGISTER_FAILURE,
         email,
         status: "failure",
         reason: "User already exists"
@@ -140,22 +140,19 @@ export async function POST(request: NextRequest) {
         const body = await request.clone().json();
         email = body.email;
     } catch (e) {
-      await logAuthEvent({
-      request,
-      event: AuthEventType.REGISTER,
-      email,
-      status: "success",
-      metadata: { name, e }
-    });
-        // It's okay if we can't get the email, we'll just log without it.
+      // It's okay if we can't get the email, we'll just log without it.
+      console.error('error :', e);
     }
     await logAuthEvent({
       request,
-      event: AuthEventType.REGISTER_FAILURE, // This will now work
+      event: AuthEventType.REGISTER_FAILURE,
       email: email,
       status: "failure",
       reason: "Internal server error",
-      metadata: { error: error.message, stack: error.stack }
+      metadata: {
+        error: error.message,
+        stack: error.stack
+      }
     });
     
     return NextResponse.json(
