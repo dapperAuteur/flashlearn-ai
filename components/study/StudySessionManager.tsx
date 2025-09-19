@@ -34,9 +34,12 @@ export default function StudySessionManager() {
     studyDirection,
     sessionStartTime,
     recordCardResult,
+    recordConfidence,
     resetSession,
     lastCardResult,
     cardResults,
+    isConfidenceRequired,
+    hasCompletedConfidence,
   } = useStudySession();
   const { status } = useSession();
 
@@ -130,6 +133,10 @@ export default function StudySessionManager() {
             onResult={recordCardResult}
             onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
             onEndSession={resetSession}
+            isConfidenceRequired={isConfidenceRequired}
+            hasCompletedConfidence={hasCompletedConfidence}
+            onConfidenceSelect={recordConfidence}
+            canFlip={hasCompletedConfidence}
           />
         </div>
       );

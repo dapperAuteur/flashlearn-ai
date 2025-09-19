@@ -5,24 +5,32 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { Flashcard } from '@/types/flashcard';
+import ConfidenceScale from './ConfidenceScale';
 
 interface StudyCardProps {
   flashcard: Flashcard;
-  // NEW: The component now receives its flipped status and a handler from the parent.
   isFlipped: boolean;
+  canFlip: boolean; // NEW: Controls if card can be flipped
   onFlip: () => void;
   onResult: (isCorrect: boolean, timeSeconds: number) => void;
+  onConfidenceSelect: (rating: number) => void; // NEW: Confidence handler
   onPrevious: () => void;
   onEndSession: () => void;
+  isConfidenceRequired: boolean; // NEW: Show confidence UI
+  hasCompletedConfidence: boolean; // NEW: Has user rated confidence
 }
 
 export default function StudyCard({
   flashcard,
-  isFlipped,  // Receive state as a prop
-  onFlip,      // Receive handler as a prop
+  isFlipped,
+  canFlip,
+  onFlip,
   onResult,
+  onConfidenceSelect,
   onPrevious,
-  onEndSession
+  onEndSession,
+  isConfidenceRequired,
+  hasCompletedConfidence
 }: StudyCardProps) {
   const [startTime, setStartTime] = useState<number>(Date.now());
   const cardId = String(flashcard._id);
@@ -39,6 +47,12 @@ export default function StudyCard({
     onResult(correct, timeSeconds);
   }, [startTime, cardId, onResult]);
 
+  const handleFlip = useCallback(() => {
+    if (canFlip) {
+      onFlip();
+    }
+  }, [canFlip, onFlip]);
+
   // MODIFIED: The keydown handler now calls the onFlip prop.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -51,16 +65,16 @@ export default function StudyCard({
         case ' ':
         case 'Enter':
           event.preventDefault();
-          onFlip(); // Call the parent's flip handler
+          handleFlip();
           break;
         // ... (other cases remain the same)
         case 'ArrowLeft':
         case '1':
-          if (isFlipped) handleResult(false);
+          if (isFlipped && hasCompletedConfidence) handleResult(false);
           break;
         case 'ArrowRight':
         case '2':
-          if (isFlipped) handleResult(true);
+          if (isFlipped && hasCompletedConfidence) handleResult(true);
           break;
         case 'ArrowUp':
           onPrevious();
@@ -72,37 +86,61 @@ export default function StudyCard({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFlipped, handleResult, onPrevious, onEndSession, onFlip]);
+  }, [isFlipped, hasCompletedConfidence, handleResult, onPrevious, onEndSession, handleFlip]);
+
+  console.log('StudyCard props:', { 
+    isConfidenceRequired, 
+    hasCompletedConfidence, 
+    isFlipped 
+  });
 
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="mb-4 flex justify-between items-center" title="Space: Flip, ←/1: Wrong, →/2: Right, ↑: Previous, Esc: End">
-        <div className="text-white">Tap card to flip</div>
+        <div className="text-white">
+          {!canFlip ? 'Rate confidence first' : 'Tap card to flip'}
+        </div>
         <div className="text-sm text-gray-400">
           Keyboard: Space, &larr;, &rarr;, &uarr;, Esc
         </div>
       </div>
+      {/* NEW: Confidence Rating - Only show for paid users before flip */}
+      <ConfidenceScale 
+        onRatingSelect={onConfidenceSelect}
+        disabled={!isConfidenceRequired}
+      />
       <div className="mb-8">
         {/* MODIFIED: The onClick handler now calls the onFlip prop */}
         <motion.div
-          className="w-full h-80 cursor-pointer perspective-1000"
-          onClick={onFlip}
+          className={`w-full h-80 perspective-1000 ${canFlip ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`}
+          onClick={handleFlip}
         >
           {/* MODIFIED: The animation directly uses the isFlipped prop */}
           <motion.div
             className="relative w-full h-full transform-style-preserve-3d transition-transform duration-500"
             animate={{ rotateY: isFlipped ? 180 : 0 }}
           >
-            {/* Front and Back of card JSX remains the same */}
+            {/* Front of card */}
             <div className="absolute w-full h-full backface-hidden bg-gray-700 border border-gray-200 rounded-lg p-6 flex flex-col justify-center shadow-md">
               <div className="overflow-auto">
                 <div 
                   className="text-center text-lg prose prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: flashcard.front }}
                 />
-                {flashcard.frontImage && <div className="mt-4 flex justify-center"><Image src={flashcard.frontImage} alt="Front visual" className="max-h-48 object-contain" width={400} height={400} /></div>}
+                {flashcard.frontImage && (
+                  <div className="mt-4 flex justify-center">
+                    <Image 
+                      src={flashcard.frontImage} 
+                      alt="Front visual" 
+                      className="max-h-48 object-contain" 
+                      width={400} 
+                      height={400} 
+                    />
+                  </div>
+                )}
               </div>
             </div>
+            {/* Back of card */}
             <motion.div 
               className="absolute w-full h-full backface-hidden bg-gray-800 border border-gray-600 rounded-lg p-6 flex flex-col justify-center shadow-md"
               style={{ rotateY: 180 }}
@@ -112,19 +150,35 @@ export default function StudyCard({
                   className="text-center text-lg prose prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: flashcard.back }}
                 />
-                {flashcard.backImage && <div className="mt-4 flex justify-center"><Image src={flashcard.backImage} alt="Back visual" className="max-h-48 object-contain" width={400} height={400} /></div>}
+                {flashcard.backImage && (
+                  <div className="mt-4 flex justify-center">
+                    <Image 
+                      src={flashcard.backImage} 
+                      alt="Back visual" 
+                      className="max-h-48 object-contain" 
+                      width={400} 
+                      height={400} 
+                    />
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
         </motion.div>
       </div>
-      {/* MODIFIED: The result buttons are still conditional on the isFlipped prop */}
-      {isFlipped && (
+      {/* Answer buttons - only show when flipped and confidence completed */}
+      {isFlipped && hasCompletedConfidence && (
         <div className="flex space-x-4 justify-center">
-          <button onClick={() => handleResult(false)} className="px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500">
+          <button 
+            onClick={() => handleResult(false)} 
+            className="px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
             Got it Wrong
           </button>
-          <button onClick={() => handleResult(true)} className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+          <button 
+            onClick={() => handleResult(true)} 
+            className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
             Got it Right
           </button>
         </div>
