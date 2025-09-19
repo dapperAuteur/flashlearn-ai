@@ -68,14 +68,14 @@ export default function ShareableResultsCard({ initialResults, cardResults = [] 
     try {
       const imageUrl = await toPng(cardRef.current, { 
         cacheBust: true, 
-        width: 1080, 
-        height: 1080,
+        width: hasConfidenceData ? 1200 : 1080,
+        height: hasConfidenceData ? 1800 : 1080, // Taller if confidence data
         style: { 
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '2rem', // Add some padding
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          padding: '2rem',
         }  
       });
       const response = await fetch(imageUrl);
@@ -145,6 +145,12 @@ export default function ShareableResultsCard({ initialResults, cardResults = [] 
             </div>
           </div>
         </div>
+        {/* Include Confidence Results in shareable image */}
+            {hasConfidenceData && (
+              <div className="mt-8">
+                <ConfidenceResults cardResults={cardResults} />
+              </div>
+            )}
       </div>
       <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
         <p className="text-lg font-bold text-gray-800 dark:text-gray-200">Flashlearn AI</p>
@@ -155,10 +161,10 @@ export default function ShareableResultsCard({ initialResults, cardResults = [] 
         </div>
       </div>
       </div>
-      <ConfidenceResults 
+      {/* <ConfidenceResults 
         cardResults={cardResults} 
         hasConfidenceData={hasConfidenceData} 
-      />
+      /> */}
       <div className="mt-8 text-center">
         {/* You may want to add the resetSession button back here if needed */}
         <button
