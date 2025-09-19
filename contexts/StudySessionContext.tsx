@@ -35,9 +35,14 @@ interface StudySessionState {
   studyDirection: StudyDirection;
   setStudyDirection: (direction: StudyDirection) => void;
 
-  // Actions (functions to modify the state)
+  // NEW: Confidence State
+  currentConfidenceRating: number | null;
+  isConfidenceRequired: boolean;
+  hasCompletedConfidence: boolean;
+  // Actions
   startSession: (listId: string, direction: StudyDirection) => Promise<void>;
-  recordCardResult: (isCorrect: boolean, timeSeconds: number) => Promise<void>;
+  recordCardResult: (isCorrect: boolean, timeSeconds: number, confidenceRating?: number) => Promise<void>;
+  recordConfidence: (rating: number) => void;
   showNextCard: () => void;
   resetSession: () => void;
 }
@@ -53,7 +58,7 @@ interface StudySessionProviderProps {
 }
 
 export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
-  const { data: authSession } = useSession();
+  const { data: authSession, status } = useSession();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [flashcardSetName, setFlashcardSetName] = useState<string | null>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -65,6 +70,18 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [studyDirection, setStudyDirection] = useState<StudyDirection>('front-to-back');
   const [lastCardResult, setLastCardResult] = useState<LastCardResult>(null);
+
+  // NEW: Confidence state
+  const [currentConfidenceRating, setCurrentConfidenceRating] = useState<number | null>(null);
+  
+  // Confidence is required for all users
+  const isConfidenceRequired = true;
+  const hasCompletedConfidence = currentConfidenceRating !== null;
+
+  // Reset confidence when moving to new card
+  useEffect(() => {
+    setCurrentConfidenceRating(null);
+  }, [currentIndex]);
 
   // --- LOGIC MOVED FROM OLD COMPONENTS ---
 
@@ -105,6 +122,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
       setCurrentIndex(0);
       setIsComplete(false);
       setSessionStartTime(Date.now());
+      setCurrentConfidenceRating(null);
       Logger.log(LogContext.STUDY, "Session started successfully.", { sessionId: data.sessionId });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -117,28 +135,83 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
 
   const completeSession = useCallback(async () => {
     if (!sessionId) return;
+
+    console.log('completeSession - cardResults length:', cardResults.length);
+    console.log('completeSession - cardResults:', cardResults);
+    // Get fresh results from IndexedDB to ensure we have all data
+  try {
+    const freshResults = await getResults(sessionId);
+    console.log('completeSession - fresh results from IndexedDB:', freshResults);
+    
+    // Update cardResults with fresh data before completing
+    setCardResults(freshResults);
+
     // For now, we'll just handle local queuing. Server sync logic can be added later.
     Logger.log(LogContext.STUDY, "Session completed. Queuing for sync.", { sessionId });
-    await queueSessionForSync(sessionId);
-    setIsComplete(true);
-  }, [sessionId]);
+    // Sync to server immediately if authenticated
+  if (authSession?.user?.id && flashcards.length > 0) {
+    try {
+      await fetch('/api/study/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          setId: flashcards[0]?.listId, // Get setId from flashcard
+          results: freshResults // Use fresh results for sync 
+        })
+      });
+    } catch (error) {
+      Logger.error(LogContext.STUDY, "Failed to sync session", { error });
+    }
+  }
+  
+  await queueSessionForSync(sessionId);
+  setIsComplete(true);
+} catch (error) {
+    Logger.error(LogContext.STUDY, "Error getting results for completion", { error });
+    setIsComplete(true); // Complete anyway to avoid stuck state
+  }
+}, [sessionId, authSession, flashcards, cardResults]); 
 
-  const recordCardResult = useCallback(async (isCorrect: boolean, timeSeconds: number) => {
+  const recordConfidence = useCallback((rating: number) => {
+    if (rating < 1 || rating > 5) return;
+    setCurrentConfidenceRating(rating);
+    Logger.log(LogContext.STUDY, "Confidence rating recorded", { rating });
+  }, []);
+
+  const recordCardResult = useCallback(async (isCorrect: boolean, timeSeconds: number, confidenceRating?: number) => {
     if (!sessionId || currentIndex >= flashcards.length) return;
 
     const currentCard = flashcards[currentIndex];
-    const result: CardResult = { sessionId, flashcardId: String(currentCard._id), isCorrect, timeSeconds };
+    const finalConfidenceRating = confidenceRating || currentConfidenceRating;
+    
+    const result: CardResult = { 
+      sessionId, 
+      flashcardId: String(currentCard._id), 
+      isCorrect, 
+      timeSeconds,
+      confidenceRating: finalConfidenceRating ?? undefined
+    };
 
-    setCardResults(prev => [...prev, result]);
+    // DEBUG: Log what we're creating
+  console.log('recordCardResult - creating result:', result);
+  console.log('recordCardResult - currentConfidenceRating:', currentConfidenceRating);
+  console.log('recordCardResult - finalConfidenceRating:', finalConfidenceRating);
+
+    setCardResults(prev => {
+      const newResults = [...prev, result];
+    console.log('recordCardResult - updated cardResults:', newResults);
+    return newResults;
+    });
     await saveResult(result);
 
     // Instead of incrementing currentIndex, we set the result for the feedback screen.
     setLastCardResult(isCorrect ? 'correct' : 'incorrect');
-  }, [sessionId, currentIndex, flashcards]);
+  }, [sessionId, currentIndex, flashcards, currentConfidenceRating]);
 
   // NEW: This action is called by the feedback screen to advance the session.
   const showNextCard = useCallback(() => {
     setLastCardResult(null); // Hide the feedback screen
+    setCurrentConfidenceRating(null);
     const nextIndex = currentIndex + 1;
     if (nextIndex < flashcards.length) {
       setCurrentIndex(nextIndex);
@@ -158,6 +231,8 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     setSessionStartTime(null);
     setLastCardResult(null);
+    setCurrentConfidenceRating(null);
+    Logger.log(LogContext.STUDY, "Session reset.");
   }, [sessionId]);
 
   const value = {
@@ -177,6 +252,10 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     resetSession,
     studyDirection,
     setStudyDirection,
+    currentConfidenceRating,
+    isConfidenceRequired,
+    hasCompletedConfidence,
+    recordConfidence,
   };
 
   return (

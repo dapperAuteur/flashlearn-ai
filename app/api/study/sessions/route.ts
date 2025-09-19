@@ -13,11 +13,13 @@ import { User } from '@/models/User';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { Profile } from '@/models/Profile';
 import StudySession, { StudyDirection } from '@/models/StudySession';
+import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 
 interface CardResult {
   cardId: string;
   isCorrect: boolean;
-  timeStudied: number;
+  timeSeconds: number;
+  confidenceRating?: number;
 }
 
 interface SyncPayload {
@@ -28,6 +30,38 @@ interface SyncPayload {
 interface LeanUser {
   _id: mongoose.Types.ObjectId;
   profiles: mongoose.Types.ObjectId[];
+}
+
+// Helper function to determine if user is paid (implement based on your user model)
+async function isUserPaid(userId: string): Promise<boolean> {
+  try {
+    const user = await User.findById(userId).select('subscriptionTier');
+    return user?.subscriptionTier === 'Lifetime Learner';
+  } catch (error) {
+    Logger.error(LogContext.STUDY, 'Error checking user subscription status', { userId, error });
+    return false; // Default to free tier on error
+  }
+}
+// Helper function to update confidence data
+function updateConfidenceData(confidenceData: any, confidenceRating: number, isCorrect: boolean) {
+  if (!confidenceRating || confidenceRating < 1 || confidenceRating > 5) return;
+  // Update average confidence - fix TypeScript typing
+  const distributionValues = Object.values(confidenceData.confidenceDistribution) as number[];
+  const currentTotal = distributionValues.reduce((sum: number, count: number) => sum + count, 0);
+  const currentAverage = confidenceData.averageConfidence || 0;
+  const newAverage = ((currentAverage * currentTotal) + confidenceRating) / (currentTotal + 1);
+  confidenceData.averageConfidence = newAverage;
+  // Update distribution
+  const levelKey = `level${confidenceRating}` as keyof typeof confidenceData.confidenceDistribution;
+  confidenceData.confidenceDistribution[levelKey] = (confidenceData.confidenceDistribution[levelKey] || 0) + 1;
+  // Update special categories
+  if (isCorrect && confidenceRating <= 2) {
+    confidenceData.luckyGuesses = (confidenceData.luckyGuesses || 0) + 1;
+  } else if (isCorrect && confidenceRating >= 4) {
+    confidenceData.confidentCorrect = (confidenceData.confidentCorrect || 0) + 1;
+  } else if (!isCorrect && confidenceRating >= 4) {
+    confidenceData.confidentIncorrect = (confidenceData.confidentIncorrect || 0) + 1;
+  }
 }
 
 function shuffleArray(array: any[]) {
@@ -49,9 +83,23 @@ export async function POST(request: NextRequest) {
         await Logger.warning(LogContext.STUDY, 'Unauthorized attempt to sync study session.');
         return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
+    // Rate limit: 10 session syncs per minute per user
+    const rateLimiter = getRateLimiter('study-sync', 10, 60);
+    const { success } = await rateLimiter.limit(session.user.id);
+
+    if (!success) {
+      await Logger.warning(LogContext.STUDY, 'Rate limit exceeded for study session sync', { 
+        userId: session.user.id 
+      });
+      return NextResponse.json({ 
+        message: 'Too many session syncs. Please wait before syncing again.' 
+      }, { status: 429 });
+    }
+    
     const userId = session.user.id;
     const { setId, results } = body;
     const setIdAsObjectId = new mongoose.Types.ObjectId(setId);
+    const isPaidUser = await isUserPaid(userId);
     // **FIX: Start the session from Mongoose, not the native client**
     const mongoSession = await mongoose.startSession();
     try {
@@ -67,26 +115,54 @@ export async function POST(request: NextRequest) {
                     profile: profileId,
                     set: setIdAsObjectId,
                     cardPerformance: [],
-                    setPerformance: { totalStudySessions: 0, totalTimeStudied: 0, averageScore: 0 },
+                    setPerformance: { 
+                        totalStudySessions: 0, 
+                        totalTimeStudied: 0, 
+                        averageScore: 0,
+                        overallConfidenceData: {
+                            averageConfidence: 0,
+                            confidenceDistribution: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0 },
+                            luckyGuesses: 0,
+                            confidentCorrect: 0,
+                            confidentIncorrect: 0
+                        }
+                    },
                 });
             }
 
             let totalSessionTime = 0;
             for (const result of results as CardResult[]) {
-                totalSessionTime += result.timeStudied;
-                const cardPerf = analytics.cardPerformance.find((p: any) => p.cardId.toString() === result.cardId);
-                if (cardPerf) {
-                    cardPerf.totalTimeStudied += result.timeStudied;
-                    if (result.isCorrect) cardPerf.correctCount++; else cardPerf.incorrectCount++;
-                } else {
-                    analytics.cardPerformance.push({
+                totalSessionTime += result.timeSeconds;
+                let cardPerf = analytics.cardPerformance.find((p: any) => p.cardId.toString() === result.cardId);
+                if (!cardPerf) {
+                    // Initialize new card performance with confidence data structure
+                    const newCardPerf = {
                         cardId: new mongoose.Types.ObjectId(result.cardId),
-                        correctCount: result.isCorrect ? 1 : 0,
-                        incorrectCount: result.isCorrect ? 0 : 1,
-                        totalTimeStudied: result.timeStudied,
-                    });
+                        correctCount: 0,
+                        incorrectCount: 0,
+                        totalTimeStudied: 0,
+                        confidenceData: {
+                            averageConfidence: 0,
+                            confidenceDistribution: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0 },
+                            luckyGuesses: 0,
+                            confidentCorrect: 0,
+                            confidentIncorrect: 0
+                        }
+                    };
+                    analytics.cardPerformance.push(newCardPerf);
+                    cardPerf = analytics.cardPerformance[analytics.cardPerformance.length - 1];
+                }
+                // Update basic performance
+                cardPerf.totalTimeStudied += result.timeSeconds;
+                if (result.isCorrect) cardPerf.correctCount++; else cardPerf.incorrectCount++;
+                // Update confidence data for paid users
+                // Update confidence data for authenticated users only
+                if (session?.user?.id && result.confidenceRating) {
+                    updateConfidenceData(cardPerf.confidenceData, result.confidenceRating, result.isCorrect);
+                    updateConfidenceData(analytics.setPerformance.overallConfidenceData, result.confidenceRating, result.isCorrect);
                 }
             }
+            // Update set-level performance
 
             analytics.setPerformance.totalStudySessions += 1;
             analytics.setPerformance.totalTimeStudied += totalSessionTime;
@@ -98,7 +174,7 @@ export async function POST(request: NextRequest) {
             responseData = { message: 'Sync successful', analyticsId: analytics._id.toString() };
         });
 
-        await Logger.info(LogContext.STUDY, `Successfully synced study session for set ${setId}.`, { userId, metadata: { setId, resultsCount: results.length } });
+        await Logger.info(LogContext.STUDY, `Successfully synced study session for set ${setId}.`, { userId, metadata: { setId, resultsCount: results.length, isPaidUser  } });
         return NextResponse.json(responseData, { status: 200 });
 
     } catch (error) {
@@ -111,8 +187,22 @@ export async function POST(request: NextRequest) {
   }
 
   // LOGIC 2: Handle Creating a New Study Session
+  // Rate limiting for new session creation
   if (body.listId) {
     const requestId = await Logger.info(LogContext.STUDY, "Create study session request");
+    const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
+    // Rate limit: 20 new sessions per hour per IP
+    const rateLimiter = getRateLimiter('study-create', 20, 3600);
+    const { success } = await rateLimiter.limit(clientIP);
+    
+    if (!success) {
+      await Logger.warning(LogContext.STUDY, 'Rate limit exceeded for session creation', { 
+        ip: clientIP 
+      });
+      return NextResponse.json({ 
+        message: 'Too many session requests. Please wait before starting a new session.' 
+      }, { status: 429 });
+    }
     try {
         const { listId, studyDirection }: { listId: string, studyDirection: StudyDirection } = body;
         

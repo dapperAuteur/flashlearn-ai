@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useRef, useState, useMemo } from 'react';
@@ -5,6 +6,7 @@ import { toPng } from 'html-to-image';
 // REMOVED: No longer need to import from 'chart.js' directly
 import { Doughnut } from 'react-chartjs-2';
 import { IStudySession } from '@/models/StudySession';
+import ConfidenceResults from './ConfidenceResults';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // REMOVED: The registration line is no longer needed here.
@@ -12,7 +14,9 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 interface ShareableResultsCardProps {
   initialResults: IStudySession & { setName?: string };
+  cardResults?: any[]; // Add this
 }
+
 
 const formatDateTime = (date: Date): string => {
   return new Intl.DateTimeFormat('en-US', {
@@ -21,7 +25,20 @@ const formatDateTime = (date: Date): string => {
   }).format(date);
 };
 
-export default function ShareableResultsCard({ initialResults }: ShareableResultsCardProps) {
+export default function ShareableResultsCard({ initialResults, cardResults = [] }: ShareableResultsCardProps) {
+
+  //  DEBUG: Log the cardResults to see what we're getting
+  console.log('ShareableResultsCard - cardResults:', cardResults);
+  console.log('ShareableResultsCard - cardResults length:', cardResults.length);
+  console.log('ShareableResultsCard - first result:', cardResults[0]);
+
+  const hasConfidenceData = cardResults.some(result => {
+        console.log('Checking result for confidence:', result?.confidenceRating);
+
+        return result.confidenceRating !== undefined
+      });
+
+      console.log('ShareableResultsCard - hasConfidenceData:', hasConfidenceData);
   const cardRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
 
@@ -51,14 +68,14 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
     try {
       const imageUrl = await toPng(cardRef.current, { 
         cacheBust: true, 
-        width: 1080, 
-        height: 1080,
+        width: hasConfidenceData ? 1200 : 1080,
+        height: hasConfidenceData ? 1800 : 1080, // Taller if confidence data
         style: { 
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '2rem', // Add some padding
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          padding: '2rem',
         }  
       });
       const response = await fetch(imageUrl);
@@ -128,6 +145,12 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
             </div>
           </div>
         </div>
+        {/* Include Confidence Results in shareable image */}
+            {hasConfidenceData && (
+              <div className="mt-8">
+                <ConfidenceResults cardResults={cardResults} />
+              </div>
+            )}
       </div>
       <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
         <p className="text-lg font-bold text-gray-800 dark:text-gray-200">Flashlearn AI</p>
@@ -138,6 +161,10 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
         </div>
       </div>
       </div>
+      {/* <ConfidenceResults 
+        cardResults={cardResults} 
+        hasConfidenceData={hasConfidenceData} 
+      /> */}
       <div className="mt-8 text-center">
         {/* You may want to add the resetSession button back here if needed */}
         <button

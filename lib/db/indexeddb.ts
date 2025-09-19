@@ -1,18 +1,18 @@
 'use client';
 
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-
 const DB_NAME = 'FlashlearnAI';
-const DB_VERSION = 2; // Incremented version to trigger onupgradeneeded
+const DB_VERSION = 3; // Incremented for confidence field
 const STUDY_RESULTS_STORE = 'studyResults';
-const SYNC_QUEUE_STORE = 'syncQueue'; // New store for pending syncs
+const SYNC_QUEUE_STORE = 'syncQueue';
 
-// Define the structure of a single card result
+// Updated interface with confidence rating
 export interface CardResult {
   sessionId: string;
   flashcardId: string;
   isCorrect: boolean;
   timeSeconds: number;
+  confidenceRating?: number; // 1-5 scale, optional for backward compatibility
 }
 
 // Define the structure of the object in the studyResults store
@@ -30,7 +30,7 @@ let db: IDBDatabase;
 
 /**
  * Opens and initializes the IndexedDB database.
- * This is now version 2 to add the new syncQueue store.
+ * This is now version 3 to add the new syncQueue store.
  * @returns A promise that resolves with the database instance.
  */
 function openDB(): Promise<IDBDatabase> {
