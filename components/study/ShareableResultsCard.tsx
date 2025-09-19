@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useRef, useState, useMemo } from 'react';
@@ -5,6 +6,7 @@ import { toPng } from 'html-to-image';
 // REMOVED: No longer need to import from 'chart.js' directly
 import { Doughnut } from 'react-chartjs-2';
 import { IStudySession } from '@/models/StudySession';
+import ConfidenceResults from './ConfidenceResults';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // REMOVED: The registration line is no longer needed here.
@@ -12,7 +14,9 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 interface ShareableResultsCardProps {
   initialResults: IStudySession & { setName?: string };
+  cardResults?: any[]; // Add this
 }
+
 
 const formatDateTime = (date: Date): string => {
   return new Intl.DateTimeFormat('en-US', {
@@ -21,7 +25,20 @@ const formatDateTime = (date: Date): string => {
   }).format(date);
 };
 
-export default function ShareableResultsCard({ initialResults }: ShareableResultsCardProps) {
+export default function ShareableResultsCard({ initialResults, cardResults = [] }: ShareableResultsCardProps) {
+
+  //  DEBUG: Log the cardResults to see what we're getting
+  console.log('ShareableResultsCard - cardResults:', cardResults);
+  console.log('ShareableResultsCard - cardResults length:', cardResults.length);
+  console.log('ShareableResultsCard - first result:', cardResults[0]);
+
+  const hasConfidenceData = cardResults.some(result => {
+        console.log('Checking result for confidence:', result?.confidenceRating);
+
+        return result.confidenceRating !== undefined
+      });
+
+      console.log('ShareableResultsCard - hasConfidenceData:', hasConfidenceData);
   const cardRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
 
@@ -138,6 +155,10 @@ export default function ShareableResultsCard({ initialResults }: ShareableResult
         </div>
       </div>
       </div>
+      <ConfidenceResults 
+        cardResults={cardResults} 
+        hasConfidenceData={hasConfidenceData} 
+      />
       <div className="mt-8 text-center">
         {/* You may want to add the resetSession button back here if needed */}
         <button

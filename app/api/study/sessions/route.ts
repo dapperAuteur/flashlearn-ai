@@ -156,7 +156,8 @@ export async function POST(request: NextRequest) {
                 cardPerf.totalTimeStudied += result.timeSeconds;
                 if (result.isCorrect) cardPerf.correctCount++; else cardPerf.incorrectCount++;
                 // Update confidence data for paid users
-                if (isPaidUser && result.confidenceRating) {
+                // Update confidence data for authenticated users only
+                if (session?.user?.id && result.confidenceRating) {
                     updateConfidenceData(cardPerf.confidenceData, result.confidenceRating, result.isCorrect);
                     updateConfidenceData(analytics.setPerformance.overallConfidenceData, result.confidenceRating, result.isCorrect);
                 }

@@ -105,10 +105,13 @@ export default function StudyCard({
         </div>
       </div>
       {/* NEW: Confidence Rating - Only show for paid users before flip */}
-      <ConfidenceScale 
-        onRatingSelect={onConfidenceSelect}
-        disabled={!isConfidenceRequired}
-      />
+      {isConfidenceRequired && !isFlipped && (
+        <ConfidenceScale 
+          onRatingSelect={onConfidenceSelect}
+          disabled={!isConfidenceRequired}
+        />
+      )}
+
       <div className="mb-8">
         {/* MODIFIED: The onClick handler now calls the onFlip prop */}
         <motion.div

@@ -135,11 +135,42 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
 
   const completeSession = useCallback(async () => {
     if (!sessionId) return;
+
+    console.log('completeSession - cardResults length:', cardResults.length);
+    console.log('completeSession - cardResults:', cardResults);
+    // Get fresh results from IndexedDB to ensure we have all data
+  try {
+    const freshResults = await getResults(sessionId);
+    console.log('completeSession - fresh results from IndexedDB:', freshResults);
+    
+    // Update cardResults with fresh data before completing
+    setCardResults(freshResults);
+
     // For now, we'll just handle local queuing. Server sync logic can be added later.
     Logger.log(LogContext.STUDY, "Session completed. Queuing for sync.", { sessionId });
-    await queueSessionForSync(sessionId);
-    setIsComplete(true);
-  }, [sessionId]);
+    // Sync to server immediately if authenticated
+  if (authSession?.user?.id && flashcards.length > 0) {
+    try {
+      await fetch('/api/study/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          setId: flashcards[0]?.listId, // Get setId from flashcard
+          results: freshResults // Use fresh results for sync 
+        })
+      });
+    } catch (error) {
+      Logger.error(LogContext.STUDY, "Failed to sync session", { error });
+    }
+  }
+  
+  await queueSessionForSync(sessionId);
+  setIsComplete(true);
+} catch (error) {
+    Logger.error(LogContext.STUDY, "Error getting results for completion", { error });
+    setIsComplete(true); // Complete anyway to avoid stuck state
+  }
+}, [sessionId, authSession, flashcards, cardResults]); 
 
   const recordConfidence = useCallback((rating: number) => {
     if (rating < 1 || rating > 5) return;
@@ -161,7 +192,16 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
       confidenceRating: finalConfidenceRating ?? undefined
     };
 
-    setCardResults(prev => [...prev, result]);
+    // DEBUG: Log what we're creating
+  console.log('recordCardResult - creating result:', result);
+  console.log('recordCardResult - currentConfidenceRating:', currentConfidenceRating);
+  console.log('recordCardResult - finalConfidenceRating:', finalConfidenceRating);
+
+    setCardResults(prev => {
+      const newResults = [...prev, result];
+    console.log('recordCardResult - updated cardResults:', newResults);
+    return newResults;
+    });
     await saveResult(result);
 
     // Instead of incrementing currentIndex, we set the result for the feedback screen.

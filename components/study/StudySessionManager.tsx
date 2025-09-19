@@ -11,8 +11,6 @@ import CardFeedback from './CardFeedback';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
-// THIS IS THE FIX: Register Chart.js elements in the parent component.
-// This ensures they are available before any child component tries to render a chart.
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const formatTime = (milliseconds: number): string => {
@@ -37,7 +35,7 @@ export default function StudySessionManager() {
     recordConfidence,
     resetSession,
     lastCardResult,
-    cardResults,
+    cardResults, // Get cardResults from context
     isConfidenceRequired,
     hasCompletedConfidence,
   } = useStudySession();
@@ -57,8 +55,6 @@ export default function StudySessionManager() {
     }, 1000);
     return () => clearInterval(timerInterval);
   }, [sessionStartTime, isComplete]);
-  
-  // --- Conditional rendering logic ---
 
   if (isLoading) {
     return (
@@ -95,7 +91,14 @@ export default function StudySessionManager() {
         durationSeconds: Math.round(cardResults.reduce((total, result) => total + result.timeSeconds, 0)),
         setName: flashcardSetName,
       };
-      return <ShareableResultsCard initialResults={resultsData as any} />;
+      
+      // FIX: Pass cardResults to ShareableResultsCard
+      return (
+        <ShareableResultsCard 
+          initialResults={resultsData as any} 
+          cardResults={cardResults}
+        />
+      );
     }
 
     if (lastCardResult) {
@@ -145,4 +148,3 @@ export default function StudySessionManager() {
 
   return <StudySessionSetup />;
 }
-
