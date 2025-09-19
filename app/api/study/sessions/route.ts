@@ -13,6 +13,7 @@ import { User } from '@/models/User';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { Profile } from '@/models/Profile';
 import StudySession, { StudyDirection } from '@/models/StudySession';
+import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 
 interface CardResult {
   cardId: string;
@@ -49,6 +50,19 @@ export async function POST(request: NextRequest) {
         await Logger.warning(LogContext.STUDY, 'Unauthorized attempt to sync study session.');
         return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
+    // Rate limit: 10 session syncs per minute per user
+    const rateLimiter = getRateLimiter('study-sync', 10, 60);
+    const { success } = await rateLimiter.limit(session.user.id);
+
+    if (!success) {
+      await Logger.warning(LogContext.STUDY, 'Rate limit exceeded for study session sync', { 
+        userId: session.user.id 
+      });
+      return NextResponse.json({ 
+        message: 'Too many session syncs. Please wait before syncing again.' 
+      }, { status: 429 });
+    }
+    
     const userId = session.user.id;
     const { setId, results } = body;
     const setIdAsObjectId = new mongoose.Types.ObjectId(setId);
@@ -111,8 +125,22 @@ export async function POST(request: NextRequest) {
   }
 
   // LOGIC 2: Handle Creating a New Study Session
+  // Rate limiting for new session creation
   if (body.listId) {
     const requestId = await Logger.info(LogContext.STUDY, "Create study session request");
+    const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
+    // Rate limit: 20 new sessions per hour per IP
+    const rateLimiter = getRateLimiter('study-create', 20, 3600);
+    const { success } = await rateLimiter.limit(clientIP);
+    
+    if (!success) {
+      await Logger.warning(LogContext.STUDY, 'Rate limit exceeded for session creation', { 
+        ip: clientIP 
+      });
+      return NextResponse.json({ 
+        message: 'Too many session requests. Please wait before starting a new session.' 
+      }, { status: 429 });
+    }
     try {
         const { listId, studyDirection }: { listId: string, studyDirection: StudyDirection } = body;
         
