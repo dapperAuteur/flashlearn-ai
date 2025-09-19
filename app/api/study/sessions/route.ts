@@ -18,7 +18,7 @@ import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 interface CardResult {
   cardId: string;
   isCorrect: boolean;
-  timeStudied: number;
+  timeSeconds: number;
 }
 
 interface SyncPayload {
@@ -87,17 +87,17 @@ export async function POST(request: NextRequest) {
 
             let totalSessionTime = 0;
             for (const result of results as CardResult[]) {
-                totalSessionTime += result.timeStudied;
+                totalSessionTime += result.timeSeconds;
                 const cardPerf = analytics.cardPerformance.find((p: any) => p.cardId.toString() === result.cardId);
                 if (cardPerf) {
-                    cardPerf.totalTimeStudied += result.timeStudied;
+                    cardPerf.totalTimeStudied += result.timeSeconds;
                     if (result.isCorrect) cardPerf.correctCount++; else cardPerf.incorrectCount++;
                 } else {
                     analytics.cardPerformance.push({
                         cardId: new mongoose.Types.ObjectId(result.cardId),
                         correctCount: result.isCorrect ? 1 : 0,
                         incorrectCount: result.isCorrect ? 0 : 1,
-                        totalTimeStudied: result.timeStudied,
+                        totalTimeStudied: result.timeSeconds,
                     });
                 }
             }
