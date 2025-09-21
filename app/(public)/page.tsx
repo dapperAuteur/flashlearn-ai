@@ -60,7 +60,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                   <Sparkles className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Create Cards</h3>
-                <p className="text-sm text-gray-600 mb-3">Generate from PDF, text, or YouTube</p>
+                <p className="text-sm text-gray-600 mb-3">Generate from PDF or text</p>
                 <div className="text-purple-600 text-sm font-medium group-hover:text-purple-700">Generate now →</div>
               </Link>
               
@@ -136,12 +136,12 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                 <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-teal-500 rounded-full border-2 border-white" />
                 <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full border-2 border-white" />
               </div>
-              <span>2,000+ active learners</span>
+              <span>Active Learners</span>
             </div>
             <div className="w-px h-4 bg-gray-300" />
-            <span>4.9/5 average rating</span>
+            <span>Create Flashcards</span>
             <div className="w-px h-4 bg-gray-300" />
-            <span>40% better retention rate</span>
+            <span>Increase Retention Rate</span>
           </div>
         </div>
       </div>
@@ -163,7 +163,7 @@ const BenefitsSection = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
     {
       icon: Sparkles,
       title: "Instant AI Generation",
-      description: "Upload any PDF, paste YouTube links, or share text. New flashcards appear in seconds, not hours.",
+      description: "Upload any PDF or share text. New flashcards appear in seconds, not hours.",
       color: "purple" as ColorVariant
     },
     {
@@ -253,7 +253,7 @@ const FeaturesShowcase = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">AI Content Generation</h3>
-                <p className="text-gray-700">Upload PDFs, YouTube videos, or any text. Our AI creates perfectly formatted flashcards in seconds.</p>
+                <p className="text-gray-700">Upload PDFs or any text. Our AI creates perfectly formatted flashcards in seconds.</p>
               </div>
             </div>
             
@@ -307,7 +307,7 @@ const FeaturesShowcase = () => {
                   <Sparkles className="h-5 w-5 text-purple-600" />
                   <span className="font-medium text-gray-900">Spanish Vocabulary</span>
                 </div>
-                <p className="text-gray-600 text-sm">12 cards • Generated from YouTube video</p>
+                <p className="text-gray-600 text-sm">12 cards • Generated from PDF</p>
                 <div className="mt-3 bg-green-50 rounded-lg p-2">
                   <p className="text-xs text-green-800">Mastered: 8/12 cards</p>
                 </div>
