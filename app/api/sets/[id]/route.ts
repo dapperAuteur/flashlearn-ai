@@ -59,7 +59,7 @@ export async function GET(
 // PATCH /api/sets/[id] - Update set metadata
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -75,7 +75,7 @@ export async function PATCH(
     }
 
     await dbConnect();
-    const setId = params.id;
+    const setId = (await params).id;
 
     if (!ObjectId.isValid(setId)) {
       return NextResponse.json({ error: 'Invalid set ID' }, { status: 400 });
