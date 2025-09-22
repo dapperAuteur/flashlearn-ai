@@ -13,12 +13,12 @@ import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 // GET /api/sets/[id] - Fetch full set with flashcards
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
     const session = await getServerSession(authOptions);
-    const setId = params.id;
+    const setId = (await params).id;
 
     if (!ObjectId.isValid(setId)) {
       return NextResponse.json({ error: 'Invalid set ID' }, { status: 400 });
