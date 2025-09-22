@@ -38,6 +38,10 @@ interface FlashcardSet {
   updatedAt: string;
 }
 
+interface CombinedFlashcardSet extends FlashcardSet {
+  isOfflineAvailable: boolean;
+}
+
 export default function FlashcardManager() {
   const [sets, setSets] = useState<FlashcardSet[]>([]);
   const [offlineSets, setOfflineSets] = useState<OfflineFlashcardSet[]>([]);
@@ -161,9 +165,9 @@ export default function FlashcardManager() {
     document.body.removeChild(link);
   };
 
-  const combinedSets = useMemo(() => {
-  const combined = [];
-  const processedIds = new Set();
+  const combinedSets = useMemo((): CombinedFlashcardSet[] => {
+  const combined: CombinedFlashcardSet[] = [];
+  const processedIds = new Set<string>();
 
   // Add offline sets first
   offlineSets.forEach(set => {
@@ -399,26 +403,22 @@ export default function FlashcardManager() {
                       <span>{set.isPublic ? 'Public' : 'Private'}</span>
                     </div>
                     
-                    {(set.categories || set.tags) && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {set.categories?.map(category => (
-                          <span
-                            key={category}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                          >
-                            {category}
-                          </span>
-                        ))}
-                        {set.tags?.map(tag => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {(set.categories || []).map((category: string) => (
+                      <span
+                        key={category}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {category}
+                      </span>
+                    ))}
+                    {(set.tags || []).map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
                   </div>
                   
                   <div className="mt-4 flex space-x-2">
