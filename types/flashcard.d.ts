@@ -49,3 +49,19 @@ export interface IFlashcardSet {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
+
+// Client-side flashcard types (without MongoDB ObjectId)
+export interface IFlashcardClient {
+  _id?: string; // String ID for client-side use
+  front: string;
+  back: string;
+  frontImage?: string;
+  backImage?: string;
+}
+
+// For generation results
+export interface FlashcardGenerationResult {
+  flashcards: IFlashcardClient[];
+  fileName?: string;
+  source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Video' | 'Image' | 'Text' | 'CSV';
+}
