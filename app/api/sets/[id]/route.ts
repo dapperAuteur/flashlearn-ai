@@ -125,7 +125,7 @@ export async function PATCH(
 // DELETE /api/sets/[id] - Delete set
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -134,7 +134,7 @@ export async function DELETE(
     }
 
     await dbConnect();
-    const setId = params.id;
+    const setId = (await params).id;
 
     if (!ObjectId.isValid(setId)) {
       return NextResponse.json({ error: 'Invalid set ID' }, { status: 400 });
