@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -82,29 +83,29 @@ export default function StudySessionManager() {
   }
 
   if (sessionId) {
-    if (isComplete) {
-      const resultsData = {
-        _id: sessionId,
-        listId: 'unknown',
-        userId: 'unknown',
-        startTime: new Date(sessionStartTime || 0),
-        status: 'completed' as const,
-        totalCards: flashcards.length,
-        correctCount: cardResults.filter(r => r.isCorrect).length,
-        incorrectCount: cardResults.filter(r => !r.isCorrect).length,
-        completedCards: cardResults.length,
-        durationSeconds: Math.round(cardResults.reduce((total, result) => total + result.timeSeconds, 0)),
-        setName: flashcardSetName,
-      };
+    // if (isComplete) {
+    //   const resultsData = {
+    //     _id: sessionId,
+    //     listId: 'unknown',
+    //     userId: 'unknown',
+    //     startTime: new Date(sessionStartTime || 0),
+    //     status: 'completed' as const,
+    //     totalCards: flashcards.length,
+    //     correctCount: cardResults.filter(r => r.isCorrect).length,
+    //     incorrectCount: cardResults.filter(r => !r.isCorrect).length,
+    //     completedCards: cardResults.length,
+    //     durationSeconds: Math.round(cardResults.reduce((total, result) => total + result.timeSeconds, 0)),
+    //     setName: flashcardSetName,
+    //   };
       
-      // FIX: Pass cardResults to ShareableResultsCard
-      return (
-        <ShareableResultsCard 
-          initialResults={resultsData as any} 
-          cardResults={cardResults}
-        />
-      );
-    }
+    //   // FIX: Pass cardResults to ShareableResultsCard
+    //   return (
+    //     <ShareableResultsCard 
+    //       initialResults={resultsData as any} 
+    //       cardResults={cardResults}
+    //     />
+    //   );
+    // }
 
     if (lastCardResult) {
       return (
