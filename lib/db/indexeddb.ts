@@ -1,38 +1,85 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 const DB_NAME = 'FlashlearnAI';
-const DB_VERSION = 3; // Incremented for confidence field
+const DB_VERSION = 4; // Incremented for offline features
 const STUDY_RESULTS_STORE = 'studyResults';
 const SYNC_QUEUE_STORE = 'syncQueue';
+const OFFLINE_SETS_STORE = 'offlineSets';
+const CATEGORIES_STORE = 'categories';
+const STUDY_HISTORY_STORE = 'studyHistory';
+const PENDING_CHANGES_STORE = 'pendingChanges';
 
-// Updated interface with confidence rating
+// Existing interfaces
 export interface CardResult {
   sessionId: string;
   flashcardId: string;
   isCorrect: boolean;
   timeSeconds: number;
-  confidenceRating?: number; // 1-5 scale, optional for backward compatibility
+  confidenceRating?: number;
 }
 
-// Define the structure of the object in the studyResults store
 interface StoredResult extends CardResult {
-  id?: number; // auto-incrementing primary key
+  id?: number;
 }
 
-// Define the structure of the object in the syncQueue store
 interface QueuedSession {
-    sessionId: string;
+  sessionId: string;
 }
 
+// New interfaces for offline functionality
+export interface OfflineFlashcardSet {
+  setId: string;
+  title: string;
+  description?: string;
+  isPublic: boolean;
+  categories: string[];
+  tags: string[];
+  flashcards: Array<{
+    _id: string;
+    front: string;
+    back: string;
+    frontImage?: string;
+    backImage?: string;
+  }>;
+  lastSynced: Date;
+  isOfflineEnabled: boolean;
+  cardCount: number;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  color?: string;
+  createdAt: Date;
+}
+
+export interface StudySessionHistory {
+  sessionId: string;
+  setId: string;
+  setName: string;
+  startTime: Date;
+  endTime?: Date;
+  totalCards: number;
+  correctCount: number;
+  incorrectCount: number;
+  accuracy: number;
+  durationSeconds: number;
+  isOfflineSession: boolean;
+}
+
+export interface PendingChange {
+  id: string;
+  type: 'create' | 'update' | 'delete';
+  entity: 'set' | 'category' | 'flashcard';
+  data: any; // Keep as any for flexibility with different update types
+  timestamp: Date;
+  retryCount: number;
+}
 
 let db: IDBDatabase;
 
-/**
- * Opens and initializes the IndexedDB database.
- * This is now version 3 to add the new syncQueue store.
- * @returns A promise that resolves with the database instance.
- */
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (db) {
@@ -51,11 +98,10 @@ function openDB(): Promise<IDBDatabase> {
       resolve(db);
     };
 
-    // This event runs only when the DB version changes.
     request.onupgradeneeded = (event) => {
       const dbInstance = (event.target as IDBOpenDBRequest).result;
       
-      // Create studyResults store if it doesn't exist
+      // Existing stores
       if (!dbInstance.objectStoreNames.contains(STUDY_RESULTS_STORE)) {
         dbInstance.createObjectStore(STUDY_RESULTS_STORE, {
           keyPath: 'id',
@@ -63,22 +109,41 @@ function openDB(): Promise<IDBDatabase> {
         });
       }
       
-      // **1. Create the "Sync Queue" Object Store**
       if (!dbInstance.objectStoreNames.contains(SYNC_QUEUE_STORE)) {
-        // This store will hold the sessionIds that need to be synced.
-        // We use 'sessionId' as the keyPath to ensure no duplicates.
         dbInstance.createObjectStore(SYNC_QUEUE_STORE, {
           keyPath: 'sessionId',
+        });
+      }
+
+      // New stores for offline functionality
+      if (!dbInstance.objectStoreNames.contains(OFFLINE_SETS_STORE)) {
+        dbInstance.createObjectStore(OFFLINE_SETS_STORE, {
+          keyPath: 'setId',
+        });
+      }
+
+      if (!dbInstance.objectStoreNames.contains(CATEGORIES_STORE)) {
+        dbInstance.createObjectStore(CATEGORIES_STORE, {
+          keyPath: 'id',
+        });
+      }
+
+      if (!dbInstance.objectStoreNames.contains(STUDY_HISTORY_STORE)) {
+        dbInstance.createObjectStore(STUDY_HISTORY_STORE, {
+          keyPath: 'sessionId',
+        });
+      }
+
+      if (!dbInstance.objectStoreNames.contains(PENDING_CHANGES_STORE)) {
+        dbInstance.createObjectStore(PENDING_CHANGES_STORE, {
+          keyPath: 'id',
         });
       }
     };
   });
 }
 
-/**
- * Saves a single card result to IndexedDB.
- * @param result The card result to save.
- */
+// Existing functions (unchanged)
 export async function saveResult(result: CardResult): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -94,11 +159,6 @@ export async function saveResult(result: CardResult): Promise<void> {
   });
 }
 
-/**
- * Retrieves all results for a given session ID from IndexedDB.
- * @param sessionId The ID of the session to retrieve results for.
- * @returns A promise that resolves with an array of card results.
- */
 export async function getResults(sessionId: string): Promise<CardResult[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -108,7 +168,6 @@ export async function getResults(sessionId: string): Promise<CardResult[]> {
 
     request.onsuccess = () => {
       const allResults = request.result as StoredResult[];
-      // Filter results for the specific session
       resolve(allResults.filter(r => r.sessionId === sessionId));
     };
 
@@ -119,10 +178,6 @@ export async function getResults(sessionId: string): Promise<CardResult[]> {
   });
 }
 
-/**
- * Clears all results for a given session ID from IndexedDB.
- * @param sessionId The ID of the session to clear results for.
- */
 export async function clearResults(sessionId: string): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -147,77 +202,246 @@ export async function clearResults(sessionId: string): Promise<void> {
   });
 }
 
-// --- New Functions for Syncing ---
-
-/**
- * **2. Adds a completed session's ID to the sync queue.**
- * This is called when a session is completed offline.
- * @param sessionId The ID of the session to queue.
- */
 export async function queueSessionForSync(sessionId: string): Promise<void> {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
-        const store = transaction.objectStore(SYNC_QUEUE_STORE);
-        const request = store.add({ sessionId });
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
+    const store = transaction.objectStore(SYNC_QUEUE_STORE);
+    const request = store.add({ sessionId });
 
-        request.onsuccess = () => {
-            Logger.log(LogContext.SYSTEM, 'Session queued for sync', { sessionId });
-            resolve();
-        };
-        request.onerror = () => {
-            // It might fail if the session is already in the queue, which is fine.
-            if (request.error?.name === 'ConstraintError') {
-                Logger.log(LogContext.SYSTEM, 'Session already in sync queue', { sessionId });
-                return resolve();
-            }
-            Logger.error(LogContext.SYSTEM, 'Error queuing session for sync', { error: request.error });
-            reject('Could not queue session.');
-        };
-    });
+    request.onsuccess = () => {
+      Logger.log(LogContext.SYSTEM, 'Session queued for sync', { sessionId });
+      resolve();
+    };
+    request.onerror = () => {
+      if (request.error?.name === 'ConstraintError') {
+        Logger.log(LogContext.SYSTEM, 'Session already in sync queue', { sessionId });
+        return resolve();
+      }
+      Logger.error(LogContext.SYSTEM, 'Error queuing session for sync', { error: request.error });
+      reject('Could not queue session.');
+    };
+  });
 }
 
-/**
- * **3. Retrieves all session IDs from the sync queue.**
- * @returns A promise that resolves with an array of session IDs.
- */
 export async function getQueuedSessions(): Promise<string[]> {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(SYNC_QUEUE_STORE, 'readonly');
-        const store = transaction.objectStore(SYNC_QUEUE_STORE);
-        const request = store.getAll();
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(SYNC_QUEUE_STORE, 'readonly');
+    const store = transaction.objectStore(SYNC_QUEUE_STORE);
+    const request = store.getAll();
 
-        request.onsuccess = () => {
-            const queuedItems = request.result as QueuedSession[];
-            resolve(queuedItems.map(item => item.sessionId));
-        };
-        request.onerror = () => {
-            Logger.error(LogContext.SYSTEM, 'Error getting queued sessions', { error: request.error });
-            reject('Could not get queued sessions.');
-        };
-    });
+    request.onsuccess = () => {
+      const queuedItems = request.result as QueuedSession[];
+      resolve(queuedItems.map(item => item.sessionId));
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error getting queued sessions', { error: request.error });
+      reject('Could not get queued sessions.');
+    };
+  });
 }
 
-/**
- * **3. Removes a session ID from the sync queue.**
- * This is called after a session's data has been successfully sent to the server.
- * @param sessionId The ID of the session to remove.
- */
 export async function removeSessionFromQueue(sessionId: string): Promise<void> {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
-        const store = transaction.objectStore(SYNC_QUEUE_STORE);
-        const request = store.delete(sessionId);
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
+    const store = transaction.objectStore(SYNC_QUEUE_STORE);
+    const request = store.delete(sessionId);
 
-        request.onsuccess = () => {
-            Logger.log(LogContext.SYSTEM, 'Session removed from sync queue', { sessionId });
-            resolve();
-        };
-        request.onerror = () => {
-            Logger.error(LogContext.SYSTEM, 'Error removing session from sync queue', { error: request.error });
-            reject('Could not remove session from queue.');
-        };
-    });
+    request.onsuccess = () => {
+      Logger.log(LogContext.SYSTEM, 'Session removed from sync queue', { sessionId });
+      resolve();
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error removing session from sync queue', { error: request.error });
+      reject('Could not remove session from queue.');
+    };
+  });
+}
+
+// NEW: Offline Sets Management
+export async function saveOfflineSet(set: OfflineFlashcardSet): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
+    const store = transaction.objectStore(OFFLINE_SETS_STORE);
+    const request = store.put(set);
+
+    request.onsuccess = () => {
+      Logger.log(LogContext.SYSTEM, 'Offline set saved', { setId: set.setId });
+      resolve();
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error saving offline set', { error: request.error });
+      reject('Could not save offline set.');
+    };
+  });
+}
+
+export async function getOfflineSets(): Promise<OfflineFlashcardSet[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(OFFLINE_SETS_STORE, 'readonly');
+    const store = transaction.objectStore(OFFLINE_SETS_STORE);
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error getting offline sets', { error: request.error });
+      reject('Could not get offline sets.');
+    };
+  });
+}
+
+export async function getOfflineSet(setId: string): Promise<OfflineFlashcardSet | null> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(OFFLINE_SETS_STORE, 'readonly');
+    const store = transaction.objectStore(OFFLINE_SETS_STORE);
+    const request = store.get(setId);
+
+    request.onsuccess = () => {
+      resolve(request.result || null);
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error getting offline set', { error: request.error });
+      reject('Could not get offline set.');
+    };
+  });
+}
+
+export async function removeOfflineSet(setId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
+    const store = transaction.objectStore(OFFLINE_SETS_STORE);
+    const request = store.delete(setId);
+
+    request.onsuccess = () => {
+      Logger.log(LogContext.SYSTEM, 'Offline set removed', { setId });
+      resolve();
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error removing offline set', { error: request.error });
+      reject('Could not remove offline set.');
+    };
+  });
+}
+
+// NEW: Categories Management
+export async function saveCategory(category: Category): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(CATEGORIES_STORE, 'readwrite');
+    const store = transaction.objectStore(CATEGORIES_STORE);
+    const request = store.put(category);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error saving category', { error: request.error });
+      reject('Could not save category.');
+    };
+  });
+}
+
+export async function getCategories(): Promise<Category[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(CATEGORIES_STORE, 'readonly');
+    const store = transaction.objectStore(CATEGORIES_STORE);
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error getting categories', { error: request.error });
+      reject('Could not get categories.');
+    };
+  });
+}
+
+// NEW: Study History Management
+export async function saveStudyHistory(session: StudySessionHistory): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STUDY_HISTORY_STORE, 'readwrite');
+    const store = transaction.objectStore(STUDY_HISTORY_STORE);
+    const request = store.put(session);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error saving study history', { error: request.error });
+      reject('Could not save study history.');
+    };
+  });
+}
+
+export async function getStudyHistory(limit: number = 10): Promise<StudySessionHistory[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STUDY_HISTORY_STORE, 'readonly');
+    const store = transaction.objectStore(STUDY_HISTORY_STORE);
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      const results = request.result as StudySessionHistory[];
+      // Sort by start time descending and limit
+      const sorted = results
+        .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+        .slice(0, limit);
+      resolve(sorted);
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error getting study history', { error: request.error });
+      reject('Could not get study history.');
+    };
+  });
+}
+
+// NEW: Pending Changes Management
+export async function savePendingChange(change: PendingChange): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(PENDING_CHANGES_STORE, 'readwrite');
+    const store = transaction.objectStore(PENDING_CHANGES_STORE);
+    const request = store.put(change);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error saving pending change', { error: request.error });
+      reject('Could not save pending change.');
+    };
+  });
+}
+
+export async function getPendingChanges(): Promise<PendingChange[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(PENDING_CHANGES_STORE, 'readonly');
+    const store = transaction.objectStore(PENDING_CHANGES_STORE);
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error getting pending changes', { error: request.error });
+      reject('Could not get pending changes.');
+    };
+  });
+}
+
+export async function removePendingChange(changeId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(PENDING_CHANGES_STORE, 'readwrite');
+    const store = transaction.objectStore(PENDING_CHANGES_STORE);
+    const request = store.delete(changeId);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error removing pending change', { error: request.error });
+      reject('Could not remove pending change.');
+    };
+  });
 }

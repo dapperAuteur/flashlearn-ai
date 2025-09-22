@@ -1,14 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Flashcard } from '@/types/flashcard';
-import { CardResult, saveResult, getResults, clearResults, queueSessionForSync } from '@/lib/db/indexeddb';
+import { 
+  CardResult, 
+  saveResult, 
+  getResults, 
+  clearResults, 
+  queueSessionForSync,
+  getOfflineSet,
+  saveStudyHistory,
+  StudySessionHistory
+} from '@/lib/db/indexeddb';
 import { shuffleArray } from '@/lib/utils/arrayUtils';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-
-// --- 1. DEFINE THE SHAPE OF OUR CONTEXT STATE ---
 
 type StudyDirection = 'front-to-back' | 'back-to-front';
 type LastCardResult = 'correct' | 'incorrect' | null;
@@ -35,10 +41,14 @@ interface StudySessionState {
   studyDirection: StudyDirection;
   setStudyDirection: (direction: StudyDirection) => void;
 
-  // NEW: Confidence State
+  // Confidence State
   currentConfidenceRating: number | null;
   isConfidenceRequired: boolean;
   hasCompletedConfidence: boolean;
+  
+  // Offline indicator
+  isOfflineSession: boolean;
+  
   // Actions
   startSession: (listId: string, direction: StudyDirection) => Promise<void>;
   recordCardResult: (isCorrect: boolean, timeSeconds: number, confidenceRating?: number) => Promise<void>;
@@ -47,18 +57,10 @@ interface StudySessionState {
   resetSession: () => void;
 }
 
-// --- 2. CREATE THE CONTEXT ---
-// We provide a default empty implementation for type safety.
 const StudySessionContext = createContext<StudySessionState | undefined>(undefined);
 
-// --- 3. CREATE THE PROVIDER COMPONENT ---
-
-interface StudySessionProviderProps {
-  children: ReactNode;
-}
-
 export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
-  const { data: authSession, status } = useSession();
+  const { data: authSession } = useSession();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [flashcardSetName, setFlashcardSetName] = useState<string | null>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -70,11 +72,11 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [studyDirection, setStudyDirection] = useState<StudyDirection>('front-to-back');
   const [lastCardResult, setLastCardResult] = useState<LastCardResult>(null);
+  const [isOfflineSession, setIsOfflineSession] = useState(false);
 
-  // NEW: Confidence state
+  // Confidence state
   const [currentConfidenceRating, setCurrentConfidenceRating] = useState<number | null>(null);
   
-  // Confidence is required for all users
   const isConfidenceRequired = true;
   const hasCompletedConfidence = currentConfidenceRating !== null;
 
@@ -83,14 +85,70 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     setCurrentConfidenceRating(null);
   }, [currentIndex]);
 
-  // --- LOGIC MOVED FROM OLD COMPONENTS ---
-
   const startSession = useCallback(async (listId: string, direction: StudyDirection) => {
     setIsLoading(true);
     setError(null);
     setStudyDirection(direction);
+    setIsOfflineSession(false);
+    
     try {
-      Logger.log(LogContext.STUDY, "Attempting to start a new session.", { listId });
+      Logger.log(LogContext.STUDY, "Attempting to start session", { listId, direction });
+      
+      // STEP 1: Check offline storage first
+      const offlineSet = await getOfflineSet(listId);
+      
+      if (offlineSet) {
+        Logger.log(LogContext.STUDY, "Found offline set, starting offline session", { listId });
+        
+        if (!offlineSet.flashcards || offlineSet.flashcards.length === 0) {
+          setError("This offline set has no flashcards.");
+          setIsLoading(false);
+          return;
+        }
+
+        const shuffledCards = shuffleArray([...offlineSet.flashcards]).map(card => ({
+          ...card,
+          id: card._id,
+          tags: [],
+          listId: listId,
+          userId: authSession?.user?.id || 'offline-user',
+          difficulty: 1,
+          lastReviewed: undefined,
+          nextReviewDate: undefined,
+          correctCount: 0,
+          incorrectCount: 0,
+          stage: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }));
+        const generatedSessionId = `offline-${Date.now()}-${listId}`;
+
+        await clearResults(generatedSessionId);
+
+        setSessionId(generatedSessionId);
+        setFlashcards(shuffledCards);
+        setFlashcardSetName(offlineSet.title);
+        setCardResults([]);
+        setCurrentIndex(0);
+        setIsComplete(false);
+        setSessionStartTime(Date.now());
+        setCurrentConfidenceRating(null);
+        setIsOfflineSession(true);
+        
+        Logger.log(LogContext.STUDY, "Offline session started successfully", { sessionId: generatedSessionId });
+        setIsLoading(false);
+        return;
+      }
+
+      // STEP 2: If not offline, try online API
+      if (!navigator.onLine) {
+        setError("No internet connection and this set is not available offline. Please enable offline mode for this set when online.");
+        setIsLoading(false);
+        return;
+      }
+
+      Logger.log(LogContext.STUDY, "No offline set found, trying online API", { listId });
+      
       const response = await fetch('/api/study/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,15 +163,15 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
       const data: { sessionId: string; setName: string; flashcards: Flashcard[] } = await response.json();
 
       if (!data.flashcards || data.flashcards.length === 0) {
-        Logger.warning(LogContext.STUDY, "Attempted to start a session with an empty list.", { listId });
+        Logger.warning(LogContext.STUDY, "Attempted to start session with empty list", { listId });
         setError("This list has no flashcards. Please add cards to it or choose another list.");
         setIsLoading(false);
-        return; // Stop execution here.
+        return;
       }
 
       const shuffledCards = shuffleArray(data.flashcards);
 
-      await clearResults(data.sessionId); // Clear any old data for this session
+      await clearResults(data.sessionId);
 
       setSessionId(data.sessionId);
       setFlashcards(shuffledCards);
@@ -123,54 +181,79 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
       setIsComplete(false);
       setSessionStartTime(Date.now());
       setCurrentConfidenceRating(null);
-      Logger.log(LogContext.STUDY, "Session started successfully.", { sessionId: data.sessionId });
+      setIsOfflineSession(false);
+      
+      Logger.log(LogContext.STUDY, "Online session started successfully", { sessionId: data.sessionId });
+      
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(message);
-      Logger.error(LogContext.STUDY, "Failed to start session.", { listId, error: message });
+      Logger.error(LogContext.STUDY, "Failed to start session", { listId, error: message });
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   const completeSession = useCallback(async () => {
-    if (!sessionId) return;
+    if (!sessionId || !sessionStartTime) return;
 
     console.log('completeSession - cardResults length:', cardResults.length);
-    console.log('completeSession - cardResults:', cardResults);
-    // Get fresh results from IndexedDB to ensure we have all data
-  try {
-    const freshResults = await getResults(sessionId);
-    console.log('completeSession - fresh results from IndexedDB:', freshResults);
     
-    // Update cardResults with fresh data before completing
-    setCardResults(freshResults);
-
-    // For now, we'll just handle local queuing. Server sync logic can be added later.
-    Logger.log(LogContext.STUDY, "Session completed. Queuing for sync.", { sessionId });
-    // Sync to server immediately if authenticated
-  if (authSession?.user?.id && flashcards.length > 0) {
     try {
-      await fetch('/api/study/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          setId: flashcards[0]?.listId, // Get setId from flashcard
-          results: freshResults // Use fresh results for sync 
-        })
-      });
+      const freshResults = await getResults(sessionId);
+      console.log('completeSession - fresh results from IndexedDB:', freshResults);
+      
+      setCardResults(freshResults);
+
+      // Create study history entry
+      const historyEntry: StudySessionHistory = {
+        sessionId,
+        setId: String(flashcards[0]?.listId) || 'unknown',
+        setName: flashcardSetName || 'Unknown Set',
+        startTime: new Date(sessionStartTime),
+        endTime: new Date(),
+        totalCards: flashcards.length,
+        correctCount: freshResults.filter(r => r.isCorrect).length,
+        incorrectCount: freshResults.filter(r => !r.isCorrect).length,
+        accuracy: freshResults.length > 0 
+          ? (freshResults.filter(r => r.isCorrect).length / freshResults.length) * 100 
+          : 0,
+        durationSeconds: Math.round(freshResults.reduce((total, result) => total + result.timeSeconds, 0)),
+        isOfflineSession
+      };
+
+      // Save to study history
+      await saveStudyHistory(historyEntry);
+      Logger.log(LogContext.STUDY, "Study history saved", { sessionId });
+
+      // Sync to server if online and authenticated
+      if (authSession?.user?.id && flashcards.length > 0 && navigator.onLine) {
+        try {
+          await fetch('/api/study/sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              setId: flashcards[0]?.listId,
+              results: freshResults
+            })
+          });
+          Logger.log(LogContext.STUDY, "Session synced to server", { sessionId });
+        } catch (error) {
+          Logger.error(LogContext.STUDY, "Failed to sync session to server", { error });
+        }
+      }
+      
+      await queueSessionForSync(sessionId);
+      setIsComplete(true);
+      setTimeout(() => {
+        window.location.href = `/study/results/${sessionId}`;
+      }, 100);
+      
     } catch (error) {
-      Logger.error(LogContext.STUDY, "Failed to sync session", { error });
+      Logger.error(LogContext.STUDY, "Error completing session", { error });
+      setIsComplete(true);
     }
-  }
-  
-  await queueSessionForSync(sessionId);
-  setIsComplete(true);
-} catch (error) {
-    Logger.error(LogContext.STUDY, "Error getting results for completion", { error });
-    setIsComplete(true); // Complete anyway to avoid stuck state
-  }
-}, [sessionId, authSession, flashcards, cardResults]); 
+  }, [sessionId, authSession, flashcards, cardResults, sessionStartTime, flashcardSetName, isOfflineSession]); 
 
   const recordConfidence = useCallback((rating: number) => {
     if (rating < 1 || rating > 5) return;
@@ -192,31 +275,25 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
       confidenceRating: finalConfidenceRating ?? undefined
     };
 
-    // DEBUG: Log what we're creating
-  console.log('recordCardResult - creating result:', result);
-  console.log('recordCardResult - currentConfidenceRating:', currentConfidenceRating);
-  console.log('recordCardResult - finalConfidenceRating:', finalConfidenceRating);
+    console.log('recordCardResult - creating result:', result);
 
     setCardResults(prev => {
       const newResults = [...prev, result];
-    console.log('recordCardResult - updated cardResults:', newResults);
-    return newResults;
+      console.log('recordCardResult - updated cardResults:', newResults);
+      return newResults;
     });
+    
     await saveResult(result);
-
-    // Instead of incrementing currentIndex, we set the result for the feedback screen.
     setLastCardResult(isCorrect ? 'correct' : 'incorrect');
   }, [sessionId, currentIndex, flashcards, currentConfidenceRating]);
 
-  // NEW: This action is called by the feedback screen to advance the session.
   const showNextCard = useCallback(() => {
-    setLastCardResult(null); // Hide the feedback screen
+    setLastCardResult(null);
     setCurrentConfidenceRating(null);
     const nextIndex = currentIndex + 1;
     if (nextIndex < flashcards.length) {
       setCurrentIndex(nextIndex);
     } else {
-      // If that was the last card, complete the session.
       completeSession();
     }
   }, [currentIndex, flashcards.length, completeSession]);
@@ -232,7 +309,8 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     setSessionStartTime(null);
     setLastCardResult(null);
     setCurrentConfidenceRating(null);
-    Logger.log(LogContext.STUDY, "Session reset.");
+    setIsOfflineSession(false);
+    Logger.log(LogContext.STUDY, "Session reset");
   }, [sessionId]);
 
   const value = {
@@ -256,6 +334,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     isConfidenceRequired,
     hasCompletedConfidence,
     recordConfidence,
+    isOfflineSession,
   };
 
   return (
@@ -263,7 +342,6 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// --- 5. CREATE THE CUSTOM HOOK ---
 export const useStudySession = (): StudySessionState => {
   const context = useContext(StudySessionContext);
   if (context === undefined) {

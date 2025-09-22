@@ -1,20 +1,30 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useRef, useState, useMemo } from 'react';
 import { toPng } from 'html-to-image';
-// REMOVED: No longer need to import from 'chart.js' directly
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { IStudySession } from '@/models/StudySession';
 import ConfidenceResults from './ConfidenceResults';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
-// REMOVED: The registration line is no longer needed here.
-// ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface ShareableResultsCardProps {
-  initialResults: IStudySession & { setName?: string };
-  cardResults?: any[]; // Add this
+  initialResults: {
+    _id: string;
+    totalCards: number;
+    correctCount: number;
+    incorrectCount: number;
+    completedCards: number;
+    durationSeconds: number;
+    setName?: string;
+    startTime?: Date;
+    endTime?: Date;
+  };
+  cardResults?: any[];
 }
 
 
