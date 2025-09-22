@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -12,8 +13,18 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface ShareableResultsCardProps {
-  initialResults: IStudySession & { setName?: string };
-  cardResults?: any[]; // Add this
+  initialResults: {
+    _id: string;
+    totalCards: number;
+    correctCount: number;
+    incorrectCount: number;
+    completedCards: number;
+    durationSeconds: number;
+    setName?: string;
+    startTime?: Date;
+    endTime?: Date;
+  };
+  cardResults?: any[];
 }
 
 
