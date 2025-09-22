@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -72,7 +73,7 @@ export interface PendingChange {
   id: string;
   type: 'create' | 'update' | 'delete';
   entity: 'set' | 'category' | 'flashcard';
-  data: OfflineFlashcardSet | Category | { _id: string; front: string; back: string; };
+  data: any; // Keep as any for flexibility with different update types
   timestamp: Date;
   retryCount: number;
 }

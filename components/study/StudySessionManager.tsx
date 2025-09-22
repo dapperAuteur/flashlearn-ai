@@ -47,6 +47,11 @@ export default function StudySessionManager() {
   useEffect(() => {
     setIsFlipped(false);
   }, [currentIndex]);
+  useEffect(() => {
+    if (isComplete && sessionId) {
+      window.location.href = `/study/results/${sessionId}`;
+    }
+  }, [isComplete, sessionId]);
 
   useEffect(() => {
     if (!sessionStartTime || isComplete) { return; }

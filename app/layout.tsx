@@ -5,6 +5,8 @@ import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import PublicHeader from '@/components/layout/PublicHeader';
 import { usePathname } from 'next/navigation';
+import '@/lib/services/syncService';
+import { StudySessionProvider } from '@/contexts/StudySessionContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,8 +25,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          {showPublicHeader && <PublicHeader />}
-          {children}
+          <StudySessionProvider>
+            {showPublicHeader && <PublicHeader />}
+            {children}
+          </StudySessionProvider>
         </AuthProvider>
       </body>
     </html>

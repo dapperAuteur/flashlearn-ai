@@ -245,6 +245,9 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
       
       await queueSessionForSync(sessionId);
       setIsComplete(true);
+      setTimeout(() => {
+        window.location.href = `/study/results/${sessionId}`;
+      }, 100);
       
     } catch (error) {
       Logger.error(LogContext.STUDY, "Error completing session", { error });
