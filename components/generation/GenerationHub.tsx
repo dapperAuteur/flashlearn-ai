@@ -8,7 +8,8 @@ import {
   SpeakerWaveIcon, 
   VideoCameraIcon,
   PencilIcon,
-  LinkIcon 
+  LinkIcon,
+  TableCellsIcon
 } from '@heroicons/react/24/outline';
 import PDFUploader from './PDFUploader';
 import ImageUploader from './ImageUploader';
@@ -16,8 +17,9 @@ import AudioUploader from './AudioUploader';
 import VideoUploader from './VideoUploader';
 import TextGenerator from './TextGenerator';
 import YouTubeGenerator from './YouTubeGenerator';
+import CSVUploader from './CSVUploader';
 
-type GenerationType = 'text' | 'pdf' | 'images' | 'audio' | 'video' | 'youtube';
+type GenerationType = 'text' | 'pdf' | 'images' | 'audio' | 'video' | 'youtube' | 'csv';
 
 interface GenerationOption {
   id: GenerationType;
@@ -38,6 +40,15 @@ const generationOptions: GenerationOption[] = [
     color: 'text-blue-600',
     bgColor: 'bg-gradient-to-br from-blue-50 to-blue-100',
     borderColor: 'border-blue-200 hover:border-blue-300',
+  },
+  {
+    id: 'csv',
+    title: 'CSV Upload',
+    description: 'Import pre-made flashcards from a CSV file with instant preview',
+    icon: TableCellsIcon,
+    color: 'text-emerald-600',
+    bgColor: 'bg-gradient-to-br from-emerald-50 to-emerald-100',
+    borderColor: 'border-emerald-200 hover:border-emerald-300',
   },
   {
     id: 'pdf',
@@ -93,6 +104,8 @@ export function GenerationHub() {
     switch (selectedType) {
       case 'text':
         return <TextGenerator onBack={() => setSelectedType(null)} />;
+      case 'csv':
+        return <CSVUploader onBack={() => setSelectedType(null)} />;
       case 'pdf':
         return <PDFUploader onBack={() => setSelectedType(null)} />;
       case 'images':
@@ -174,15 +187,20 @@ export function GenerationHub() {
           </div>
           <div>
             <h4 className="font-semibold text-gray-900 mb-2 text-lg">
-              AI-Powered Processing
+              Smart Content Processing
             </h4>
             <p className="text-gray-700 text-sm leading-relaxed mb-3">
-              All content types are processed using advanced AI to create high-quality flashcards. 
-              Large files are processed in the background - you&apos;ll receive an email when they&apos;re ready!
+              CSV files are processed instantly in your browser for immediate preview, while other content types use advanced AI to create high-quality flashcards.
             </p>
-            <div className="flex items-center space-x-2 text-xs text-blue-600 font-medium">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span>Rate limit: 1 AI generation per hour</span>
+            <div className="flex items-center space-x-4 text-xs text-blue-600 font-medium">
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                <span>CSV: Instant preview</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span>AI: 1 generation per hour</span>
+              </div>
             </div>
           </div>
         </div>
