@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, SetStateAction } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeftIcon, PencilIcon, SparklesIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { FlashcardResult } from '@/components/flashcards/FlashcardResult';
@@ -11,12 +12,20 @@ interface TextGeneratorProps {
   onBack: () => void;
 }
 
+interface SavedSetData {
+  _id: string;
+  title: string;
+  isPublic: boolean;
+  cardCount: number;
+}
+
 export default function TextGenerator({ onBack }: TextGeneratorProps) {
   const [prompt, setPrompt] = useState('');
   const [flashcards, setFlashcards] = useState<IFlashcardClient[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rateLimitExceeded, setRateLimitExceeded] = useState(false);
+  const [savedSetData, setSavedSetData] = useState<SavedSetData | null>(null);
 
   useEffect(() => {
     checkRateLimit();
@@ -32,6 +41,10 @@ export default function TextGenerator({ onBack }: TextGeneratorProps) {
     }
   };
 
+  const handleSaveSuccess = (setData: SavedSetData) => {
+    setSavedSetData(setData);
+    // Don't reset flashcards here - let FlashcardResult manage the display
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -219,15 +232,14 @@ export default function TextGenerator({ onBack }: TextGeneratorProps) {
 
       {/* Results */}
       <FlashcardResult 
-        flashcards={flashcards} 
-        initialTitle={prompt} 
-        source="Text Prompt" 
-        onSaveSuccess={() => { 
-          setFlashcards([]); 
-          setPrompt(''); 
-          checkRateLimit();
-        }} 
-      />
+        flashcards={flashcards}
+        initialTitle={prompt}
+        source="Text Prompt"
+        onSaveSuccess={handleSaveSuccess}
+        savedSetData={null}
+        setSavedSetData={setSavedSetData} onStartOver={function (): void {
+          throw new Error('Function not implemented.');
+        } }      />
     </div>
   );
 }

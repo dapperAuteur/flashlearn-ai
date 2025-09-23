@@ -5,6 +5,7 @@ import { signOut } from 'next-auth/react';
 // import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, LogOut, Settings } from 'lucide-react';
+import Image from 'next/image';
 
 
 interface UserMenuProps {
@@ -47,7 +48,7 @@ export default function UserMenu({user}: UserMenuProps) {
       >
         <span className="sr-only">Open user menu</span>
         {user.image ? (
-          <img
+          <Image
             className="h-8 w-8 rounded-full"
             src={user.image}
             alt={user.name || "User"}

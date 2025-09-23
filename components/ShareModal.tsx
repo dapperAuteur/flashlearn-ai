@@ -1,6 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  XMarkIcon, 
+  ClipboardDocumentIcon, 
+  CheckIcon,
+  ShareIcon,
+  // EnvelopeIcon
+} from '@heroicons/react/24/outline';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -18,15 +26,11 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title }: ShareMo
     }
   }, [isOpen]);
 
-  if (!isOpen) {
-    return null;
-  }
-
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
+      setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
       // Fallback for older browsers
@@ -49,51 +53,127 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title }: ShareMo
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(`Check out this flashcard set: ${title}`);
 
+  const shareOptions = [
+    {
+      name: 'Twitter',
+      url: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+      color: 'bg-blue-500 hover:bg-blue-600',
+      icon: '𝕏'
+    },
+    {
+      name: 'Facebook',
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      color: 'bg-blue-600 hover:bg-blue-700',
+      icon: 'f'
+    },
+    {
+      name: 'Email',
+      url: `mailto:?subject=${encodedTitle}&body=Check out this flashcard set I made on FlashLearn AI: ${encodedUrl}`,
+      color: 'bg-gray-600 hover:bg-gray-700',
+      icon: '✉'
+    }
+  ];
+
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 transition-opacity duration-300"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md transform transition-transform duration-300 scale-95"
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
-      >
-        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Share This Set</h2>
-        
-        <div className="flex items-center space-x-2 mb-4">
-          <input
-            type="text"
-            readOnly
-            value={shareUrl}
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300"
-          />
-          <button
-            onClick={handleCopy}
-            className={`px-4 py-2 rounded-md text-white font-semibold ${isCopied ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'}`}
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 bg-blue-100 bg-opacity-60 flex justify-center items-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative"
+            onClick={(e) => e.stopPropagation()}
           >
-            {isCopied ? 'Copied!' : 'Copy'}
-          </button>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <ShareIcon className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Share This Set</h2>
+                  <p className="text-sm text-gray-600">&quot;{title}&quot;</p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Copy URL Section */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Share Link
+              </label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={shareUrl}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm focus:outline-none"
+                />
+                <motion.button
+                  onClick={handleCopy}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                    isCopied 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {isCopied ? (
+                    <div className="flex items-center space-x-1">
+                      <CheckIcon className="h-4 w-4" />
+                      <span>Copied!</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-1">
+                      <ClipboardDocumentIcon className="h-4 w-4" />
+                      <span>Copy</span>
+                    </div>
+                  )}
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Social Share Options */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Share On
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {shareOptions.map((option) => (
+                  <motion.a
+                    key={option.name}
+                    href={option.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`${option.color} text-white px-4 py-3 rounded-lg font-medium text-sm text-center transition-colors flex flex-col items-center space-y-1`}
+                  >
+                    <span className="text-lg">{option.icon}</span>
+                    <span>{option.name}</span>
+                  </motion.a>
+                ))}
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 rounded-lg transition-colors"
+            >
+              Close
+            </button>
+          </motion.div>
         </div>
-        
-        <div className="flex justify-center space-x-4">
-            <a href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-500">
-                {/* SVG for Twitter */}
-            </a>
-            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-800">
-                {/* SVG for Facebook */}
-            </a>
-            <a href={`mailto:?subject=${encodedTitle}&body=Check out this flashcard set I made on Flashlearn AI: ${encodedUrl}`} className="text-gray-500 hover:text-red-500">
-                {/* SVG for Email */}
-            </a>
-        </div>
-        
-        <button
-          onClick={onClose}
-          className="w-full mt-6 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded"
-        >
-          Close
-        </button>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

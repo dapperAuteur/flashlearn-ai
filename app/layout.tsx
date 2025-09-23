@@ -18,7 +18,7 @@ export default function RootLayout({
   const pathname = usePathname();
   
   // Show public header for these routes
-  const publicRoutes = ['/study', '/generate', '/'];
+  const publicRoutes = ['/study', '/sets', '/generate', '/'];
   const showPublicHeader = publicRoutes.includes(pathname);
 
   return (

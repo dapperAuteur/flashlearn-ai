@@ -6,7 +6,7 @@ import { Logger, LogContext } from '@/lib/logging/logger';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { jobId: string } }
+  context: { params: Promise<{ jobId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   

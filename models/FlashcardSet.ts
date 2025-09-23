@@ -31,7 +31,7 @@ export interface IFlashcardSet extends Document {
   cardCount: number;
   description?: string;
   isPublic: boolean;
-  source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV';
+  source: 'Text Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV';
   flashcards: IFlashcard[];
   parentSetId?: mongoose.Types.ObjectId; // Optional link to the original, complete set
   createdAt: Date;
