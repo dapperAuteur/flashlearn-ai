@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
+import dbConnect from "@/lib/db/dbConnect"; // Import the dbConnect utility
 import { User } from "@/models/User";
 import { Profile } from "@/models/Profile"; // Import the Profile model
 import { FlashcardSet } from "@/models/FlashcardSet";
 import { z } from "zod";
 import { apiLogger, analytics } from "@/lib/logging/flashcard-logger";
-import mongoose, { Types } from "mongoose";
+import { Types, MongooseError } from "mongoose";
 
 // Define the expected shape of the incoming request body
 const saveSetSchema = z.object({
@@ -27,11 +28,7 @@ interface LeanUser {
 
 export async function POST(request: NextRequest) {
   try {
-    const MONGODB_URI = process.env.MONGODB_URI;
-    if (!MONGODB_URI) {
-      throw new Error("MONGODB_URI is not defined in environment variables.");
-    }
-    await mongoose.connect(MONGODB_URI);
+    await dbConnect(); // Use the dbConnect utility
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -106,10 +103,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Flashcard save error:", error);
     apiLogger.error("An unexpected error occurred while saving a flashcard set.", request, { error });
-    if (error instanceof mongoose.Error.ValidationError) {
+    if (error instanceof MongooseError && 'name' in error && error.name === 'ValidationError' && 'errors' in error) {
         return NextResponse.json({ error: 'Database validation failed', details: error.errors }, { status: 400 });
     }
     return NextResponse.json({ error: "An internal server error occurred." }, { status: 500 });
   }
 }
-

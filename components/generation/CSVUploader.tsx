@@ -21,12 +21,20 @@ interface CSVUploaderProps {
   onBack: () => void;
 }
 
+interface SavedSetData {
+  _id: string;
+  title: string;
+  isPublic: boolean;
+  cardCount: number;
+}
+
 export default function CSVUploader({ onBack }: CSVUploaderProps) {
   const { data: session, status } = useSession();
   
   // Core state
   const [flashcards, setFlashcards] = useState<IFlashcard[]>([]);
   const [fileName, setFileName] = useState('');
+  const [savedSetData, setSavedSetData] = useState<SavedSetData | null>(null);
   
   // UI state
   const [isUploading, setIsUploading] = useState(false);
@@ -108,7 +116,7 @@ export default function CSVUploader({ onBack }: CSVUploaderProps) {
 
   const downloadTemplate = () => {
     Logger.log(LogContext.FLASHCARD, 'Downloading CSV template');
-    const templateContent = `"front","back"\n"What is the capital of France?","Paris"\n"What is 2 + 2?","4"`;
+    const templateContent = `"front","back"\n"What is the capital of France?","Paris"\n"What is 2 + 2?","4"`; // replace with file that shows user all options
     const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -135,6 +143,17 @@ export default function CSVUploader({ onBack }: CSVUploaderProps) {
     if (!fileName) return 'Flashcards from CSV';
     const nameWithoutExtension = fileName.replace(/\.csv$/i, '');
     return sanitizeString(nameWithoutExtension).replace(/_/g, ' ');
+  };
+
+  const handleSaveSuccess = (setData: SavedSetData) => {
+    setSavedSetData(setData);
+    // Don't reset flashcards here - let FlashcardResult manage the display
+  };
+  const handleStartOver = () => {
+    setSavedSetData(null);
+    setFlashcards([]);
+    setFileName('');
+    setFlippedCards(new Set());
   };
 
   return (
@@ -293,11 +312,10 @@ export default function CSVUploader({ onBack }: CSVUploaderProps) {
             flashcards={flashcards}
             initialTitle={getInitialTitle()}
             source="CSV"
-            onSaveSuccess={() => {
-              setFlashcards([]);
-              setFileName('');
-              setFlippedCards(new Set());
-            }}
+            savedSetData={savedSetData}
+            setSavedSetData={setSavedSetData}
+            onSaveSuccess={handleSaveSuccess}
+            onStartOver={handleStartOver}
           />
         </motion.div>
       )}
