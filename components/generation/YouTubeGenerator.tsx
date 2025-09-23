@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, SetStateAction } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeftIcon, LinkIcon, SparklesIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { FlashcardResult } from '@/components/flashcards/FlashcardResult';
@@ -11,12 +12,20 @@ interface YouTubeGeneratorProps {
   onBack: () => void;
 }
 
+interface SavedSetData {
+  _id: string;
+  title: string;
+  isPublic: boolean;
+  cardCount: number;
+}
+
 export default function YouTubeGenerator({ onBack }: YouTubeGeneratorProps) {
   const [videoUrl, setVideoUrl] = useState('');
   const [flashcards, setFlashcards] = useState<IFlashcard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rateLimitExceeded, setRateLimitExceeded] = useState(false);
+  const [savedSetData, setSavedSetData] = useState<SavedSetData | null>(null);
 
   useEffect(() => {
     checkRateLimit();
@@ -30,6 +39,15 @@ export default function YouTubeGenerator({ onBack }: YouTubeGeneratorProps) {
     } catch (error) {
       console.error('Rate limit check failed:', error);
     }
+  };
+
+  const handleSaveSuccess = (setData: SavedSetData) => {
+    setSavedSetData(setData);
+    // Don't reset flashcards here - let FlashcardResult manage the display
+  };
+  const handleStartOver = () => {
+    setSavedSetData(null);
+    setFlashcards([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,15 +223,13 @@ export default function YouTubeGenerator({ onBack }: YouTubeGeneratorProps) {
 
       {/* Results */}
       <FlashcardResult 
-        flashcards={flashcards} 
-        initialTitle="Flashcards from YouTube" 
-        source="YouTube" 
-        onSaveSuccess={() => { 
-          setFlashcards([]); 
-          setVideoUrl(''); 
-          checkRateLimit();
-        }} 
-      />
+        flashcards={flashcards}
+        initialTitle="Flashcards from YouTube"
+        source="YouTube"
+        onSaveSuccess={handleSaveSuccess}
+        savedSetData={null}
+        setSavedSetData={setSavedSetData}
+        onStartOver={handleStartOver}      />
     </div>
   );
 }
