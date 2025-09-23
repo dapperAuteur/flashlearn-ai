@@ -22,7 +22,7 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 interface FlashcardResultProps {
   flashcards: IFlashcard[];
   initialTitle: string;
-  source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV' | 'Text' | 'Video';
+  source: 'Text Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV' | 'Text' | 'Video';
   savedSetData: SavedSetData | null;
   setSavedSetData: React.Dispatch<React.SetStateAction<SavedSetData | null>>;
   onSaveSuccess: (setData: SavedSetData) => void;
