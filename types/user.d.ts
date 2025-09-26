@@ -6,7 +6,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   role: 'Student' | 'Admin';
-  subscriptionTier: 'Free' | 'Lifetime Learner';
+  subscriptionTier: 'Free' | 'Active' | 'Inactive' | 'Lifetime Learner';
   profiles: Schema.Types.ObjectId[];
   stripeCustomerId?: string;
   aiGenerationCount: number;
