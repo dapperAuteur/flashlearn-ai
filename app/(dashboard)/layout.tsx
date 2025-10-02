@@ -1,8 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { PowerSyncContext } from '@powersync/react';
+import { initPowerSync } from '@/lib/powersync/client';
+import { FlashcardProvider } from '@/contexts/FlashcardContext';
 import { useSync } from '@/hooks/useSync';
 import OfflineIndicator from '@/components/ui/OfflineIndicator';
 import Header from '@/components/layout/Header';
@@ -29,6 +32,9 @@ export default function DashboardLayout({
   completeOnboarding,
   skipOnboarding,
 } = useOnboarding();
+  const [powerSync, setPowerSync] = useState<Awaited<ReturnType<typeof initPowerSync>> | null>(null);
+  
+
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -37,8 +43,12 @@ export default function DashboardLayout({
     }
   }, [status, router]);
 
+  useEffect(() => {
+    initPowerSync().then(setPowerSync);
+  }, []);
+
   // Show loading state while checking authentication
-  if (status === 'loading') {
+  if (status === 'loading' || !powerSync) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -55,25 +65,29 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {children}
-        </div>
-      </main>
+    <PowerSyncContext.Provider value={powerSync}>
+          <FlashcardProvider>
+        <div className="min-h-screen bg-gray-50">
+          <Header />
+          
+          <main className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
+          </main>
 
-      <OfflineIndicator isOnline={isOnline} />
-      <Toaster />
-      <OnboardingModal
-        isOpen={showOnboarding}
-        currentStep={currentStep}
-        onNext={nextStep}
-        onPrevious={previousStep}
-        onComplete={completeOnboarding}
-        onSkip={skipOnboarding}
-      />
-    </div>
+          <OfflineIndicator isOnline={isOnline} />
+          <Toaster />
+          <OnboardingModal
+            isOpen={showOnboarding}
+            currentStep={currentStep}
+            onNext={nextStep}
+            onPrevious={previousStep}
+            onComplete={completeOnboarding}
+            onSkip={skipOnboarding}
+          />
+        </div>
+        </FlashcardProvider>
+    </PowerSyncContext.Provider>
   );
 }
