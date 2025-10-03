@@ -66,7 +66,7 @@ export default function DashboardLayout({
 
   return (
     <PowerSyncContext.Provider value={powerSync}>
-          <FlashcardProvider>
+      <FlashcardProvider>
         <div className="min-h-screen bg-gray-50">
           <Header />
           
@@ -87,7 +87,7 @@ export default function DashboardLayout({
             onSkip={skipOnboarding}
           />
         </div>
-        </FlashcardProvider>
+      </FlashcardProvider>
     </PowerSyncContext.Provider>
   );
 }
