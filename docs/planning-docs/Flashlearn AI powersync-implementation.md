@@ -75,7 +75,7 @@ This checklist covers the complete implementation of PowerSync for offline-first
 
 ### Create Backend Sync Endpoint
 
-- [ ] Create `app/api/powersync/route.ts`
+- [x] Create `app/api/powersync/route.ts`
   - [ ] Implement POST handler with authentication
     - [ ] Use `getServerSession(authOptions)`
     - [ ] Return 401 if not authenticated
