@@ -30,7 +30,7 @@ export async function initPowerSync(): Promise<PowerSyncDatabase> {
 
     await powerSyncInstance.init();
 
-    Logger.log(LogContext.SYSTEM, 'PowerSync initialized successfully', {
+    Logger.info(LogContext.SYSTEM, 'PowerSync initialized successfully', {
       dbName: 'flashlearnai.db',
       tables: Object.keys(AppSchema.tables),
     });
