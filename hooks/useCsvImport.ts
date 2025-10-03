@@ -1,15 +1,14 @@
 import { useState, useRef } from 'react';
 import Papa from 'papaparse';
-import { useFlashcards } from '@/contexts/FlashcardContext';
 import { Flashcard, processCsvContent, sanitizeString } from '@/lib/utils/flashcards/helpers';
-import { useSession } from 'next-auth/react';
 
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // This Hook encapsulates all logic related to CSV file import.
-export const useCsvImport = () => {
-  const { createFlashcardSet } = useFlashcards();
-  const { data: session } = useSession();
+export const useCsvImport = (
+  setFlashcards: React.Dispatch<React.SetStateAction<Flashcard[]>>,
+  setTopicAndTitle: (topic: string) => void
+    ) => {
 
     const [isUploading, setIsUploading] = useState(false);
     const [csvError, setCsvError] = useState<string | null>(null);
@@ -22,7 +21,7 @@ export const useCsvImport = () => {
         fileInputRef.current?.click();
     };
 
-    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     if (!file.name.toLowerCase().endsWith('.csv')) {
@@ -30,47 +29,25 @@ export const useCsvImport = () => {
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
-    if (!session?.user?.id) {
-      setCsvError("You must be signed in to import flashcards.");
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
 
         setIsUploading(true);
-        // setFlashcards([]);
-        // setTopicAndTitle('');
+        setFlashcards([]);
+        setTopicAndTitle('');
 
         Papa.parse(file, {
             header: true,
             skipEmptyLines: true,
-            complete: async (results) => {
+            complete: (results) => {
                 const processed = processCsvContent(results.data as Flashcard[], file.name);
 
-                if (processed.flashcards && processed.flashcards.length > 0) {
-          try {
-            const title = sanitizeString(file.name.replace(/\.csv$/i, '')).replace(/_/g, ' ');
+                if (processed.flashcards) {
+                    setFlashcards(processed.flashcards);
+                    const newTopic = sanitizeString(file.name.replace(/\.csv$/i, '')).replace(/_/g, ' ');
+                    setTopicAndTitle(newTopic);
             
-            await createFlashcardSet({
-              user_id: session.user.id,
-              title,
-              description: `Imported from ${file.name}`,
-              is_public: 0,
-              card_count: processed.flashcards.length,
-              source: 'CSV',
-              is_deleted: 0,
-            });
-            // TODO: Create individual flashcard records in next step
+            setCsvError(null);
+            setShowTemplateButton(false);
             
-            Logger.log(LogContext.FLASHCARD, 'CSV imported successfully', { 
-              title, 
-              cardCount: processed.flashcards.length 
-            });
-                    setCsvError(null);
-                    setShowTemplateButton(false);
-                    } catch (error) {
-            Logger.error(LogContext.FLASHCARD, 'Failed to save imported set', { error });
-            setCsvError('Failed to save flashcard set. Please try again.');
-          }
                 } else {
                     setCsvError(processed.error ?? 'An unknown error occurred during CSV processing.');
                     if (processed.error?.includes('header')) {
