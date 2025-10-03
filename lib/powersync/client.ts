@@ -21,21 +21,42 @@ export async function initPowerSync(): Promise<PowerSyncDatabase> {
   try {
     Logger.log(LogContext.SYSTEM, 'Initializing PowerSync database');
 
-    powerSyncInstance = new PowerSyncDatabase({
+    const db = new PowerSyncDatabase({
       schema: AppSchema,
       database: {
         dbFilename: 'flashlearnai.db', // IndexedDB database name
       },
+      flags: {
+        useWebWorker: false, // Fix worker script error
+      },
     });
 
-    await powerSyncInstance.init();
+    // Wait for ready state
+
+    // await new Promise((resolve) => {
+    //   if (powerSyncInstance!.ready) {
+    //     resolve(true);
+    //   } else {
+    //     const checkReady = setInterval(() => {
+    //       console.log('Checking ready state:', powerSyncInstance!.ready);
+    //       if (powerSyncInstance!.ready) {
+    //         clearInterval(checkReady);
+    //         resolve(true);
+    //       }
+    //     }, 100);
+    //   }
+    // });
+    
 
     Logger.info(LogContext.SYSTEM, 'PowerSync initialized successfully', {
       dbName: 'flashlearnai.db',
       tables: Object.keys(AppSchema.tables),
     });
 
-    return powerSyncInstance;
+    await db.init();
+
+    powerSyncInstance = db;
+    return db;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     Logger.error(LogContext.SYSTEM, 'Failed to initialize PowerSync', {
