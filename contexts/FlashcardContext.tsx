@@ -4,7 +4,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePowerSync, useQuery } from '@powersync/react';
-import { PowerSyncFlashcardSet, PowerSyncOfflineSet, generateMongoId, boolToInt } from '@/lib/powersync/schema';
+import { PowerSyncFlashcardSet, PowerSyncOfflineSet, generateMongoId, PowerSyncFlashcard, boolToInt } from '@/lib/powersync/schema';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { getPowerSync } from '@/lib/powersync/client';
 
@@ -15,6 +15,7 @@ interface FlashcardContextType {
   isSyncing: boolean;
   isOnline: boolean;
   createFlashcardSet: (set: Omit<PowerSyncFlashcardSet, 'id' | 'created_at' | 'updated_at'>) => Promise<string>;
+  createFlashcard: (card: Omit<PowerSyncFlashcard, 'id' | 'created_at' | 'updated_at'>) => Promise<string>; // Add this
   updateFlashcardSet: (id: string, updates: Partial<PowerSyncFlashcardSet>) => Promise<void>;
   deleteFlashcardSet: (id: string) => Promise<void>;
   toggleOfflineAvailability: (setId: string) => Promise<void>;
@@ -86,6 +87,21 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
       powerSync.disconnect();
     };
   }, [userId, powerSync]);
+
+  const createFlashcard = async (card: Omit<PowerSyncFlashcard, 'id' | 'created_at' | 'updated_at'>) => {
+  const id = generateMongoId();
+  const now = new Date().toISOString();
+  
+  await powerSync.writeTransaction(async (tx) => {
+    await tx.execute(
+      `INSERT INTO flashcards (id, set_id, user_id, front, back, front_image, back_image, "order", created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, card.set_id, card.user_id, card.front, card.back, card.front_image, card.back_image, card.order, now, now]
+    );
+  });
+  
+  return id;
+};
 
   const createFlashcardSet = async (
     set: Omit<PowerSyncFlashcardSet, 'id' | 'created_at' | 'updated_at'>
@@ -181,9 +197,17 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
     updateFlashcardSet,
     deleteFlashcardSet,
     toggleOfflineAvailability,
+    createFlashcard: function (card: Omit<PowerSyncFlashcard, 'id' | 'created_at' | 'updated_at'>): Promise<string> {
+      throw new Error('Function not implemented.');
+    }
   };
 
-  return <FlashcardContext.Provider value={value}>{children}</FlashcardContext.Provider>;
+  return <FlashcardContext.Provider value={{
+      ...value,
+      createFlashcard
+    }}>
+      {children}
+      </FlashcardContext.Provider>;
 }
 
 export function useFlashcards() {
