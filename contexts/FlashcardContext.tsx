@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react';
 import { usePowerSync, useQuery } from '@powersync/react';
 import { PowerSyncFlashcardSet, PowerSyncOfflineSet, generateMongoId, boolToInt } from '@/lib/powersync/schema';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+import { getPowerSync } from '@/lib/powersync/client';
+
 
 interface FlashcardContextType {
   flashcardSets: PowerSyncFlashcardSet[];
@@ -54,23 +56,71 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
 
   // Simplified connection - full sync setup in next phase
   useEffect(() => {
-    if (!userId) return;
-    Logger.log(LogContext.SYSTEM, 'FlashcardContext ready', { userId });
-  }, [userId]);
+    if (!userId || !powerSync) return;
+    const connect = async () => {
+      try {
+        setIsSyncing(true);
+        await powerSync.connect({
+          remote: {
+            uploadData: async (database) => {
+              const changes = await database.getLocalChanges();
+              const response = await fetch('/api/powersync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ changes }),
+              });
+              if (!response.ok) throw new Error('Push failed');
+            },
+          },
+        });
+        
+        Logger.log(LogContext.SYSTEM, 'PowerSync connected', { userId });
+      } catch (error) {
+        Logger.error(LogContext.SYSTEM, 'PowerSync connection failed', { error });
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+    connect();
+    return () => {
+      powerSync.disconnect();
+    };
+  }, [userId, powerSync]);
 
   const createFlashcardSet = async (
     set: Omit<PowerSyncFlashcardSet, 'id' | 'created_at' | 'updated_at'>
   ): Promise<string> => {
     const id = generateMongoId();
     const now = new Date().toISOString();
+
+    console.log('About to execute INSERT');
+    console.log('PowerSync instance:', powerSync);
+
+    console.log('PowerSync from context:', powerSync);
+    console.log('PowerSync methods:', Object.keys(powerSync));
+    try {
     
-    await powerSync.execute(
-      `INSERT INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, set.user_id, set.title, set.description, set.is_public, set.card_count, set.source, now, now, 0]
-    );
+      const promise = await powerSync.writeTransaction(async (tx) => {
+        await tx.execute(
+          `INSERT INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, set.user_id, set.title, set.description, set.is_public, set.card_count, set.source, now, now, 0]
+        );
+      });
+
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('INSERT timeout after 5s')), 5000)
+      );
+      
+      await Promise.race([promise, timeout]);
+
+      console.log('INSERT completed');
+    } catch (error) {
+      console.error('INSERT failed:', error);
+      throw error;
+    }
     
-    Logger.log(LogContext.FLASHCARD, 'Flashcard set created', { id, title: set.title });
+    Logger.info(LogContext.FLASHCARD, 'Flashcard set created', { id, title: set.title });
     return id;
   };
 
