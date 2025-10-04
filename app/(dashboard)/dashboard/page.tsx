@@ -1,10 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import StatisticCard from '@/components/ui/StatisticCard';
 import { useSession } from 'next-auth/react';
+import { useFlashcards } from '@/contexts/FlashcardContext';
+import { initPowerSync } from '@/lib/powersync/client';
 
 import {
   BookOpenIcon,
@@ -18,12 +20,48 @@ export default function DashboardPage() {
   const { data: session, status } = useSession();
   const user = session?.user;
   const router = useRouter();
+  const { flashcardSets, createFlashcardSet } = useFlashcards();
+  const [powerSync, setPowerSync] = useState<Awaited<ReturnType<typeof initPowerSync>> | null>(null);
+
+  const testCreate = async () => {
+    console.log('Test button clicked');
+    console.log('Session:', session?.user?.id);
+    if (!session?.user?.id) {
+      console.error('No user ID');
+      return;
+    }
+    try {
+      const id = await createFlashcardSet({
+        user_id: session.user.id,
+        title: 'Test Set',
+        description: 'Testing PowerSync',
+        is_public: 0,
+        card_count: 0,
+        source: 'CSV',
+        is_deleted: 0,
+      });
+      console.log('Created set:', id);
+      console.log('All sets:', flashcardSets);
+    } catch (error) {
+      console.error('Create failed:', error);
+    }
+  };
   
   useEffect(() => {
     if (status === 'unauthenticated') {
       console.log('DashboardPage() status :>> ', status);
     }
   }, [status, router]);
+
+  useEffect(() => {
+  initPowerSync()
+    .then(async (db) => {
+      await db.waitForReady(); // Wait for database to be ready
+      console.log('PowerSync ready');
+      setPowerSync(db);
+    })
+    .catch(console.error);
+}, []);
   
   // Mock stats data
   const stats = {
@@ -50,6 +88,18 @@ export default function DashboardPage() {
   
   return (
     <div>
+      <div className="p-8 text-black">
+      <button
+        onClick={testCreate}
+        className="bg-blue-600 px-4 py-2 rounded"
+      >
+        Test Create Set
+      </button>
+      <div className="mt-4">
+        <h2 className="font-bold">Sets ({flashcardSets.length}):</h2>
+        <pre>{JSON.stringify(flashcardSets, null, 2)}</pre>
+      </div>
+    </div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name}!</h1>
         <p className="mt-1 text-gray-600">

@@ -4,9 +4,15 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePowerSync, useQuery } from '@powersync/react';
-import { PowerSyncFlashcardSet, PowerSyncOfflineSet, generateMongoId, PowerSyncFlashcard, boolToInt } from '@/lib/powersync/schema';
+import { 
+  PowerSyncFlashcardSet, 
+  PowerSyncOfflineSet, 
+  PowerSyncFlashcard,
+  generateMongoId, 
+  boolToInt 
+} from '@/lib/powersync/schema';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-import { getPowerSync } from '@/lib/powersync/client';
+import type { AbstractPowerSyncDatabase } from '@powersync/web'; 
 
 
 interface FlashcardContextType {
@@ -30,18 +36,32 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const userId = session?.user?.id;
+  const userId = session?.user?.id || '';
+  // For authenticated users: show their sets
+  // For unauthenticated: show public sets
+  const shouldQuery = !!powerSync && !!userId;
 
   const { data: flashcardSets = [] } = useQuery<PowerSyncFlashcardSet>(
-    'SELECT * FROM flashcard_sets WHERE user_id = ? AND is_deleted = 0 ORDER BY updated_at DESC',
-    [userId || '']
+    shouldQuery 
+      ? userId
+        ? 'SELECT * FROM flashcard_sets WHERE user_id = ? AND is_deleted = 0 ORDER BY updated_at DESC'
+        : 'SELECT * FROM flashcard_sets WHERE is_public = 1 AND is_deleted = 0 ORDER BY updated_at DESC'
+      : '',
+    shouldQuery 
+      ? userId 
+        ? [userId] 
+        : []
+      : []
   );
 
   const { data: offlineSets = [] } = useQuery<PowerSyncOfflineSet>(
-    'SELECT * FROM offline_sets WHERE user_id = ? ORDER BY last_accessed DESC',
-    [userId || '']
+    shouldQuery && userId
+      ? 'SELECT * FROM offline_sets WHERE user_id = ? ORDER BY last_accessed DESC'
+      : '',
+    shouldQuery && userId ? [userId] : []
   );
 
+  // Online/offline listener
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -55,40 +75,60 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Simplified connection - full sync setup in next phase
+  // PowerSync connection
   useEffect(() => {
     if (!userId || !powerSync) return;
-    const connect = async () => {
+
+    let mounted = true;
+
+    const setupSync = async () => {
       try {
         setIsSyncing(true);
-        await powerSync.connect({
-          remote: {
-            uploadData: async (database) => {
-              const changes = await database.getLocalChanges();
-              const response = await fetch('/api/powersync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ changes }),
-              });
-              if (!response.ok) throw new Error('Push failed');
-            },
+        
+        // PowerSync connection happens in lib/powersync/client.ts
+        // Just monitor sync status here
+        powerSync.registerListener({
+          initialized: () => {
+            if (mounted) {
+              Logger.log(LogContext.SYSTEM, 'PowerSync initialized', { userId });
+            }
+          },
+          sessionStarted: () => {
+            if (mounted) {
+              setIsSyncing(true);
+            }
+          },
+          sessionCompleted: () => {
+            if (mounted) {
+              setIsSyncing(false);
+            }
           },
         });
         
-        Logger.log(LogContext.SYSTEM, 'PowerSync connected', { userId });
       } catch (error) {
-        Logger.error(LogContext.SYSTEM, 'PowerSync connection failed', { error });
+        if (mounted) {
+          Logger.error(LogContext.SYSTEM, 'PowerSync connection failed', {
+            error
+          });
+        }
       } finally {
-        setIsSyncing(false);
+        if (mounted) {
+          setIsSyncing(false);
+        }
       }
     };
-    connect();
+    setupSync();
+    
     return () => {
-      powerSync.disconnect();
+      mounted = false;
     };
   }, [userId, powerSync]);
 
-  const createFlashcard = async (card: Omit<PowerSyncFlashcard, 'id' | 'created_at' | 'updated_at'>) => {
+  // Define createFlashcard function
+  const createFlashcard = async (
+    card: Omit<PowerSyncFlashcard, 'id' | 'created_at' | 'updated_at'>
+    ): Promise<string> => {
+    if (!powerSync) throw new Error('PowerSync not initialized');
   const id = generateMongoId();
   const now = new Date().toISOString();
   
@@ -96,16 +136,30 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
     await tx.execute(
       `INSERT INTO flashcards (id, set_id, user_id, front, back, front_image, back_image, "order", created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, card.set_id, card.user_id, card.front, card.back, card.front_image, card.back_image, card.order, now, now]
+      [
+        id, 
+        card.set_id, 
+        card.user_id, 
+        card.front, 
+        card.back, 
+        card.front_image || null, 
+        card.back_image || null, 
+        card.order, 
+        now, 
+        now
+      ]
     );
   });
-  
-  return id;
+  Logger.log(LogContext.FLASHCARD, 'Flashcard created', { id, set_id: card.set_id });
+    return id;
 };
 
+// Define createFlashcardSet function
   const createFlashcardSet = async (
     set: Omit<PowerSyncFlashcardSet, 'id' | 'created_at' | 'updated_at'>
   ): Promise<string> => {
+    if (!powerSync) throw new Error('PowerSync not initialized');
+    
     const id = generateMongoId();
     const now = new Date().toISOString();
 
@@ -114,33 +168,34 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
 
     console.log('PowerSync from context:', powerSync);
     console.log('PowerSync methods:', Object.keys(powerSync));
-    try {
+    // try {
     
-      const promise = await powerSync.writeTransaction(async (tx) => {
+      await powerSync.writeTransaction(async (tx) => {
         await tx.execute(
           `INSERT INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [id, set.user_id, set.title, set.description, set.is_public, set.card_count, set.source, now, now, 0]
+          [
+            id, 
+            set.user_id, 
+            set.title, 
+            set.description || null, 
+            set.is_public, 
+            set.card_count, 
+            set.source, 
+            now, 
+            now, 
+            0
+          ]
         );
       });
-
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('INSERT timeout after 5s')), 5000)
-      );
-      
-      await Promise.race([promise, timeout]);
-
-      console.log('INSERT completed');
-    } catch (error) {
-      console.error('INSERT failed:', error);
-      throw error;
-    }
     
     Logger.info(LogContext.FLASHCARD, 'Flashcard set created', { id, title: set.title });
     return id;
   };
 
   const updateFlashcardSet = async (id: string, updates: Partial<PowerSyncFlashcardSet>) => {
+    if (!powerSync) throw new Error('PowerSync not initialized');
+    
     const setClauses = Object.keys(updates).map(key => `${key} = ?`).join(', ');
     const values = [...Object.values(updates), new Date().toISOString(), id];
     
@@ -153,6 +208,8 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteFlashcardSet = async (id: string) => {
+    if (!powerSync) throw new Error('PowerSync not initialized');
+    
     await powerSync.execute(
       'UPDATE flashcard_sets SET is_deleted = 1, updated_at = ? WHERE id = ?',
       [new Date().toISOString(), id]
@@ -162,8 +219,9 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleOfflineAvailability = async (setId: string) => {
-    if (!userId) return;
-
+    if (!powerSync) throw new Error('PowerSync not initialized');
+    if (!userId) throw new Error('User not authenticated');
+    
     const existing = offlineSets.find(s => s.set_id === setId);
     
     if (existing) {
@@ -194,22 +252,20 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
     isSyncing,
     isOnline,
     createFlashcardSet,
+    createFlashcard,
     updateFlashcardSet,
     deleteFlashcardSet,
     toggleOfflineAvailability,
-    createFlashcard: function (card: Omit<PowerSyncFlashcard, 'id' | 'created_at' | 'updated_at'>): Promise<string> {
-      throw new Error('Function not implemented.');
-    }
   };
 
-  return <FlashcardContext.Provider value={{
-      ...value,
-      createFlashcard
-    }}>
+  return (
+    <FlashcardContext.Provider value={value}>
       {children}
-      </FlashcardContext.Provider>;
+    </FlashcardContext.Provider>
+  );
 }
 
+// Custom hook to use the context
 export function useFlashcards() {
   const context = useContext(FlashcardContext);
   if (!context) {

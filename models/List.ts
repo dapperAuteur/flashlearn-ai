@@ -6,11 +6,11 @@ import { ObjectId } from 'mongodb';
 export interface List {
   _id?: string | ObjectId;
   title: string;                   // List name
-  description: string;            // List description
+  description?: string;            // List description
   isPublic: boolean;              // Whether the list is public or private
   userId: string | ObjectId;      // Owner of this list
   categoryId?: string | ObjectId; // Optional category
-  tags: string[] | ObjectId[];    // References to tags
+  tags?: string[] | ObjectId[];    // References to tags
   cardCount: number;              // Number of cards in this list
   
   // Metadata

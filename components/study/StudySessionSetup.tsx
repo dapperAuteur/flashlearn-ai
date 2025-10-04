@@ -21,9 +21,14 @@ import {
   TagIcon,
   FolderIcon
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import { useFlashcards } from '@/contexts/FlashcardContext';
+import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
+
 
 export default function StudySessionSetup() {
   const { startSession, isLoading, studyDirection, setStudyDirection } = useStudySession();
+  const { flashcardSets } = useFlashcards(); // Get PowerSync sets
   const { status } = useSession();
 
   const [lists, setLists] = useState<List[]>([]);
@@ -40,19 +45,48 @@ export default function StudySessionSetup() {
 
   const fetchLists = async () => {
     try {
-      const response = await fetch('/api/lists');
-      if (!response.ok) throw new Error('Failed to fetch lists');
-      const data = await response.json();
-      setLists(data);
+      // Only fetch from API if authenticated
+      if (status === 'authenticated') {
+        const response = await fetch('/api/lists');
+        if (!response.ok) throw new Error('Failed to fetch lists');
+        const apiLists = await response.json();
+        
+        // Merge with PowerSync sets (PowerSync sets take priority)
+        const powerSyncSetIds = new Set(flashcardSets.map(s => s.id));
+        const uniqueApiLists = apiLists.filter((list: List) => 
+          !powerSyncSetIds.has(list._id?.toString() || '')
+        );
+        
+        setLists([...flashcardSets.map(convertPowerSyncToList), ...uniqueApiLists]);
+      } else {
+        // Unauthenticated: only show PowerSync sets (public sets)
+        setLists(flashcardSets.map(convertPowerSyncToList));
+      }
     } catch (error) {
-      setError('Failed to load lists. Please try again.');
-      Logger.error(LogContext.STUDY, 'Error fetching lists in StudySessionSetup', { error });
+      setError('Failed to load lists. Showing offline sets only.');
+      Logger.error(LogContext.STUDY, 'Error fetching lists', { error });
+      
+      // Fallback to PowerSync sets only
+      setLists(flashcardSets.map(convertPowerSyncToList));
     }
   };
 
+  // Helper: Convert PowerSync set to List format
+  const convertPowerSyncToList = (set: PowerSyncFlashcardSet): List => ({
+    _id: set.id,
+    title: set.title,
+    description: set.description || undefined,
+    isPublic: set.is_public === 1,
+    userId: set.user_id,
+    cardCount: set.card_count,
+    createdAt: new Date(set.created_at),
+    updatedAt: new Date(set.updated_at),
+    tags: []
+  });
+
   useEffect(() => {
     fetchLists();
-  }, []);
+  }, [flashcardSets, status]); // Re-fetch when PowerSync sets change
 
   useEffect(() => {
     if (selectedListId && currentStep === 'select') {
@@ -250,13 +284,20 @@ export default function StudySessionSetup() {
                   </div>
                 )}
                 
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors"
+                <Link
+                  href="/generate"
+                  className="block p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
                 >
-                  <CloudArrowUpIcon className="h-5 w-5 mx-auto mb-2" />
-                  <span className="text-sm font-medium">Import New Set from CSV</span>
-                </button>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 bg-gray-100 p-2 rounded-lg">
+                      <CloudArrowUpIcon className="h-5 w-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">Create or Import a New Set</h3>
+                      <p className="text-sm text-gray-600">Generate with AI or import from CSV</p>
+                    </div>
+                  </div>
+                </Link>
               </div>
             )}
           </div>

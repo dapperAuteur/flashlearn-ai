@@ -9,12 +9,14 @@ import {
   getResults, 
   clearResults, 
   queueSessionForSync,
-  getOfflineSet,
   saveStudyHistory,
   StudySessionHistory
 } from '@/lib/db/indexeddb';
 import { shuffleArray } from '@/lib/utils/arrayUtils';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+import { PowerSyncFlashcard, PowerSyncFlashcardSet } from '@/lib/powersync/schema';
+import { getPowerSync } from '@/lib/powersync/client';
+
 
 type StudyDirection = 'front-to-back' | 'back-to-front';
 type LastCardResult = 'correct' | 'incorrect' | null;
@@ -93,106 +95,127 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       Logger.log(LogContext.STUDY, "Attempting to start session", { listId, direction });
+      // Try PowerSync first (if available and initialized)
+    let set = null;
+    let cards: PowerSyncFlashcard[] = [];
+    
+    try {
+      const powerSync = getPowerSync();
       
-      // STEP 1: Check offline storage first
-      const offlineSet = await getOfflineSet(listId);
-      
-      if (offlineSet) {
-        Logger.log(LogContext.STUDY, "Found offline set, starting offline session", { listId });
-        
-        if (!offlineSet.flashcards || offlineSet.flashcards.length === 0) {
-          setError("This offline set has no flashcards.");
-          setIsLoading(false);
-          return;
+      if (powerSync) {
+        [set] = await powerSync.getAll<PowerSyncFlashcardSet>(
+          'SELECT * FROM flashcard_sets WHERE id = ?',
+          [listId]
+        );
+
+        if (set) {
+          cards = await powerSync.getAll<PowerSyncFlashcard>(
+            'SELECT * FROM flashcards WHERE set_id = ? ORDER BY "order"',
+            [listId]
+          );
         }
-
-        const shuffledCards = shuffleArray([...offlineSet.flashcards]).map(card => ({
-          ...card,
-          id: card._id,
-          tags: [],
-          listId: listId,
-          userId: authSession?.user?.id || 'offline-user',
-          difficulty: 1,
-          lastReviewed: undefined,
-          nextReviewDate: undefined,
-          correctCount: 0,
-          incorrectCount: 0,
-          stage: 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }));
-        const generatedSessionId = `offline-${Date.now()}-${listId}`;
-
-        await clearResults(generatedSessionId);
-
-        setSessionId(generatedSessionId);
-        setFlashcards(shuffledCards);
-        setFlashcardSetName(offlineSet.title);
-        setCardResults([]);
-        setCurrentIndex(0);
-        setIsComplete(false);
-        setSessionStartTime(Date.now());
-        setCurrentConfidenceRating(null);
-        setIsOfflineSession(true);
-        
-        Logger.log(LogContext.STUDY, "Offline session started successfully", { sessionId: generatedSessionId });
-        setIsLoading(false);
-        return;
       }
-
-      // STEP 2: If not offline, try online API
-      if (!navigator.onLine) {
-        setError("No internet connection and this set is not available offline. Please enable offline mode for this set when online.");
-        setIsLoading(false);
-        return;
-      }
-
-      Logger.log(LogContext.STUDY, "No offline set found, trying online API", { listId });
-      
-      const response = await fetch('/api/study/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listId })
+    } catch (powerSyncError) {
+      Logger.log(LogContext.STUDY, "PowerSync not available, falling back to API", { 
+        error: powerSyncError 
       });
+    }
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to start study session');
-      }
+    // If PowerSync found the set, use it
+    if (set && cards.length > 0) {
+      Logger.log(LogContext.STUDY, "Found set in PowerSync", { listId });
 
-      const data: { sessionId: string; setName: string; flashcards: Flashcard[] } = await response.json();
+      const shuffledCards = shuffleArray([...cards]).map(card => ({
+        ...card,
+        id: card.id,
+        front: card.front,
+        back: card.back,
+        tags: [],
+        listId: listId,
+        userId: authSession?.user?.id || 'offline-user',
+        difficulty: 1,
+        lastReviewed: undefined,
+        nextReviewDate: undefined,
+        correctCount: 0,
+        incorrectCount: 0,
+        stage: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }));
 
-      if (!data.flashcards || data.flashcards.length === 0) {
-        Logger.warning(LogContext.STUDY, "Attempted to start session with empty list", { listId });
-        setError("This list has no flashcards. Please add cards to it or choose another list.");
-        setIsLoading(false);
-        return;
-      }
+      const generatedSessionId = `offline-${Date.now()}-${listId}`;
+      await clearResults(generatedSessionId);
 
-      const shuffledCards = shuffleArray(data.flashcards);
-
-      await clearResults(data.sessionId);
-
-      setSessionId(data.sessionId);
+      setSessionId(generatedSessionId);
       setFlashcards(shuffledCards);
-      setFlashcardSetName(data.setName);
+      setFlashcardSetName(set.title);
       setCardResults([]);
       setCurrentIndex(0);
       setIsComplete(false);
       setSessionStartTime(Date.now());
       setCurrentConfidenceRating(null);
-      setIsOfflineSession(false);
+      setIsOfflineSession(true);
       
-      Logger.log(LogContext.STUDY, "Online session started successfully", { sessionId: data.sessionId });
-      
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(message);
-      Logger.error(LogContext.STUDY, "Failed to start session", { listId, error: message });
-    } finally {
+      Logger.log(LogContext.STUDY, "PowerSync session started", { 
+        sessionId: generatedSessionId 
+      });
       setIsLoading(false);
+      return;
     }
-  }, []);
+
+    // Fallback to online API
+    if (!navigator.onLine) {
+      setError("No internet connection and this set is not available offline.");
+      setIsLoading(false);
+      return;
+    }
+
+    Logger.log(LogContext.STUDY, "Fetching from API", { listId });
+    
+    const response = await fetch('/api/study/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listId, studyDirection: direction })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to start study session');
+    }
+
+    const data: { sessionId: string; setName: string; flashcards: Flashcard[] } = 
+      await response.json();
+
+    if (!data.flashcards || data.flashcards.length === 0) {
+      Logger.warning(LogContext.STUDY, "Empty list", { listId });
+      setError("This list has no flashcards.");
+      setIsLoading(false);
+      return;
+    }
+
+    const shuffledCards = shuffleArray(data.flashcards);
+    await clearResults(data.sessionId);
+
+    setSessionId(data.sessionId);
+    setFlashcards(shuffledCards);
+    setFlashcardSetName(data.setName);
+    setCardResults([]);
+    setCurrentIndex(0);
+    setIsComplete(false);
+    setSessionStartTime(Date.now());
+    setCurrentConfidenceRating(null);
+    setIsOfflineSession(false);
+    
+    Logger.log(LogContext.STUDY, "API session started", { sessionId: data.sessionId });
+    
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'An unknown error occurred';
+    setError(message);
+    Logger.error(LogContext.STUDY, "Failed to start session", { listId, error: message });
+  } finally {
+    setIsLoading(false);
+  }
+}, [authSession]);
 
   const completeSession = useCallback(async () => {
     if (!sessionId || !sessionStartTime) return;
