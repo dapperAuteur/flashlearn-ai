@@ -16,7 +16,7 @@
     "@headlessui/react": "^2.2.1",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.0.1",
-    "@powersync/react": "^1.8.0",
+    "@powersync/react": "^1.8.1",
     "@powersync/web": "^1.27.0",
     "@radix-ui/react-toast": "^1.2.14",
     "@upstash/ratelimit": "^2.0.5",
