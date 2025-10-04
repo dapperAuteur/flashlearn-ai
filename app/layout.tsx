@@ -42,9 +42,9 @@ export default function RootLayout({
   }, []);
   
   // Show public header for these routes
-  const publicRoutes = ['/', '/study'];
-  const showPublicHeader = publicRoutes.includes(pathname);
-
+  // The root page is the only one that needs this explicit check now
+  const isPublicRouteByPath = pathname === '/';
+  
   // Don't render until PowerSync is ready
   if (!powerSyncDB) {
     return (
@@ -69,7 +69,7 @@ export default function RootLayout({
           <PowerSyncContext.Provider value={powerSyncDB}>
             <FlashcardProvider>
               <StudySessionProvider>
-                {showPublicHeader && <PublicHeader />}
+                {isPublicRouteByPath && <PublicHeader />}
                 {children}
               </StudySessionProvider>
             </FlashcardProvider>
