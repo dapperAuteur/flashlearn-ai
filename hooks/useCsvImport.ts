@@ -1,13 +1,15 @@
 import { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import { Flashcard, processCsvContent, sanitizeString } from '@/lib/utils/flashcards/helpers';
+
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // This Hook encapsulates all logic related to CSV file import.
 export const useCsvImport = (
-    setFlashcards: React.Dispatch<React.SetStateAction<Flashcard[]>>,
-    setTopicAndTitle: (topic: string) => void
-) => {
+  setFlashcards: React.Dispatch<React.SetStateAction<Flashcard[]>>,
+  setTopicAndTitle: (topic: string) => void
+    ) => {
+
     const [isUploading, setIsUploading] = useState(false);
     const [csvError, setCsvError] = useState<string | null>(null);
     const [showTemplateButton, setShowTemplateButton] = useState(false);
@@ -20,14 +22,13 @@ export const useCsvImport = (
     };
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        if (!file.name.toLowerCase().endsWith('.csv')) {
-            setCsvError("Invalid file type. Please upload a .csv file.");
-            if (fileInputRef.current) fileInputRef.current.value = '';
-            return;
-        }
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setCsvError("Invalid file type. Please upload a .csv file.");
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
         setIsUploading(true);
         setFlashcards([]);
@@ -43,8 +44,10 @@ export const useCsvImport = (
                     setFlashcards(processed.flashcards);
                     const newTopic = sanitizeString(file.name.replace(/\.csv$/i, '')).replace(/_/g, ' ');
                     setTopicAndTitle(newTopic);
-                    setCsvError(null);
-                    setShowTemplateButton(false);
+            
+            setCsvError(null);
+            setShowTemplateButton(false);
+            
                 } else {
                     setCsvError(processed.error ?? 'An unknown error occurred during CSV processing.');
                     if (processed.error?.includes('header')) {

@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { getCurrentUser } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Settings | FlashLearn AI',
@@ -44,12 +45,13 @@ export default async function SettingsPage() {
             Get started by creating your first flashcard.
           </p>
           <div className="mt-6">
-            <button
+            <Link
+              href="/generate"
               type="button"
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Create Flashcard
-            </button>
+            </Link>
           </div>
         </div>
       </div>

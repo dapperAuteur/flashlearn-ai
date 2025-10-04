@@ -29,11 +29,17 @@ export default function GenerateFlashcardsPage(){
   
   // Core state and API logic is managed by this Hook
   const {
-    topic, setTopic,
-    title, setTitle,
-    description, setDescription,
-    flashcards, setFlashcards,
-    isLoading, isSaving, isExporting,
+    topic,
+    setTopic,
+    title,
+    setTitle,
+    description,
+    setDescription,
+    flashcards,
+    setFlashcards,
+    isLoading,
+    isSaving,
+    isExporting,
     apiError,
     saveSuccessMessage,
     savedSetData,

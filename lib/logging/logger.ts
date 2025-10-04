@@ -11,14 +11,15 @@ export enum LogLevel {
   ERROR = "error"
 }
 
-// Context types to organize logs
+// Context types to organize logss
 export enum LogContext {
   AUTH = "auth",
   FLASHCARD = "flashcard",
   AI = "ai",
   USER = "user",
   STUDY = "study",
-  SYSTEM = "system"
+  SYSTEM = "system",
+  POWERSYNC = 'powerSync',
 }
 
 // Base log entry interface

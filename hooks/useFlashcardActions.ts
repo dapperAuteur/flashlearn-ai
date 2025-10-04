@@ -1,13 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react';
-import { useRouter } from "next/navigation";
+import { useSession } from 'next-auth/react';
+import { useFlashcards } from '@/contexts/FlashcardContext';
 import Papa from 'papaparse';
 import { Flashcard, sanitizeString } from '@/lib/utils/flashcards/helpers';
+
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // This Hook encapsulates the core state and API interactions for the flashcard generation page.
 export const useFlashcardActions = () => {
-    const router = useRouter();
+  const { data: session } = useSession();
+  const { createFlashcardSet, createFlashcard } = useFlashcards();
+  
     const [topic, setTopic] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -20,7 +23,7 @@ export const useFlashcardActions = () => {
     const [apiError, setApiError] = useState<string | null>(null);
     const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
 
-    const [savedSetData, setSavedSetData] = useState<{ id: string, title: string, isPublic: boolean } | null>(null);
+  const [savedSetData, setSavedSetData] = useState<{ id: string; title: string; isPublic: boolean } | null>(null);
 
     const setTopicAndTitle = (newTopic: string) => {
         setTopic(newTopic);
@@ -64,6 +67,14 @@ export const useFlashcardActions = () => {
     };
 
     const handleSave = async (isPublic: boolean) => {
+        if (!session?.user?.id) {
+            setApiError('You must be signed in to save flashcards.');
+            return;
+            }
+            if (flashcards.length === 0) {
+            setApiError('No flashcards to save.');
+            return;
+            }
         Logger.log(LogContext.FLASHCARD, 'Attempting to save set');
         if (!title.trim()) {
             setApiError("A title is required to save.");
@@ -72,26 +83,48 @@ export const useFlashcardActions = () => {
         setIsSaving(true);
         setApiError(null);
         try {
-            const response = await fetch('/api/flashcards', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description, isPublic, flashcards }),
+            const setId = await createFlashcardSet({
+                user_id: session.user.id,
+                title: title || 'Untitled Set',
+                description: description || null,
+                is_public: isPublic ? 1 : 0,
+                card_count: flashcards.length,
+                source: 'CSV',
+                is_deleted: 0,
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to save.');
-
-            setSaveSuccessMessage(`Successfully saved "${title}"!`);
-            setSavedSetData({ id: data.savedSet._id, title: data.savedSet.title, isPublic: data.savedSet.isPublic });
+        // Create individual flashcard records
+        await Promise.all(
+            flashcards.map((card, index) => 
+                createFlashcard({
+                set_id: setId,
+                user_id: session.user.id,
+                front: card.front,
+                back: card.back,
+                front_image: null,
+                back_image: null,
+                order: index,
+                })
+            )
+        );
+        Logger.log(LogContext.FLASHCARD, 'Flashcard set saved', { setId, cardCount: flashcards.length });
+        setSavedSetData({
+            id: setId,
+            title: title || 'Untitled Set',
+            isPublic,
+        });
+        setSaveSuccessMessage('Flashcard set saved successfully!');
         } catch (err) {
             const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
             setApiError(msg);
             Logger.error(LogContext.FLASHCARD, 'Error saving set', { error: err });
+                  setApiError('Failed to save flashcard set. Please try again.');
+
         } finally {
             setIsSaving(false);
         }
     };
 
-    const handleExport = () => {
+    const handleExport = async () => {
         // Export logic remains the same as before
         setIsExporting(true);
         try {

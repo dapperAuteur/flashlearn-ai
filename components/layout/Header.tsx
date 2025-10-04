@@ -33,7 +33,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/dashboard" className="text-xl font-bold text-blue-600">
+            <Link href="/" className="text-xl font-bold text-blue-600">
               FlashLearn AI
             </Link>
           </div>

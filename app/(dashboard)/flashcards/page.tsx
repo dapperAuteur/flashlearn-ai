@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
-import FlashcardManager from "@/components/flashcards/FlashcardManager";
+import FlashcardManagerV2 from "@/components/flashcards/FlashcardManagerV2";
 
 export const metadata: Metadata = {
   title: "Flashcards | FlashLearn AI",
@@ -27,7 +27,7 @@ export default async function FlashcardsPage() {
         </div>
       </div>
       
-      <FlashcardManager />
+      <FlashcardManagerV2 />
     </div>
   );
 }
