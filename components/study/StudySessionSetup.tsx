@@ -286,7 +286,7 @@ export default function StudySessionSetup() {
                 
                 <Link
                   href="/generate"
-                  className="block p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
+                  className="block p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer bg-green-400"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0 bg-gray-100 p-2 rounded-lg">
