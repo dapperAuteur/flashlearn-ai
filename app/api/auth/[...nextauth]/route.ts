@@ -71,7 +71,7 @@ import { authOptions } from "@/lib/auth/auth"
 //     }
 //   },
 //   pages: {
-//     signIn: "/signin",
+//     signIn: "/auth/signin",
 //     signOut: "/signout",
 //     error: "/error",
 //   },
