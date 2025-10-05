@@ -10,8 +10,6 @@ import { Switch } from '@headlessui/react';
 import { useFlashcardActions } from '@/hooks/useFlashcardActions';
 import { useCsvImport } from '@/hooks/useCsvImport';
 import { motion, AnimatePresence } from 'framer-motion';
-import FlashcardPreviewGrid from '@/components/flashcards/FlashcardPreviewGrid';
-import SaveControls from '@/components/flashcards/SaveControls';
 import {
   SparklesIcon,
   CloudArrowUpIcon,
@@ -325,20 +323,121 @@ export default function GenerateFlashcardsPage(){
             style={{ display: 'none' }}
           />
 
-          {/* SIMPLIFIED: Save controls */}
-          {status === 'authenticated' && (
-            <SaveControls
-              flashcardCount={flashcards.length}
-              isPublic={isPublic}
-              isSaving={isSaving}
-              onPublicToggle={setIsPublic}
-              onSave={() => handleSave(isPublic)}
-            />
-          )}
-                
+          {/* Save Controls - Sticky */}
+          <AnimatePresence>
+            {flashcards.length > 0 && status === 'authenticated' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="sticky top-4 z-10 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-lg mb-8"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm font-medium text-gray-700">
+                      {flashcards.length} flashcards created
+                    </span>
+                    <Switch.Group as="div" className="flex items-center">
+                      <Switch
+                        checked={isPublic}
+                        onChange={setIsPublic}
+                        className={`${
+                          isPublic ? 'bg-blue-600' : 'bg-gray-200'
+                        } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                      >
+                        <span
+                          className={`${
+                            isPublic ? 'translate-x-6' : 'translate-x-1'
+                          } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                        />
+                      </Switch>
+                      <Switch.Label className="ml-3 text-sm font-medium text-gray-700">
+                        Share with others
+                      </Switch.Label>
+                    </Switch.Group>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleSave(isPublic)} 
+                    disabled={isSaving} 
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    {isSaving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircleIcon className="h-5 w-5 mr-2" />
+                        Save to Account
+                      </>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* SIMPLIFIED: Flashcard preview */}
-          <FlashcardPreviewGrid flashcards={flashcards} />
+          {/* Flashcard Display */}
+          <AnimatePresence>
+            {flashcards.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Preview Your Flashcards</h2>
+                  <p className="text-gray-600">Click any card to see the answer</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {flashcards.map((card, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 h-48"
+                      onClick={() => toggleFlip(index)}
+                    >
+                      <div className={`h-full transform transition-transform duration-500 ${flippedCardIndices.has(index) ? 'rotate-y-180' : ''}`}>
+                        {/* Front */}
+                        <div className={`absolute inset-0 backface-hidden ${flippedCardIndices.has(index) ? 'hidden' : 'block'}`}>
+                          <div className="h-full p-6 flex flex-col justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+                            <div className="text-center mb-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                Question
+                              </span>
+                            </div>
+                            <div className="text-center font-medium text-gray-900 line-clamp-4">
+                              {card.front}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Back */}
+                        <div className={`absolute inset-0 backface-hidden transform rotate-y-180 ${flippedCardIndices.has(index) ? 'block' : 'hidden'}`}>
+                          <div className="h-full p-6 flex flex-col justify-center bg-gradient-to-br from-green-50 to-emerald-50">
+                            <div className="text-center mb-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                Answer
+                              </span>
+                            </div>
+                            <div className="text-center text-gray-800 line-clamp-4">
+                              {card.back}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
