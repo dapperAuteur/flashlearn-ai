@@ -12,7 +12,7 @@ import { StudyAnalytics } from '@/models/StudyAnalytics';
 import { User } from '@/models/User';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { Profile } from '@/models/Profile';
-import StudySession, { StudyDirection } from '@/models/StudySession';
+import { StudyDirection, StudySession } from '@/models/StudySession';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 
 interface CardResult {
@@ -231,6 +231,7 @@ export async function POST(request: NextRequest) {
         shuffleArray(flashcards);
         // **FIX: Use Mongoose model to create the new session document**
         const newSession = await StudySession.create({
+            sessionId: new mongoose.Types.ObjectId().toString(),
             userId: session?.user?.id ? new mongoose.Types.ObjectId(session.user.id) : new mongoose.Types.ObjectId(),
             listId: new mongoose.Types.ObjectId(listId),
             startTime: new Date(),

@@ -28,6 +28,7 @@ export async function initPowerSync(): Promise<PowerSyncDatabase> {
       },
       flags: {
         useWebWorker: false, // Fix worker script error
+        enableMultiTabs: true, // Allow multiple tabs
       },
     });
 
@@ -56,6 +57,11 @@ export async function initPowerSync(): Promise<PowerSyncDatabase> {
     await db.init();
 
     powerSyncInstance = db;
+
+    console.log('[PowerSync] Database initialized successfully');
+    console.log('[PowerSync] Database name:', 'flashlearnai.db');
+    console.log('[PowerSync] Tables:', Object.keys(AppSchema.tables));
+
     return db;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

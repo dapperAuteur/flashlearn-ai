@@ -39,18 +39,20 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
   const userId = session?.user?.id || '';
   // For authenticated users: show their sets
   // For unauthenticated: show public sets
-  const shouldQuery = !!powerSync && !!userId;
+  const shouldQuery = !!powerSync;
 
+  // For authenticated users: show their sets + public sets
+  // For unauthenticated: show only public sets
   const { data: flashcardSets = [] } = useQuery<PowerSyncFlashcardSet>(
     shouldQuery 
       ? userId
-        ? 'SELECT * FROM flashcard_sets WHERE user_id = ? AND is_deleted = 0 ORDER BY updated_at DESC'
+        ? 'SELECT * FROM flashcard_sets WHERE (user_id = ? OR is_public = 1) AND is_deleted = 0 ORDER BY updated_at DESC'
         : 'SELECT * FROM flashcard_sets WHERE is_public = 1 AND is_deleted = 0 ORDER BY updated_at DESC'
       : '',
     shouldQuery 
       ? userId 
         ? [userId] 
-        : []
+        : [] // Empty array for public query (no parameters needed)
       : []
   );
 
