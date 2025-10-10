@@ -46,7 +46,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
 
             {/* Quick Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              <Link href="/study" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300">
+              <Link href="/flashcards" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Play className="h-6 w-6 text-white" />
                 </div>
@@ -333,7 +333,7 @@ const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
             You&apos;re on a 12-day streak! Keep the momentum going with your personalized study session.
           </p>
           <Link
-            href="/study"
+            href="/flashcards"
             className="inline-flex items-center bg-yellow-400 text-blue-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-yellow-300 transition-colors shadow-lg"
           >
             Continue Studying

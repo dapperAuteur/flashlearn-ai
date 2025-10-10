@@ -131,7 +131,7 @@ export default function StudyResultsPage() {
           </Link>
           
           <Link
-            href="/study"
+            href="/flashcards"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition-all"
           >
             <PlayIcon className="h-4 w-4 mr-2" />

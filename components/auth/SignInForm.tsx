@@ -88,7 +88,7 @@ export default function SignInForm() {
       }
       
       Logger.log(LogContext.AUTH, 'User sign-in successful', { email: data.email });
-      router.push("/study");
+      router.push("/flashcards");
       router.refresh();
     } catch (error: any) {
       Logger.error(LogContext.AUTH, 'Sign-in submission error', { email: data.email, error: error.message });

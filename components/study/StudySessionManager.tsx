@@ -7,7 +7,6 @@ import { useSession } from 'next-auth/react';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import StudySessionSetup from './StudySessionSetup';
 import StudyCard from './StudyCard';
-import ShareableResultsCard from './ShareableResultsCard';
 import CardFeedback from './CardFeedback';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -36,7 +35,6 @@ export default function StudySessionManager() {
     recordConfidence,
     resetSession,
     lastCardResult,
-    cardResults, // Get cardResults from context
     isConfidenceRequired,
     hasCompletedConfidence,
   } = useStudySession();
@@ -49,9 +47,7 @@ export default function StudySessionManager() {
     setIsFlipped(false);
   }, [currentIndex]);
   useEffect(() => {
-    if (isComplete && sessionId) {
-      window.location.href = `/study/results/${sessionId}`;
-    }
+    console.log('isComplete, sessionId :>> ', isComplete, sessionId);
   }, [isComplete, sessionId]);
 
   useEffect(() => {
@@ -83,29 +79,6 @@ export default function StudySessionManager() {
   }
 
   if (sessionId) {
-    // if (isComplete) {
-    //   const resultsData = {
-    //     _id: sessionId,
-    //     listId: 'unknown',
-    //     userId: 'unknown',
-    //     startTime: new Date(sessionStartTime || 0),
-    //     status: 'completed' as const,
-    //     totalCards: flashcards.length,
-    //     correctCount: cardResults.filter(r => r.isCorrect).length,
-    //     incorrectCount: cardResults.filter(r => !r.isCorrect).length,
-    //     completedCards: cardResults.length,
-    //     durationSeconds: Math.round(cardResults.reduce((total, result) => total + result.timeSeconds, 0)),
-    //     setName: flashcardSetName,
-    //   };
-      
-    //   // FIX: Pass cardResults to ShareableResultsCard
-    //   return (
-    //     <ShareableResultsCard 
-    //       initialResults={resultsData as any} 
-    //       cardResults={cardResults}
-    //     />
-    //   );
-    // }
 
     if (lastCardResult) {
       return (
