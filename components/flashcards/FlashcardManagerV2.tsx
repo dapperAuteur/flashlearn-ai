@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState } from 'react';
@@ -11,9 +12,17 @@ import {
   CloudArrowUpIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
+import { useStudySession } from '@/contexts/StudySessionContext';
 import { LogContext, Logger } from '@/lib/logging/client-logger';
 
-export default function FlashcardManagerV2() {
+interface Props {
+  onOfflineStudy: (setId: string) => void;
+}
+
+export default function FlashcardManagerV2({ onOfflineStudy }: Props) {
+  const router = useRouter();
+  const { startSession } = useStudySession();
   const {
     flashcardSets,
     offlineSets,
@@ -21,6 +30,7 @@ export default function FlashcardManagerV2() {
     createFlashcardSet, 
     createFlashcard 
   } = useFlashcards();
+  const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState('');
   const [migrating, setMigrating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +40,28 @@ export default function FlashcardManagerV2() {
     currentBatch: 0,
   });
 
-  const { data: session } = useSession();
+  // DEBUG: Check what we're getting
+  console.log('FlashcardManagerV2 - flashcardSets:', flashcardSets);
+  console.log('FlashcardManagerV2 - session user:', session?.user?.id);
+  console.log('FlashcardManagerV2 - offlineSets:', offlineSets);
+
+  // Add this handler
+  const handleStudyClick = (setId: string) => {
+    const isSetOffline = offlineSets.some(s => s.set_id === setId);
+    
+    if (!navigator.onLine) {
+      if (!isSetOffline) {
+        setError('This set is not available offline');
+        return;
+      }
+      // Offline: use static page
+      onOfflineStudy(setId);
+    } else {
+      // Online: use dynamic page
+      router.push(`/study/${setId}`);
+    }
+  };
+
 
   const handleToggle = async (setId: string) => {
   try {
@@ -174,49 +205,6 @@ export default function FlashcardManagerV2() {
     }
   };
 
-  // const migrateOldSets = async () => {
-  //   if (!session?.user?.id) return;
-
-  //   setMigrating(true);
-  //   try {
-  //     const response = await fetch('/api/migrate-to-powersync', { method: 'POST' });
-  //     if (!response.ok) throw new Error('Migration failed');
-  //     alert('Migration complete. Refresh page.');
-  //     const { sets } = await response.json();
-  //     for (const mongoSet of sets) {
-  //     const setId = await createFlashcardSet({
-  //       user_id: session.user.id,
-  //       title: mongoSet.title,
-  //       description: mongoSet.description || null,
-  //       is_public: mongoSet.isPublic ? 1 : 0,
-  //       card_count: mongoSet.cardCount,
-  //       source: mongoSet.source || 'CSV',
-  //       is_deleted: 0,
-  //     });
-  //     for (let i = 0; i < mongoSet.flashcards.length; i++) {
-  //       const card = mongoSet.flashcards[i];
-  //       await createFlashcard({
-  //         set_id: setId,
-  //         user_id: session.user.id,
-  //         front: card.front,
-  //         back: card.back,
-  //         front_image: null,
-  //         back_image: null,
-  //         order: i,
-  //       });
-  //     }
-  //   }
-    
-  //   alert('Migration complete!');
-
-  //   } catch (error) {
-  //     Logger.error(LogContext.FLASHCARD, 'Failed to migrate flashcards from cloud', { error });
-  //     alert('Migration failed');
-  //   } finally {
-  //     setMigrating(false);
-  //   }
-  // };
-
   const filtered = flashcardSets.filter(set =>
     set.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -314,11 +302,12 @@ export default function FlashcardManagerV2() {
                 )}
               </button>
             </div>
-            <Link
-              href={`/study/${set.id}`}
-              className="mt-4 block text-center px-3 py-2 bg-blue-600 text-white rounded-md">
+            <button
+              onClick={() => handleStudyClick(set.id)}
+              className="mt-4 block w-full text-center px-3 py-2 bg-blue-600 text-white rounded-md"
+            >
               Study
-            </Link>
+            </button>
           </div>
         ))}
       </div>

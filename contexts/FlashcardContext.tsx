@@ -36,10 +36,16 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  console.log('FlashcardProvider - powerSync exists:', !!powerSync);
+  console.log('FlashcardProvider - session user:', session?.user?.id);
+
   const userId = session?.user?.id || '';
   // For authenticated users: show their sets
   // For unauthenticated: show public sets
   const shouldQuery = !!powerSync;
+
+  console.log('FlashcardProvider - shouldQuery:', shouldQuery);
+  console.log('FlashcardProvider - userId:', userId);
 
   // For authenticated users: show their sets + public sets
   // For unauthenticated: show only public sets
@@ -55,6 +61,9 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
         : [] // Empty array for public query (no parameters needed)
       : []
   );
+
+  console.log('FlashcardProvider - flashcardSets count:', flashcardSets.length);
+  console.log('FlashcardProvider - flashcardSets:', flashcardSets);
 
   const { data: offlineSets = [] } = useQuery<PowerSyncOfflineSet>(
     shouldQuery && userId
@@ -221,10 +230,14 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleOfflineAvailability = async (setId: string) => {
+    console.log('[Toggle] Starting, setId:', setId);
+    console.log('[Toggle] PowerSync exists:', !!powerSync);
+    console.log('[Toggle] userId:', userId);
     if (!powerSync) throw new Error('PowerSync not initialized');
     if (!userId) throw new Error('User not authenticated');
     
     const existing = offlineSets.find(s => s.set_id === setId);
+    console.log('[Toggle] Existing offline set:', existing);
     
     if (existing) {
       await powerSync.execute('DELETE FROM offline_sets WHERE id = ?', [existing.id]);
@@ -235,14 +248,19 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
       }
       
       const set = flashcardSets.find(s => s.id === setId);
+      console.log('[Toggle] Found set:', set?.title);
       const id = generateMongoId();
       const now = new Date().toISOString();
+
+      console.log('[Toggle] Inserting:', { id, userId, setId });
       
       await powerSync.execute(
         `INSERT INTO offline_sets (id, user_id, set_id, is_owned, last_accessed, created_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [id, userId, setId, boolToInt(set?.user_id === userId), now, now]
       );
+
+      console.log('[Toggle] Inserted successfully');
       
       Logger.log(LogContext.FLASHCARD, 'Set added to offline', { setId });
     }

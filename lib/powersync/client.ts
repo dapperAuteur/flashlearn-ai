@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PowerSyncDatabase } from '@powersync/web';
 import AppSchema from './schema';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -6,6 +8,7 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
  * PowerSync client singleton
  * Manages local IndexedDB database with offline-first sync
  */
+// let powerSyncInstance: PowerSyncDatabase | null = null;
 let powerSyncInstance: PowerSyncDatabase | null = null;
 
 /**
@@ -13,79 +16,36 @@ let powerSyncInstance: PowerSyncDatabase | null = null;
  * Call once during app startup
  */
 export async function initPowerSync(): Promise<PowerSyncDatabase> {
-  if (powerSyncInstance) {
-    Logger.log(LogContext.SYSTEM, 'PowerSync already initialized');
-    return powerSyncInstance;
-  }
+  if (powerSyncInstance) return powerSyncInstance;
 
   try {
-    Logger.log(LogContext.SYSTEM, 'Initializing PowerSync database');
-
-    const db = new PowerSyncDatabase({
-      schema: AppSchema,
+    powerSyncInstance = new PowerSyncDatabase({
       database: {
-        dbFilename: 'flashlearnai.db', // IndexedDB database name
+        dbFilename: 'flashlearnai.db',
       },
+      schema: AppSchema,
       flags: {
-        useWebWorker: false, // Fix worker script error
-        enableMultiTabs: true, // Allow multiple tabs
-      },
+        useWebWorker: false,
+        enableMultiTabs: false,
+      }
     });
 
-    // Wait for ready state
-
-    // await new Promise((resolve) => {
-    //   if (powerSyncInstance!.ready) {
-    //     resolve(true);
-    //   } else {
-    //     const checkReady = setInterval(() => {
-    //       console.log('Checking ready state:', powerSyncInstance!.ready);
-    //       if (powerSyncInstance!.ready) {
-    //         clearInterval(checkReady);
-    //         resolve(true);
-    //       }
-    //     }, 100);
-    //   }
-    // });
+    await powerSyncInstance.init();
     
-
-    Logger.info(LogContext.SYSTEM, 'PowerSync initialized successfully', {
-      dbName: 'flashlearnai.db',
-      tables: Object.keys(AppSchema.tables),
-    });
-
-    await db.init();
-
-    powerSyncInstance = db;
-
-    console.log('[PowerSync] Database initialized successfully');
-    console.log('[PowerSync] Database name:', 'flashlearnai.db');
-    console.log('[PowerSync] Tables:', Object.keys(AppSchema.tables));
-
-    return db;
+    console.log('[PowerSync] Database initialized');
+    return powerSyncInstance;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    Logger.error(LogContext.SYSTEM, 'Failed to initialize PowerSync', {
-      error: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    throw new Error(`PowerSync initialization failed: ${errorMessage}`);
+    console.error('[PowerSync] Init failed:', error);
+    throw error;
   }
 }
 
-/**
- * Get PowerSync instance
- * @throws Error if not initialized
- */
 export function getPowerSync(): PowerSyncDatabase {
   if (!powerSyncInstance) {
-    const error = 'PowerSync not initialized. Call initPowerSync() first.';
-    Logger.error(LogContext.SYSTEM, error);
-    throw new Error(error);
+    throw new Error('PowerSync not initialized');
   }
   return powerSyncInstance;
 }
-
 /**
  * Close PowerSync connection
  * Call during cleanup/logout
