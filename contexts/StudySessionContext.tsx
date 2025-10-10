@@ -249,7 +249,18 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
 }, [authSession, sessionSetId]);
 
   const completeSession = useCallback(async () => {
-  if (!sessionId || !sessionStartTime) return;
+  
+  if (!sessionId || !sessionStartTime || !sessionSetId) {
+    Logger.error(LogContext.STUDY, "Missing required data for completion", {
+      hasSessionId: !!sessionId,
+      hasStartTime: !!sessionStartTime,
+      hasSetId: !!sessionSetId
+    });
+    return;
+  }
+
+  console.log('completeSession called - isOfflineSession:', isOfflineSession, 'navigator.onLine:', navigator.onLine);
+
 
   console.log('completeSession - cardResults length:', cardResults.length, 'listId: ', sessionSetId);
   
@@ -339,7 +350,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
           throw new Error(errorData.message || 'Sync failed');
         }
       } catch (syncError) {
-        Logger.error(LogContext.STUDY, "Failed to sync session to MongoDB (will retry later)", { 
+        Logger.error(LogContext.STUDY, "⚠️ Failed to sync session to MongoDB (will retry later)", { 
           error: syncError,
           sessionId,
           sessionSetId
@@ -349,12 +360,15 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     }
     
     setIsComplete(true);
+
+    // FIXED: Check if offline before navigating
+    if (!navigator.onLine || isOfflineSession) {
+      // Stay in current context - let OfflineStudyModal handle this
+      Logger.log(LogContext.STUDY, "Session complete (offline mode)", { sessionId });
+      // Modal will detect isComplete and call onComplete callback
+    }
     
-    // Navigate to results page
-    Logger.log(LogContext.STUDY, "Navigating to results page", { sessionId });
-    setTimeout(() => {
-      window.location.href = `/study/results/${sessionId}`;
-    }, 100);
+  
     
   } catch (error) {
     Logger.error(LogContext.STUDY, "Error completing session", {

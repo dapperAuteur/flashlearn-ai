@@ -8,9 +8,10 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 interface Props {
   setId: string | null;
   onClose: () => void;
+  onComplete: (sessionId: string) => void;
 }
 
-export default function OfflineStudyModal({ setId, onClose }: Props) {
+export default function OfflineStudyModal({ setId, onClose, onComplete }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
   const {
@@ -35,6 +36,15 @@ export default function OfflineStudyModal({ setId, onClose }: Props) {
     setStartTime(Date.now());
     showNextCard();
   };
+
+  useEffect(() => {
+    if (isComplete && sessionId) {
+      setTimeout(() => {
+      onComplete(sessionId);
+      resetSession();
+    }, 500);
+    }
+  }, [isComplete, sessionId, onComplete, resetSession]);
 
   useEffect(() => {
     if (setId && !sessionId) {
