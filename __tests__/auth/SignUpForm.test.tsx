@@ -80,7 +80,7 @@ describe('SignUpForm', () => {
       });
       
       // Check if router.push was called with the correct URL
-      expect(push).toHaveBeenCalledWith('/signin?registered=true');
+      expect(push).toHaveBeenCalledWith('auth/signin?registered=true');
     });
   });
 });
