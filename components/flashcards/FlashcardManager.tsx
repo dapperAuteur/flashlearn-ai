@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useFlashcards } from '@/contexts/FlashcardContext';
-import { useSession } from 'next-auth/react';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -14,6 +13,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useStudySession } from '@/contexts/StudySessionContext';
+import { useMigration } from '@/hooks/useMigration';
+import { useSession } from 'next-auth/react';
 import { LogContext, Logger } from '@/lib/logging/client-logger';
 
 interface Props {
@@ -21,24 +22,13 @@ interface Props {
 }
 
 export default function FlashcardManager({ onStartStudy }: Props) {
+  const { data: session } = useSession();
   const router = useRouter();
   const { startSession } = useStudySession();
-  const {
-    flashcardSets,
-    offlineSets,
-    toggleOfflineAvailability,
-    createFlashcardSet, 
-    createFlashcard 
-  } = useFlashcards();
-  const { data: session } = useSession();
+  const { flashcardSets, offlineSets, toggleOfflineAvailability } = useFlashcards();
+  const { migrating, error: migrationError, migrationProgress, migrateAllSets } = useMigration();
   const [searchTerm, setSearchTerm] = useState('');
-  const [migrating, setMigrating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [migrationProgress, setMigrationProgress] = useState({
-    total: 0,
-    completed: 0,
-    currentBatch: 0,
-  });
+  const [localError, setLocalError] = useState<string | null>(null);
 
   // DEBUG: Check what we're getting
   console.log('FlashcardManager - flashcardSets:', flashcardSets);
@@ -48,154 +38,21 @@ export default function FlashcardManager({ onStartStudy }: Props) {
   // Add this handler
   const handleStudyClick = async (setId: string) => {
     try {
-      setError(null);
+      setLocalError(null);
       await startSession(setId, 'front-to-back');
       onStartStudy(setId); // Trigger view change
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start session');
+      setLocalError(err instanceof Error ? err.message : 'Failed to start session');
     }
   };
 
 
   const handleToggle = async (setId: string) => {
   try {
-    setError(null);
+    setLocalError(null);
     await toggleOfflineAvailability(setId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to toggle offline');
-    }
-  };
-
-  const migrateAllSets = async () => {
-    if (!session?.user?.id) {
-      alert('You must be signed in to migrate sets');
-      return;
-    }
-
-    if (!confirm('Migrate ALL sets from MongoDB to PowerSync? This will take several minutes.')) {
-      return;
-    }
-
-    setMigrating(true);
-    setError(null);
-    
-    let skip = 0;
-    const limit = 10; // Process 10 sets per batch
-    let hasMore = true;
-    let totalMigrated = 0;
-
-    try {
-      while (hasMore) {
-        Logger.log(LogContext.FLASHCARD, 'Fetching migration batch', { skip, limit });
-
-        // Fetch batch from MongoDB
-        const response = await fetch('/api/migrate-to-powersync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            migrateAll: true, // Admin migration flag
-            limit,
-            skip,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.details || 'Migration API failed');
-        }
-
-        const { sets, pagination } = await response.json();
-
-        // Update progress
-        setMigrationProgress({
-          total: pagination.total,
-          completed: skip,
-          currentBatch: sets.length,
-        });
-
-        // Migrate each set in this batch
-        for (const mongoSet of sets) {
-          Logger.log(LogContext.FLASHCARD, 'Migrating set', { 
-            title: mongoSet.title,
-            cardCount: mongoSet.cardCount 
-          });
-
-          try {
-            // Check if set already exists (by mongoId or title)
-            const existingSet = flashcardSets.find(
-              s => s.title === mongoSet.title
-            );
-
-            if (existingSet) {
-              Logger.log(LogContext.FLASHCARD, 'Set already exists, skipping', { 
-                title: mongoSet.title 
-              });
-              totalMigrated++;
-              continue;
-            }
-
-            // Create set in PowerSync
-            const setId = await createFlashcardSet({
-              user_id: session.user.id, // Sets ownership to current user
-              title: mongoSet.title,
-              description: mongoSet.description,
-              is_public: mongoSet.isPublic ? 1 : 0,
-              card_count: mongoSet.cardCount,
-              source: mongoSet.source,
-              is_deleted: 0,
-            });
-
-            // Create flashcards
-            for (let i = 0; i < mongoSet.flashcards.length; i++) {
-              const card = mongoSet.flashcards[i];
-              await createFlashcard({
-                set_id: setId,
-                user_id: session.user.id,
-                front: card.front,
-                back: card.back,
-                front_image: card.frontImage,
-                back_image: card.backImage,
-                order: i,
-              });
-            }
-
-            totalMigrated++;
-            Logger.log(LogContext.FLASHCARD, 'Set migrated successfully', { 
-              title: mongoSet.title,
-              totalMigrated 
-            });
-
-          } catch (err) {
-            Logger.error(LogContext.FLASHCARD, 'Failed to migrate individual set', { 
-              error: err,
-              title: mongoSet.title 
-            });
-            // Continue with next set even if one fails
-          }
-        }
-
-        // Check if more batches remain
-        hasMore = pagination.hasMore;
-        skip += limit;
-
-        // Small delay between batches to avoid overwhelming PowerSync
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      alert(`Migration complete! ${totalMigrated} sets migrated to PowerSync.`);
-      Logger.log(LogContext.FLASHCARD, 'Migration complete', { totalMigrated });
-
-      // Refresh page to show new sets
-      window.location.reload();
-
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      setError(`Migration failed: ${errorMsg}`);
-      Logger.error(LogContext.FLASHCARD, 'Migration failed', { error });
-      alert(`Migration failed: ${errorMsg}`);
-    } finally {
-      setMigrating(false);
-      setMigrationProgress({ total: 0, completed: 0, currentBatch: 0 });
+      setLocalError(err instanceof Error ? err.message : 'Failed to toggle offline');
     }
   };
 
@@ -220,12 +77,12 @@ export default function FlashcardManager({ onStartStudy }: Props) {
           placeholder="Search sets..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 pr-4 py-2 w-full border rounded-md"
+          className="pl-10 pr-4 py-2 w-full border rounded-md focus:outline-none focus:border-blue-500 text-gray-900"
         />
       </div>
       {/* Action buttons */}
       <div className="flex gap-4">
-      <button onClick={migrateAllSets} className="inline-flex items-end px-4 py-2 bg-green-600 text-white rounded-md" disabled={migrating}>
+      <button onClick={() => migrateAllSets()} className="inline-flex items-end px-4 py-2 bg-green-600 text-white rounded-md" disabled={migrating}>
         {migrating ? (
             <>
               <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
@@ -244,11 +101,16 @@ export default function FlashcardManager({ onStartStudy }: Props) {
         Create Set
       </Link>
       </div>
-      {/* Error display */}
-        {error && (
+      {/* Error display for local component errors */}
+        {localError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800">{localError}</p>
+          </div>
+        )}
+        {migrationError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-800 font-medium">Migration Error</p>
-            <p className="text-red-800">{error}</p>
+            <p className="text-red-800">{migrationError}</p>
           </div>
         )}
         {/* Migration progress */}
