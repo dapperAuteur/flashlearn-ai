@@ -104,7 +104,7 @@ export default function GenerateFlashcardsPage(){
               
               <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                 <button
-                  onClick={() => router.push('/study')}
+                  onClick={() => router.push('/flashcards')}
                   className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   <PlayIcon className="h-5 w-5 mr-2" />
