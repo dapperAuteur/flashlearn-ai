@@ -333,7 +333,7 @@ const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
             You&apos;re on a 12-day streak! Keep the momentum going with your personalized study session.
           </p>
           <Link
-            href="/flashcards"
+            href="/study"
             className="inline-flex items-center bg-yellow-400 text-blue-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-yellow-300 transition-colors shadow-lg"
           >
             Continue Studying
