@@ -1,6 +1,6 @@
 import 'next-auth';
 import 'next-auth/jwt';
-import { DefaultSession } from "next-auth";
+import { DefaultSession, DefaultUser } from "next-auth";
 
 /**
  * This file extends the default types for NextAuth.js.
@@ -12,9 +12,10 @@ declare module 'next-auth' {
   /**
    * Extends the User model to include your custom 'role' property.
    */
-  interface User {
+  interface User extends DefaultUser {
     // FIX: Made 'role' a required string, as every user in your system has a role.
     role: string;
+    id: string;
   }
 
   /**
@@ -26,6 +27,7 @@ declare module 'next-auth' {
       // FIX: Made 'role' a required string.
       role: string;
     } & DefaultSession['user']; // This keeps the default properties like name, email, image
+    powersync_token: string;
   }
 }
 
@@ -37,5 +39,6 @@ declare module 'next-auth/jwt' {
     id: string;
     // FIX: Made 'role' a required string.
     role: string;
+    powersync_token: string;
   }
 }
