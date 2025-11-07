@@ -361,12 +361,11 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     
     setIsComplete(true);
 
-    // FIXED: Check if offline before navigating
-    if (!navigator.onLine || isOfflineSession) {
-      // Stay in current context - let OfflineStudyModal handle this
-      Logger.log(LogContext.STUDY, "Session complete (offline mode)", { sessionId });
-      // Modal will detect isComplete and call onComplete callback
-    }
+    
+    Logger.log(LogContext.STUDY, "Is session complete in (offline mode)", {
+      sessionId,
+      isOfflineSession: isOfflineSession
+    });
     
   
     
