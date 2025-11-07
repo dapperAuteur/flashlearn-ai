@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useEffect, useMemo } from 'react';
@@ -41,14 +42,14 @@ export default function StudySessionResults() {
     }
   }, [results]); // Depend on sessionId from the derived results
 
-  const handleResetClick = () => {
-    Logger.log(
-      LogContext.STUDY,
-      `User clicked 'Study Another Set' after session ID: ${results.sessionId}`
-    );
-    // MODIFIED: Call the reset function from the context.
-    resetSession();
-  };
+  // const handleResetClick = () => {
+  //   Logger.log(
+  //     LogContext.STUDY,
+  //     `User clicked 'Study Another Set' after session ID: ${results.sessionId}`
+  //   );
+  //   // MODIFIED: Call the reset function from the context.
+  //   resetSession();
+  // };
 
   // The rest of the component's JSX and helper functions remain exactly the same.
   // ... (formatDuration, chartData, StatCard, and the main return statement)
@@ -93,14 +94,14 @@ export default function StudySessionResults() {
           </div>
         </div>
       </div>
-      <div className="mt-8 text-center">
+      {/* <div className="mt-8 text-center">
         <button
           onClick={handleResetClick}
           className="w-full sm:w-auto py-3 px-8 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
         >
           Study Another Set
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
