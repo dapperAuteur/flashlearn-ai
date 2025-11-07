@@ -106,8 +106,8 @@ export function usePageActions(): PageActions {
           ],
         };
 
-      case '/study':
-      case '/study':
+      case '/flashcards':
+      case '/flashcards':
         return {
           primary: {
             label: 'Start Session',

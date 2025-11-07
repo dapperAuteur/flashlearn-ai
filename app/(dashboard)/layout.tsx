@@ -39,7 +39,7 @@ export default function DashboardLayout({
   // Redirect unauthenticated users
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/signin');
+      router.push('/auth/signin');
     }
   }, [status, router]);
 

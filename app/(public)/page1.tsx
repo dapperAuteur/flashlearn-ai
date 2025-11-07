@@ -30,7 +30,7 @@ const AuthenticatedHome = ({ session }: { session: any }) => {
             </div>
           </Link>
           
-          <Link href="/study" className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+          <Link href="/flashcards" className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center space-x-3">
               <Brain className="h-8 w-8 text-green-600" />
               <div>

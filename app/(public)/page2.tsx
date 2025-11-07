@@ -20,7 +20,7 @@ const AdaptiveHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; 
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/study"
+                href="/flashcards"
                 className="bg-yellow-400 text-blue-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
               >
                 Continue Studying
@@ -183,7 +183,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
               <p className="text-gray-600 text-sm">Upload PDFs, paste text, or share YouTube links to create flashcards instantly with AI.</p>
             </Link>
             
-            <Link href="/study" className="group bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
+            <Link href="/flashcards" className="group bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-green-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Brain className="h-6 w-6 text-white" />
               </div>
@@ -332,7 +332,7 @@ export default async function Home() {
                   Your flashcards are waiting. Let&apos;s make today a learning victory.
                 </p>
                 <Link
-                  href="/study"
+                  href="/flashcards"
                   className="bg-yellow-400 text-blue-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
                 >
                   Start Studying Now

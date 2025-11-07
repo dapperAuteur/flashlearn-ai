@@ -62,7 +62,7 @@ export default function NotFound() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link 
-                href="/study"
+                href="/flashcards"
                 className="group flex items-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover:shadow-md transition-all duration-300"
               >
                 <div className="bg-blue-500 rounded-lg w-10 h-10 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">

@@ -14,6 +14,7 @@ const PENDING_CHANGES_STORE = 'pendingChanges';
 // Existing interfaces
 export interface CardResult {
   sessionId: string;
+  setId?: string;
   flashcardId: string;
   isCorrect: boolean;
   timeSeconds: number;
@@ -67,6 +68,7 @@ export interface StudySessionHistory {
   accuracy: number;
   durationSeconds: number;
   isOfflineSession: boolean;
+  studyDirection: string;
 }
 
 export interface PendingChange {
@@ -147,8 +149,8 @@ function openDB(): Promise<IDBDatabase> {
 export async function saveResult(result: CardResult): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STUDY_RESULTS_STORE, 'readwrite');
-    const store = transaction.objectStore(STUDY_RESULTS_STORE);
+    const tx = db.transaction(STUDY_RESULTS_STORE, 'readwrite');
+    const store = tx.objectStore(STUDY_RESULTS_STORE);
     const request = store.add(result);
 
     request.onsuccess = () => resolve();
@@ -162,8 +164,8 @@ export async function saveResult(result: CardResult): Promise<void> {
 export async function getResults(sessionId: string): Promise<CardResult[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STUDY_RESULTS_STORE, 'readonly');
-    const store = transaction.objectStore(STUDY_RESULTS_STORE);
+    const tx = db.transaction(STUDY_RESULTS_STORE, 'readonly');
+    const store = tx.objectStore(STUDY_RESULTS_STORE);
     const request = store.getAll();
 
     request.onsuccess = () => {
@@ -181,8 +183,8 @@ export async function getResults(sessionId: string): Promise<CardResult[]> {
 export async function clearResults(sessionId: string): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STUDY_RESULTS_STORE, 'readwrite');
-    const store = transaction.objectStore(STUDY_RESULTS_STORE);
+    const tx = db.transaction(STUDY_RESULTS_STORE, 'readwrite');
+    const store = tx.objectStore(STUDY_RESULTS_STORE);
     const request = store.getAll();
 
     request.onsuccess = () => {
@@ -202,33 +204,11 @@ export async function clearResults(sessionId: string): Promise<void> {
   });
 }
 
-export async function queueSessionForSync(sessionId: string): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
-    const store = transaction.objectStore(SYNC_QUEUE_STORE);
-    const request = store.add({ sessionId });
-
-    request.onsuccess = () => {
-      Logger.log(LogContext.SYSTEM, 'Session queued for sync', { sessionId });
-      resolve();
-    };
-    request.onerror = () => {
-      if (request.error?.name === 'ConstraintError') {
-        Logger.log(LogContext.SYSTEM, 'Session already in sync queue', { sessionId });
-        return resolve();
-      }
-      Logger.error(LogContext.SYSTEM, 'Error queuing session for sync', { error: request.error });
-      reject('Could not queue session.');
-    };
-  });
-}
-
 export async function getQueuedSessions(): Promise<string[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(SYNC_QUEUE_STORE, 'readonly');
-    const store = transaction.objectStore(SYNC_QUEUE_STORE);
+    const tx = db.transaction(SYNC_QUEUE_STORE, 'readonly');
+    const store = tx.objectStore(SYNC_QUEUE_STORE);
     const request = store.getAll();
 
     request.onsuccess = () => {
@@ -245,8 +225,8 @@ export async function getQueuedSessions(): Promise<string[]> {
 export async function removeSessionFromQueue(sessionId: string): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
-    const store = transaction.objectStore(SYNC_QUEUE_STORE);
+    const tx = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
+    const store = tx.objectStore(SYNC_QUEUE_STORE);
     const request = store.delete(sessionId);
 
     request.onsuccess = () => {
@@ -264,8 +244,8 @@ export async function removeSessionFromQueue(sessionId: string): Promise<void> {
 export async function saveOfflineSet(set: OfflineFlashcardSet): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
-    const store = transaction.objectStore(OFFLINE_SETS_STORE);
+    const tx = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
+    const store = tx.objectStore(OFFLINE_SETS_STORE);
     const request = store.put(set);
 
     request.onsuccess = () => {
@@ -282,8 +262,8 @@ export async function saveOfflineSet(set: OfflineFlashcardSet): Promise<void> {
 export async function getOfflineSets(): Promise<OfflineFlashcardSet[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(OFFLINE_SETS_STORE, 'readonly');
-    const store = transaction.objectStore(OFFLINE_SETS_STORE);
+    const tx = db.transaction(OFFLINE_SETS_STORE, 'readonly');
+    const store = tx.objectStore(OFFLINE_SETS_STORE);
     const request = store.getAll();
 
     request.onsuccess = () => {
@@ -299,8 +279,8 @@ export async function getOfflineSets(): Promise<OfflineFlashcardSet[]> {
 export async function getOfflineSet(setId: string): Promise<OfflineFlashcardSet | null> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(OFFLINE_SETS_STORE, 'readonly');
-    const store = transaction.objectStore(OFFLINE_SETS_STORE);
+    const tx = db.transaction(OFFLINE_SETS_STORE, 'readonly');
+    const store = tx.objectStore(OFFLINE_SETS_STORE);
     const request = store.get(setId);
 
     request.onsuccess = () => {
@@ -316,8 +296,8 @@ export async function getOfflineSet(setId: string): Promise<OfflineFlashcardSet 
 export async function removeOfflineSet(setId: string): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
-    const store = transaction.objectStore(OFFLINE_SETS_STORE);
+    const tx = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
+    const store = tx.objectStore(OFFLINE_SETS_STORE);
     const request = store.delete(setId);
 
     request.onsuccess = () => {
@@ -335,8 +315,8 @@ export async function removeOfflineSet(setId: string): Promise<void> {
 export async function saveCategory(category: Category): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(CATEGORIES_STORE, 'readwrite');
-    const store = transaction.objectStore(CATEGORIES_STORE);
+    const tx = db.transaction(CATEGORIES_STORE, 'readwrite');
+    const store = tx.objectStore(CATEGORIES_STORE);
     const request = store.put(category);
 
     request.onsuccess = () => resolve();
@@ -350,8 +330,8 @@ export async function saveCategory(category: Category): Promise<void> {
 export async function getCategories(): Promise<Category[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(CATEGORIES_STORE, 'readonly');
-    const store = transaction.objectStore(CATEGORIES_STORE);
+    const tx = db.transaction(CATEGORIES_STORE, 'readonly');
+    const store = tx.objectStore(CATEGORIES_STORE);
     const request = store.getAll();
 
     request.onsuccess = () => resolve(request.result);
@@ -366,8 +346,8 @@ export async function getCategories(): Promise<Category[]> {
 export async function saveStudyHistory(session: StudySessionHistory): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STUDY_HISTORY_STORE, 'readwrite');
-    const store = transaction.objectStore(STUDY_HISTORY_STORE);
+    const tx = db.transaction(STUDY_HISTORY_STORE, 'readwrite');
+    const store = tx.objectStore(STUDY_HISTORY_STORE);
     const request = store.put(session);
 
     request.onsuccess = () => resolve();
@@ -381,8 +361,8 @@ export async function saveStudyHistory(session: StudySessionHistory): Promise<vo
 export async function getStudyHistory(limit: number = 10): Promise<StudySessionHistory[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STUDY_HISTORY_STORE, 'readonly');
-    const store = transaction.objectStore(STUDY_HISTORY_STORE);
+    const tx = db.transaction(STUDY_HISTORY_STORE, 'readonly');
+    const store = tx.objectStore(STUDY_HISTORY_STORE);
     const request = store.getAll();
 
     request.onsuccess = () => {
@@ -404,8 +384,8 @@ export async function getStudyHistory(limit: number = 10): Promise<StudySessionH
 export async function savePendingChange(change: PendingChange): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(PENDING_CHANGES_STORE, 'readwrite');
-    const store = transaction.objectStore(PENDING_CHANGES_STORE);
+    const tx = db.transaction(PENDING_CHANGES_STORE, 'readwrite');
+    const store = tx.objectStore(PENDING_CHANGES_STORE);
     const request = store.put(change);
 
     request.onsuccess = () => resolve();
@@ -419,8 +399,8 @@ export async function savePendingChange(change: PendingChange): Promise<void> {
 export async function getPendingChanges(): Promise<PendingChange[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(PENDING_CHANGES_STORE, 'readonly');
-    const store = transaction.objectStore(PENDING_CHANGES_STORE);
+    const tx = db.transaction(PENDING_CHANGES_STORE, 'readonly');
+    const store = tx.objectStore(PENDING_CHANGES_STORE);
     const request = store.getAll();
 
     request.onsuccess = () => resolve(request.result);
@@ -434,8 +414,8 @@ export async function getPendingChanges(): Promise<PendingChange[]> {
 export async function removePendingChange(changeId: string): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(PENDING_CHANGES_STORE, 'readwrite');
-    const store = transaction.objectStore(PENDING_CHANGES_STORE);
+    const tx = db.transaction(PENDING_CHANGES_STORE, 'readwrite');
+    const store = tx.objectStore(PENDING_CHANGES_STORE);
     const request = store.delete(changeId);
 
     request.onsuccess = () => resolve();

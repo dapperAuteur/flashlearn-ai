@@ -23,6 +23,19 @@ export default function RootLayout({
   const pathname = usePathname();
   const [powerSyncDB, setPowerSyncDB] = useState<any>(null);
 
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .then((registration) => {
+          console.log('[SW] Registered:', registration.scope);
+        })
+        .catch((error) => {
+          console.error('[SW] Registration failed:', error);
+        });
+    }
+  }, []);
+
   // Initialize PowerSync once on mount
   useEffect(() => {
     const initPowerSync = async () => {
@@ -49,6 +62,8 @@ export default function RootLayout({
   if (!powerSyncDB) {
     return (
       <html lang="en">
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3B82F6" />
         <body className={inter.className}>
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">

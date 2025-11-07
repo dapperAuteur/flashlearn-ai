@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { List } from '@/models/List';
-import { Logger, LogContext } from '@/lib/logging/client-logger';
-import CsvImportModal from '../flashcards/CsvImportModal';
 import { useStudySession } from '@/contexts/StudySessionContext';
+import { useFlashcards } from '@/contexts/FlashcardContext';
+// import { List } from '@/models/List';
+import { Logger, LogContext } from '@/lib/logging/client-logger';
+// import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
 import SignUpModal from '@/components/ui/SignUpModal';
 import clsx from 'clsx';
+import Link from 'next/link';
 import { 
   BookOpenIcon, 
   PlayIcon, 
@@ -17,76 +18,61 @@ import {
   ArrowRightIcon,
   LockClosedIcon,
   CheckCircleIcon,
-  MagnifyingGlassIcon,
-  TagIcon,
-  FolderIcon
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
-import Link from 'next/link';
-import { useFlashcards } from '@/contexts/FlashcardContext';
-import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
-
 
 export default function StudySessionSetup() {
   const { startSession, isLoading, studyDirection, setStudyDirection } = useStudySession();
-  const { flashcardSets } = useFlashcards(); // Get PowerSync sets
+  const { flashcardSets } = useFlashcards();
   const { status } = useSession();
 
-  const [lists, setLists] = useState<List[]>([]);
+  // const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [showImportModal, setShowImportModal] = useState(false);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [currentStep, setCurrentStep] = useState<'select' | 'direction' | 'ready'>('select');
-  
-  // Filtering state
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedTag, setSelectedTag] = useState<string>('all');
-
-  const fetchLists = async () => {
-    try {
-      // Only fetch from API if authenticated
-      if (status === 'authenticated') {
-        const response = await fetch('/api/lists');
-        if (!response.ok) throw new Error('Failed to fetch lists');
-        const apiLists = await response.json();
-        
-        // Merge with PowerSync sets (PowerSync sets take priority)
-        const powerSyncSetIds = new Set(flashcardSets.map(s => s.id));
-        const uniqueApiLists = apiLists.filter((list: List) => 
-          !powerSyncSetIds.has(list._id?.toString() || '')
-        );
-        
-        setLists([...flashcardSets.map(convertPowerSyncToList), ...uniqueApiLists]);
-      } else {
-        // Unauthenticated: only show PowerSync sets (public sets)
-        setLists(flashcardSets.map(convertPowerSyncToList));
-      }
-    } catch (error) {
-      setError('Failed to load lists. Showing offline sets only.');
-      Logger.error(LogContext.STUDY, 'Error fetching lists', { error });
-      
-      // Fallback to PowerSync sets only
-      setLists(flashcardSets.map(convertPowerSyncToList));
-    }
-  };
 
   // Helper: Convert PowerSync set to List format
-  const convertPowerSyncToList = (set: PowerSyncFlashcardSet): List => ({
-    _id: set.id,
-    title: set.title,
-    description: set.description || undefined,
-    isPublic: set.is_public === 1,
-    userId: set.user_id,
-    cardCount: set.card_count,
-    createdAt: new Date(set.created_at),
-    updatedAt: new Date(set.updated_at),
-    tags: []
-  });
+  // const convertPowerSyncToList = (set: PowerSyncFlashcardSet): List => ({
+  //   _id: set.id,
+  //   title: set.title,
+  //   description: set.description || undefined,
+  //   isPublic: set.is_public === 1,
+  //   userId: set.user_id,
+  //   cardCount: set.card_count,
+  //   createdAt: new Date(set.created_at),
+  //   updatedAt: new Date(set.updated_at),
+  //   tags: [],
+  // });
 
-  useEffect(() => {
-    fetchLists();
-  }, [flashcardSets, status]); // Re-fetch when PowerSync sets change
+  // Combine PowerSync sets and API sets
+  // const fetchLists = useCallback(async () => {
+  //   try {
+  //     if (status === 'authenticated') {
+  //       const response = await fetch('/api/lists');
+  //       if (!response.ok) throw new Error('Failed to fetch lists');
+  //       const apiLists = await response.json();
+        
+  //       const powerSyncSetIds = new Set(flashcardSets.map(s => s.id));
+  //       const uniqueApiLists = apiLists.filter((list: List) => 
+  //         !powerSyncSetIds.has(list._id?.toString() || '')
+  //       );
+        
+  //       setLists([...flashcardSets.map(convertPowerSyncToList), ...uniqueApiLists]);
+  //     } else {
+  //       setLists(flashcardSets.map(convertPowerSyncToList));
+  //     }
+  //   } catch (error) {
+  //     setError('Failed to load lists. Showing offline sets only.');
+  //     Logger.error(LogContext.STUDY, 'Error fetching lists', { error });
+  //     setLists(flashcardSets.map(convertPowerSyncToList));
+  //   }
+  // }, [status, flashcardSets]);
+
+  // useEffect(() => {
+  //   fetchLists();
+  // }, [fetchLists]);
 
   useEffect(() => {
     if (selectedListId && currentStep === 'select') {
@@ -99,41 +85,41 @@ export default function StudySessionSetup() {
       setError('Please select a list to study');
       return;
     }
+    
     setError(null);
+    
+    // Check if offline and set not available
+    // if (!navigator.onLine) {
+    //   const isSetOffline = offlineSets.some(s => s.set_id === selectedListId);
+      
+    //   if (!isSetOffline) {
+    //     setError('You are offline and this set is not available for offline study.');
+    //     return;
+    //   }
+    // }
+    
     await startSession(selectedListId, studyDirection);
   };
 
   const handleDirectionChange = (direction: 'front-to-back' | 'back-to-front') => {
     if (status !== 'authenticated' && direction === 'back-to-front') {
       setShowSignUpModal(true);
-      Logger.log(LogContext.STUDY, "Unauthenticated user clicked premium feature upsell.");
+      Logger.log(LogContext.STUDY, "Unauthenticated user clicked premium feature");
     } else {
       setStudyDirection(direction);
       setCurrentStep('ready');
     }
   };
 
-  const handleImportSuccess = () => {
-    fetchLists();
-  };
-
-  const selectedList = lists.find(list => list._id?.toString() === selectedListId);
-
-  // Filter and search logic
-  const filteredLists = useMemo(() => {
-    return lists.filter(list => {
-      const matchesSearch = list.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           list.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // Note: Simplified filtering - categories/tags may not be available on List type
-      // This focuses on search functionality which is the main requirement
+  // Filter lists
+  // Filter sets - only PowerSync sets
+  const filteredSets = useMemo(() => {
+    return flashcardSets.filter(set => {
+      const matchesSearch = set.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           set.description?.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesSearch;
     });
-  }, [lists, searchTerm]);
-
-  // Simplified - remove category/tag filtering since List type doesn't support it
-  const allCategories: string[] = [];
-  const allTags: string[] = [];
+  }, [flashcardSets, searchTerm]);
 
   return (
     <>
@@ -190,9 +176,7 @@ export default function StudySessionSetup() {
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
-            <div className="flex">
-              <div className="text-sm">{error}</div>
-            </div>
+            {error}
           </div>
         )}
 
@@ -206,76 +190,69 @@ export default function StudySessionSetup() {
               <h2 className="text-xl font-semibold text-gray-900">Select Flashcard Set</h2>
             </div>
 
-            {lists.length === 0 ? (
+            {filteredSets.length === 0 ? (
               <div className="text-center py-8">
-                <BookOpenIcon className="h-12 w-12 text-gray-700 mx-auto mb-4" />
+                <BookOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No flashcard sets found</h3>
                 <p className="text-gray-600 mb-4">Create your first set to get started</p>
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-gray-900 rounded-lg hover:bg-blue-700 transition-colors"
+                <Link
+                  href="/generate"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   <CloudArrowUpIcon className="h-4 w-4 mr-2" />
-                  Import from CSV
-                </button>
+                  Create New Set
+                </Link>
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Search and Filters */}
-                <div className="flex flex-col lg:flex-row gap-3 p-4 bg-gray-50 rounded-lg">
-                  {/* Search */}
-                  <div className="flex-1">
-                    <div className="relative">
-                      <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800" />
-                      <input
-                        type="text"
-                        placeholder="Search flashcard sets..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700"
-                      />
-                    </div>
-                  </div>
+                {/* Search */}
+                <div className="relative">
+                  <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search flashcard sets..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
 
                 {/* Filtered Results */}
-                {filteredLists.length === 0 ? (
+                {filteredSets.length === 0 ? (
                   <div className="text-center py-8">
                     <MagnifyingGlassIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No sets match your filters</h3>
-                    <p className="text-gray-600 mb-4">Try adjusting your search or filters</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No sets match your search</h3>
+                    <p className="text-gray-600">Try a different search term</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {filteredLists.map((list) => (
+                    {filteredSets.map((set) => (
                       <div
-                        key={list._id?.toString()}
-                        onClick={() => setSelectedListId(list._id?.toString() || '')}
+                        key={set.id?.toString()}
+                        onClick={() => setSelectedListId(set.id?.toString() || '')}
                         className={clsx(
                           'p-4 rounded-xl border-2 cursor-pointer transition-all',
-                          selectedListId === list._id?.toString()
+                          selectedListId === set.id?.toString()
                             ? 'border-blue-500 bg-blue-50 shadow-md'
                             : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                         )}
                       >
                         <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-medium text-gray-900">{list.title}</h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600">
-                              <span>{list.cardCount} cards</span>
-                              {list.description && (
-                                <span className="truncate max-w-xs">{list.description}</span>
-                              )}
-                            </div>
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-900">{set.title}</h3>
+                            {set.description && (
+                              <p className="text-sm text-gray-600 mt-1">{set.description}</p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-2">{set.card_count} cards</p>
                           </div>
                           <div className={clsx(
-                            'w-5 h-5 rounded-full border-2',
-                            selectedListId === list._id?.toString()
+                            'w-6 h-6 rounded-full border-2 flex items-center justify-center',
+                            selectedListId === set.id?.toString()
                               ? 'bg-blue-600 border-blue-600'
                               : 'border-gray-300'
                           )}>
-                            {selectedListId === list._id?.toString() && (
-                              <CheckCircleIcon className="w-3 h-3 text-white m-0.5" />
+                            {selectedListId === set.id?.toString() && (
+                              <CheckCircleIcon className="w-4 h-4 text-white" />
                             )}
                           </div>
                         </div>
@@ -286,10 +263,10 @@ export default function StudySessionSetup() {
                 
                 <Link
                   href="/generate"
-                  className="block p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
+                  className="block p-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0 bg-gray-100 p-2 rounded-lg">
+                    <div className="bg-gray-100 p-2 rounded-lg">
                       <CloudArrowUpIcon className="h-5 w-5 text-gray-600" />
                     </div>
                     <div>
@@ -339,78 +316,51 @@ export default function StudySessionSetup() {
                     'p-6 rounded-xl border-2 text-left transition-all relative',
                     studyDirection === 'back-to-front'
                       ? 'border-blue-500 bg-blue-50 shadow-md'
-                      : 'border-gray-200 hover:border-gray-300 hover:shadow-sm',
-                    status !== 'authenticated' && 'opacity-75'
+                      : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                   )}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">Back → Front</h3>
-                    <div className="flex items-center space-x-2">
-                      {status !== 'authenticated' && <LockClosedIcon className="h-4 w-4 text-amber-600" />}
-                      <ArrowRightIcon className="h-5 w-5 text-gray-600" />
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    See the answer first, then test if you know the question. Great for reverse learning.
-                  </p>
                   {status !== 'authenticated' && (
-                    <div className="absolute top-2 right-2">
-                      <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Premium</span>
+                    <div className="absolute top-2 right-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center">
+                      <LockClosedIcon className="h-3 w-3 mr-1" />
+                      Sign up
                     </div>
                   )}
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-900">Back → Front</h3>
+                    <ArrowRightIcon className="h-5 w-5 text-gray-600 transform rotate-180" />
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    See the answer first, then the question. Great for reverse learning.
+                  </p>
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 3: Start Session */}
-        {currentStep === 'ready' && selectedList && (
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg border border-blue-200">
-            <div className="p-6">
-              <div className="text-center">
-                <div className="bg-green-100 p-3 rounded-full w-16 h-16 mx-auto mb-4">
-                  <PlayIcon className="h-10 w-10 text-green-600" />
-                </div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">Ready to Study!</h2>
-                <p className="text-gray-600 mb-6">
-                  You&apos;ll study <span className="font-semibold">{selectedList.title}</span> with{' '}
-                  <span className="font-semibold">{selectedList.cardCount} cards</span> in{' '}
-                  <span className="font-semibold">
-                    {studyDirection === 'front-to-back' ? 'Front → Back' : 'Back → Front'}
-                  </span> mode.
-                </p>
-                
-                <button
-                  onClick={handleStartSession}
-                  disabled={isLoading}
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                      Starting Session...
-                    </>
-                  ) : (
-                    <>
-                      <PlayIcon className="h-5 w-5 mr-2" />
-                      Start Studying
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
+        {/* Step 3: Start Button */}
+        {currentStep === 'ready' && (
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg p-8 text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">Ready to Start!</h2>
+            <p className="text-blue-100 mb-6">
+              You&apos;re about to study {filteredSets.find(l => l.id?.toString() === selectedListId)?.card_count} flashcards
+            </p>
+            <button
+              onClick={handleStartSession}
+              disabled={isLoading}
+              className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+            >
+              <PlayIcon className="h-5 w-5 mr-2" />
+              {isLoading ? 'Starting...' : 'Begin Study Session'}
+            </button>
           </div>
         )}
       </div>
 
-      <CsvImportModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onImportSuccess={handleImportSuccess}
+      <SignUpModal 
+        isOpen={showSignUpModal} 
+        onClose={() => setShowSignUpModal(false)} 
       />
-      
-      <SignUpModal isOpen={showSignUpModal} onClose={() => setShowSignUpModal(false)} />
     </>
   );
 }

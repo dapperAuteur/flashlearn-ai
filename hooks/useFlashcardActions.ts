@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useFlashcards } from '@/contexts/FlashcardContext';
+// DELETED: We no longer need the PowerSync context for this action.
+// import { useFlashcards } from '@/contexts/FlashcardContext';
 import Papa from 'papaparse';
 import { Flashcard, sanitizeString } from '@/lib/utils/flashcards/helpers';
-
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // This Hook encapsulates the core state and API interactions for the flashcard generation page.
 export const useFlashcardActions = () => {
   const { data: session } = useSession();
-  const { createFlashcardSet, createFlashcard } = useFlashcards();
+  // DELETED: No longer using PowerSync context here.
+  // const { createFlashcardSet, createFlashcard } = useFlashcards();
+  console.log("useFlashcardActions started");
+  
   
     const [topic, setTopic] = useState('');
     const [title, setTitle] = useState('');
@@ -66,6 +69,7 @@ export const useFlashcardActions = () => {
         }
     };
 
+    // --- THIS IS THE UPDATED FUNCTION ---
     const handleSave = async (isPublic: boolean) => {
         if (!session?.user?.id) {
             setApiError('You must be signed in to save flashcards.');
@@ -75,54 +79,56 @@ export const useFlashcardActions = () => {
             setApiError('No flashcards to save.');
             return;
             }
-        Logger.log(LogContext.FLASHCARD, 'Attempting to save set');
+        Logger.log(LogContext.FLASHCARD, 'Attempting to save set via API');
         if (!title.trim()) {
             setApiError("A title is required to save.");
             return;
         }
         setIsSaving(true);
         setApiError(null);
+
         try {
-            const setId = await createFlashcardSet({
-                user_id: session.user.id,
-                title: title || 'Untitled Set',
-                description: description || null,
-                is_public: isPublic ? 1 : 0,
-                card_count: flashcards.length,
-                source: 'CSV',
-                is_deleted: 0,
+            // We now call the /api/flashcards endpoint directly
+            const response = await fetch('/api/flashcards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: title || 'Untitled Set',
+                    description: description || '',
+                    isPublic: isPublic,
+                    flashcards: flashcards,
+                    // The 'source: CSV' logic is handled by the API endpoint
+                }),
             });
-        // Create individual flashcard records
-        await Promise.all(
-            flashcards.map((card, index) => 
-                createFlashcard({
-                set_id: setId,
-                user_id: session.user.id,
-                front: card.front,
-                back: card.back,
-                front_image: null,
-                back_image: null,
-                order: index,
-                })
-            )
-        );
-        Logger.log(LogContext.FLASHCARD, 'Flashcard set saved', { setId, cardCount: flashcards.length });
-        setSavedSetData({
-            id: setId,
-            title: title || 'Untitled Set',
-            isPublic,
-        });
-        setSaveSuccessMessage('Flashcard set saved successfully!');
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to save flashcard set');
+            }
+
+            const data = await response.json();
+            const savedSet = data.savedSet;
+
+            Logger.log(LogContext.FLASHCARD, 'Flashcard set saved via API', { setId: savedSet._id, cardCount: savedSet.cardCount });
+            
+            setSavedSetData({
+                id: savedSet._id,
+                title: savedSet.title,
+                isPublic: savedSet.isPublic,
+            });
+            setSaveSuccessMessage('Flashcard set saved successfully!');
+        
         } catch (err) {
             const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
             setApiError(msg);
-            Logger.error(LogContext.FLASHCARD, 'Error saving set', { error: err });
-                  setApiError('Failed to save flashcard set. Please try again.');
+            Logger.error(LogContext.FLASHCARD, 'Error saving set to API', { error: err });
+            setApiError('Failed to save flashcard set. Please try again.');
 
         } finally {
             setIsSaving(false);
         }
     };
+    // --- END OF UPDATED FUNCTION ---
 
     const handleExport = async () => {
         // Export logic remains the same as before

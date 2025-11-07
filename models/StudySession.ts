@@ -11,6 +11,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export type StudyDirection = 'front-to-back' | 'back-to-front';
 
 export interface IStudySession extends Document {
+  sessionId: string;
   userId: mongoose.Types.ObjectId;
   listId: mongoose.Types.ObjectId;
   startTime: Date;
@@ -21,15 +22,17 @@ export interface IStudySession extends Document {
   incorrectCount: number;
   completedCards: number;
   studyDirection?: StudyDirection;
+  durationSeconds: number;
+  // results?: [];
   
   // Virtual properties
   isComplete: boolean;
   accuracy: number;
-  durationSeconds: number;
 }
 
 const StudySessionSchema: Schema = new Schema(
   {
+    sessionId: { type: String, required: true, unique: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     listId: { type: Schema.Types.ObjectId, ref: 'List', required: true },
     startTime: { type: Date, default: Date.now },
@@ -48,6 +51,9 @@ const StudySessionSchema: Schema = new Schema(
   { timestamps: true }
 );
 
+StudySessionSchema.index({ userId: 1, createdAt: -1 });
+StudySessionSchema.index({ sessionId: 1 });
+
 // Virtual property to check if session is complete
 StudySessionSchema.virtual('isComplete').get(function(this: IStudySession) {
   return this.completedCards >= this.totalCards;
@@ -65,4 +71,5 @@ StudySessionSchema.virtual('durationSeconds').get(function(this: IStudySession) 
   return Math.round((this.endTime.getTime() - this.startTime.getTime()) / 1000);
 });
 
-export default mongoose.models.StudySession || mongoose.model<IStudySession>('StudySession', StudySessionSchema);
+export const StudySession = mongoose.models.StudySession || 
+  mongoose.model<IStudySession>('StudySession', StudySessionSchema, 'studySessions');

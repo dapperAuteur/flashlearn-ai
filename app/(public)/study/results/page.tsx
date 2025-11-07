@@ -60,7 +60,7 @@ export default function StudyResultsPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link
-            href="/study"
+            href="/flashcards"
             className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4"
           >
             <ArrowLeftIcon className="h-4 w-4 mr-1" />

@@ -50,7 +50,7 @@ describe('DashboardLayout', () => {
       </DashboardLayout>
     );
     
-    expect(mockRouter.push).toHaveBeenCalledWith('/signin');
+    expect(mockRouter.push).toHaveBeenCalledWith('/auth/signin');
     expect(screen.queryByText('Test Content')).not.toBeInTheDocument();
   });
   
