@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import { useFlashcards } from '@/contexts/FlashcardContext';
-import { List } from '@/models/List';
+// import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
+// import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
 import SignUpModal from '@/components/ui/SignUpModal';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -23,10 +23,10 @@ import {
 
 export default function StudySessionSetup() {
   const { startSession, isLoading, studyDirection, setStudyDirection } = useStudySession();
-  const { flashcardSets, offlineSets } = useFlashcards();
+  const { flashcardSets } = useFlashcards();
   const { status } = useSession();
 
-  const [lists, setLists] = useState<List[]>([]);
+  // const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
@@ -34,45 +34,45 @@ export default function StudySessionSetup() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Helper: Convert PowerSync set to List format
-  const convertPowerSyncToList = (set: PowerSyncFlashcardSet): List => ({
-    _id: set.id,
-    title: set.title,
-    description: set.description || undefined,
-    isPublic: set.is_public === 1,
-    userId: set.user_id,
-    cardCount: set.card_count,
-    createdAt: new Date(set.created_at),
-    updatedAt: new Date(set.updated_at),
-    tags: [],
-  });
+  // const convertPowerSyncToList = (set: PowerSyncFlashcardSet): List => ({
+  //   _id: set.id,
+  //   title: set.title,
+  //   description: set.description || undefined,
+  //   isPublic: set.is_public === 1,
+  //   userId: set.user_id,
+  //   cardCount: set.card_count,
+  //   createdAt: new Date(set.created_at),
+  //   updatedAt: new Date(set.updated_at),
+  //   tags: [],
+  // });
 
   // Combine PowerSync sets and API sets
-  const fetchLists = useCallback(async () => {
-    try {
-      if (status === 'authenticated') {
-        const response = await fetch('/api/lists');
-        if (!response.ok) throw new Error('Failed to fetch lists');
-        const apiLists = await response.json();
+  // const fetchLists = useCallback(async () => {
+  //   try {
+  //     if (status === 'authenticated') {
+  //       const response = await fetch('/api/lists');
+  //       if (!response.ok) throw new Error('Failed to fetch lists');
+  //       const apiLists = await response.json();
         
-        const powerSyncSetIds = new Set(flashcardSets.map(s => s.id));
-        const uniqueApiLists = apiLists.filter((list: List) => 
-          !powerSyncSetIds.has(list._id?.toString() || '')
-        );
+  //       const powerSyncSetIds = new Set(flashcardSets.map(s => s.id));
+  //       const uniqueApiLists = apiLists.filter((list: List) => 
+  //         !powerSyncSetIds.has(list._id?.toString() || '')
+  //       );
         
-        setLists([...flashcardSets.map(convertPowerSyncToList), ...uniqueApiLists]);
-      } else {
-        setLists(flashcardSets.map(convertPowerSyncToList));
-      }
-    } catch (error) {
-      setError('Failed to load lists. Showing offline sets only.');
-      Logger.error(LogContext.STUDY, 'Error fetching lists', { error });
-      setLists(flashcardSets.map(convertPowerSyncToList));
-    }
-  }, [status, flashcardSets]);
+  //       setLists([...flashcardSets.map(convertPowerSyncToList), ...uniqueApiLists]);
+  //     } else {
+  //       setLists(flashcardSets.map(convertPowerSyncToList));
+  //     }
+  //   } catch (error) {
+  //     setError('Failed to load lists. Showing offline sets only.');
+  //     Logger.error(LogContext.STUDY, 'Error fetching lists', { error });
+  //     setLists(flashcardSets.map(convertPowerSyncToList));
+  //   }
+  // }, [status, flashcardSets]);
 
-  useEffect(() => {
-    fetchLists();
-  }, [fetchLists]);
+  // useEffect(() => {
+  //   fetchLists();
+  // }, [fetchLists]);
 
   useEffect(() => {
     if (selectedListId && currentStep === 'select') {
@@ -89,14 +89,14 @@ export default function StudySessionSetup() {
     setError(null);
     
     // Check if offline and set not available
-    if (!navigator.onLine) {
-      const isSetOffline = offlineSets.some(s => s.set_id === selectedListId);
+    // if (!navigator.onLine) {
+    //   const isSetOffline = offlineSets.some(s => s.set_id === selectedListId);
       
-      if (!isSetOffline) {
-        setError('You are offline and this set is not available for offline study.');
-        return;
-      }
-    }
+    //   if (!isSetOffline) {
+    //     setError('You are offline and this set is not available for offline study.');
+    //     return;
+    //   }
+    // }
     
     await startSession(selectedListId, studyDirection);
   };
@@ -112,13 +112,14 @@ export default function StudySessionSetup() {
   };
 
   // Filter lists
-  const filteredLists = useMemo(() => {
-    return lists.filter(list => {
-      const matchesSearch = list.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           list.description?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter sets - only PowerSync sets
+  const filteredSets = useMemo(() => {
+    return flashcardSets.filter(set => {
+      const matchesSearch = set.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           set.description?.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesSearch;
     });
-  }, [lists, searchTerm]);
+  }, [flashcardSets, searchTerm]);
 
   return (
     <>
@@ -189,7 +190,7 @@ export default function StudySessionSetup() {
               <h2 className="text-xl font-semibold text-gray-900">Select Flashcard Set</h2>
             </div>
 
-            {lists.length === 0 ? (
+            {filteredSets.length === 0 ? (
               <div className="text-center py-8">
                 <BookOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No flashcard sets found</h3>
@@ -217,7 +218,7 @@ export default function StudySessionSetup() {
                 </div>
 
                 {/* Filtered Results */}
-                {filteredLists.length === 0 ? (
+                {filteredSets.length === 0 ? (
                   <div className="text-center py-8">
                     <MagnifyingGlassIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No sets match your search</h3>
@@ -225,32 +226,32 @@ export default function StudySessionSetup() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {filteredLists.map((list) => (
+                    {filteredSets.map((set) => (
                       <div
-                        key={list._id?.toString()}
-                        onClick={() => setSelectedListId(list._id?.toString() || '')}
+                        key={set.id?.toString()}
+                        onClick={() => setSelectedListId(set.id?.toString() || '')}
                         className={clsx(
                           'p-4 rounded-xl border-2 cursor-pointer transition-all',
-                          selectedListId === list._id?.toString()
+                          selectedListId === set.id?.toString()
                             ? 'border-blue-500 bg-blue-50 shadow-md'
                             : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                         )}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <h3 className="font-medium text-gray-900">{list.title}</h3>
-                            {list.description && (
-                              <p className="text-sm text-gray-600 mt-1">{list.description}</p>
+                            <h3 className="font-medium text-gray-900">{set.title}</h3>
+                            {set.description && (
+                              <p className="text-sm text-gray-600 mt-1">{set.description}</p>
                             )}
-                            <p className="text-xs text-gray-500 mt-2">{list.cardCount} cards</p>
+                            <p className="text-xs text-gray-500 mt-2">{set.card_count} cards</p>
                           </div>
                           <div className={clsx(
                             'w-6 h-6 rounded-full border-2 flex items-center justify-center',
-                            selectedListId === list._id?.toString()
+                            selectedListId === set.id?.toString()
                               ? 'bg-blue-600 border-blue-600'
                               : 'border-gray-300'
                           )}>
-                            {selectedListId === list._id?.toString() && (
+                            {selectedListId === set.id?.toString() && (
                               <CheckCircleIcon className="w-4 h-4 text-white" />
                             )}
                           </div>
@@ -342,7 +343,7 @@ export default function StudySessionSetup() {
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-4">Ready to Start!</h2>
             <p className="text-blue-100 mb-6">
-              You&apos;re about to study {filteredLists.find(l => l._id?.toString() === selectedListId)?.cardCount} flashcards
+              You&apos;re about to study {filteredSets.find(l => l.id?.toString() === selectedListId)?.card_count} flashcards
             </p>
             <button
               onClick={handleStartSession}
