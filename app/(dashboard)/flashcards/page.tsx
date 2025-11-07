@@ -11,6 +11,9 @@ import { useStudySession } from '@/contexts/StudySessionContext';
 import { useMigration } from '@/hooks/useMigration';
 import { ChartBarIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+import { useSession } from 'next-auth/react';
+import { useFlashcards } from '@/contexts/FlashcardContext';
+import { useToast } from '@/hooks/use-toast';
 
 
 type ViewMode = 'list' | 'study' | 'results' | 'history';
@@ -19,29 +22,70 @@ export default function FlashcardsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  // const [autoMigrated, setAutoMigrated] = useState(false);
+
+  const { flashcardSets } = useFlashcards(); 
+  const { toast } = useToast();
+  const { data: session, status } = useSession(); // Get auth status
+  const { migrateAllSets } = useMigration();
 
   const { sessionId, isComplete, resetSession } = useStudySession();
-  // const { migrateAllSets } = useMigration();
 
-  // useEffect(() => {
-  //   // This effect is currently disabled in the original code.
-  //   // If it were to be re-enabled, it would now use the stable `migrateAllSets`
-  //   // function from the `useMigration` hook, solving the dependency issue.
-  //   const isMigrationEffectEnabled = true;
-  //   if (!isMigrationEffectEnabled || autoMigrated) return;
+  useEffect(() => {
+    // Check if migration has already run *this session*
+    const hasMigrated = sessionStorage.getItem('autoMigrated');
 
-  //   const autoMigrateSets = async () => {
-  //     try {
-  //       Logger.log(LogContext.FLASHCARD, 'Checking for sets to migrate');
-  //       migrateAllSets({ onComplete: () => setAutoMigrated(true) });
-  //     } catch (error) {
-  //       Logger.error(LogContext.FLASHCARD, 'Auto-migration failed', { error });
-  //       setAutoMigrated(true); // Don't retry
-  //     }
-  //   };
-  //   autoMigrateSets();
-  // }, [autoMigrated, migrateAllSets]);
+    // Wait for auth and ensure we only run once
+    if (hasMigrated || status !== 'authenticated' || !session?.user?.id) {
+      return;
+    }
+
+    // If local DB is empty, trigger migration
+    if (flashcardSets.length === 0) {
+      Logger.log(LogContext.FLASHCARD, 'No local sets found. Triggering automatic migration...');
+      
+      // Notify user migration is starting
+      toast({
+        title: 'Syncing your account',
+        description: 'Please wait while we fetch your flashcard sets...',
+      });
+
+      // Mark as "migrated" in session storage immediately
+      sessionStorage.setItem('autoMigrated', 'true'); 
+
+      migrateAllSets({
+        onComplete: () => {
+          Logger.log(LogContext.FLASHCARD, 'Automatic migration complete.');
+          // Notify user migration is finished
+          toast({
+            title: 'Sync Complete',
+            description: 'Your flashcard sets are all up to date.',
+          });
+        },
+        onError: (error: unknown) => {
+           Logger.error(LogContext.FLASHCARD, 'Auto-migration failed', { error });
+           // Notify user of failure
+           toast({
+             variant: 'destructive',
+             title: 'Sync Failed',
+             description: 'Could not fetch your sets. Please try clearing the local cache or refreshing.',
+           });
+           // Allow migration to be tried again next time
+           sessionStorage.removeItem('autoMigrated');
+        }
+      });
+
+    } else {
+      // If we already have sets, just mark as "migrated" to skip this check next time.
+      Logger.log(LogContext.FLASHCARD, 'Local sets found. Skipping automatic migration.');
+      sessionStorage.setItem('autoMigrated', 'true');
+    }
+  }, [
+    migrateAllSets, 
+    flashcardSets.length, 
+    status, 
+    session,
+    toast // Add toast to dependency array
+  ]);
 
   const handleStartStudy = (setId: string) => {
     setSelectedSetId(setId);

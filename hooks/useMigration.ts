@@ -1,11 +1,23 @@
-import { useState, useCallback } from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useFlashcards } from '@/contexts/FlashcardContext';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+import { useToast } from './use-toast';
+import { usePowerSync } from '@powersync/react';
+import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
+import { PowerSyncBackendConnector } from '@/lib/powersync/client';
+
+interface MigrateAllSetsOptions {
+  onComplete?: () => void;
+  onError?: (error: unknown) => void;
+}
 
 export function useMigration() {
   const { flashcardSets, createFlashcardSet, createFlashcard } = useFlashcards();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const { toast } = useToast();
+  const powerSync = usePowerSync();
 
   const [migrating, setMigrating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,9 +27,13 @@ export function useMigration() {
     currentBatch: 0,
   });
 
-  const migrateAllSets = useCallback(async (options?: { onComplete?: () => void }) => {
-    if (!session?.user?.id) {
+  const migrateAllSets = async ({ onComplete, onError }: MigrateAllSetsOptions = {}) => {
+    if (status !== 'authenticated' || !session?.user?.id) {
       alert('You must be signed in to migrate sets');
+      Logger.error(LogContext.SYSTEM, 'Migration failed: User not authenticated');
+      // --- CALL onError IF IT EXISTS ---
+      onError?.(new Error('User not authenticated'));
+      // --- END CALL ---
       return;
     }
 
@@ -33,9 +49,18 @@ export function useMigration() {
     let hasMore = true;
     let totalMigrated = 0;
 
+    if (status !== 'authenticated' || !session?.user?.id) {
+      Logger.error(LogContext.SYSTEM, 'Migration failed: User not authenticated');
+      // --- CALL onError IF IT EXISTS ---
+      onError?.(new Error('User not authenticated'));
+      // --- END CALL ---
+      return;
+    }
+
     try {
       while (hasMore) {
         Logger.log(LogContext.FLASHCARD, 'Fetching migration batch', { skip, limit });
+        Logger.log(LogContext.SYSTEM, 'Starting migration for all sets...');
 
         const response = await fetch('/api/migrate-to-powersync', {
           method: 'POST',
@@ -53,6 +78,8 @@ export function useMigration() {
         }
 
         const { sets, pagination } = await response.json();
+
+        Logger.log(LogContext.SYSTEM, 'Migration API call successful', { count: sets.migratedSetsCount });
 
         setMigrationProgress({
           total: pagination.total,
@@ -104,17 +131,56 @@ export function useMigration() {
 
       alert(`Migration complete! ${totalMigrated} sets migrated to PowerSync.`);
       Logger.log(LogContext.FLASHCARD, 'Migration complete', { totalMigrated });
-      options?.onComplete?.();
+      // options?.onComplete?.();
+      if (onComplete) {
+        onComplete();
+      }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';
       setError(`Migration failed: ${errorMsg}`);
       Logger.error(LogContext.FLASHCARD, 'Migration failed', { error: e });
+      Logger.error(LogContext.SYSTEM, 'Migration failed', { error });
+      if (onError) {
+        onError(error);
+      }
       alert(`Migration failed: ${errorMsg}`);
     } finally {
       setMigrating(false);
       setMigrationProgress({ total: 0, completed: 0, currentBatch: 0 });
     }
-  }, [session, createFlashcardSet, createFlashcard]);
+  };
 
-  return { migrating, error, migrationProgress, migrateAllSets };
+  const clearLocalCache = async () => {
+    try {
+      Logger.log(LogContext.SYSTEM, 'Attempting to clear local PowerSync cache...');
+      await powerSync.disconnectAndClear();
+      Logger.log(LogContext.SYSTEM, 'Local cache cleared. Reconnecting...');
+
+      toast({
+        title: 'Cache Cleared',
+        description: 'Local data has been cleared. Re-syncing with server...',
+      });
+      
+      // We need to re-authenticate with PowerSync after clearing
+      // This logic might be in your main layout, but good to have here.
+      if (session) {
+        // This is a simplified connector call. Adjust if your logic is different.
+        const token = session.powersync_token;
+        if (token) {
+          await powerSync.connect(new PowerSyncBackendConnector(token));
+        }
+      }
+      Logger.log(LogContext.SYSTEM, 'PowerSync reconnected.');
+
+    } catch (error) {
+      Logger.error(LogContext.SYSTEM, 'Failed to clear local cache', { error });
+      toast({
+        title: 'Error',
+        description: 'Could not clear local cache. Please refresh the page.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return { migrating, error, migrationProgress, migrateAllSets, clearLocalCache };
 }
