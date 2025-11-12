@@ -4,13 +4,10 @@ import { AbstractPowerSyncDatabase, PowerSyncDatabase, UpdateType, PowerSyncCred
 import AppSchema from './schema';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
-// PowerSyncDatabaseConnector
-
 /**
  * PowerSync client singleton
  * Manages local IndexedDB database with offline-first sync
  */
-// let powerSyncInstance: PowerSyncDatabase | null = null;
 let powerSyncInstance: PowerSyncDatabase | null = null;
 
 /**

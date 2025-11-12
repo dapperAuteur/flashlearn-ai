@@ -137,6 +137,7 @@ export interface PowerSyncFlashcard {
 
 export interface PowerSyncOfflineSet {
   id: string;
+  title: string;
   user_id: string;
   set_id: string;
   is_owned: 0 | 1;

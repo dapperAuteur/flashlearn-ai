@@ -140,7 +140,7 @@ export default function FlashcardsPage() {
 
         {/* Content */}
         {viewMode === 'list' && (
-          <FlashcardManager onStartStudy={handleStartStudy} />
+          <FlashcardManager onStartStudy={handleStartStudy} sets={[]} isLoading={false} />
         )}
 
         {viewMode === 'study' && (

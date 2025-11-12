@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useFlashcards } from '@/contexts/FlashcardContext';
+import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -11,29 +12,51 @@ import {
   CloudArrowUpIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import { SearchIcon, XIcon, DownloadIcon, UploadIcon } from 'lucide-react';
+
+import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import { useMigration } from '@/hooks/useMigration';
 import { useSession } from 'next-auth/react';
 import { LogContext, Logger } from '@/lib/logging/client-logger';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface Props {
+interface FlashcardManagerProps {
   onStartStudy: (setId: string) => void;
+  sets: PowerSyncFlashcardSet[];
+  isLoading: boolean;
 }
 
-export default function FlashcardManager({ onStartStudy }: Props) {
+// interface Props {
+//   onStartStudy: (setId: string) => void;
+// }
+
+export default function FlashcardManager({
+  onStartStudy, 
+  sets: setsFromProps, 
+  isLoading 
+}: FlashcardManagerProps) {
   const { data: session } = useSession();
   const router = useRouter();
   const { startSession } = useStudySession();
-  const { flashcardSets, offlineSets, toggleOfflineAvailability } = useFlashcards();
+  const { flashcardSets, offlineSets: localSets, toggleOfflineAvailability, deleteFlashcardSet } = useFlashcards();
   const { migrating, error: migrationError, migrationProgress, migrateAllSets } = useMigration();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [selectedSet, setSelectedSet] = useState<PowerSyncFlashcardSet | null>(null);
+  const sets = setsFromProps ? setsFromProps : localSets;
+
+  const { clearLocalCache } = useMigration();
+  const { toast } = useToast();
+  
   const [localError, setLocalError] = useState<string | null>(null);
 
   // DEBUG: Check what we're getting
   console.log('FlashcardManager - flashcardSets:', flashcardSets);
   console.log('FlashcardManager - session user:', session?.user?.id);
-  console.log('FlashcardManager - offlineSets:', offlineSets);
+  console.log('FlashcardManager - offlineSets:', localSets);
 
   // Add this handler
   const handleStudyClick = async (setId: string) => {
@@ -46,6 +69,56 @@ export default function FlashcardManager({ onStartStudy }: Props) {
     }
   };
 
+  const filteredSets = useMemo(() => {
+    return sets.filter(set =>
+      set.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [sets, searchTerm]);
+  const handleEditSet = (set: PowerSyncFlashcardSet) => {
+    setSelectedSet(set);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteSet = async (setId: string) => {
+    if (confirm('Are you sure you want to delete this set? This action cannot be undone.')) {
+      try {
+        Logger.log(LogContext.FLASHCARD, 'Attempting to delete set', { setId });
+        await deleteFlashcardSet(setId);
+        toast({
+          title: 'Set Deleted',
+          description: 'The flashcard set has been successfully deleted.',
+        });
+      } catch (error) {
+        Logger.error(LogContext.FLASHCARD, 'Error deleting set', { error });
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not delete the set. Please try again.',
+        });
+      }
+    }
+  };
+  const handleClearCache = async () => {
+    if (confirm('Are you sure you want to clear the local cache? This will force a full re-sync from the server.')) {
+      await clearLocalCache();
+      // The page will reload or data will re-sync via PowerSync hooks
+    }
+  }
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center gap-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-40 rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const handleToggle = async (setId: string) => {
   try {
@@ -60,16 +133,16 @@ export default function FlashcardManager({ onStartStudy }: Props) {
     set.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const isOffline = (setId: string) => offlineSets.some(s => s.set_id === setId);
+  const isOffline = (setId: string) => localSets.some(s => s.set_id === setId);
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow p-4">
         <p className="text-sm text-gray-600">
-          {offlineSets.length} of 10 sets available offline
+          {localSets.length} of 10 sets available offline
         </p>
       </div>
-      {/* Search */}
+      {/* Search and Actions */}
       <div className="relative">
         <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
@@ -82,19 +155,16 @@ export default function FlashcardManager({ onStartStudy }: Props) {
       </div>
       {/* Action buttons */}
       <div className="flex gap-4">
-      <button onClick={() => migrateAllSets()} className="inline-flex items-end px-4 py-2 bg-green-600 text-white rounded-md" disabled={migrating}>
-        {migrating ? (
-            <>
-              <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
-              Migrating {migrationProgress.completed}/{migrationProgress.total}...
-            </>
-          ) : (
-            <>
-              <CloudArrowDownIcon className="h-4 w-4 mr-2" />
-              Migrate All Sets
-            </>
-          )}
-      </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button onClick={() => setIsImportModalOpen(true)} className="flex-1 sm:flex-none">
+            <UploadIcon className="w-4 h-4 mr-2" />
+            Import
+          </button>
+          <button onClick={() => router.push('/generate')} className="flex-1 sm:flex-none">
+            <PlusIcon className="w-4 h-4 mr-2" />
+            New Set
+          </button>
+        </div>
 
       <Link href="/generate" className="inline-flex items-end px-4 py-2 bg-blue-600 text-white rounded-md">
         <PlusIcon className="h-4 w-4 mr-2" />
