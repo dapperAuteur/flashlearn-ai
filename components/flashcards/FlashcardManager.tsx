@@ -155,21 +155,11 @@ export default function FlashcardManager({
       </div>
       {/* Action buttons */}
       <div className="flex gap-4">
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button onClick={() => setIsImportModalOpen(true)} className="flex-1 sm:flex-none">
-            <UploadIcon className="w-4 h-4 mr-2" />
-            Import
-          </button>
-          <button onClick={() => router.push('/generate')} className="flex-1 sm:flex-none">
-            <PlusIcon className="w-4 h-4 mr-2" />
-            New Set
-          </button>
-        </div>
 
-      <Link href="/generate" className="inline-flex items-end px-4 py-2 bg-blue-600 text-white rounded-md">
-        <PlusIcon className="h-4 w-4 mr-2" />
-        Create Set
-      </Link>
+        <Link href="/generate" className="inline-flex items-end px-4 py-2 bg-blue-600 text-white rounded-md">
+          <PlusIcon className="h-4 w-4 mr-2" />
+          Create Set
+        </Link>
       </div>
       {/* Error display for local component errors */}
         {localError && (
