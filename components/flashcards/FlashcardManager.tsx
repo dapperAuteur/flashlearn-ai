@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useFlashcards } from '@/contexts/FlashcardContext';
 import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
@@ -10,12 +10,9 @@ import {
   MagnifyingGlassIcon,
   CloudArrowDownIcon,
   CloudArrowUpIcon,
-  ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { SearchIcon, XIcon, DownloadIcon, UploadIcon } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import { useMigration } from '@/hooks/useMigration';
 import { useSession } from 'next-auth/react';
@@ -28,17 +25,12 @@ interface FlashcardManagerProps {
   isLoading: boolean;
 }
 
-// interface Props {
-//   onStartStudy: (setId: string) => void;
-// }
-
 export default function FlashcardManager({
   onStartStudy, 
   sets: setsFromProps, 
   isLoading 
 }: FlashcardManagerProps) {
   const { data: session } = useSession();
-  const router = useRouter();
   const { startSession } = useStudySession();
   const { flashcardSets, offlineSets: localSets, toggleOfflineAvailability, deleteFlashcardSet } = useFlashcards();
   const { migrating, error: migrationError, migrationProgress, migrateAllSets } = useMigration();
