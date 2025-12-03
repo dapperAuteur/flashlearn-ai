@@ -15,7 +15,8 @@ export default function StudyOfflinePage() {
 
   useEffect(() => {
     if (!setId) {
-      router.push('/flashcards');
+      // router.push('/flashcards');
+      console.log('no setId');
       return;
     }
 
