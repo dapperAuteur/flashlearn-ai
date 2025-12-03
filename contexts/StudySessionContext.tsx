@@ -139,7 +139,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
         front: card.front,
         back: card.back,
         tags: [],
-        listId: listId,
+        setId: listId, // CORRECTED: Was listId
         userId: authSession?.user?.id || 'offline-user',
         difficulty: 1,
         lastReviewed: undefined,
