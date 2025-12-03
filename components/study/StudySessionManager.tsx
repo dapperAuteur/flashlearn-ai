@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -46,9 +44,6 @@ export default function StudySessionManager() {
   useEffect(() => {
     setIsFlipped(false);
   }, [currentIndex]);
-  useEffect(() => {
-    console.log('isComplete, sessionId :>> ', isComplete, sessionId);
-  }, [isComplete, sessionId]);
 
   useEffect(() => {
     if (!sessionStartTime || isComplete) { return; }
@@ -62,6 +57,7 @@ export default function StudySessionManager() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="ml-4 text-gray-600">Loading session...</p> 
       </div>
     );
   }
@@ -78,6 +74,14 @@ export default function StudySessionManager() {
     );
   }
 
+  if (isComplete && sessionId) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="ml-4 text-gray-600">Loading results...</p>
+      </div>
+    );
+  }
   if (sessionId) {
 
     if (lastCardResult) {
