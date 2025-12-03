@@ -2,14 +2,17 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Flashcard } from '@/types/flashcard';
 import { 
   CardResult, 
   saveResult, 
   getResults, 
-  clearResults, 
+  clearResults,
+  queueSessionForSync,
   saveStudyHistory,
-  StudySessionHistory
+  StudySessionHistory,
+  getStudyHistory
 } from '@/lib/db/indexeddb';
 import { shuffleArray } from '@/lib/utils/arrayUtils';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -57,12 +60,14 @@ interface StudySessionState {
   recordConfidence: (rating: number) => void;
   showNextCard: () => void;
   resetSession: () => void;
+  loadSessionResults: (sessionId: string) => Promise<void>;
 }
 
 const StudySessionContext = createContext<StudySessionState | undefined>(undefined);
 
 export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   const { data: authSession } = useSession();
+  const router = useRouter();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [flashcardSetName, setFlashcardSetName] = useState<string | null>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -135,11 +140,12 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
 
       const shuffledCards = shuffleArray([...cards]).map(card => ({
         ...card,
+        _id: card.id, // Ensure _id is present
         id: card.id,
         front: card.front,
         back: card.back,
         tags: [],
-        setId: listId, // CORRECTED: Was listId
+        listId: listId, // CORRECTED: Was listId
         userId: authSession?.user?.id || 'offline-user',
         difficulty: 1,
         lastReviewed: undefined,
@@ -151,6 +157,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
         updatedAt: new Date()
       }));
 
+      // why does it set session as offline?
       const generatedSessionId = `offline-${Date.now()}-${listId}`;
       await clearResults(generatedSessionId);
 
@@ -265,13 +272,20 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
   console.log('completeSession - cardResults length:', cardResults.length, 'listId: ', sessionSetId);
   
   try {
+    Logger.log(LogContext.STUDY, "Completing session", { sessionId });
+
     const freshResults = await getResults(sessionId);
     console.log('completeSession - fresh results from IndexedDB:', freshResults, 'listId: ', sessionSetId);
+    if (freshResults.length === 0) {
+        Logger.warning(LogContext.STUDY, "No results found for session", { sessionId });
+        return;
+      }
     
     setCardResults(freshResults);
 
     const correctCount = freshResults.filter(r => r.isCorrect).length;
     const incorrectCount = freshResults.length - correctCount;
+
     const accuracy = freshResults.length > 0 
       ? (correctCount / freshResults.length) * 100 
       : 0;
@@ -292,8 +306,11 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
       incorrectCount,
       accuracy,
       durationSeconds,
-      isOfflineSession
+      isOfflineSession // why does it record the session as offline when it's not?
     };
+    Logger.info(LogContext.STUDY, "what data does historyEntry hold", {
+      historyEntry
+    });
 
     // Save to local study history (IndexedDB)
     await saveStudyHistory(historyEntry);
@@ -355,6 +372,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
           sessionId,
           sessionSetId
         });
+        await queueSessionForSync(sessionId);
         // Don't block user from seeing results - queue for later sync
       }
     }
@@ -366,6 +384,9 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
       sessionId,
       isOfflineSession: isOfflineSession
     });
+
+    Logger.log(LogContext.STUDY, "Navigating to results", { sessionId });
+    router.push(`/study/results/${sessionId}`);
     
   
     
@@ -378,17 +399,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     setError('Failed to save session results');
     setIsComplete(true);
   }
-}, [
-  sessionId,
-  sessionSetId, 
-  authSession, 
-  flashcards, 
-  cardResults, 
-  sessionStartTime, 
-  flashcardSetName, 
-  isOfflineSession,
-  studyDirection
-]); 
+}, [sessionId, sessionStartTime, sessionSetId, isOfflineSession, cardResults.length, flashcardSetName, studyDirection, flashcards.length, authSession?.user?.id, router]); 
 
   const recordConfidence = useCallback((rating: number) => {
     if (rating < 1 || rating > 5) return;
@@ -412,12 +423,18 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     };
 
     console.log('recordCardResult - creating result:', result);
+    Logger.log(LogContext.STUDY, "Recording card result", { 
+      flashcardId: result.flashcardId,
+      isCorrect,
+      confidence: finalConfidenceRating
+    });
 
     setCardResults(prev => {
       const newResults = [...prev, result];
       console.log('recordCardResult - updated cardResults:', newResults);
       return newResults;
     });
+    setCardResults(prev => [...prev, result]);
     
     await saveResult(result);
     setLastCardResult(isCorrect ? 'correct' : 'incorrect');
@@ -429,7 +446,10 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     const nextIndex = currentIndex + 1;
     if (nextIndex < flashcards.length) {
       setCurrentIndex(nextIndex);
+      Logger.log(LogContext.STUDY, "Moving to next card", { cardIndex: nextIndex });
+
     } else {
+      Logger.log(LogContext.STUDY, "All cards completed, finishing session");
       completeSession();
     }
   }, [currentIndex, flashcards.length, completeSession]);
@@ -449,6 +469,57 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     setIsOfflineSession(false);
     Logger.log(LogContext.STUDY, "Session reset");
   }, [sessionId]);
+
+  const loadSessionResults = useCallback(async (sessionIdToLoad: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [results, history] = await Promise.all([
+        getResults(sessionIdToLoad),
+        getStudyHistory(10)
+      ]);
+
+      if (results.length === 0 && !history) {
+        setError('Could not find results for this study session.');
+        return;
+      }
+
+      const dummyFlashcard: Flashcard = {
+        _id: 'dummy',
+        id: 'dummy',
+        front: '',
+        back: '',
+        userId: '',
+        listId: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        tags: [],
+        difficulty: 0,
+        correctCount: 0,
+        incorrectCount: 0,
+        stage: 0
+      };
+
+      setCardResults(results);
+      if (history) {
+        setFlashcardSetName(flashcardSetName);
+        setFlashcards(flashcards);
+        setSessionId(sessionId);
+        setSessionSetId(sessionSetId);
+      } else if (results.length > 0) {
+        setSessionId(sessionIdToLoad);
+        setFlashcards(new Array(results.length).fill(dummyFlashcard));
+        setFlashcardSetName('Unknown Set');
+        setSessionSetId(''); 
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(message);
+      Logger.error(LogContext.STUDY, "Failed to load session results", { sessionId: sessionIdToLoad, error: message });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [flashcardSetName, flashcards, sessionId, sessionSetId]);
 
   const value = {
     sessionId,
@@ -473,6 +544,7 @@ export const StudySessionProvider = ({ children }: { children: ReactNode }) => {
     hasCompletedConfidence,
     recordConfidence,
     isOfflineSession,
+    loadSessionResults,
   };
 
   return (
