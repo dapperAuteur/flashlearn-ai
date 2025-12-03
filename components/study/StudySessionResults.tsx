@@ -1,24 +1,44 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-'use client';
+ 'use client';
 
 import { useEffect, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-// NEW: Import the custom hook to access our context
 import { useStudySession } from '@/contexts/StudySessionContext';
-
-// REMOVED: The component no longer accepts props.
-// interface StudySessionResultsProps { ... }
+import { Skeleton } from '@/components/ui/skeleton';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// The component is now self-contained.
 export default function StudySessionResults() {
-  // NEW: Connect to the context to get all necessary data and actions.
-  const { sessionId, flashcards, cardResults, resetSession, flashcardSetName } = useStudySession();
+  const params = useParams();
+  const sessionIdFromUrl = params.sessionId as string;
 
-  // NEW: Derive the results object directly from the context state.
+  const {
+    sessionId,
+    flashcards,
+    cardResults,
+    flashcardSetName,
+    loadSessionResults,
+    isLoading,
+    error,
+  } = useStudySession();
+
+  Logger.info(LogContext.STUDY, "StudySessionResults state", {
+    sessionId,
+    flashcards,
+    cardResults,
+    flashcardSetName,
+  })
+
+  useEffect(() => {
+    // On page load/refresh, if the context's session ID doesn't match the URL,
+    // it means we need to load the data from IndexedDB.
+    if (sessionIdFromUrl && sessionId !== sessionIdFromUrl) {
+      loadSessionResults(sessionIdFromUrl);
+    }
+  }, [sessionId, sessionIdFromUrl, loadSessionResults]);
+
   const results = useMemo(() => ({
     sessionId: sessionId || 'unknown-session',
     totalCards: flashcards.length,
@@ -32,37 +52,59 @@ export default function StudySessionResults() {
   }), [sessionId, flashcards, cardResults]);
 
   useEffect(() => {
-    // This logging logic remains the same and is still valuable.
-    if (results.sessionId !== 'unknown-session') {
+    if (results.sessionId !== 'unknown-session' && !isLoading) {
       Logger.log(
         LogContext.STUDY,
         `Study session results displayed for session ID: ${results.sessionId}`,
         { ...results }
       );
     }
-  }, [results]); // Depend on sessionId from the derived results
-
-  // const handleResetClick = () => {
-  //   Logger.log(
-  //     LogContext.STUDY,
-  //     `User clicked 'Study Another Set' after session ID: ${results.sessionId}`
-  //   );
-  //   // MODIFIED: Call the reset function from the context.
-  //   resetSession();
-  // };
-
-  // The rest of the component's JSX and helper functions remain exactly the same.
-  // ... (formatDuration, chartData, StatCard, and the main return statement)
+  }, [results, isLoading]);
 
   const formatDuration = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) {
-      Logger.error(LogContext.STUDY, 'Invalid duration value received.', { seconds });
       return '0m 0s';
     }
     const mins = Math.floor(seconds / 60);
     const secs = Math.round(seconds % 60);
     return `${mins}m ${secs}s`;
   };
+
+  if (isLoading || (sessionId !== sessionIdFromUrl && !error)) {
+    return (
+      <div className="p-4 sm:p-6 md:p-8">
+        <Skeleton className="h-12 w-1/2 mx-auto mb-2" />
+        <Skeleton className="h-6 w-3/4 mx-auto mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-gray-100 p-4 rounded-lg">
+                <Skeleton className="h-4 w-20 mb-2" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+            ))}
+          </div>
+          <div>
+            <Skeleton className="h-8 w-32 mb-4" />
+            <div className="w-full max-w-xs mx-auto">
+              <Skeleton className="h-64 w-64 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96 bg-gray-100">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-700">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   const chartData = {
     labels: ['Correct', 'Incorrect'],
@@ -94,14 +136,6 @@ export default function StudySessionResults() {
           </div>
         </div>
       </div>
-      {/* <div className="mt-8 text-center">
-        <button
-          onClick={handleResetClick}
-          className="w-full sm:w-auto py-3 px-8 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-        >
-          Study Another Set
-        </button>
-      </div> */}
     </div>
   );
 }
