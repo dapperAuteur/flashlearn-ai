@@ -1,11 +1,11 @@
 {
   "name": "FlashLearn AI",
   "short_name": "FlashLearn",
-  "description": "AI-powered flashcard study app",
-  "start_url": "/flashcards",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3B82F6",
+  "theme_color": "#3b82f6",
+  "description": "AI-powered flashcard learning",
   "icons": [
     {
       "src": "/icon-192.png",
