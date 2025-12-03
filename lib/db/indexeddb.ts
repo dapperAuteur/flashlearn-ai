@@ -145,6 +145,24 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
+export async function queueSessionForSync(sessionId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
+    const store = tx.objectStore(SYNC_QUEUE_STORE);
+    const request = store.put({ sessionId });
+
+    request.onsuccess = () => {
+      Logger.log(LogContext.SYSTEM, 'Session queued for sync', { sessionId });
+      resolve();
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error queuing session for sync', { error: request.error });
+      reject('Could not queue session for sync.');
+    };
+  });
+}
+
 // Existing functions (unchanged)
 export async function saveResult(result: CardResult): Promise<void> {
   const db = await openDB();
