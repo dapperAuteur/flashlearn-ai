@@ -12,6 +12,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { FlashcardProvider } from '@/contexts/FlashcardContext';
 import { PowerSyncContext } from '@powersync/react';
 import { useEffect, useState } from 'react';
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -65,6 +66,17 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#3B82F6" />
         <body className={inter.className}>
+          <Script id="register-sw" strategy="afterInteractive">
+            {`
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('SW registered:', reg))
+                    .catch(err => console.log('SW failed:', err));
+                });
+              }
+            `}
+          </Script>
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
