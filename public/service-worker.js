@@ -1,11 +1,18 @@
-const CACHE_NAME = 'flashlearn-offline-v1';
+const CACHE_NAME = 'flashlearn-v1';
+const OFFLINE_URL = '/offline';
+// Assets to cache on install
+const STATIC_ASSETS = [
+  '/',
+  '/offline',
+  '/study',
+  '/manifest.json',
+];
 
 // Install: Cache critical assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(['/flashcards']);
+      return cache.addAll(STATIC_ASSETS);
     })
   );
   self.skipWaiting();
@@ -17,11 +24,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
-            return caches.delete(name);
-          }
-        })
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
       );
     })
   );
@@ -49,55 +54,34 @@ self.addEventListener('fetch', (event) => {
   // Handle navigation requests (page loads)
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Don't cache redirects
-          if (response.type === 'opaqueredirect' || response.redirected) {
-            return response;
-          }
-          // Cache successful responses
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Offline: serve cached /flashcards
-          return caches.match('/flashcards').then((cached) => {
-            return cached || new Response('Offline - Please visit /flashcards');
-          });
-        })
-    );
-    return;
-  }
-  
-  // Handle assets: Cache first
-  if (request.url.includes('/_next/') || request.url.includes('/static/')) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached;
-        
-        return fetch(request).then((response) => {
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        });
-      })
-    );
-    return;
-  }
-  
-  // Everything else: Network first
-  event.respondWith(
-    fetch(request).catch(() => {
-      return caches.match(request);
-    })
+      (async () => {
+      try {
+        const networkResponse = await fetch(event.request);
+        if (networkResponse.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (error) {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        if (event.request.mode === 'navigate') {
+          return caches.match(OFFLINE_URL);
+        }
+        throw error;
+      }
+    })()
   );
+}
 });
+// Background sync for study sessions
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-study-sessions') {
+    event.waitUntil(syncStudySessions());
+  }
+});
+async function syncStudySessions() {
+  console.log('Background sync triggered for study sessions');
+}
