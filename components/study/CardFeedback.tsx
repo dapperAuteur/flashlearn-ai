@@ -28,7 +28,7 @@ export default function CardFeedback() {
   if (!lastCardResult) return null;
 
   const isCorrect = lastCardResult === 'correct';
-  const messages = {
+  const messages = { // Issue https://github.com/dapperAuteur/flashlearn-ai/issues/6
     correct: ["Awesome!", "You got it!", "Great job!", "Keep it up!"],
     incorrect: ["Keep trying!", "Almost there.", "You'll get it next time.", "Don't give up!"]
   };
