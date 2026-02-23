@@ -4,21 +4,20 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import { useFlashcards } from '@/contexts/FlashcardContext';
-// import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-// import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
 import SignUpModal from '@/components/ui/SignUpModal';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { 
-  BookOpenIcon, 
-  PlayIcon, 
+import {
+  BookOpenIcon,
+  PlayIcon,
   CloudArrowUpIcon,
   SparklesIcon,
   ArrowRightIcon,
   LockClosedIcon,
   CheckCircleIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 
 interface StudySessionSetupProps {
@@ -35,6 +34,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [currentStep, setCurrentStep] = useState<'select' | 'direction' | 'ready'>('select');
   const [searchTerm, setSearchTerm] = useState('');
+  const [dueCounts, setDueCounts] = useState<Map<string, number>>(new Map());
 
   // Pre-select set if provided via URL query param
   useEffect(() => {
@@ -49,6 +49,21 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
       setCurrentStep('direction');
     }
   }, [selectedListId, currentStep]);
+
+  // Fetch due card counts for authenticated users
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    fetch('/api/study/due-cards')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.sets) {
+          const map = new Map<string, number>();
+          for (const s of data.sets) map.set(s.setId, s.dueCount);
+          setDueCounts(map);
+        }
+      })
+      .catch(() => { /* silent */ });
+  }, [status]);
 
   const handleStartSession = async () => {
     if (!selectedListId) {
@@ -213,7 +228,15 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                             {set.description && (
                               <p className="text-sm text-gray-600 mt-1">{set.description}</p>
                             )}
-                            <p className="text-xs text-gray-500 mt-2">{set.card_count} cards</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <p className="text-xs text-gray-500">{set.card_count} cards</p>
+                              {dueCounts.get(set.id?.toString() || '') && (
+                                <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                                  <ClockIcon className="h-3 w-3" />
+                                  {dueCounts.get(set.id?.toString() || '')} due
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className={clsx(
                             'w-6 h-6 rounded-full border-2 flex items-center justify-center',

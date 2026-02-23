@@ -15,6 +15,7 @@ import { Profile } from '@/models/Profile';
 import { StudyDirection, StudySession } from '@/models/StudySession';
 import { CardResult } from '@/models/CardResult';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
+import { calculateSM2 } from '@/lib/algorithms/sm2';
 
 interface CardResult {
   cardId: string;
@@ -157,6 +158,17 @@ export async function POST(request: NextRequest) {
                 // Update basic performance
                 cardPerf.totalTimeStudied += result.timeSeconds;
                 if (result.isCorrect) cardPerf.correctCount++; else cardPerf.incorrectCount++;
+                // Update SM-2 spaced repetition data
+                const updatedSM2 = calculateSM2(
+                  cardPerf.mlData,
+                  result.isCorrect,
+                  result.confidenceRating,
+                );
+                if (!cardPerf.mlData) cardPerf.mlData = {};
+                cardPerf.mlData.easinessFactor = updatedSM2.easinessFactor;
+                cardPerf.mlData.interval = updatedSM2.interval;
+                cardPerf.mlData.repetitions = updatedSM2.repetitions;
+                cardPerf.mlData.nextReviewDate = updatedSM2.nextReviewDate;
                 // Update confidence data for paid users
                 // Update confidence data for authenticated users only
                 if (session?.user?.id && result.confidenceRating) {

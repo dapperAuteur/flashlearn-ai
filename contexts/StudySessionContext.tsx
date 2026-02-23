@@ -41,7 +41,7 @@ interface StudySessionState {
   isOfflineSession: boolean;
   isSyncing: boolean;
   syncError: string | null;
-  startSession: (listId: string, direction: StudyDirection) => Promise<void>;
+  startSession: (listId: string, direction: StudyDirection, cardIds?: string[]) => Promise<void>;
   recordCardResult: (isCorrect: boolean, timeSeconds: number, confidenceRating?: number) => Promise<void>;
   recordConfidence: (rating: number) => void;
   completeConfidence: () => void;
@@ -72,7 +72,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  const startSession = useCallback(async (listId: string, direction: StudyDirection) => {
+  const startSession = useCallback(async (listId: string, direction: StudyDirection, cardIds?: string[]) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -155,7 +155,17 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
         throw new Error('No flashcards found for this set');
       }
 
-      const shuffled = shuffleArray([...fetchedFlashcards]);
+      // Filter to specific cards if cardIds provided (e.g., missed cards or due cards)
+      let cardsToStudy = fetchedFlashcards;
+      if (cardIds && cardIds.length > 0) {
+        const idSet = new Set(cardIds);
+        cardsToStudy = fetchedFlashcards.filter(c => idSet.has(String(c._id)));
+        if (cardsToStudy.length === 0) {
+          throw new Error('None of the requested cards were found in this set');
+        }
+      }
+
+      const shuffled = shuffleArray([...cardsToStudy]);
       
       setSessionId(newSessionId);
       setFlashcards(shuffled);

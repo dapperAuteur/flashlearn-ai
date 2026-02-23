@@ -160,23 +160,23 @@ const phases: Phase[] = [
       {
         title: 'Server-Side Study History',
         description: 'Persistent study history synced to the cloud.',
-        status: 'in-progress',
+        status: 'done',
         items: [
           'Save sessions to MongoDB',
-          'View past study sessions',
+          'View past study sessions on dashboard',
           'Per-card performance tracking',
-          'Review missed cards from past sessions',
+          'Review missed cards after each session',
         ],
       },
       {
         title: 'SM-2 Spaced Repetition',
         description: 'Science-backed algorithm for optimal review scheduling.',
-        status: 'planned',
+        status: 'done',
         items: [
           'SM-2 algorithm (easiness factor, interval, repetitions)',
           'Per-card next review date',
-          'Smart session builder (due cards first)',
-          'Performance-based difficulty adjustment',
+          'Due cards API and dashboard widget',
+          'Due card badges on study set selection',
         ],
       },
       {
