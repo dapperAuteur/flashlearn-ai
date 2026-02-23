@@ -8,7 +8,10 @@ import { useStudySession } from '@/contexts/StudySessionContext';
 import StudySessionSetup from './StudySessionSetup';
 import StudySessionResults from './StudySessionResults';
 import StudyCard from './StudyCard';
+import MultipleChoiceCard from './MultipleChoiceCard';
+import TypeAnswerCard from './TypeAnswerCard';
 import CardFeedback from './CardFeedback';
+import CelebrationModal from './CelebrationModal';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
@@ -35,6 +38,8 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
     flashcards,
     currentIndex,
     studyDirection,
+    studyMode,
+    multipleChoiceData,
     sessionStartTime,
     recordCardResult,
     recordConfidence,
@@ -48,6 +53,7 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [newAchievements, setNewAchievements] = useState<Array<{ type: string; title: string; description: string; icon: string }>>([]);
 
   useEffect(() => {
     setIsFlipped(false);
@@ -60,6 +66,20 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
     }, 1000);
     return () => clearInterval(timerInterval);
   }, [sessionStartTime, isComplete]);
+
+  // Check achievements when session completes
+  useEffect(() => {
+    if (isComplete && status === 'authenticated') {
+      fetch('/api/study/achievements', { method: 'POST' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.newAchievements?.length > 0) {
+            setNewAchievements(data.newAchievements);
+          }
+        })
+        .catch(() => { /* silent */ });
+    }
+  }, [isComplete, status]);
 
   if (isLoading) {
     return (
@@ -103,11 +123,18 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
               </button>
             )}
           </div>
+          {newAchievements.length > 0 && (
+            <CelebrationModal
+              achievements={newAchievements}
+              onClose={() => setNewAchievements([])}
+            />
+          )}
         </div>
       );
     }
 
-    if (lastCardResult) {
+    // Feedback screen between cards (classic mode only)
+    if (lastCardResult && studyMode === 'classic') {
       return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
           <div className="mb-4 h-5"></div>
@@ -123,30 +150,56 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
       const cardToShow = (isInverse && canBeInverse)
         ? { ...currentCard, front: currentCard.back, back: currentCard.front }
         : currentCard;
+
+      const modeLabel = studyMode === 'multiple-choice' ? 'Multiple Choice' : studyMode === 'type-answer' ? 'Type Answer' : 'Classic';
+
       return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
           <h3 className="font-bold text-lg truncate text-white mb-2" title={flashcardSetName || 'Study Set'}>
             {flashcardSetName || 'Study Set'}
           </h3>
-          <div className="mb-4 flex justify-between items-center text-gray-300">
+          <div className="mb-4 flex flex-wrap justify-between items-center gap-2 text-gray-300">
             <span>Card {currentIndex + 1} of {flashcards.length}</span>
+            <span className="text-xs bg-gray-700 px-2 py-1 rounded-full">{modeLabel}</span>
             <span>Time: {formatTime(elapsedTime)}</span>
             <button onClick={resetSession} className="text-sm text-blue-400 hover:text-blue-300">
               End Session
             </button>
           </div>
-          <StudyCard
-            flashcard={cardToShow}
-            isFlipped={isFlipped}
-            onFlip={() => setIsFlipped(!isFlipped)}
-            onResult={recordCardResult}
-            onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
-            onEndSession={resetSession}
-            isConfidenceRequired={isConfidenceRequired}
-            hasCompletedConfidence={hasCompletedConfidence}
-            onConfidenceSelect={recordConfidence}
-            canFlip={hasCompletedConfidence}
-          />
+
+          {studyMode === 'multiple-choice' ? (
+            <MultipleChoiceCard
+              flashcard={cardToShow}
+              distractors={multipleChoiceData[String(currentCard._id)] || []}
+              onResult={recordCardResult}
+              onConfidenceSelect={recordConfidence}
+              onEndSession={resetSession}
+              isConfidenceRequired={isConfidenceRequired}
+              hasCompletedConfidence={hasCompletedConfidence}
+            />
+          ) : studyMode === 'type-answer' ? (
+            <TypeAnswerCard
+              flashcard={cardToShow}
+              onResult={recordCardResult}
+              onConfidenceSelect={recordConfidence}
+              onEndSession={resetSession}
+              isConfidenceRequired={isConfidenceRequired}
+              hasCompletedConfidence={hasCompletedConfidence}
+            />
+          ) : (
+            <StudyCard
+              flashcard={cardToShow}
+              isFlipped={isFlipped}
+              onFlip={() => setIsFlipped(!isFlipped)}
+              onResult={recordCardResult}
+              onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
+              onEndSession={resetSession}
+              isConfidenceRequired={isConfidenceRequired}
+              hasCompletedConfidence={hasCompletedConfidence}
+              onConfidenceSelect={recordConfidence}
+              canFlip={hasCompletedConfidence}
+            />
+          )}
         </div>
       );
     }
