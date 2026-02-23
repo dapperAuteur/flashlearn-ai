@@ -37,6 +37,12 @@ export default function PublicHeader() {
                   Generate
                 </Link>
                 <Link
+                  href="/pricing"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                >
+                  Pricing
+                </Link>
+                <Link
                   href="/roadmap"
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
                 >

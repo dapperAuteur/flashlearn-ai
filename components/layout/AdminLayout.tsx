@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   
   // If not admin, redirect to dashboard
   const user = session?.user as any;
-  if (user?.role !== "admin") {
+  if (user?.role !== "Admin") {
     console.log("User not admin, redirecting to study page");
     router.push("/flashcards");
     return null;
@@ -51,17 +51,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <span className="text-xl font-bold text-blue-600">FlashLearn AI Admin</span>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link href="/admin/dashboard" 
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"></Link>
-                  <Link href="/admin/logs" 
-                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Auth Logs
-                  </Link>
-                  <Link href="/admin/users" 
-                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Users
-                  </Link>
-                </div>
+                <Link href="/admin/dashboard"
+                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                  Dashboard
+                </Link>
+                <Link href="/admin/logs"
+                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                  Logs
+                </Link>
+                <Link href="/admin/users"
+                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                  Users
+                </Link>
+                <Link href="/admin/settings"
+                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                  Settings
+                </Link>
+              </div>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:items-center">
                 <div className="ml-3 relative">
