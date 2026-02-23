@@ -27,7 +27,6 @@ declare module 'next-auth' {
       // FIX: Made 'role' a required string.
       role: string;
     } & DefaultSession['user']; // This keeps the default properties like name, email, image
-    powersync_token: string;
   }
 }
 
@@ -37,8 +36,6 @@ declare module 'next-auth/jwt' {
    */
   interface JWT {
     id: string;
-    // FIX: Made 'role' a required string.
     role: string;
-    powersync_token: string;
   }
 }

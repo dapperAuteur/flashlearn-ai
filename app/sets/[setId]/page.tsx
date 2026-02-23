@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import dbConnect from "@/lib/db/mongodb";
 import { FlashcardSet, IFlashcardSet } from "@/models/FlashcardSet";
 import { isValidObjectId, Types } from "mongoose";
@@ -93,6 +94,12 @@ export default async function PublicSetPage({ params }: PublicSetPageProps) {
             <span className="mx-2">·</span>
             <span>Created by a user</span>
           </div>
+          <Link
+            href={`/study?setId=${setId}`}
+            className="mt-4 inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+          >
+            Study This Set
+          </Link>
         </div>
 
         <PublicSetViewer flashcardSet={flashcardSet} />

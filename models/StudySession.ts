@@ -22,9 +22,9 @@ export interface IStudySession extends Document {
   incorrectCount: number;
   completedCards: number;
   studyDirection?: StudyDirection;
+  isShareable: boolean;
   durationSeconds: number;
-  // results?: [];
-  
+
   // Virtual properties
   isComplete: boolean;
   accuracy: number;
@@ -46,7 +46,8 @@ const StudySessionSchema: Schema = new Schema(
       type: String,
       enum: ['front-to-back', 'back-to-front'],
       default: 'front-to-back'
-    }
+    },
+    isShareable: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

@@ -16,7 +16,6 @@ import { SearchIcon, XIcon, DownloadIcon, UploadIcon } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useStudySession } from '@/contexts/StudySessionContext';
 import { useMigration } from '@/hooks/useMigration';
 import { useSession } from 'next-auth/react';
 import { LogContext, Logger } from '@/lib/logging/client-logger';
@@ -39,7 +38,6 @@ export default function FlashcardManager({
 }: FlashcardManagerProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const { startSession } = useStudySession();
   const { flashcardSets, offlineSets: localSets, toggleOfflineAvailability, deleteFlashcardSet } = useFlashcards();
   const { migrating, error: migrationError, migrationProgress, migrateAllSets } = useMigration();
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,20 +51,8 @@ export default function FlashcardManager({
   
   const [localError, setLocalError] = useState<string | null>(null);
 
-  // DEBUG: Check what we're getting
-  console.log('FlashcardManager - flashcardSets:', flashcardSets);
-  console.log('FlashcardManager - session user:', session?.user?.id);
-  console.log('FlashcardManager - offlineSets:', localSets);
-
-  // Add this handler
-  const handleStudyClick = async (setId: string) => {
-    try {
-      setLocalError(null);
-      await startSession(setId, 'front-to-back');
-      onStartStudy(setId); // Trigger view change
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Failed to start session');
-    }
+  const handleStudyClick = (setId: string) => {
+    onStartStudy(setId);
   };
 
   const filteredSets = useMemo(() => {

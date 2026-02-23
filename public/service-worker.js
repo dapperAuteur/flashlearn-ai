@@ -5,7 +5,7 @@ self.addEventListener('install', (event) => {
   console.log('[SW] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(['/flashcards']);
+      return cache.addAll(['/study', '/offline']);
     })
   );
   self.skipWaiting();
@@ -65,9 +65,9 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Offline: serve cached /flashcards
-          return caches.match('/flashcards').then((cached) => {
-            return cached || new Response('Offline - Please visit /flashcards');
+          // Offline: serve cached /offline fallback page
+          return caches.match('/offline').then((cached) => {
+            return cached || new Response('You are offline. Please reconnect to continue.');
           });
         })
     );

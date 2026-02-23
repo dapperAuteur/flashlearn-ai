@@ -4,81 +4,66 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import { useFlashcards } from '@/contexts/FlashcardContext';
-// import { List } from '@/models/List';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-// import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
 import SignUpModal from '@/components/ui/SignUpModal';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { 
-  BookOpenIcon, 
-  PlayIcon, 
+import {
+  BookOpenIcon,
+  PlayIcon,
   CloudArrowUpIcon,
   SparklesIcon,
   ArrowRightIcon,
   LockClosedIcon,
   CheckCircleIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 
-export default function StudySessionSetup() {
+interface StudySessionSetupProps {
+  preSelectedSetId?: string;
+}
+
+export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetupProps) {
   const { startSession, isLoading, studyDirection, setStudyDirection } = useStudySession();
   const { flashcardSets } = useFlashcards();
   const { status } = useSession();
 
-  // const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [currentStep, setCurrentStep] = useState<'select' | 'direction' | 'ready'>('select');
   const [searchTerm, setSearchTerm] = useState('');
+  const [dueCounts, setDueCounts] = useState<Map<string, number>>(new Map());
 
-  // Helper: Convert PowerSync set to List format
-  // const convertPowerSyncToList = (set: PowerSyncFlashcardSet): List => ({
-  //   _id: set.id,
-  //   title: set.title,
-  //   description: set.description || undefined,
-  //   isPublic: set.is_public === 1,
-  //   userId: set.user_id,
-  //   cardCount: set.card_count,
-  //   createdAt: new Date(set.created_at),
-  //   updatedAt: new Date(set.updated_at),
-  //   tags: [],
-  // });
-
-  // Combine PowerSync sets and API sets
-  // const fetchLists = useCallback(async () => {
-  //   try {
-  //     if (status === 'authenticated') {
-  //       const response = await fetch('/api/lists');
-  //       if (!response.ok) throw new Error('Failed to fetch lists');
-  //       const apiLists = await response.json();
-        
-  //       const powerSyncSetIds = new Set(flashcardSets.map(s => s.id));
-  //       const uniqueApiLists = apiLists.filter((list: List) => 
-  //         !powerSyncSetIds.has(list._id?.toString() || '')
-  //       );
-        
-  //       setLists([...flashcardSets.map(convertPowerSyncToList), ...uniqueApiLists]);
-  //     } else {
-  //       setLists(flashcardSets.map(convertPowerSyncToList));
-  //     }
-  //   } catch (error) {
-  //     setError('Failed to load lists. Showing offline sets only.');
-  //     Logger.error(LogContext.STUDY, 'Error fetching lists', { error });
-  //     setLists(flashcardSets.map(convertPowerSyncToList));
-  //   }
-  // }, [status, flashcardSets]);
-
-  // useEffect(() => {
-  //   fetchLists();
-  // }, [fetchLists]);
+  // Pre-select set if provided via URL query param
+  useEffect(() => {
+    if (preSelectedSetId && !selectedListId) {
+      setSelectedListId(preSelectedSetId);
+      setCurrentStep('direction');
+    }
+  }, [preSelectedSetId, selectedListId]);
 
   useEffect(() => {
     if (selectedListId && currentStep === 'select') {
       setCurrentStep('direction');
     }
   }, [selectedListId, currentStep]);
+
+  // Fetch due card counts for authenticated users
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    fetch('/api/study/due-cards')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.sets) {
+          const map = new Map<string, number>();
+          for (const s of data.sets) map.set(s.setId, s.dueCount);
+          setDueCounts(map);
+        }
+      })
+      .catch(() => { /* silent */ });
+  }, [status]);
 
   const handleStartSession = async () => {
     if (!selectedListId) {
@@ -243,7 +228,15 @@ export default function StudySessionSetup() {
                             {set.description && (
                               <p className="text-sm text-gray-600 mt-1">{set.description}</p>
                             )}
-                            <p className="text-xs text-gray-500 mt-2">{set.card_count} cards</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <p className="text-xs text-gray-500">{set.card_count} cards</p>
+                              {dueCounts.get(set.id?.toString() || '') && (
+                                <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                                  <ClockIcon className="h-3 w-3" />
+                                  {dueCounts.get(set.id?.toString() || '')} due
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className={clsx(
                             'w-6 h-6 rounded-full border-2 flex items-center justify-center',

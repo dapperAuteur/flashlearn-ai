@@ -2,19 +2,58 @@
 // lib/services/syncService.ts
 'use client';
 
-import { 
-  getPendingChanges, 
-  removePendingChange, 
+import {
+  getPendingChanges,
+  removePendingChange,
   getQueuedSessions,
   removeSessionFromQueue,
-  getResults
+  getResults,
+  getStudyHistoryBySessionId
 } from '@/lib/db/indexeddb';
+import { getPowerSync, isPowerSyncInitialized } from '@/lib/powersync/client';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
+const PERIODIC_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const FAILED_SYNC_RETRY_DELAY_MS = 30000; // 30 seconds
+
+// ============================================================================
+// TYPES
+// ============================================================================
+interface SyncResult {
+  success: boolean;
+  sessionId?: string;
+  error?: string;
+}
+
+interface SessionSyncPayload {
+  setId: string;
+  results: any[];
+  sessionId: string;
+  sessionMeta?: {
+    setName: string;
+    startTime: string;
+    endTime: string;
+    totalCards: number;
+    correctCount: number;
+    incorrectCount: number;
+    durationSeconds: number;
+    studyDirection: string;
+  };
+}
+
+// ============================================================================
+// UNIFIED OFFLINE SYNC SERVICE
+// ============================================================================
 export class OfflineSyncService {
   private static instance: OfflineSyncService;
   private syncInProgress = false;
   private retryTimeout: NodeJS.Timeout | null = null;
+  private periodicSyncInterval: NodeJS.Timeout | null = null;
 
   static getInstance(): OfflineSyncService {
     if (!OfflineSyncService.instance) {
@@ -23,22 +62,53 @@ export class OfflineSyncService {
     return OfflineSyncService.instance;
   }
 
-  // Initialize sync service with online/offline listeners
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
+  
+  /**
+   * Initialize sync service with online/offline listeners and periodic sync
+   * Call this once during app startup
+   */
   initialize(): void {
     if (typeof window === 'undefined') return;
 
+    // Set up online/offline event listeners
     window.addEventListener('online', this.handleOnline.bind(this));
     window.addEventListener('offline', this.handleOffline.bind(this));
 
-    // Sync immediately if already online
+    // Start periodic sync if online
     if (navigator.onLine) {
       this.syncAllPendingData();
+      this.startPeriodicSync();
     }
+
+    Logger.log(LogContext.SYSTEM, 'OfflineSyncService initialized');
   }
+
+  /**
+   * Clean up resources (call on app unmount/logout)
+   */
+  cleanup(): void {
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+      this.retryTimeout = null;
+    }
+    if (this.periodicSyncInterval) {
+      clearInterval(this.periodicSyncInterval);
+      this.periodicSyncInterval = null;
+    }
+    Logger.log(LogContext.SYSTEM, 'OfflineSyncService cleaned up');
+  }
+
+  // ============================================================================
+  // EVENT HANDLERS
+  // ============================================================================
 
   private handleOnline(): void {
     Logger.log(LogContext.SYSTEM, 'Connection restored, starting sync');
     this.syncAllPendingData();
+    this.startPeriodicSync();
   }
 
   private handleOffline(): void {
@@ -47,9 +117,33 @@ export class OfflineSyncService {
       clearTimeout(this.retryTimeout);
       this.retryTimeout = null;
     }
+    if (this.periodicSyncInterval) {
+      clearInterval(this.periodicSyncInterval);
+      this.periodicSyncInterval = null;
+    }
   }
 
-  // Main sync function - syncs all pending data
+  private startPeriodicSync(): void {
+    if (this.periodicSyncInterval) return; // Already running
+
+    this.periodicSyncInterval = setInterval(() => {
+      if (navigator.onLine && !this.syncInProgress) {
+        Logger.log(LogContext.SYSTEM, 'Periodic sync triggered');
+        this.syncAllPendingData();
+      }
+    }, PERIODIC_SYNC_INTERVAL_MS);
+  }
+
+  // ============================================================================
+  // MAIN SYNC ORCHESTRATION
+  // ============================================================================
+
+  /**
+   * Main sync function - syncs all pending data
+   * 1. Pull flashcard data from server into PowerSync local DB
+   * 2. Push pending changes (sets/categories) to server
+   * 3. Push queued study sessions to server
+   */
   async syncAllPendingData(): Promise<void> {
     if (this.syncInProgress || !navigator.onLine) {
       return;
@@ -59,12 +153,15 @@ export class OfflineSyncService {
     Logger.log(LogContext.SYSTEM, 'Starting offline data sync');
 
     try {
-      // Sync pending set changes first
+      // Pull flashcard data from server into PowerSync
+      await this.pullFlashcardData();
+
+      // Push pending changes (sets/categories created offline)
       await this.syncPendingChanges();
-      
-      // Then sync study sessions
+
+      // Push study sessions (not in PowerSync schema)
       await this.syncStudySessions();
-      
+
       Logger.log(LogContext.SYSTEM, 'Offline sync completed successfully');
     } catch (error) {
       Logger.error(LogContext.SYSTEM, 'Sync failed, will retry', { error });
@@ -74,8 +171,85 @@ export class OfflineSyncService {
     }
   }
 
+  // ============================================================================
+  // FLASHCARD DATA PULL (Server → PowerSync)
+  // ============================================================================
+
+  /**
+   * Pull flashcard data from the server into the local PowerSync database.
+   * Uses the /api/powersync endpoint which returns changes since last sync.
+   * Only runs for authenticated users (the endpoint requires auth via cookies).
+   */
+  private async pullFlashcardData(): Promise<void> {
+    if (!isPowerSyncInitialized()) return;
+
+    try {
+      // Check if the user is authenticated by peeking at the session
+      const sessionRes = await fetch('/api/auth/session');
+      const session = await sessionRes.json();
+      if (!session?.user?.id) return; // Not authenticated, skip pull
+
+      const lastSyncedAt = localStorage.getItem('powersync_last_synced_at') || '';
+      const url = lastSyncedAt
+        ? `/api/powersync?last_synced_at=${encodeURIComponent(lastSyncedAt)}`
+        : '/api/powersync';
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        Logger.warning(LogContext.SYSTEM, 'Flashcard pull failed', { status: response.status });
+        return;
+      }
+
+      const { checkpoint, data } = await response.json();
+
+      if (!data || data.length === 0) {
+        if (checkpoint) localStorage.setItem('powersync_last_synced_at', checkpoint);
+        return;
+      }
+
+      const db = getPowerSync();
+
+      for (const change of data) {
+        try {
+          if (change.type === 'flashcard_sets' && change.data) {
+            const d = change.data;
+            await db.execute(
+              `INSERT OR REPLACE INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [d.id, d.user_id, d.title, d.description || null, d.is_public, d.card_count, d.source, d.created_at, d.updated_at, d.is_deleted ?? 0]
+            );
+          } else if (change.type === 'flashcards' && change.data) {
+            const d = change.data;
+            await db.execute(
+              `INSERT OR REPLACE INTO flashcards (id, set_id, user_id, front, back, front_image, back_image, "order", created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [d.id, d.set_id, d.user_id, d.front, d.back, d.front_image || null, d.back_image || null, d.order, d.created_at, d.updated_at]
+            );
+          }
+        } catch (err) {
+          Logger.warning(LogContext.SYSTEM, 'Failed to apply pull change', { change, err });
+        }
+      }
+
+      if (checkpoint) localStorage.setItem('powersync_last_synced_at', checkpoint);
+      Logger.log(LogContext.SYSTEM, `Pulled ${data.length} flashcard changes from server`);
+    } catch (error) {
+      Logger.warning(LogContext.SYSTEM, 'Flashcard data pull error', { error });
+      // Non-fatal — don't throw, let the rest of sync continue
+    }
+  }
+
+  // ============================================================================
+  // PENDING CHANGES SYNC (Sets/Categories)
+  // ============================================================================
+
   private async syncPendingChanges(): Promise<void> {
     const pendingChanges = await getPendingChanges();
+    
+    if (pendingChanges.length === 0) {
+      return;
+    }
+
     Logger.log(LogContext.SYSTEM, `Syncing ${pendingChanges.length} pending changes`);
 
     for (const change of pendingChanges) {
@@ -92,15 +266,22 @@ export class OfflineSyncService {
         }
         
         await removePendingChange(change.id);
+        Logger.log(LogContext.SYSTEM, 'Pending change synced', { changeId: change.id });
+        
       } catch (error) {
-        Logger.error(LogContext.SYSTEM, 'Failed to sync change', { changeId: change.id, error });
+        Logger.error(LogContext.SYSTEM, 'Failed to sync change', { 
+          changeId: change.id, 
+          error 
+        });
         
         // Increment retry count
         change.retryCount = (change.retryCount || 0) + 1;
         
-        // Remove after 3 failed attempts
-        if (change.retryCount >= 3) {
-          Logger.error(LogContext.SYSTEM, 'Max retries exceeded, removing change', { changeId: change.id });
+        // Remove after max retries
+        if (change.retryCount >= MAX_RETRY_ATTEMPTS) {
+          Logger.error(LogContext.SYSTEM, 'Max retries exceeded, removing change', { 
+            changeId: change.id 
+          });
           await removePendingChange(change.id);
         }
       }
@@ -137,66 +318,189 @@ export class OfflineSyncService {
 
   private async syncCategoryChange(change: any): Promise<void> {
     // Category changes are handled through set updates
-    Logger.log(LogContext.SYSTEM, 'Category change synced via sets', { changeId: change.id });
+    Logger.log(LogContext.SYSTEM, 'Category change synced via sets', { 
+      changeId: change.id 
+    });
   }
 
+  // ============================================================================
+  // STUDY SESSIONS SYNC (Enhanced with retry logic)
+  // ============================================================================
+
+  /**
+   * Sync all queued study sessions to server
+   * Study sessions are NOT in PowerSync schema - they go directly to MongoDB
+   */
   private async syncStudySessions(): Promise<void> {
     const queuedSessions = await getQueuedSessions();
+    
+    if (queuedSessions.length === 0) {
+      return;
+    }
+
     Logger.log(LogContext.SYSTEM, `Syncing ${queuedSessions.length} study sessions`);
 
+    // Process sessions sequentially to avoid overwhelming the server
     for (const sessionId of queuedSessions) {
-      try {
-        const results = await getResults(sessionId);
-        
-        if (results.length === 0) {
-          await removeSessionFromQueue(sessionId);
-          continue;
-        }
-
-        // Extract setId from sessionId
-        let setId: string;
-        if (sessionId.startsWith('offline-')) {
-          // Format: offline-timestamp-setId
-          const parts = sessionId.split('-');
-          setId = parts[2]; // Get the setId part
-        } else {
-          // For online sessions, try to determine setId from results or use sessionId
-          setId = results[0]?.flashcardId ? 'unknown' : sessionId;
-        }
-
-        await fetch('/api/study/sessions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            setId, 
-            results 
-          })
+      const result = await this.syncSingleSession(sessionId);
+      
+      if (result.success) {
+        Logger.log(LogContext.SYSTEM, 'Study session synced successfully', { 
+          sessionId 
         });
+      } else {
+        Logger.warning(LogContext.SYSTEM, 'Study session sync failed', { 
+          sessionId,
+          error: result.error 
+        });
+      }
+    }
+  }
 
+  /**
+   * Sync a single session with retry logic
+   */
+  private async syncSingleSession(
+    sessionId: string, 
+    attempt: number = 1
+  ): Promise<SyncResult> {
+    try {
+      // Get results from IndexedDB
+      const results = await getResults(sessionId);
+      
+      if (results.length === 0) {
+        Logger.warning(LogContext.STUDY, 'No results found for session', { sessionId });
         await removeSessionFromQueue(sessionId);
-        Logger.log(LogContext.SYSTEM, 'Study session synced', { sessionId, setId });
-        
-      } catch (error) {
-        Logger.error(LogContext.SYSTEM, 'Failed to sync study session', { sessionId, error });
+        return { success: false, sessionId, error: 'No results found' };
       }
+
+      // Extract setId from sessionId or results
+      const setId = this.extractSetId(sessionId, results);
+
+      // Fetch session history for metadata
+      const historyEntry = await getStudyHistoryBySessionId(sessionId);
+
+      const payload: SessionSyncPayload = {
+        setId,
+        results,
+        sessionId,
+        ...(historyEntry && {
+          sessionMeta: {
+            setName: historyEntry.setName,
+            startTime: new Date(historyEntry.startTime).toISOString(),
+            endTime: historyEntry.endTime ? new Date(historyEntry.endTime).toISOString() : new Date().toISOString(),
+            totalCards: historyEntry.totalCards,
+            correctCount: historyEntry.correctCount,
+            incorrectCount: historyEntry.incorrectCount,
+            durationSeconds: historyEntry.durationSeconds,
+            studyDirection: historyEntry.studyDirection || 'front-to-back',
+          }
+        })
+      };
+
+      Logger.log(LogContext.STUDY, `Syncing session to server (attempt ${attempt})`, { 
+        sessionId, 
+        resultCount: results.length,
+        setId
+      });
+
+      const response = await fetch('/api/study/sessions', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server responded with ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      Logger.log(LogContext.STUDY, 'Session synced successfully', { 
+        sessionId,
+        serverResponse: data 
+      });
+
+      // Remove from queue after successful sync
+      await removeSessionFromQueue(sessionId);
+      
+      return { success: true, sessionId };
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      Logger.error(LogContext.STUDY, `Sync failed for session (attempt ${attempt})`, { 
+        sessionId, 
+        error: errorMessage,
+        attempt 
+      });
+
+      // Retry logic
+      if (attempt < MAX_RETRY_ATTEMPTS) {
+        await new Promise(resolve => 
+          setTimeout(resolve, RETRY_DELAY_MS * attempt)
+        );
+        return this.syncSingleSession(sessionId, attempt + 1);
+      }
+
+      // Max retries exceeded - keep in queue for next sync cycle
+      return { success: false, sessionId, error: errorMessage };
     }
   }
 
-  private scheduleRetry(): void {
-    if (this.retryTimeout) {
-      clearTimeout(this.retryTimeout);
+  /**
+   * Extract setId from sessionId format or results
+   */
+  private extractSetId(sessionId: string, results: any[]): string {
+    // Format 1: "setId_timestamp"
+    if (sessionId.includes('_')) {
+      const parts = sessionId.split('_');
+      return parts[0];
     }
-    
-    // Retry in 30 seconds
-    this.retryTimeout = setTimeout(() => {
-      if (navigator.onLine && !this.syncInProgress) {
-        this.syncAllPendingData();
+
+    // Format 2: "offline-timestamp-setId"
+    if (sessionId.startsWith('offline-')) {
+      const parts = sessionId.split('-');
+      return parts.length > 2 ? parts[2] : 'unknown';
+    }
+
+    // Format 3: Try to get from first result's flashcardId
+    if (results.length > 0 && results[0].flashcardId) {
+      // flashcardId might be "setId_cardId" or just the cardId
+      const flashcardId = results[0].flashcardId;
+      if (flashcardId.includes('_')) {
+        return flashcardId.split('_')[0];
       }
-    }, 30000);
+    }
+
+    // Fallback
+    return 'unknown';
   }
 
-  // Manual sync trigger
-  async forcSync(): Promise<boolean> {
+  // ============================================================================
+  // PUBLIC API
+  // ============================================================================
+
+  /**
+   * Sync a specific session immediately
+   * Used after session completion for instant sync
+   */
+  async syncSession(sessionId: string): Promise<boolean> {
+    if (!navigator.onLine) {
+      Logger.warning(LogContext.STUDY, 'Cannot sync while offline', { sessionId });
+      return false;
+    }
+
+    const result = await this.syncSingleSession(sessionId);
+    return result.success;
+  }
+
+  /**
+   * Manual sync trigger for all pending data
+   */
+  async forceSync(): Promise<boolean> {
     if (!navigator.onLine) {
       Logger.warning(LogContext.SYSTEM, 'Cannot sync while offline');
       return false;
@@ -210,16 +514,57 @@ export class OfflineSyncService {
       return false;
     }
   }
+
+  /**
+   * Check if sync is currently in progress
+   */
+  isSyncing(): boolean {
+    return this.syncInProgress;
+  }
+
+  // ============================================================================
+  // RETRY SCHEDULING
+  // ============================================================================
+
+  private scheduleRetry(): void {
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+    }
+    
+    Logger.log(LogContext.SYSTEM, 'Scheduling retry in 30 seconds');
+    
+    this.retryTimeout = setTimeout(() => {
+      if (navigator.onLine && !this.syncInProgress) {
+        Logger.log(LogContext.SYSTEM, 'Retry timeout triggered');
+        this.syncAllPendingData();
+      }
+    }, FAILED_SYNC_RETRY_DELAY_MS);
+  }
 }
 
-// Initialize sync service in browser
-if (typeof window !== 'undefined') {
-  const syncService = OfflineSyncService.getInstance();
-  syncService.initialize();
-}
+// ============================================================================
+// EXPORTS
+// ============================================================================
 
-// Export convenience function for external use
+/**
+ * Convenience function to sync all offline data
+ */
 export async function syncOfflineData(): Promise<void> {
   const syncService = OfflineSyncService.getInstance();
   await syncService.syncAllPendingData();
+}
+
+/**
+ * Convenience function to sync a specific session
+ */
+export async function syncSession(sessionId: string): Promise<boolean> {
+  const syncService = OfflineSyncService.getInstance();
+  return syncService.syncSession(sessionId);
+}
+
+/**
+ * Get sync service instance
+ */
+export function getSyncService(): OfflineSyncService {
+  return OfflineSyncService.getInstance();
 }

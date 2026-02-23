@@ -13,10 +13,13 @@ import { User } from '@/models/User';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { Profile } from '@/models/Profile';
 import { StudyDirection, StudySession } from '@/models/StudySession';
+import { CardResult } from '@/models/CardResult';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
+import { calculateSM2 } from '@/lib/algorithms/sm2';
 
 interface CardResult {
   cardId: string;
+  flashcardId?: string;
   isCorrect: boolean;
   timeSeconds: number;
   confidenceRating?: number;
@@ -155,6 +158,17 @@ export async function POST(request: NextRequest) {
                 // Update basic performance
                 cardPerf.totalTimeStudied += result.timeSeconds;
                 if (result.isCorrect) cardPerf.correctCount++; else cardPerf.incorrectCount++;
+                // Update SM-2 spaced repetition data
+                const updatedSM2 = calculateSM2(
+                  cardPerf.mlData,
+                  result.isCorrect,
+                  result.confidenceRating,
+                );
+                if (!cardPerf.mlData) cardPerf.mlData = {};
+                cardPerf.mlData.easinessFactor = updatedSM2.easinessFactor;
+                cardPerf.mlData.interval = updatedSM2.interval;
+                cardPerf.mlData.repetitions = updatedSM2.repetitions;
+                cardPerf.mlData.nextReviewDate = updatedSM2.nextReviewDate;
                 // Update confidence data for paid users
                 // Update confidence data for authenticated users only
                 if (session?.user?.id && result.confidenceRating) {
@@ -171,7 +185,46 @@ export async function POST(request: NextRequest) {
             analytics.setPerformance.averageScore = (totalCorrect + totalIncorrect) > 0 ? (totalCorrect / (totalCorrect + totalIncorrect)) * 100 : 0;
 
             await analytics.save({ session: mongoSession });
-            responseData = { message: 'Sync successful', analyticsId: analytics._id.toString() };
+
+            // Persist StudySession document
+            const sessionMeta = body.sessionMeta;
+            const sessionData: any = {
+              sessionId: body.sessionId || `${setId}_${Date.now()}`,
+              userId: new mongoose.Types.ObjectId(userId),
+              listId: setIdAsObjectId,
+              status: 'completed',
+              totalCards: sessionMeta?.totalCards ?? results.length,
+              correctCount: sessionMeta?.correctCount ?? results.filter((r: CardResult) => r.isCorrect).length,
+              incorrectCount: sessionMeta?.incorrectCount ?? results.filter((r: CardResult) => !r.isCorrect).length,
+              completedCards: results.length,
+              studyDirection: sessionMeta?.studyDirection || 'front-to-back',
+            };
+            if (sessionMeta?.startTime) sessionData.startTime = new Date(sessionMeta.startTime);
+            if (sessionMeta?.endTime) sessionData.endTime = new Date(sessionMeta.endTime);
+
+            await StudySession.findOneAndUpdate(
+              { sessionId: sessionData.sessionId },
+              { $set: sessionData },
+              { upsert: true, session: mongoSession }
+            );
+
+            // Persist individual CardResult documents
+            const cardResultDocs = results.map((r: CardResult) => ({
+              sessionId: sessionData.sessionId,
+              setId,
+              flashcardId: r.cardId || r.flashcardId,
+              isCorrect: r.isCorrect,
+              timeSeconds: r.timeSeconds,
+              ...(r.confidenceRating && { confidenceRating: r.confidenceRating }),
+            }));
+
+            if (cardResultDocs.length > 0) {
+              await CardResult.insertMany(cardResultDocs, { session: mongoSession, ordered: false }).catch(() => {
+                // Ignore duplicate key errors for re-synced sessions
+              });
+            }
+
+            responseData = { message: 'Sync successful', analyticsId: analytics._id.toString(), sessionId: sessionData.sessionId };
         });
 
         await Logger.info(LogContext.STUDY, `Successfully synced study session for set ${setId}.`, { userId, metadata: { setId, resultsCount: results.length, isPaidUser  } });

@@ -1,135 +1,123 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { ObjectId } from 'mongodb';
-import clientPromise from '@/lib/db/mongodb';
+import mongoose from 'mongoose';
+import dbConnect from '@/lib/db/dbConnect';
 import { authOptions } from '@/lib/auth/auth';
 import { Logger, LogContext } from '@/lib/logging/logger';
-
-// Define interfaces based on your database schemas for type safety
-interface Flashcard {
-  _id: ObjectId;
-  front: string;
-  back: string;
-  // include other flashcard properties if they exist
-}
-
-interface FlashcardSet {
-  _id: ObjectId;
-  flashcards: Flashcard[];
-  isPublic: boolean;
-  // include other flashcard set properties if they exist
-}
-
-interface StudySession {
-  _id: ObjectId;
-  userId?: ObjectId; // userId can be optional for anonymous sessions
-  flashcardSetId?: ObjectId; // Make optional to handle potential data inconsistency
-  listId: ObjectId;
-  // include other study session properties if they exist
-}
-
+import { StudySession } from '@/models/StudySession';
+import { CardResult } from '@/models/CardResult';
+import { FlashcardSet } from '@/models/FlashcardSet';
 
 /**
  * GET /api/study/sessions/[id]
- * Fetches the flashcards for a specific study session.
- * Allows access to public sets for unauthenticated users.
+ * Returns session summary + per-card results.
+ * - If session isShareable: accessible to anyone.
+ * - If session belongs to authenticated user: always accessible.
+ * - Otherwise: 404.
  */
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id: sessionId } = await context.params;
-  const requestId = await Logger.info(LogContext.STUDY, "Get study session details request", {
+  const requestId = await Logger.info(LogContext.STUDY, 'Get study session results request', {
     metadata: { sessionId }
   });
 
   try {
-    // 1. Get current user session (can be null for anonymous users)
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.id;
+    await dbConnect();
 
-    // 2. Validate the incoming sessionId
-    if (!ObjectId.isValid(sessionId)) {
-        await Logger.warning(LogContext.STUDY, "Invalid sessionId format provided", { requestId, metadata: { sessionId } });
-        return NextResponse.json({ error: "Invalid session ID format" }, { status: 400 });
+    const authSession = await getServerSession(authOptions);
+    const userId = authSession?.user?.id;
+
+    // Try finding by sessionId field first, then by _id
+    let studySession: any = await StudySession.findOne({ sessionId }).lean();
+    if (!studySession && mongoose.isValidObjectId(sessionId)) {
+      studySession = await StudySession.findById(sessionId).lean();
     }
 
-    const client = await clientPromise;
-    const db = client.db();
-
-    // 3. Find the study session
-    const studySession = await db.collection<StudySession>('studySessions').findOne({
-      _id: new ObjectId(sessionId),
-    });
-    console.log('studySessionstudySession :>> ', studySession);
-
     if (!studySession) {
-      await Logger.warning(LogContext.STUDY, "Study session not found", {
+      await Logger.warning(LogContext.STUDY, 'Study session not found', {
         requestId,
         metadata: { sessionId }
       });
-      return NextResponse.json({ error: "Study session not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Study session not found' }, { status: 404 });
     }
 
-    // 3a. FIX: Add a guard to ensure flashcardSetId exists before use.
-    // This prevents the TypeError if the study session data is incomplete.
-    // if (!studySession.flashcardSetId) {
-    if (!studySession.listId) {
-        await Logger.error(LogContext.STUDY, "Study session is corrupt or missing flashcardSetId", {
-            requestId,
-            metadata: { sessionId }
-        });
-        return NextResponse.json({ error: "Could not find flashcards for this session due to a data error." }, { status: 500 });
+    const isOwner = !!(userId && studySession.userId?.toString() === userId);
+    const isShareable = studySession.isShareable === true;
+
+    if (!isOwner && !isShareable) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    // 4. Find the associated flashcard set
-    const flashcardSet = await db.collection<FlashcardSet>('flashcard_sets').findOne({
-        _id: new ObjectId(studySession.listId)
-    });
-    console.log('flashcardSetpp :>> ', flashcardSet);
+    // Fetch per-card results
+    const cardResults = await CardResult.find({
+      sessionId: studySession.sessionId
+    }).lean();
 
-    if (!flashcardSet) {
-        await Logger.error(LogContext.STUDY, "Flashcard set not found for a valid study session", {
-            requestId,
-            // This is now safe because of the check in step 3a
-            metadata: { sessionId, flashcardSetId: studySession.listId.toHexString() }
-        });
-        return NextResponse.json({ error: "Could not find flashcards for this session" }, { status: 404 });
+    // Fetch set info for the set name and card front/back text
+    let setName = 'Study Set';
+    let isSetPublic = false;
+    const cardMap: Record<string, { front: string; back: string }> = {};
+
+    if (studySession.listId) {
+      const flashcardSet = await FlashcardSet.findById(studySession.listId)
+        .select('title isPublic flashcards')
+        .lean() as any;
+
+      if (flashcardSet) {
+        setName = flashcardSet.title || setName;
+        isSetPublic = flashcardSet.isPublic || false;
+        for (const card of (flashcardSet.flashcards || [])) {
+          cardMap[card._id.toString()] = { front: card.front, back: card.back };
+        }
+      }
     }
 
-    // 5. Authorization Check:
-    // Allow if the set is public OR if the user is authenticated and owns the session.
-    const isOwner = !!(
-        userId &&
-        studySession.userId &&
-        studySession.userId.toHexString() === userId
-    );
-
-    if (!flashcardSet.isPublic && !isOwner) {
-        await Logger.warning(LogContext.STUDY, "Unauthorized access attempt to private study session", {
-            requestId,
-            userId: userId || 'anonymous',
-            metadata: { sessionId }
-        });
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // 6. Access granted, return the flashcards
-    await Logger.info(LogContext.STUDY, "Successfully fetched study session details", {
-        requestId,
-        userId: userId || 'anonymous',
-        metadata: { sessionId, isPublic: flashcardSet.isPublic, flashcardsCount: flashcardSet.flashcards.length }
+    // Build per-card details with front/back text
+    const cardDetails = cardResults.map((cr: any) => {
+      const cardInfo = cardMap[cr.flashcardId] || {};
+      return {
+        flashcardId: cr.flashcardId,
+        front: cardInfo.front || '',
+        back: cardInfo.back || '',
+        isCorrect: cr.isCorrect,
+        timeSeconds: cr.timeSeconds,
+        confidenceRating: cr.confidenceRating,
+      };
     });
 
-    return NextResponse.json({ flashcards: flashcardSet.flashcards });
+    const response = {
+      sessionId: studySession.sessionId,
+      setId: studySession.listId?.toString(),
+      setName,
+      isSetPublic,
+      status: studySession.status,
+      totalCards: studySession.totalCards,
+      correctCount: studySession.correctCount,
+      incorrectCount: studySession.incorrectCount,
+      studyDirection: studySession.studyDirection,
+      startTime: studySession.startTime,
+      endTime: studySession.endTime,
+      isShareable: studySession.isShareable,
+      cardResults: cardDetails,
+    };
 
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    await Logger.error(LogContext.STUDY, `Error fetching study session: ${errorMessage}`, {
+    await Logger.info(LogContext.STUDY, 'Successfully fetched session results', {
       requestId,
-      metadata: { sessionId, errorStack: error instanceof Error ? error.stack : String(error) }
+      userId: userId || 'anonymous',
+      metadata: { sessionId, cardCount: cardDetails.length }
     });
-    return NextResponse.json({ error: "Failed to fetch study session" }, { status: 500 });
+
+    return NextResponse.json(response);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    await Logger.error(LogContext.STUDY, `Error fetching session results: ${errorMessage}`, {
+      requestId,
+      metadata: { sessionId }
+    });
+    return NextResponse.json({ error: 'Failed to fetch session results' }, { status: 500 });
   }
 }

@@ -204,6 +204,29 @@ export async function clearResults(sessionId: string): Promise<void> {
   });
 }
 
+export async function queueSessionForSync(sessionId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
+    const store = tx.objectStore(SYNC_QUEUE_STORE);
+    const request = store.add({ sessionId });
+
+    request.onsuccess = () => {
+      Logger.log(LogContext.SYSTEM, 'Session queued for sync', { sessionId });
+      resolve();
+    };
+    request.onerror = () => {
+      // Handle duplicate key error gracefully
+      if (request.error?.name === 'ConstraintError') {
+        Logger.log(LogContext.SYSTEM, 'Session already in sync queue', { sessionId });
+        return resolve();
+      }
+      Logger.error(LogContext.SYSTEM, 'Error queuing session for sync', { error: request.error });
+      reject('Could not queue session.');
+    };
+  });
+}
+
 export async function getQueuedSessions(): Promise<string[]> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -376,6 +399,23 @@ export async function getStudyHistory(limit: number = 10): Promise<StudySessionH
     request.onerror = () => {
       Logger.error(LogContext.SYSTEM, 'Error getting study history', { error: request.error });
       reject('Could not get study history.');
+    };
+  });
+}
+
+export async function getStudyHistoryBySessionId(sessionId: string): Promise<StudySessionHistory | null> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STUDY_HISTORY_STORE, 'readonly');
+    const store = tx.objectStore(STUDY_HISTORY_STORE);
+    const request = store.get(sessionId);
+
+    request.onsuccess = () => {
+      resolve(request.result as StudySessionHistory | null);
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error getting study history by sessionId', { error: request.error });
+      reject('Could not get study history entry.');
     };
   });
 }

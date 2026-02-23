@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AbstractPowerSyncDatabase, PowerSyncDatabase, UpdateType, PowerSyncCredentials } from '@powersync/web';
 import AppSchema from './schema';
 import { Logger, LogContext } from '@/lib/logging/client-logger';

@@ -1,11 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { PowerSyncContext } from '@powersync/react';
-import { initPowerSync } from '@/lib/powersync/client';
-import { FlashcardProvider } from '@/contexts/FlashcardContext';
 import { useSync } from '@/hooks/useSync';
 import OfflineIndicator from '@/components/ui/OfflineIndicator';
 import Header from '@/components/layout/Header';
@@ -14,7 +11,8 @@ import { useOnboarding } from '@/hooks/OnboardingHooks';
 import OnboardingModal from '@/components/ui/OnboardingModal';
 
 /**
- * Dashboard layout with authentication check and context-aware navigation.
+ * Dashboard layout with authentication check.
+ * PowerSync and FlashcardProvider are provided by root layout.
  */
 export default function DashboardLayout({
   children,
@@ -25,16 +23,13 @@ export default function DashboardLayout({
   const router = useRouter();
   const { isOnline } = useSync();
   const {
-  showOnboarding,
-  currentStep,
-  nextStep,
-  previousStep,
-  completeOnboarding,
-  skipOnboarding,
-} = useOnboarding();
-  const [powerSync, setPowerSync] = useState<Awaited<ReturnType<typeof initPowerSync>> | null>(null);
-  
-
+    showOnboarding,
+    currentStep,
+    nextStep,
+    previousStep,
+    completeOnboarding,
+    skipOnboarding,
+  } = useOnboarding();
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -43,12 +38,7 @@ export default function DashboardLayout({
     }
   }, [status, router]);
 
-  useEffect(() => {
-    initPowerSync().then(setPowerSync);
-  }, []);
-
-  // Show loading state while checking authentication
-  if (status === 'loading' || !powerSync) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -59,35 +49,30 @@ export default function DashboardLayout({
     );
   }
 
-  // Don't render for unauthenticated users
   if (status === 'unauthenticated') {
     return null;
   }
 
   return (
-    <PowerSyncContext.Provider value={powerSync}>
-      <FlashcardProvider>
-        <div className="min-h-screen bg-gray-50">
-          <Header />
-          
-          <main className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
-          </main>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
 
-          <OfflineIndicator isOnline={isOnline} />
-          <Toaster />
-          <OnboardingModal
-            isOpen={showOnboarding}
-            currentStep={currentStep}
-            onNext={nextStep}
-            onPrevious={previousStep}
-            onComplete={completeOnboarding}
-            onSkip={skipOnboarding}
-          />
+      <main className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {children}
         </div>
-      </FlashcardProvider>
-    </PowerSyncContext.Provider>
+      </main>
+
+      <OfflineIndicator isOnline={isOnline} />
+      <Toaster />
+      <OnboardingModal
+        isOpen={showOnboarding}
+        currentStep={currentStep}
+        onNext={nextStep}
+        onPrevious={previousStep}
+        onComplete={completeOnboarding}
+        onSkip={skipOnboarding}
+      />
+    </div>
   );
 }
