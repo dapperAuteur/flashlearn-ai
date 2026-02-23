@@ -12,6 +12,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { FlashcardProvider } from '@/contexts/FlashcardContext';
 import { PowerSyncContext } from '@powersync/react';
 import { useEffect, useState } from 'react';
+import AppInitializer from '@/components/providers/AppInitializer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -79,6 +80,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <AppInitializer />
         <Analytics />
         <AuthProvider>
           <PowerSyncContext.Provider value={powerSyncDB}>

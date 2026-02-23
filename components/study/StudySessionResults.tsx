@@ -1,22 +1,24 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import { useSession } from 'next-auth/react';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-// NEW: Import the custom hook to access our context
 import { useStudySession } from '@/contexts/StudySessionContext';
-
-// REMOVED: The component no longer accepts props.
-// interface StudySessionResultsProps { ... }
+import ShareModal from '@/components/ShareModal';
+import { ShareIcon } from '@heroicons/react/24/outline';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// The component is now self-contained.
 export default function StudySessionResults() {
-  // NEW: Connect to the context to get all necessary data and actions.
-  const { sessionId, flashcards, cardResults, resetSession, flashcardSetName } = useStudySession();
+  const { sessionId, flashcards, cardResults, flashcardSetName } = useStudySession();
+  const { data: authSession } = useSession();
+
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   // NEW: Derive the results object directly from the context state.
   const results = useMemo(() => ({
@@ -32,7 +34,6 @@ export default function StudySessionResults() {
   }), [sessionId, flashcards, cardResults]);
 
   useEffect(() => {
-    // This logging logic remains the same and is still valuable.
     if (results.sessionId !== 'unknown-session') {
       Logger.log(
         LogContext.STUDY,
@@ -40,19 +41,41 @@ export default function StudySessionResults() {
         { ...results }
       );
     }
-  }, [results]); // Depend on sessionId from the derived results
+  }, [results]);
 
-  // const handleResetClick = () => {
-  //   Logger.log(
-  //     LogContext.STUDY,
-  //     `User clicked 'Study Another Set' after session ID: ${results.sessionId}`
-  //   );
-  //   // MODIFIED: Call the reset function from the context.
-  //   resetSession();
-  // };
+  const handleShare = async () => {
+    if (!sessionId || isSharing) return;
 
-  // The rest of the component's JSX and helper functions remain exactly the same.
-  // ... (formatDuration, chartData, StatCard, and the main return statement)
+    setIsSharing(true);
+    setShareError(null);
+
+    try {
+      const response = await fetch(`/api/study/sessions/${sessionId}/share`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to share');
+      }
+
+      const data = await response.json();
+
+      if (data.isShareable && data.shareUrl) {
+        setShareUrl(data.shareUrl);
+        setShareModalOpen(true);
+      } else {
+        // Was unshared — re-toggle to share
+        setShareUrl(null);
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Failed to share results';
+      setShareError(msg);
+      Logger.error(LogContext.STUDY, 'Share toggle failed', { sessionId, error: msg });
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   const formatDuration = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) {
@@ -94,14 +117,30 @@ export default function StudySessionResults() {
           </div>
         </div>
       </div>
-      {/* <div className="mt-8 text-center">
-        <button
-          onClick={handleResetClick}
-          className="w-full sm:w-auto py-3 px-8 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-        >
-          Study Another Set
-        </button>
-      </div> */}
+      {/* Actions */}
+      <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        {authSession?.user && sessionId && (
+          <button
+            onClick={handleShare}
+            disabled={isSharing}
+            className="inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+          >
+            <ShareIcon className="h-4 w-4 mr-2" />
+            {isSharing ? 'Sharing...' : 'Share Results'}
+          </button>
+        )}
+      </div>
+
+      {shareError && (
+        <p className="mt-3 text-center text-sm text-red-600">{shareError}</p>
+      )}
+
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        shareUrl={shareUrl || ''}
+        title={`${results.accuracy.toFixed(0)}% on ${flashcardSetName}`}
+      />
     </div>
   );
 }

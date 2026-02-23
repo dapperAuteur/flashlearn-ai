@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import StudySessionSetup from './StudySessionSetup';
+import StudySessionResults from './StudySessionResults';
 import StudyCard from './StudyCard';
 import CardFeedback from './CardFeedback';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -20,7 +21,11 @@ const formatTime = (milliseconds: number): string => {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-export default function StudySessionManager() {
+interface StudySessionManagerProps {
+  preSelectedSetId?: string;
+}
+
+export default function StudySessionManager({ preSelectedSetId }: StudySessionManagerProps) {
   const {
     sessionId,
     flashcardSetName,
@@ -39,6 +44,7 @@ export default function StudySessionManager() {
     hasCompletedConfidence,
   } = useStudySession();
   const { status } = useSession();
+  const router = useRouter();
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -46,9 +52,6 @@ export default function StudySessionManager() {
   useEffect(() => {
     setIsFlipped(false);
   }, [currentIndex]);
-  useEffect(() => {
-    console.log('isComplete, sessionId :>> ', isComplete, sessionId);
-  }, [isComplete, sessionId]);
 
   useEffect(() => {
     if (!sessionStartTime || isComplete) { return; }
@@ -79,6 +82,30 @@ export default function StudySessionManager() {
   }
 
   if (sessionId) {
+    // Session complete - show results inline
+    if (isComplete) {
+      return (
+        <div className="space-y-6">
+          <StudySessionResults />
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={resetSession}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+            >
+              Study Another Set
+            </button>
+            {status === 'authenticated' && (
+              <button
+                onClick={() => router.push('/flashcards')}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+              >
+                Back to My Sets
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     if (lastCardResult) {
       return (
@@ -125,5 +152,5 @@ export default function StudySessionManager() {
     }
   }
 
-  return <StudySessionSetup />;
+  return <StudySessionSetup preSelectedSetId={preSelectedSetId} />;
 }

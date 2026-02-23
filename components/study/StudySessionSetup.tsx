@@ -21,58 +21,28 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 
-export default function StudySessionSetup() {
+interface StudySessionSetupProps {
+  preSelectedSetId?: string;
+}
+
+export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetupProps) {
   const { startSession, isLoading, studyDirection, setStudyDirection } = useStudySession();
   const { flashcardSets } = useFlashcards();
   const { status } = useSession();
 
-  // const [lists, setLists] = useState<List[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [currentStep, setCurrentStep] = useState<'select' | 'direction' | 'ready'>('select');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Helper: Convert PowerSync set to List format
-  // const convertPowerSyncToList = (set: PowerSyncFlashcardSet): List => ({
-  //   _id: set.id,
-  //   title: set.title,
-  //   description: set.description || undefined,
-  //   isPublic: set.is_public === 1,
-  //   userId: set.user_id,
-  //   cardCount: set.card_count,
-  //   createdAt: new Date(set.created_at),
-  //   updatedAt: new Date(set.updated_at),
-  //   tags: [],
-  // });
-
-  // Combine PowerSync sets and API sets
-  // const fetchLists = useCallback(async () => {
-  //   try {
-  //     if (status === 'authenticated') {
-  //       const response = await fetch('/api/lists');
-  //       if (!response.ok) throw new Error('Failed to fetch lists');
-  //       const apiLists = await response.json();
-        
-  //       const powerSyncSetIds = new Set(flashcardSets.map(s => s.id));
-  //       const uniqueApiLists = apiLists.filter((list: List) => 
-  //         !powerSyncSetIds.has(list._id?.toString() || '')
-  //       );
-        
-  //       setLists([...flashcardSets.map(convertPowerSyncToList), ...uniqueApiLists]);
-  //     } else {
-  //       setLists(flashcardSets.map(convertPowerSyncToList));
-  //     }
-  //   } catch (error) {
-  //     setError('Failed to load lists. Showing offline sets only.');
-  //     Logger.error(LogContext.STUDY, 'Error fetching lists', { error });
-  //     setLists(flashcardSets.map(convertPowerSyncToList));
-  //   }
-  // }, [status, flashcardSets]);
-
-  // useEffect(() => {
-  //   fetchLists();
-  // }, [fetchLists]);
+  // Pre-select set if provided via URL query param
+  useEffect(() => {
+    if (preSelectedSetId && !selectedListId) {
+      setSelectedListId(preSelectedSetId);
+      setCurrentStep('direction');
+    }
+  }, [preSelectedSetId, selectedListId]);
 
   useEffect(() => {
     if (selectedListId && currentStep === 'select') {
