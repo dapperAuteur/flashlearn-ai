@@ -6,7 +6,6 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { useToast } from './use-toast';
 import { usePowerSync } from '@powersync/react';
 import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
-import { PowerSyncBackendConnector } from '@/lib/powersync/client';
 
 interface MigrateAllSetsOptions {
   onComplete?: () => void;
@@ -152,26 +151,18 @@ export function useMigration() {
 
   const clearLocalCache = async () => {
     try {
-      Logger.log(LogContext.SYSTEM, 'Attempting to clear local PowerSync cache...');
+      Logger.log(LogContext.SYSTEM, 'Clearing local PowerSync cache...');
       await powerSync.disconnectAndClear();
-      Logger.log(LogContext.SYSTEM, 'Local cache cleared. Reconnecting...');
+
+      // Re-initialize local database
+      const { initPowerSync } = await import('@/lib/powersync/client');
+      await initPowerSync();
 
       toast({
         title: 'Cache Cleared',
-        description: 'Local data has been cleared. Re-syncing with server...',
+        description: 'Local data has been cleared. Please refresh the page to re-sync.',
       });
-      
-      // We need to re-authenticate with PowerSync after clearing
-      // This logic might be in your main layout, but good to have here.
-      if (session) {
-        // This is a simplified connector call. Adjust if your logic is different.
-        const token = session.powersync_token;
-        if (token) {
-          await powerSync.connect(new PowerSyncBackendConnector(token));
-        }
-      }
-      Logger.log(LogContext.SYSTEM, 'PowerSync reconnected.');
-
+      Logger.log(LogContext.SYSTEM, 'PowerSync cache cleared and re-initialized.');
     } catch (error) {
       Logger.error(LogContext.SYSTEM, 'Failed to clear local cache', { error });
       toast({

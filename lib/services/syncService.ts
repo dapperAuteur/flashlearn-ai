@@ -10,6 +10,7 @@ import {
   getResults,
   getStudyHistoryBySessionId
 } from '@/lib/db/indexeddb';
+import { getPowerSync, isPowerSyncInitialized } from '@/lib/powersync/client';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // ============================================================================
@@ -139,8 +140,9 @@ export class OfflineSyncService {
 
   /**
    * Main sync function - syncs all pending data
-   * PowerSync handles flashcard sets/cards automatically
-   * This service handles study sessions and other manual syncs
+   * 1. Pull flashcard data from server into PowerSync local DB
+   * 2. Push pending changes (sets/categories) to server
+   * 3. Push queued study sessions to server
    */
   async syncAllPendingData(): Promise<void> {
     if (this.syncInProgress || !navigator.onLine) {
@@ -151,18 +153,89 @@ export class OfflineSyncService {
     Logger.log(LogContext.SYSTEM, 'Starting offline data sync');
 
     try {
-      // Sync pending changes (sets/categories created offline)
+      // Pull flashcard data from server into PowerSync
+      await this.pullFlashcardData();
+
+      // Push pending changes (sets/categories created offline)
       await this.syncPendingChanges();
-      
-      // Sync study sessions (not in PowerSync schema)
+
+      // Push study sessions (not in PowerSync schema)
       await this.syncStudySessions();
-      
+
       Logger.log(LogContext.SYSTEM, 'Offline sync completed successfully');
     } catch (error) {
       Logger.error(LogContext.SYSTEM, 'Sync failed, will retry', { error });
       this.scheduleRetry();
     } finally {
       this.syncInProgress = false;
+    }
+  }
+
+  // ============================================================================
+  // FLASHCARD DATA PULL (Server → PowerSync)
+  // ============================================================================
+
+  /**
+   * Pull flashcard data from the server into the local PowerSync database.
+   * Uses the /api/powersync endpoint which returns changes since last sync.
+   * Only runs for authenticated users (the endpoint requires auth via cookies).
+   */
+  private async pullFlashcardData(): Promise<void> {
+    if (!isPowerSyncInitialized()) return;
+
+    try {
+      // Check if the user is authenticated by peeking at the session
+      const sessionRes = await fetch('/api/auth/session');
+      const session = await sessionRes.json();
+      if (!session?.user?.id) return; // Not authenticated, skip pull
+
+      const lastSyncedAt = localStorage.getItem('powersync_last_synced_at') || '';
+      const url = lastSyncedAt
+        ? `/api/powersync?last_synced_at=${encodeURIComponent(lastSyncedAt)}`
+        : '/api/powersync';
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        Logger.warning(LogContext.SYSTEM, 'Flashcard pull failed', { status: response.status });
+        return;
+      }
+
+      const { checkpoint, data } = await response.json();
+
+      if (!data || data.length === 0) {
+        if (checkpoint) localStorage.setItem('powersync_last_synced_at', checkpoint);
+        return;
+      }
+
+      const db = getPowerSync();
+
+      for (const change of data) {
+        try {
+          if (change.type === 'flashcard_sets' && change.data) {
+            const d = change.data;
+            await db.execute(
+              `INSERT OR REPLACE INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [d.id, d.user_id, d.title, d.description || null, d.is_public, d.card_count, d.source, d.created_at, d.updated_at, d.is_deleted ?? 0]
+            );
+          } else if (change.type === 'flashcards' && change.data) {
+            const d = change.data;
+            await db.execute(
+              `INSERT OR REPLACE INTO flashcards (id, set_id, user_id, front, back, front_image, back_image, "order", created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [d.id, d.set_id, d.user_id, d.front, d.back, d.front_image || null, d.back_image || null, d.order, d.created_at, d.updated_at]
+            );
+          }
+        } catch (err) {
+          Logger.warning(LogContext.SYSTEM, 'Failed to apply pull change', { change, err });
+        }
+      }
+
+      if (checkpoint) localStorage.setItem('powersync_last_synced_at', checkpoint);
+      Logger.log(LogContext.SYSTEM, `Pulled ${data.length} flashcard changes from server`);
+    } catch (error) {
+      Logger.warning(LogContext.SYSTEM, 'Flashcard data pull error', { error });
+      // Non-fatal — don't throw, let the rest of sync continue
     }
   }
 
@@ -467,21 +540,6 @@ export class OfflineSyncService {
       }
     }, FAILED_SYNC_RETRY_DELAY_MS);
   }
-}
-
-// ============================================================================
-// AUTO-INITIALIZATION
-// ============================================================================
-
-/**
- * Initialize sync service in browser
- * This runs automatically when the module loads
- */
-if (typeof window !== 'undefined') {
-  const syncService = OfflineSyncService.getInstance();
-  syncService.initialize();
-  
-  Logger.log(LogContext.SYSTEM, 'OfflineSyncService auto-initialized');
 }
 
 // ============================================================================

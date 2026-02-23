@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePowerSync, useQuery } from '@powersync/react';
-import { 
-  PowerSyncFlashcardSet, 
-  PowerSyncOfflineSet, 
+import {
+  PowerSyncFlashcardSet,
+  PowerSyncOfflineSet,
   PowerSyncFlashcard,
-  generateMongoId, 
-  boolToInt 
+  generateMongoId,
+  boolToInt
 } from '@/lib/powersync/schema';
+import { savePendingChange } from '@/lib/db/indexeddb';
+import { OfflineSyncService } from '@/lib/services/syncService';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
-import type { AbstractPowerSyncDatabase } from '@powersync/web'; 
 
 
 interface FlashcardContextType {
@@ -36,16 +36,8 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  console.log('FlashcardProvider - powerSync exists:', !!powerSync);
-  console.log('FlashcardProvider - session user:', session?.user?.id);
-
   const userId = session?.user?.id || '';
-  // For authenticated users: show their sets
-  // For unauthenticated: show public sets
   const shouldQuery = !!powerSync;
-
-  console.log('FlashcardProvider - shouldQuery:', shouldQuery);
-  console.log('FlashcardProvider - userId:', userId);
 
   // For authenticated users: show their sets + public sets
   // For unauthenticated: show only public sets
@@ -61,9 +53,6 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
         : [] // Empty array for public query (no parameters needed)
       : []
   );
-
-  console.log('FlashcardProvider - flashcardSets count:', flashcardSets.length);
-  console.log('FlashcardProvider - flashcardSets:', flashcardSets);
 
   const { data: offlineSets = [] } = useQuery<PowerSyncOfflineSet>(
     shouldQuery && userId
@@ -165,80 +154,88 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
     return id;
 };
 
-// Define createFlashcardSet function
   const createFlashcardSet = async (
     set: Omit<PowerSyncFlashcardSet, 'id' | 'created_at' | 'updated_at'>
   ): Promise<string> => {
     if (!powerSync) throw new Error('PowerSync not initialized');
-    
+
     const id = generateMongoId();
     const now = new Date().toISOString();
 
-    console.log('About to execute INSERT');
-    console.log('PowerSync instance:', powerSync);
+    await powerSync.writeTransaction(async (tx) => {
+      await tx.execute(
+        `INSERT INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, set.user_id, set.title, set.description || null, set.is_public, set.card_count, set.source, now, now, 0]
+      );
+    });
 
-    console.log('PowerSync from context:', powerSync);
-    console.log('PowerSync methods:', Object.keys(powerSync));
-    // try {
-    
-      await powerSync.writeTransaction(async (tx) => {
-        await tx.execute(
-          `INSERT INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            id, 
-            set.user_id, 
-            set.title, 
-            set.description || null, 
-            set.is_public, 
-            set.card_count, 
-            set.source, 
-            now, 
-            now, 
-            0
-          ]
-        );
-      });
-    
+    // Queue for server sync
+    await savePendingChange({
+      id: `set-create-${id}`,
+      entity: 'set',
+      type: 'create',
+      data: { _id: id, title: set.title, description: set.description, isPublic: set.is_public === 1, cardCount: set.card_count, source: set.source },
+      timestamp: new Date(),
+      retryCount: 0,
+    });
+    if (navigator.onLine) OfflineSyncService.getInstance().syncAllPendingData();
+
     Logger.info(LogContext.FLASHCARD, 'Flashcard set created', { id, title: set.title });
     return id;
   };
 
   const updateFlashcardSet = async (id: string, updates: Partial<PowerSyncFlashcardSet>) => {
     if (!powerSync) throw new Error('PowerSync not initialized');
-    
+
     const setClauses = Object.keys(updates).map(key => `${key} = ?`).join(', ');
     const values = [...Object.values(updates), new Date().toISOString(), id];
-    
+
     await powerSync.execute(
       `UPDATE flashcard_sets SET ${setClauses}, updated_at = ? WHERE id = ?`,
       values
     );
-    
+
+    await savePendingChange({
+      id: `set-update-${id}-${Date.now()}`,
+      entity: 'set',
+      type: 'update',
+      data: { _id: id, ...updates },
+      timestamp: new Date(),
+      retryCount: 0,
+    });
+    if (navigator.onLine) OfflineSyncService.getInstance().syncAllPendingData();
+
     Logger.log(LogContext.FLASHCARD, 'Flashcard set updated', { id });
   };
 
   const deleteFlashcardSet = async (id: string) => {
     if (!powerSync) throw new Error('PowerSync not initialized');
-    
+
     await powerSync.execute(
       'UPDATE flashcard_sets SET is_deleted = 1, updated_at = ? WHERE id = ?',
       [new Date().toISOString(), id]
     );
-    
+
+    await savePendingChange({
+      id: `set-delete-${id}`,
+      entity: 'set',
+      type: 'delete',
+      data: { _id: id },
+      timestamp: new Date(),
+      retryCount: 0,
+    });
+    if (navigator.onLine) OfflineSyncService.getInstance().syncAllPendingData();
+
     Logger.log(LogContext.FLASHCARD, 'Flashcard set deleted', { id });
   };
 
   const toggleOfflineAvailability = async (setId: string) => {
-    console.log('[Toggle] Starting, setId:', setId);
-    console.log('[Toggle] PowerSync exists:', !!powerSync);
-    console.log('[Toggle] userId:', userId);
     if (!powerSync) throw new Error('PowerSync not initialized');
     if (!userId) throw new Error('User not authenticated');
-    
+
     const existing = offlineSets.find(s => s.set_id === setId);
-    console.log('[Toggle] Existing offline set:', existing);
-    
+
     if (existing) {
       await powerSync.execute('DELETE FROM offline_sets WHERE id = ?', [existing.id]);
       Logger.log(LogContext.FLASHCARD, 'Set removed from offline', { setId });
@@ -246,22 +243,17 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
       if (offlineSets.length >= MAX_OFFLINE_SETS) {
         throw new Error(`Maximum ${MAX_OFFLINE_SETS} offline sets reached`);
       }
-      
+
       const set = flashcardSets.find(s => s.id === setId);
-      console.log('[Toggle] Found set:', set?.title);
       const id = generateMongoId();
       const now = new Date().toISOString();
 
-      console.log('[Toggle] Inserting:', { id, userId, setId });
-      
       await powerSync.execute(
         `INSERT INTO offline_sets (id, user_id, set_id, is_owned, last_accessed, created_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [id, userId, setId, boolToInt(set?.user_id === userId), now, now]
       );
 
-      console.log('[Toggle] Inserted successfully');
-      
       Logger.log(LogContext.FLASHCARD, 'Set added to offline', { setId });
     }
   };

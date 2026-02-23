@@ -6,7 +6,6 @@ import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import PublicHeader from '@/components/layout/PublicHeader';
 import { usePathname } from 'next/navigation';
-import '@/lib/services/syncService';
 import { StudySessionProvider } from '@/contexts/StudySessionContext';
 import { Analytics } from "@vercel/analytics/next"
 import { FlashcardProvider } from '@/contexts/FlashcardContext';
@@ -22,15 +21,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [powerSyncDB, setPowerSyncDB] = useState<any>(null);
+  // undefined = loading, null = failed, PowerSyncDatabase = ready
+  const [powerSyncDB, setPowerSyncDB] = useState<any>(undefined);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/service-worker.js')
-        .then((registration) => {
-          console.log('[SW] Registered:', registration.scope);
-        })
         .catch((error) => {
           console.error('[SW] Registration failed:', error);
         });
@@ -39,28 +36,23 @@ export default function RootLayout({
 
   // Initialize PowerSync once on mount
   useEffect(() => {
-    const initPowerSync = async () => {
+    const init = async () => {
       try {
         const { initPowerSync, getPowerSync } = await import('@/lib/powersync/client');
         await initPowerSync();
-        const db = getPowerSync();
-        setPowerSyncDB(db);
+        setPowerSyncDB(getPowerSync());
       } catch (error) {
         console.error('PowerSync initialization failed:', error);
-        // Continue without PowerSync for unauthenticated users
-        setPowerSyncDB({});
+        setPowerSyncDB(null);
       }
     };
-    
-    initPowerSync();
+    init();
   }, []);
-  
-  // Show public header for these routes
-  // The root page is the only one that needs this explicit check now
+
   const isPublicRouteByPath = pathname === '/';
-  
-  // Don't render until PowerSync is ready
-  if (!powerSyncDB) {
+
+  // Show loading spinner while PowerSync initializes
+  if (powerSyncDB === undefined) {
     return (
       <html lang="en">
         <link rel="manifest" href="/manifest.json" />
