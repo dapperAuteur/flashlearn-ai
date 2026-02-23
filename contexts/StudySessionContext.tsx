@@ -20,6 +20,7 @@ import { generateMongoId } from '@/lib/powersync/helpers';
 
 
 type StudyDirection = 'front-to-back' | 'back-to-front';
+type StudyMode = 'classic' | 'multiple-choice' | 'type-answer';
 type LastCardResult = 'correct' | 'incorrect' | null;
 
 interface StudySessionState {
@@ -35,6 +36,9 @@ interface StudySessionState {
   lastCardResult: LastCardResult;
   studyDirection: StudyDirection;
   setStudyDirection: (direction: StudyDirection) => void;
+  studyMode: StudyMode;
+  setStudyMode: (mode: StudyMode) => void;
+  multipleChoiceData: Record<string, string[]>;
   currentConfidenceRating: number | null;
   isConfidenceRequired: boolean;
   hasCompletedConfidence: boolean;
@@ -65,6 +69,8 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [lastCardResult, setLastCardResult] = useState<LastCardResult>(null);
   const [studyDirection, setStudyDirection] = useState<StudyDirection>('front-to-back');
+  const [studyMode, setStudyMode] = useState<StudyMode>('classic');
+  const [multipleChoiceData, setMultipleChoiceData] = useState<Record<string, string[]>>({});
   const [currentConfidenceRating, setCurrentConfidenceRating] = useState<number | null>(null);
   const [isConfidenceRequired] = useState(true);
   const [hasCompletedConfidence, setHasCompletedConfidence] = useState(false);
@@ -178,11 +184,34 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       setLastCardResult(null);
       setCurrentConfidenceRating(null);
       setHasCompletedConfidence(false);
-      
-      Logger.log(LogContext.STUDY, "Session started successfully", { 
+
+      // Fetch MC distractors if in multiple-choice mode
+      if (studyMode === 'multiple-choice' && !isOffline) {
+        try {
+          const mcCards = shuffled.slice(0, 30).map(c => ({
+            id: String(c._id),
+            front: c.front,
+            back: c.back,
+          }));
+          const mcRes = await fetch('/api/study/generate-choices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cards: mcCards }),
+          });
+          if (mcRes.ok) {
+            const mcData = await mcRes.json();
+            setMultipleChoiceData(mcData.choices || {});
+          }
+        } catch (err) {
+          Logger.warning(LogContext.STUDY, "Failed to fetch MC distractors", { error: err });
+        }
+      }
+
+      Logger.log(LogContext.STUDY, "Session started successfully", {
         sessionId: newSessionId,
         cardCount: shuffled.length,
-        setName
+        setName,
+        studyMode
       });
 
     } catch (err) {
@@ -192,7 +221,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [authSession]);
+  }, [authSession, studyMode]);
 
   const completeSession = useCallback(async () => {
     if (!sessionId || !sessionStartTime) {
@@ -373,6 +402,8 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     setIsOfflineSession(false);
     setIsSyncing(false);
     setSyncError(null);
+    setStudyMode('classic');
+    setMultipleChoiceData({});
   }, [sessionId]);
 
   const value: StudySessionState = {
@@ -388,6 +419,9 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     lastCardResult,
     studyDirection,
     setStudyDirection,
+    studyMode,
+    setStudyMode,
+    multipleChoiceData,
     currentConfidenceRating,
     isConfidenceRequired,
     hasCompletedConfidence,
