@@ -37,6 +37,12 @@ export default function PublicHeader() {
                   Generate
                 </Link>
                 <Link
+                  href="/roadmap"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                >
+                  Roadmap
+                </Link>
+                <Link
                   href="/auth/signin"
                   className="px-3 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md"
                 >
