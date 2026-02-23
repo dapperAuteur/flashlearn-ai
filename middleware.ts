@@ -24,23 +24,22 @@ export async function middleware(request: NextRequest) {
 
   // --- Admin Route Protection ---
   if (pathname.startsWith('/admin')) {
-    // This is the most important log for debugging this issue.
-    edgeLogger.info(EdgeLogContext.MIDDLEWARE, "Admin route check", {
-      pathname,
-      tokenExists: !!token,
-      tokenRole: token?.role, // Check your server logs for this value.
-    });
-
     if (token?.role === 'Admin') {
-      // If the user is an admin, allow the request to proceed.
       return NextResponse.next();
     }
-
-    // For any other case (no token, or not an admin role), redirect.
     edgeLogger.warn(EdgeLogContext.AUTH, `Unauthorized access to admin route, redirecting.`, {
       ip: getClientIp(request),
       userId: token?.sub,
     });
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // --- Teacher Route Protection ---
+  if (pathname.startsWith('/teacher')) {
+    const teacherRoles = ['Teacher', 'Tutor', 'SchoolAdmin', 'Admin'];
+    if (token?.role && teacherRoles.includes(token.role)) {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

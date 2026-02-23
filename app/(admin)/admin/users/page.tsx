@@ -27,7 +27,7 @@ interface Pagination {
   totalPages: number;
 }
 
-const ROLES = ["Student", "Admin"];
+const ROLES = ["Student", "Teacher", "Tutor", "Parent", "SchoolAdmin", "Admin"];
 const TIERS = ["Free", "Monthly Pro", "Annual Pro", "Lifetime Learner"];
 
 export default function AdminUsersPage() {
