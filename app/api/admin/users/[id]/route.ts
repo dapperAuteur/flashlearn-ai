@@ -6,7 +6,7 @@ import { Logger, LogContext } from '@/lib/logging/logger';
 
 const secret = process.env.NEXTAUTH_SECRET;
 
-const VALID_ROLES = ['Student', 'Admin'];
+const VALID_ROLES = ['Student', 'Teacher', 'Tutor', 'Parent', 'SchoolAdmin', 'Admin'];
 const VALID_TIERS = ['Free', 'Monthly Pro', 'Annual Pro', 'Lifetime Learner'];
 
 export async function PUT(

@@ -18,6 +18,7 @@ import {
   CheckCircleIcon,
   MagnifyingGlassIcon,
   ClockIcon,
+  AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 
 interface StudySessionSetupProps {
@@ -35,6 +36,15 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
   const [currentStep, setCurrentStep] = useState<'select' | 'direction' | 'ready'>('select');
   const [searchTerm, setSearchTerm] = useState('');
   const [dueCounts, setDueCounts] = useState<Map<string, number>>(new Map());
+  const [assignments, setAssignments] = useState<Array<{
+    _id: string;
+    title: string;
+    flashcardSetId: { _id: string; title: string; cardCount: number };
+    classroomId: { _id: string; name: string };
+    teacherId?: { name: string };
+    dueDate?: string;
+    myStatus: string;
+  }>>([]);
 
   // Pre-select set if provided via URL query param
   useEffect(() => {
@@ -50,9 +60,10 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
     }
   }, [selectedListId, currentStep]);
 
-  // Fetch due card counts for authenticated users
+  // Fetch due card counts and assignments for authenticated users
   useEffect(() => {
     if (status !== 'authenticated') return;
+
     fetch('/api/study/due-cards')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -60,6 +71,20 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
           const map = new Map<string, number>();
           for (const s of data.sets) map.set(s.setId, s.dueCount);
           setDueCounts(map);
+        }
+      })
+      .catch(() => { /* silent */ });
+
+    fetch('/api/assignments')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.assignments) {
+          // Only show assignments that are not completed
+          setAssignments(
+            data.assignments.filter(
+              (a: { myStatus?: string }) => a.myStatus && a.myStatus !== 'completed'
+            )
+          );
         }
       })
       .catch(() => { /* silent */ });
@@ -201,6 +226,77 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                     className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   />
                 </div>
+
+                {/* Assigned Sets */}
+                {assignments.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-purple-700">
+                      <AcademicCapIcon className="h-4 w-4" />
+                      <span>Assigned to You</span>
+                    </div>
+                    {assignments.map((a) => (
+                      <div
+                        key={a._id}
+                        onClick={() => setSelectedListId(a.flashcardSetId?._id || '')}
+                        className={clsx(
+                          'p-4 rounded-xl border-2 cursor-pointer transition-all',
+                          selectedListId === a.flashcardSetId?._id
+                            ? 'border-purple-500 bg-purple-50 shadow-md'
+                            : 'border-purple-200 bg-purple-50/30 hover:border-purple-300 hover:shadow-sm'
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-medium text-gray-900 truncate">{a.flashcardSetId?.title}</h3>
+                              <span className={clsx(
+                                'text-xs px-2 py-0.5 rounded-full flex-shrink-0',
+                                a.myStatus === 'in_progress'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-gray-100 text-gray-600'
+                              )}>
+                                {a.myStatus === 'in_progress' ? 'In Progress' : 'Not Started'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {a.title} &middot; {a.classroomId?.name}
+                              {a.teacherId?.name && ` · ${a.teacherId.name}`}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-500">{a.flashcardSetId?.cardCount} cards</span>
+                              {a.dueDate && (
+                                <span className={clsx(
+                                  'text-xs px-2 py-0.5 rounded-full',
+                                  new Date(a.dueDate) < new Date()
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-gray-100 text-gray-600'
+                                )}>
+                                  Due {new Date(a.dueDate).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className={clsx(
+                            'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3',
+                            selectedListId === a.flashcardSetId?._id
+                              ? 'bg-purple-600 border-purple-600'
+                              : 'border-gray-300'
+                          )}>
+                            {selectedListId === a.flashcardSetId?._id && (
+                              <CheckCircleIcon className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredSets.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mt-4">
+                        <BookOpenIcon className="h-4 w-4" />
+                        <span>Your Sets</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Filtered Results */}
                 {filteredSets.length === 0 ? (

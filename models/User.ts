@@ -26,9 +26,17 @@ const UserSchema = new Schema<IUser>({
   },
   role: {
     type: String,
-    enum: ['Student', 'Admin'],
+    enum: ['Student', 'Teacher', 'Tutor', 'Parent', 'SchoolAdmin', 'Admin'],
     default: 'Student',
   },
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: 'School',
+  },
+  linkedStudentIds: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  }],
   subscriptionTier: {
     type: String,
     enum: ['Free', 'Monthly Pro', 'Annual Pro', 'Lifetime Learner'],
