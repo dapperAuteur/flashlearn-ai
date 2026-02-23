@@ -35,7 +35,9 @@ async function getRateLimitConfig(): Promise<Record<string, number>> {
   Logger.warning(LogContext.SYSTEM, "RATE_LIMITS not found in DB or invalid. Using default fallback values.");
   return {
     Admin: Infinity,
-    'Lifetime Learner': 2,
+    'Lifetime Learner': Infinity,
+    'Annual Pro': Infinity,
+    'Monthly Pro': Infinity,
     Free: 1,
   };
 }

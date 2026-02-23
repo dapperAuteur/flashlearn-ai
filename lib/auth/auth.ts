@@ -36,10 +36,10 @@ export const authOptions: NextAuthOptions = {
           }
           
           Logger.info(LogContext.AUTH, "User authorized successfully. Preparing data for JWT.", { email, role: userDoc.role });
-          // This object is passed to the `jwt` callback's `user` parameter
           return {
             id: userDoc._id.toString(),
-            role: userDoc.role, // This is the custom property
+            role: userDoc.role,
+            subscriptionTier: userDoc.subscriptionTier || 'Free',
           };
         } catch (error) {
           Logger.error(LogContext.AUTH, "Error during authorization.", { error });
@@ -49,13 +49,26 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      // The `user` object is only passed on the initial sign-in.
+    async jwt({ token, user, trigger }) {
       if (user) {
-        // This log is critical. It confirms the role is being added to the token.
         Logger.info(LogContext.AUTH, "JWT callback: Adding user data to token.", { userId: user.id, role: user.role });
         token.id = user.id;
         token.role = user.role;
+        token.subscriptionTier = user.subscriptionTier || 'Free';
+      }
+      // Refresh subscriptionTier from DB on update trigger (e.g. after purchase)
+      if (trigger === 'update') {
+        try {
+          const client = await clientPromise;
+          const db = client.db();
+          const { ObjectId } = await import('mongodb');
+          const userDoc = await db.collection('users').findOne({ _id: new ObjectId(token.id) });
+          if (userDoc) {
+            token.subscriptionTier = userDoc.subscriptionTier || 'Free';
+          }
+        } catch (error) {
+          Logger.error(LogContext.AUTH, "Failed to refresh subscriptionTier in JWT.", { error });
+        }
       }
       return token;
     },
@@ -63,6 +76,7 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.subscriptionTier = token.subscriptionTier || 'Free';
       }
       return session;
     }

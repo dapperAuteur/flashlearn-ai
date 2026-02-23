@@ -31,7 +31,7 @@ const UserSchema = new Schema<IUser>({
   },
   subscriptionTier: {
     type: String,
-    enum: ['Free', 'Lifetime Learner'],
+    enum: ['Free', 'Monthly Pro', 'Annual Pro', 'Lifetime Learner'],
     default: 'Free',
   },
   profiles: [{

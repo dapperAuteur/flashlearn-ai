@@ -300,9 +300,11 @@ export default function DashboardPage() {
           Your Subscription
         </h2>
         <p className="text-sm text-gray-600">
-          {user.role === 'Student' ? 'Free Plan' : 'Premium Plan'}
+          {user.subscriptionTier === 'Free' || !user.subscriptionTier
+            ? 'Free Plan'
+            : user.subscriptionTier}
         </p>
-        {user.role === 'Student' && (
+        {(!user.subscriptionTier || user.subscriptionTier === 'Free') && (
           <div className="mt-3">
             <Link
               href="/pricing"

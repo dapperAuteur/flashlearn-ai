@@ -13,8 +13,8 @@ declare module 'next-auth' {
    * Extends the User model to include your custom 'role' property.
    */
   interface User extends DefaultUser {
-    // FIX: Made 'role' a required string, as every user in your system has a role.
     role: string;
+    subscriptionTier: string;
     id: string;
   }
 
@@ -24,9 +24,9 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
-      // FIX: Made 'role' a required string.
       role: string;
-    } & DefaultSession['user']; // This keeps the default properties like name, email, image
+      subscriptionTier: string;
+    } & DefaultSession['user'];
   }
 }
 
@@ -37,5 +37,6 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     role: string;
+    subscriptionTier: string;
   }
 }

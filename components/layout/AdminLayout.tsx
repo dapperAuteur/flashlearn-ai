@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   
   // If not admin, redirect to dashboard
   const user = session?.user as any;
-  if (user?.role !== "admin") {
+  if (user?.role !== "Admin") {
     console.log("User not admin, redirecting to study page");
     router.push("/flashcards");
     return null;
