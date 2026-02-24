@@ -305,6 +305,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     setCurrentConfidenceRating(rating);
+    setHasCompletedConfidence(true);
     Logger.log(LogContext.STUDY, "Confidence rating recorded", { rating });
   }, []);
 
