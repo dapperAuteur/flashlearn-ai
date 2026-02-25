@@ -133,6 +133,19 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
       );
     }
 
+    // Session end — last card result recorded, waiting for completeSession to finish
+    if (lastCardResult && currentIndex === flashcards.length - 1) {
+      return (
+        <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
+          <div className="flex flex-col items-center justify-center py-16 text-white">
+            <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
+            <p className="text-gray-400 mb-6">Saving your results...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      );
+    }
+
     // Feedback screen between cards (classic mode only)
     if (lastCardResult && studyMode === 'classic') {
       return (
@@ -197,7 +210,7 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
               isConfidenceRequired={isConfidenceRequired}
               hasCompletedConfidence={hasCompletedConfidence}
               onConfidenceSelect={recordConfidence}
-              canFlip={hasCompletedConfidence}
+              canFlip={!isConfidenceRequired || hasCompletedConfidence}
             />
           )}
         </div>

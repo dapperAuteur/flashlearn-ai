@@ -41,7 +41,6 @@ export default function StudyCard({
   hasCompletedConfidence
 }: StudyCardProps) {
   const [startTime, setStartTime] = useState<number>(Date.now());
-  const [isHovered, setIsHovered] = useState(false);
   const cardId = String(flashcard._id);
 
   useEffect(() => {
@@ -131,7 +130,8 @@ export default function StudyCard({
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <ConfidenceScale 
+            <ConfidenceScale
+              key={cardId}
               onRatingSelect={onConfidenceSelect}
               disabled={!isConfidenceRequired}
             />
@@ -140,123 +140,80 @@ export default function StudyCard({
       </AnimatePresence>
 
       {/* Main Flashcard */}
-      <motion.div
-        className="relative perspective-1000"
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
+      <div
+        className={`relative h-96 ${canFlip ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+        onClick={handleFlip}
       >
-        <motion.div
-          className={`w-full h-96 relative ${
-            canFlip ? 'cursor-pointer hover:scale-[1.02]' : 'cursor-not-allowed'
-          }`}
-          onClick={handleFlip}
-          animate={{ 
-            scale: isHovered && canFlip ? 1.02 : 1
-          }}
-          transition={{ 
-            duration: 0.3,
-            type: "spring",
-            stiffness: 100
-          }}
-          style={{ 
-            transformStyle: "preserve-3d",
-            filter: canFlip ? 'none' : 'grayscale(0.3)'
-          }}
-        >
-          {/* Front of card */}
-          <motion.div 
-            className="absolute w-full h-full"
-            animate={{ rotateY: isFlipped ? -180 : 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ 
-              backfaceVisibility: "hidden",
-              transformStyle: "preserve-3d"
-            }}
-          >
-            <div className="w-full h-full bg-gradient-to-br from-white to-blue-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8 flex flex-col justify-center relative overflow-hidden">
-              {/* Glassmorphism background elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-200/30 to-pink-200/30 rounded-full blur-2xl" />
-              
-              <div className="relative z-10 overflow-auto">
-                <div className="text-center">
-                  <div className="inline-flex items-center space-x-2 bg-blue-100/50 backdrop-blur-sm text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
-                    <span>Question</span>
-                  </div>
+        {/* Front of card */}
+        <div className={`absolute inset-0 transition-opacity duration-300 ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className="w-full h-full bg-gradient-to-br from-white to-blue-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8 flex flex-col justify-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-200/30 to-pink-200/30 rounded-full blur-2xl" />
+            <div className="relative z-10 overflow-auto">
+              <div className="text-center">
+                <div className="inline-flex items-center space-x-2 bg-blue-100/50 backdrop-blur-sm text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
+                  <span>Question</span>
                 </div>
-                <div 
-                  className="text-center text-xl prose prose-slate max-w-none leading-relaxed text-gray-800"
-                  dangerouslySetInnerHTML={{ __html: flashcard.front }}
-                />
-                {flashcard.frontImage && (
-                  <div className="mt-6 flex justify-center">
-                    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-                      <Image 
-                        src={flashcard.frontImage} 
-                        alt="Front visual" 
-                        className="max-h-48 object-contain rounded-lg" 
-                        width={400} 
-                        height={400} 
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
-              
-              {/* Flip indicator */}
-              {canFlip && (
-                <div className="absolute bottom-4 right-4 bg-white/70 backdrop-blur-sm text-gray-600 px-3 py-2 rounded-lg text-sm font-medium opacity-60">
-                  Click to flip
+              <div
+                className="text-center text-xl prose prose-slate max-w-none leading-relaxed text-gray-800"
+                dangerouslySetInnerHTML={{ __html: flashcard.front }}
+              />
+              {flashcard.frontImage && (
+                <div className="mt-6 flex justify-center">
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                    <Image
+                      src={flashcard.frontImage}
+                      alt="Front visual"
+                      className="max-h-48 object-contain rounded-lg"
+                      width={400}
+                      height={400}
+                    />
+                  </div>
                 </div>
               )}
             </div>
-          </motion.div>
+            {canFlip && (
+              <div className="absolute bottom-4 right-4 bg-white/70 backdrop-blur-sm text-gray-600 px-3 py-2 rounded-lg text-sm font-medium opacity-60">
+                Click to flip
+              </div>
+            )}
+          </div>
+        </div>
 
-          {/* Back of card */}
-          <motion.div 
-            className="absolute w-full h-full"
-            animate={{ rotateY: isFlipped ? 0 : 180 }}
-            transition={{ duration: 0.6 }}
-            style={{ 
-              backfaceVisibility: "hidden",
-              transformStyle: "preserve-3d",
-              opacity: isFlipped ? 1 : 0
-            }}
-          >
-            <div className="w-full h-full bg-gradient-to-br from-white to-green-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8 flex flex-col justify-center relative overflow-hidden">
-              {/* Glassmorphism background elements */}
-              <div className="absolute top-0 left-0 w-28 h-28 bg-gradient-to-br from-green-200/30 to-emerald-200/30 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 right-0 w-20 h-20 bg-gradient-to-tr from-teal-200/30 to-cyan-200/30 rounded-full blur-2xl" />
-              
-              <div className="relative z-10 overflow-auto">
-                <div className="text-center">
-                  <div className="inline-flex items-center space-x-2 bg-green-100/50 backdrop-blur-sm text-green-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
-                    <CheckCircleIcon className="h-4 w-4" />
-                    <span>Answer</span>
+        {/* Back of card */}
+        <div className={`absolute inset-0 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className="w-full h-full bg-gradient-to-br from-white to-green-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8 flex flex-col justify-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-28 h-28 bg-gradient-to-br from-green-200/30 to-emerald-200/30 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 right-0 w-20 h-20 bg-gradient-to-tr from-teal-200/30 to-cyan-200/30 rounded-full blur-2xl" />
+            <div className="relative z-10 overflow-auto">
+              <div className="text-center">
+                <div className="inline-flex items-center space-x-2 bg-green-100/50 backdrop-blur-sm text-green-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
+                  <CheckCircleIcon className="h-4 w-4" />
+                  <span>Answer</span>
+                </div>
+              </div>
+              <div
+                className="text-center text-xl prose prose-slate max-w-none leading-relaxed text-gray-800"
+                dangerouslySetInnerHTML={{ __html: flashcard.back }}
+              />
+              {flashcard.backImage && (
+                <div className="mt-6 flex justify-center">
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                    <Image
+                      src={flashcard.backImage}
+                      alt="Back visual"
+                      className="max-h-48 object-contain rounded-lg"
+                      width={400}
+                      height={400}
+                    />
                   </div>
                 </div>
-                <div 
-                  className="text-center text-xl prose prose-slate max-w-none leading-relaxed text-gray-800"
-                  dangerouslySetInnerHTML={{ __html: flashcard.back }}
-                />
-                {flashcard.backImage && (
-                  <div className="mt-6 flex justify-center">
-                    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-                      <Image 
-                        src={flashcard.backImage} 
-                        alt="Back visual" 
-                        className="max-h-48 object-contain rounded-lg" 
-                        width={400} 
-                        height={400} 
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          </motion.div>
-        </motion.div>
-      </motion.div>
+          </div>
+        </div>
+      </div>
 
       {/* Answer Buttons */}
       <AnimatePresence>

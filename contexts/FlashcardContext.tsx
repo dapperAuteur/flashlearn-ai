@@ -170,15 +170,8 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
       );
     });
 
-    // Queue for server sync
-    await savePendingChange({
-      id: `set-create-${id}`,
-      entity: 'set',
-      type: 'create',
-      data: { _id: id, title: set.title, description: set.description, isPublic: set.is_public === 1, cardCount: set.card_count, source: set.source },
-      timestamp: new Date(),
-      retryCount: 0,
-    });
+    // PowerSync CRUD tracking handles syncing this set to the server.
+    // Trigger a full sync to also pull latest data and push study sessions.
     if (navigator.onLine) OfflineSyncService.getInstance().syncAllPendingData();
 
     Logger.info(LogContext.FLASHCARD, 'Flashcard set created', { id, title: set.title });
