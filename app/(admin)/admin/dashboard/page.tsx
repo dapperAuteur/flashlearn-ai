@@ -5,6 +5,29 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { adminLogger, AdminLogContext } from "@/lib/logging/admin-logger";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
+import { Line, Bar } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 interface DashboardStats {
   totalUsers: number;
@@ -14,6 +37,14 @@ interface DashboardStats {
   suspiciousActivity24h: number;
   paidUsers: number;
   tierCounts: Record<string, number>;
+  totalFlashcardSets: number;
+  totalStudySessions: number;
+  studySessions24h: number;
+}
+
+interface ChartDataPoint {
+  date: string;
+  count: number;
 }
 
 interface RecentSignup {
@@ -30,6 +61,8 @@ export default function AdminDashboardPage() {
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentSignups, setRecentSignups] = useState<RecentSignup[]>([]);
+  const [sessionsPerDay, setSessionsPerDay] = useState<ChartDataPoint[]>([]);
+  const [signupsPerDay, setSignupsPerDay] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +82,8 @@ export default function AdminDashboardPage() {
         const data = await response.json();
         setStats(data.stats);
         setRecentSignups(data.recentSignups || []);
+        setSessionsPerDay(data.charts?.sessionsPerDay || []);
+        setSignupsPerDay(data.charts?.signupsPerDay || []);
       } catch (err) {
         adminLogger.error(AdminLogContext.DASHBOARD, "Error fetching dashboard stats", err);
         setError((err as Error).message);
@@ -77,18 +112,117 @@ export default function AdminDashboardPage() {
 
   const tierCounts = stats?.tierCounts || {};
 
+  // Chart configs
+  const formatDateLabel = (dateStr: string) => {
+    const d = new Date(dateStr + "T00:00:00Z");
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const userGrowthData = {
+    labels: signupsPerDay.map((d) => formatDateLabel(d.date)),
+    datasets: [
+      {
+        label: "New Users",
+        data: signupsPerDay.map((d) => d.count),
+        borderColor: "rgb(59, 130, 246)",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2,
+      },
+    ],
+  };
+
+  const studyActivityData = {
+    labels: sessionsPerDay.map((d) => formatDateLabel(d.date)),
+    datasets: [
+      {
+        label: "Study Sessions",
+        data: sessionsPerDay.map((d) => d.count),
+        backgroundColor: "rgba(16, 185, 129, 0.7)",
+        borderColor: "rgb(16, 185, 129)",
+        borderWidth: 1,
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { maxTicksLimit: 10, font: { size: 11 } },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { precision: 0, font: { size: 11 } },
+      },
+    },
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Admin Dashboard</h1>
 
       {/* Primary Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
         <StatCard title="Total Users" value={stats?.totalUsers} />
-        <StatCard title="New (24h)" value={stats?.newUsers24h} />
+        <StatCard title="New Users (24h)" value={stats?.newUsers24h} />
         <StatCard title="Paid Users" value={stats?.paidUsers} color="text-green-600" />
-        <StatCard title="Logins" value={stats?.totalLogins} />
+      </div>
+
+      {/* Secondary Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
+        <StatCard title="Total Sets" value={stats?.totalFlashcardSets} color="text-blue-600" />
+        <StatCard title="Study Sessions" value={stats?.totalStudySessions} color="text-emerald-600" />
+        <StatCard title="Sessions (24h)" value={stats?.studySessions24h} />
+      </div>
+
+      {/* Security Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard title="Total Logins" value={stats?.totalLogins} />
         <StatCard title="Failed (24h)" value={stats?.failedLogins24h} color={stats?.failedLogins24h ? "text-red-600" : undefined} />
         <StatCard title="Suspicious (24h)" value={stats?.suspiciousActivity24h} color={stats?.suspiciousActivity24h ? "text-orange-500" : undefined} />
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* User Growth Chart */}
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
+            User Growth (30 days)
+          </h2>
+          <div className="h-64">
+            {signupsPerDay.length > 0 ? (
+              <Line data={userGrowthData} options={chartOptions} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                No signup data available
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Study Activity Chart */}
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
+            Study Activity (30 days)
+          </h2>
+          <div className="h-64">
+            {sessionsPerDay.length > 0 ? (
+              <Bar data={studyActivityData} options={chartOptions} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                No study session data available
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Subscription Breakdown + Quick Actions */}

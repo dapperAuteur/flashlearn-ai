@@ -15,6 +15,7 @@ import {
   ArrowRightIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
+import { getSubscriptionDisplay, shouldShowUpgradeCTA } from '@/lib/utils/subscription';
 
 interface StudyStats {
   totalSessions: number;
@@ -300,11 +301,9 @@ export default function DashboardPage() {
           Your Subscription
         </h2>
         <p className="text-sm text-gray-600">
-          {user.subscriptionTier === 'Free' || !user.subscriptionTier
-            ? 'Free Plan'
-            : user.subscriptionTier}
+          {getSubscriptionDisplay(user.role, user.subscriptionTier)}
         </p>
-        {(!user.subscriptionTier || user.subscriptionTier === 'Free') && (
+        {shouldShowUpgradeCTA(user.role, user.subscriptionTier) && (
           <div className="mt-3">
             <Link
               href="/pricing"

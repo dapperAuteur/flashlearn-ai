@@ -46,7 +46,8 @@ export async function POST(
     await studySession.save();
 
     const host = request.headers.get('host') || 'localhost:3000';
-    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const forwardedProto = request.headers.get('x-forwarded-proto');
+    const protocol = forwardedProto || (host.includes('localhost') ? 'http' : 'https');
     const shareUrl = `${protocol}://${host}/results/${studySession.sessionId}`;
 
     await Logger.info(LogContext.STUDY, 'Session sharing toggled', {

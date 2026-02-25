@@ -61,9 +61,9 @@ export async function GET() {
   // Calculate streak: consecutive days with at least one completed session
   const streak = await calculateStreak(userId);
 
-  // Today's sessions
+  // Today's sessions (use UTC to match $dateToString in streak calculation)
   const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  startOfDay.setUTCHours(0, 0, 0, 0);
   const todaySessions = await StudySession.countDocuments({
     userId,
     status: 'completed',
@@ -97,23 +97,22 @@ async function calculateStreak(userId: mongoose.Types.ObjectId): Promise<number>
   if (result.length === 0) return 0;
 
   const dates = result.map((r) => r._id as string);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
+  // Use UTC consistently to match MongoDB $dateToString (which defaults to UTC)
+  const todayStr = new Date().toISOString().split('T')[0];
 
-  // Check if the most recent session is today or yesterday
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterday = new Date();
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
 
+  // Check if the most recent session is today or yesterday
   if (dates[0] !== todayStr && dates[0] !== yesterdayStr) {
     return 0; // Streak broken
   }
 
   let streak = 1;
   for (let i = 1; i < dates.length; i++) {
-    const expected = new Date(dates[i - 1]);
-    expected.setDate(expected.getDate() - 1);
+    const expected = new Date(dates[i - 1] + 'T00:00:00Z'); // parse as UTC
+    expected.setUTCDate(expected.getUTCDate() - 1);
     const expectedStr = expected.toISOString().split('T')[0];
 
     if (dates[i] === expectedStr) {

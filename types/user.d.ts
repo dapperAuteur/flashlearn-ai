@@ -13,6 +13,12 @@ export interface IUser extends Document {
   stripeCustomerId?: string;
   aiGenerationCount: number;
   lastAiGenerationDate?: Date;
+  preferences?: {
+    defaultStudyDirection: 'front-to-back' | 'back-to-front';
+    defaultStudyMode: 'classic' | 'multiple-choice' | 'type-answer';
+    studyReminderEnabled: boolean;
+    studyReminderTime: string;
+  };
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
 }

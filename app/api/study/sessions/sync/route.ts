@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
       existingSession.durationSeconds = durationSeconds;
       existingSession.endTime = new Date(endTime);
       existingSession.studyDirection = studyDirection;
-      
+      existingSession.status = 'completed';
+
       await existingSession.save();
 
       Logger.log({
