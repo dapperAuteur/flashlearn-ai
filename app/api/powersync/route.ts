@@ -234,7 +234,7 @@ async function handleSetChange(userId: string, change: PushChange) {
       cardCount: (change.data?.card_count as number) || 0,
       flashcards: [], // Will be populated by card changes
       createdAt: change.data?.created_at ? new Date(change.data.created_at as string) : new Date(),
-      updatedAt: new Date(),
+      updatedAt: change.data?.updated_at ? new Date(change.data.updated_at as string) : new Date(),
     };
 
     await FlashcardSet.findOneAndUpdate(

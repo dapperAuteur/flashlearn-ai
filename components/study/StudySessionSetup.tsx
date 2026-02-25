@@ -202,32 +202,40 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
               <h2 className="text-xl font-semibold text-gray-900">Select Flashcard Set</h2>
             </div>
 
+            <div className="space-y-4">
+              {/* Search - always visible */}
+              <div className="relative">
+                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search flashcard sets..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                />
+              </div>
+
             {filteredSets.length === 0 ? (
               <div className="text-center py-8">
                 <BookOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No flashcard sets found</h3>
-                <p className="text-gray-600 mb-4">Create your first set to get started</p>
-                <Link
-                  href="/generate"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <CloudArrowUpIcon className="h-4 w-4 mr-2" />
-                  Create New Set
-                </Link>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {searchTerm ? 'No sets match your search' : 'No flashcard sets found'}
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm ? 'Try a different search term' : 'Create your first set to get started'}
+                </p>
+                {!searchTerm && (
+                  <Link
+                    href="/generate"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <CloudArrowUpIcon className="h-4 w-4 mr-2" />
+                    Create New Set
+                  </Link>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Search */}
-                <div className="relative">
-                  <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search flashcard sets..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  />
-                </div>
 
                 {/* Assigned Sets */}
                 {assignments.length > 0 && (
@@ -368,6 +376,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                 </Link>
               </div>
             )}
+            </div>{/* end outer space-y-4 */}
           </div>
         </div>
 

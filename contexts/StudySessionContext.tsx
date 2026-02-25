@@ -72,7 +72,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
   const [studyMode, setStudyMode] = useState<StudyMode>('classic');
   const [multipleChoiceData, setMultipleChoiceData] = useState<Record<string, string[]>>({});
   const [currentConfidenceRating, setCurrentConfidenceRating] = useState<number | null>(null);
-  const [isConfidenceRequired] = useState(true);
+  const isConfidenceRequired = true;
   const [hasCompletedConfidence, setHasCompletedConfidence] = useState(false);
   const [isOfflineSession, setIsOfflineSession] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -183,7 +183,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       setIsComplete(false);
       setLastCardResult(null);
       setCurrentConfidenceRating(null);
-      setHasCompletedConfidence(false);
+      setHasCompletedConfidence(!isConfidenceRequired);
 
       // Fetch MC distractors if in multiple-choice mode
       if (studyMode === 'multiple-choice' && !isOffline) {
@@ -221,7 +221,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [authSession, studyMode]);
+  }, [authSession, studyMode, isConfidenceRequired]);
 
   const completeSession = useCallback(async () => {
     if (!sessionId || !sessionStartTime) {
@@ -305,6 +305,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     setCurrentConfidenceRating(rating);
+    setHasCompletedConfidence(true);
     Logger.log(LogContext.STUDY, "Confidence rating recorded", { rating });
   }, []);
 
@@ -365,26 +366,26 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     
     setLastCardResult(isCorrect ? 'correct' : 'incorrect');
     setCurrentConfidenceRating(null);
-    setHasCompletedConfidence(false);
+    setHasCompletedConfidence(!isConfidenceRequired);
 
     if (currentIndex === flashcards.length - 1) {
       Logger.log(LogContext.STUDY, "Last card completed, initiating session completion");
       await completeSession();
     }
-  }, [sessionId, currentIndex, flashcards, currentConfidenceRating, completeSession]);
+  }, [sessionId, currentIndex, flashcards, currentConfidenceRating, completeSession, isConfidenceRequired]);
 
   const nextCard = useCallback(() => {
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setLastCardResult(null);
       setCurrentConfidenceRating(null);
-      setHasCompletedConfidence(false);
+      setHasCompletedConfidence(!isConfidenceRequired);
       Logger.log(LogContext.STUDY, "Advanced to next card", { 
         newIndex: currentIndex + 1,
         totalCards: flashcards.length
       });
     }
-  }, [currentIndex, flashcards.length]);
+  }, [currentIndex, flashcards.length, isConfidenceRequired]);
 
   const resetSession = useCallback(() => {
     Logger.log(LogContext.STUDY, "Resetting session", { sessionId });
@@ -398,13 +399,13 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     setError(null);
     setLastCardResult(null);
     setCurrentConfidenceRating(null);
-    setHasCompletedConfidence(false);
+    setHasCompletedConfidence(!isConfidenceRequired);
     setIsOfflineSession(false);
     setIsSyncing(false);
     setSyncError(null);
     setStudyMode('classic');
     setMultipleChoiceData({});
-  }, [sessionId]);
+  }, [sessionId, isConfidenceRequired]);
 
   const value: StudySessionState = {
     sessionId,

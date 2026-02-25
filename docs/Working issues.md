@@ -1,0 +1,10 @@
+- results don't appear on dashboard under recent activity
+- sharing results doesn't work on dev
+- current streak doesn't update on dashboard
+- admin shouldn't show on free plan on dashboard
+- ensure user profile is fully functional
+  - should be able to update info and reset passowrd
+- what settings options should user have access to
+- create an admin dashboard
+  - what features/benefits should admin have
+  - what analytics and metrics would benefit the admin

@@ -209,16 +209,40 @@ export class OfflineSyncService {
 
       const db = getPowerSync();
 
-      for (const change of data) {
+      // Process sets first, then cards, to ensure deduplication happens before card insertion
+      const setChanges = data.filter((c: { type: string }) => c.type === 'flashcard_sets');
+      const cardChanges = data.filter((c: { type: string }) => c.type === 'flashcards');
+
+      for (const change of setChanges) {
         try {
-          if (change.type === 'flashcard_sets' && change.data) {
+          if (change.data) {
             const d = change.data;
+
+            // Remove local duplicates with same title but different id
+            const duplicates = await db.getAll<{ id: string }>(
+              'SELECT id FROM flashcard_sets WHERE title = ? AND user_id = ? AND id != ?',
+              [d.title, d.user_id, d.id]
+            );
+            for (const dup of duplicates) {
+              await db.execute('DELETE FROM flashcards WHERE set_id = ?', [dup.id]);
+              await db.execute('DELETE FROM flashcard_sets WHERE id = ?', [dup.id]);
+              Logger.log(LogContext.SYSTEM, 'Removed duplicate local set', { dupId: dup.id, keptId: d.id, title: d.title });
+            }
+
             await db.execute(
               `INSERT OR REPLACE INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [d.id, d.user_id, d.title, d.description || null, d.is_public, d.card_count, d.source, d.created_at, d.updated_at, d.is_deleted ?? 0]
             );
-          } else if (change.type === 'flashcards' && change.data) {
+          }
+        } catch (err) {
+          Logger.warning(LogContext.SYSTEM, 'Failed to apply set change', { change, err });
+        }
+      }
+
+      for (const change of cardChanges) {
+        try {
+          if (change.data) {
             const d = change.data;
             await db.execute(
               `INSERT OR REPLACE INTO flashcards (id, set_id, user_id, front, back, front_image, back_image, "order", created_at, updated_at)
