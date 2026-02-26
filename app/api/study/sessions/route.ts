@@ -87,16 +87,23 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
     // Rate limit: 10 session syncs per minute per user
-    const rateLimiter = getRateLimiter('study-sync', 10, 60);
-    const { success } = await rateLimiter.limit(session.user.id);
+    try {
+      const rateLimiter = getRateLimiter('study-sync', 10, 60);
+      const { success } = await rateLimiter.limit(session.user.id);
 
-    if (!success) {
-      await Logger.warning(LogContext.STUDY, 'Rate limit exceeded for study session sync', { 
-        userId: session.user.id 
+      if (!success) {
+        await Logger.warning(LogContext.STUDY, 'Rate limit exceeded for study session sync', {
+          userId: session.user.id
+        });
+        return NextResponse.json({
+          message: 'Too many session syncs. Please wait before syncing again.'
+        }, { status: 429 });
+      }
+    } catch (rateLimitError) {
+      // If Redis/Upstash is unreachable, log and proceed without rate limiting
+      Logger.warning(LogContext.STUDY, 'Rate limiter unavailable, proceeding without rate limit', {
+        error: rateLimitError instanceof Error ? rateLimitError.message : String(rateLimitError),
       });
-      return NextResponse.json({ 
-        message: 'Too many session syncs. Please wait before syncing again.' 
-      }, { status: 429 });
     }
     
     const userId = session.user.id;
@@ -188,10 +195,27 @@ export async function POST(request: NextRequest) {
 
             // Persist StudySession document
             const sessionMeta = body.sessionMeta;
+            // Fetch set name and card content for the session record
+            let syncSetName: string | undefined;
+            const syncCardContentMap: Record<string, { front: string; back: string }> = {};
+            try {
+              const syncSet = await FlashcardSet.findById(setIdAsObjectId).select('title flashcards').lean().session(mongoSession) as any;
+              syncSetName = syncSet?.title;
+              if (syncSet?.flashcards) {
+                for (const card of syncSet.flashcards) {
+                  const id = String(card._id);
+                  syncCardContentMap[id] = { front: card.front, back: card.back };
+                  if (card._id?.toHexString) {
+                    syncCardContentMap[card._id.toHexString()] = { front: card.front, back: card.back };
+                  }
+                }
+              }
+            } catch { /* ignore */ }
             const sessionData: any = {
               sessionId: body.sessionId || `${setId}_${Date.now()}`,
               userId: new mongoose.Types.ObjectId(userId),
               listId: setIdAsObjectId,
+              setName: syncSetName || sessionMeta?.setName || 'Study Set',
               status: 'completed',
               totalCards: sessionMeta?.totalCards ?? results.length,
               correctCount: sessionMeta?.correctCount ?? results.filter((r: CardResult) => r.isCorrect).length,
@@ -208,15 +232,21 @@ export async function POST(request: NextRequest) {
               { upsert: true, session: mongoSession }
             );
 
-            // Persist individual CardResult documents
-            const cardResultDocs = results.map((r: CardResult) => ({
-              sessionId: sessionData.sessionId,
-              setId,
-              flashcardId: r.cardId || r.flashcardId,
-              isCorrect: r.isCorrect,
-              timeSeconds: r.timeSeconds,
-              ...(r.confidenceRating && { confidenceRating: r.confidenceRating }),
-            }));
+            // Persist individual CardResult documents (with card content for review)
+            const cardResultDocs = results.map((r: CardResult) => {
+              const cardId = r.cardId || r.flashcardId || '';
+              const content = cardId ? syncCardContentMap[cardId] : undefined;
+              return {
+                sessionId: sessionData.sessionId,
+                setId,
+                flashcardId: cardId,
+                front: content?.front,
+                back: content?.back,
+                isCorrect: r.isCorrect,
+                timeSeconds: r.timeSeconds,
+                ...(r.confidenceRating && { confidenceRating: r.confidenceRating }),
+              };
+            });
 
             if (cardResultDocs.length > 0) {
               await CardResult.insertMany(cardResultDocs, { session: mongoSession, ordered: false }).catch(() => {
@@ -245,16 +275,22 @@ export async function POST(request: NextRequest) {
     const requestId = await Logger.info(LogContext.STUDY, "Create study session request");
     const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
     // Rate limit: 20 new sessions per hour per IP
-    const rateLimiter = getRateLimiter('study-create', 20, 3600);
-    const { success } = await rateLimiter.limit(clientIP);
-    
-    if (!success) {
-      await Logger.warning(LogContext.STUDY, 'Rate limit exceeded for session creation', { 
-        ip: clientIP 
+    try {
+      const rateLimiter = getRateLimiter('study-create', 20, 3600);
+      const { success } = await rateLimiter.limit(clientIP);
+
+      if (!success) {
+        await Logger.warning(LogContext.STUDY, 'Rate limit exceeded for session creation', {
+          ip: clientIP
+        });
+        return NextResponse.json({
+          message: 'Too many session requests. Please wait before starting a new session.'
+        }, { status: 429 });
+      }
+    } catch (rateLimitError) {
+      Logger.warning(LogContext.STUDY, 'Rate limiter unavailable, proceeding without rate limit', {
+        error: rateLimitError instanceof Error ? rateLimitError.message : String(rateLimitError),
       });
-      return NextResponse.json({ 
-        message: 'Too many session requests. Please wait before starting a new session.' 
-      }, { status: 429 });
     }
     try {
         const { listId, studyDirection }: { listId: string, studyDirection: StudyDirection } = body;
@@ -287,16 +323,17 @@ export async function POST(request: NextRequest) {
             sessionId: new mongoose.Types.ObjectId().toString(),
             userId: session?.user?.id ? new mongoose.Types.ObjectId(session.user.id) : new mongoose.Types.ObjectId(),
             listId: new mongoose.Types.ObjectId(listId),
+            setName: flashcardSet.title,
             startTime: new Date(),
             status: 'active',
             totalCards: flashcards.length,
             studyDirection: studyDirection || 'front-to-back',
         });
         
-        await Logger.info(LogContext.STUDY, "Study session created successfully", { requestId, userId: session?.user?.id, metadata: { sessionId: newSession._id.toString(), studyDirection, cardCount: flashcards.length } });
-        
+        await Logger.info(LogContext.STUDY, "Study session created successfully", { requestId, userId: session?.user?.id, metadata: { sessionId: newSession.sessionId, studyDirection, cardCount: flashcards.length } });
+
         return NextResponse.json({
-            sessionId: newSession._id.toString(),
+            sessionId: newSession.sessionId,
             setName: flashcardSet.title,
             flashcards: flashcards.map((card: any) => ({ _id: card._id.toString(), front: card.front, back: card.back }))
         });

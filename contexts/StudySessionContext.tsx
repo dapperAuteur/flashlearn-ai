@@ -140,16 +140,32 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
         Logger.warning(LogContext.STUDY, "PowerSync not available, trying API", { error: err });
       }
 
-      // API fallback if online
-      if (fetchedFlashcards.length === 0 && !isOffline && authSession?.user?.id) {
+      // API fallback if online (works for both authenticated and public sets)
+      if (fetchedFlashcards.length === 0 && !isOffline) {
         try {
-          const response = await fetch(`/api/lists/${listId}`);
+          const response = await fetch(`/api/sets/${listId}`);
           if (response.ok) {
             const data = await response.json();
-            fetchedFlashcards = data.flashcards || [];
-            setName = data.name || data.title || 'Study Set';
-            Logger.log(LogContext.STUDY, "Flashcards loaded from API", { 
-              count: fetchedFlashcards.length 
+            const apiFlashcards = data.flashcards || [];
+            fetchedFlashcards = apiFlashcards.map((card: Record<string, unknown>) => ({
+              _id: String(card._id),
+              listId: listId,
+              front: card.front as string,
+              back: card.back as string,
+              frontImage: (card.frontImage as string) || undefined,
+              backImage: (card.backImage as string) || undefined,
+              tags: [],
+              userId: authSession?.user?.id || 'public-user',
+              difficulty: 1,
+              correctCount: 0,
+              incorrectCount: 0,
+              stage: 0,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }));
+            setName = data.title || 'Study Set';
+            Logger.log(LogContext.STUDY, "Flashcards loaded from API", {
+              count: fetchedFlashcards.length
             });
           }
         } catch (err) {
@@ -366,7 +382,6 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     
     setLastCardResult(isCorrect ? 'correct' : 'incorrect');
     setCurrentConfidenceRating(null);
-    setHasCompletedConfidence(!isConfidenceRequired);
 
     if (currentIndex === flashcards.length - 1) {
       Logger.log(LogContext.STUDY, "Last card completed, initiating session completion");

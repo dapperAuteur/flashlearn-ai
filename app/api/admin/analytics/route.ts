@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
 
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     const [
       totalUsers,
@@ -28,6 +29,11 @@ export async function GET(request: NextRequest) {
       suspiciousActivity24h,
       subscriptionBreakdown,
       recentSignups,
+      totalFlashcardSets,
+      totalStudySessions,
+      studySessions24h,
+      sessionsPerDay,
+      signupsPerDay,
     ] = await Promise.all([
       db.collection("users").countDocuments(),
       db.collection("users").countDocuments({ createdAt: { $gte: oneDayAgo } }),
@@ -45,6 +51,33 @@ export async function GET(request: NextRequest) {
         .sort({ createdAt: -1 })
         .limit(10)
         .toArray(),
+      // Total flashcard sets
+      db.collection("flashcardsets").countDocuments(),
+      // Total completed study sessions
+      db.collection("studysessions").countDocuments({ status: 'completed' }),
+      // Study sessions in last 24h
+      db.collection("studysessions").countDocuments({
+        status: 'completed',
+        startTime: { $gte: oneDayAgo },
+      }),
+      // Sessions per day (last 30 days) for chart
+      db.collection("studysessions").aggregate([
+        { $match: { status: 'completed', startTime: { $gte: thirtyDaysAgo } } },
+        { $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$startTime' } },
+          count: { $sum: 1 },
+        }},
+        { $sort: { _id: 1 } },
+      ]).toArray(),
+      // User signups per day (last 30 days) for chart
+      db.collection("users").aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        { $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          count: { $sum: 1 },
+        }},
+        { $sort: { _id: 1 } },
+      ]).toArray(),
     ]);
 
     // Build subscription stats
@@ -70,8 +103,15 @@ export async function GET(request: NextRequest) {
         suspiciousActivity24h,
         paidUsers,
         tierCounts,
+        totalFlashcardSets,
+        totalStudySessions,
+        studySessions24h,
       },
       recentSignups,
+      charts: {
+        sessionsPerDay: sessionsPerDay.map((d) => ({ date: d._id, count: d.count })),
+        signupsPerDay: signupsPerDay.map((d) => ({ date: d._id, count: d.count })),
+      },
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

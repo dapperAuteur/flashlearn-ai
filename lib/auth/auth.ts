@@ -65,6 +65,7 @@ export const authOptions: NextAuthOptions = {
           const userDoc = await db.collection('users').findOne({ _id: new ObjectId(token.id) });
           if (userDoc) {
             token.subscriptionTier = userDoc.subscriptionTier || 'Free';
+            token.name = userDoc.name;
           }
         } catch (error) {
           Logger.error(LogContext.AUTH, "Failed to refresh subscriptionTier in JWT.", { error });

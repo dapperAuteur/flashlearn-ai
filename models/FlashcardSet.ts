@@ -80,4 +80,6 @@ const FlashcardSetSchema = new Schema<IFlashcardSet>({
   }
 }, { timestamps: true });
 
+FlashcardSetSchema.index({ isPublic: 1, createdAt: -1 });
+
 export const FlashcardSet = mongoose.models.FlashcardSet || mongoose.model('FlashcardSet', FlashcardSetSchema, 'flashcard_sets');

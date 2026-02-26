@@ -14,6 +14,7 @@ export interface IStudySession extends Document {
   sessionId: string;
   userId: mongoose.Types.ObjectId;
   listId: mongoose.Types.ObjectId;
+  setName?: string;
   startTime: Date;
   endTime?: Date;
   status: 'active' | 'completed';
@@ -35,6 +36,7 @@ const StudySessionSchema: Schema = new Schema(
     sessionId: { type: String, required: true, unique: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     listId: { type: Schema.Types.ObjectId, ref: 'List', required: true },
+    setName: { type: String },
     startTime: { type: Date, default: Date.now },
     endTime: { type: Date },
     status: { type: String, enum: ['active', 'completed'], default: 'active' },
@@ -53,6 +55,7 @@ const StudySessionSchema: Schema = new Schema(
 );
 
 StudySessionSchema.index({ userId: 1, createdAt: -1 });
+StudySessionSchema.index({ userId: 1, status: 1, startTime: -1 });
 StudySessionSchema.index({ sessionId: 1 });
 
 // Virtual property to check if session is complete

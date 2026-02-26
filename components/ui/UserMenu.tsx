@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
 // import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { User, LogOut, Settings } from 'lucide-react';
 
@@ -47,10 +48,13 @@ export default function UserMenu({user}: UserMenuProps) {
       >
         <span className="sr-only">Open user menu</span>
         {user.image ? (
-          <img
+          <Image
             className="h-8 w-8 rounded-full"
             src={user.image}
             alt={user.name || "User"}
+            width={32}
+            height={32}
+            unoptimized
           />
         ) : (
           <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">

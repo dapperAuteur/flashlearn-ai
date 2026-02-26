@@ -127,7 +127,7 @@ export default function AnalyticsDashboard() {
   if (!hasData && achievements.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow p-8 text-center">
-        <ChartBarIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+        <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
         <h3 className="text-base font-medium text-gray-900 mb-1">No analytics data yet</h3>
         <p className="text-sm text-gray-500">Complete some study sessions to see your performance analytics.</p>
       </div>
@@ -312,7 +312,7 @@ export default function AnalyticsDashboard() {
           <div className="space-y-2">
             {problemCards.map((card, i) => (
               <div key={card.cardId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-400 w-6">{i + 1}</span>
+                <span className="text-sm font-medium text-gray-500 w-6">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 bg-gray-200 rounded-full h-2">
@@ -354,7 +354,7 @@ export default function AnalyticsDashboard() {
                 <div>
                   <p className="font-medium text-gray-900 text-sm">{a.title}</p>
                   <p className="text-xs text-gray-600">{a.description}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     {new Date(a.earnedAt).toLocaleDateString()}
                   </p>
                 </div>

@@ -6,13 +6,17 @@ import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 export async function POST(request: NextRequest) {
   const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
 
-  const rateLimiter = getRateLimiter('eval-answer', 60, 3600);
-  const { success } = await rateLimiter.limit(clientIP);
-  if (!success) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please wait.' },
-      { status: 429 },
-    );
+  try {
+    const rateLimiter = getRateLimiter('eval-answer', 60, 3600);
+    const { success } = await rateLimiter.limit(clientIP);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait.' },
+        { status: 429 },
+      );
+    }
+  } catch {
+    // Rate limiter unavailable — proceed without rate limiting
   }
 
   try {

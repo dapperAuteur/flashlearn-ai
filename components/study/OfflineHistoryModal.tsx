@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { getStudyHistory, StudySessionHistory } from '@/lib/db/indexeddb';
 import { XMarkIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
@@ -12,17 +13,58 @@ interface Props {
 
 export default function OfflineHistoryModal({ isOpen, onClose, onViewSession }: Props) {
   const [history, setHistory] = useState<StudySessionHistory[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { status } = useSession();
+
+  const loadHistory = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Try IndexedDB first
+      const localData = await getStudyHistory(50);
+      if (localData.length > 0) {
+        setHistory(localData);
+        return;
+      }
+
+      // Fallback to server API if IndexedDB is empty and user is authenticated
+      if (status === 'authenticated' && navigator.onLine) {
+        try {
+          const res = await fetch('/api/study/history?limit=50');
+          if (res.ok) {
+            const data = await res.json();
+            const serverHistory: StudySessionHistory[] = (data.sessions || []).map((s: { sessionId: string; setId: string; setName: string; startTime: string; endTime?: string; totalCards: number; correctCount: number; incorrectCount: number; accuracy: number; studyDirection?: string }) => ({
+              sessionId: s.sessionId,
+              setId: s.setId,
+              setName: s.setName,
+              startTime: new Date(s.startTime),
+              endTime: s.endTime ? new Date(s.endTime) : undefined,
+              totalCards: s.totalCards,
+              correctCount: s.correctCount,
+              incorrectCount: s.incorrectCount,
+              accuracy: s.accuracy,
+              durationSeconds: 0,
+              isOfflineSession: false,
+              studyDirection: s.studyDirection || 'front-to-back',
+            }));
+            setHistory(serverHistory);
+            return;
+          }
+        } catch {
+          // Server fetch failed, show empty state
+        }
+      }
+
+      setHistory([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [status]);
 
   useEffect(() => {
     if (isOpen) {
       loadHistory();
     }
-  }, [isOpen]);
-
-  const loadHistory = async () => {
-    const data = await getStudyHistory(50);
-    setHistory(data);
-  };
+  }, [isOpen, loadHistory]);
 
   if (!isOpen) return null;
 
@@ -37,7 +79,12 @@ export default function OfflineHistoryModal({ isOpen, onClose, onViewSession }: 
         </div>
         
         <div className="p-6">
-          {history.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-4" />
+              <p className="text-gray-600">Loading history...</p>
+            </div>
+          ) : history.length === 0 ? (
             <div className="text-center py-12">
               <ClockIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">No study history yet</p>

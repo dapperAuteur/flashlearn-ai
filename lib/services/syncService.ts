@@ -30,22 +30,6 @@ interface SyncResult {
   error?: string;
 }
 
-interface SessionSyncPayload {
-  setId: string;
-  results: any[];
-  sessionId: string;
-  sessionMeta?: {
-    setName: string;
-    startTime: string;
-    endTime: string;
-    totalCards: number;
-    correctCount: number;
-    incorrectCount: number;
-    durationSeconds: number;
-    studyDirection: string;
-  };
-}
-
 // ============================================================================
 // UNIFIED OFFLINE SYNC SERVICE
 // ============================================================================
@@ -398,39 +382,44 @@ export class OfflineSyncService {
         return { success: false, sessionId, error: 'No results found' };
       }
 
-      // Extract setId from sessionId or results
-      const setId = this.extractSetId(sessionId, results);
-
       // Fetch session history for metadata
       const historyEntry = await getStudyHistoryBySessionId(sessionId);
 
-      const payload: SessionSyncPayload = {
-        setId,
-        results,
+      // Use history entry's setId (saved from flashcard set) with fallback to extraction
+      const setId = (historyEntry?.setId && historyEntry.setId !== 'unknown')
+        ? historyEntry.setId
+        : this.extractSetId(sessionId, results);
+
+      // Build flat payload for /api/study/sessions/sync endpoint
+      // Map flashcardId → cardId since server expects cardId field
+      const payload = {
         sessionId,
-        ...(historyEntry && {
-          sessionMeta: {
-            setName: historyEntry.setName,
-            startTime: new Date(historyEntry.startTime).toISOString(),
-            endTime: historyEntry.endTime ? new Date(historyEntry.endTime).toISOString() : new Date().toISOString(),
-            totalCards: historyEntry.totalCards,
-            correctCount: historyEntry.correctCount,
-            incorrectCount: historyEntry.incorrectCount,
-            durationSeconds: historyEntry.durationSeconds,
-            studyDirection: historyEntry.studyDirection || 'front-to-back',
-          }
-        })
+        setId,
+        setName: historyEntry?.setName || 'Study Set',
+        totalCards: historyEntry?.totalCards ?? results.length,
+        correctCount: historyEntry?.correctCount ?? results.filter(r => r.isCorrect).length,
+        incorrectCount: historyEntry?.incorrectCount ?? results.filter(r => !r.isCorrect).length,
+        durationSeconds: historyEntry?.durationSeconds ?? 0,
+        startTime: historyEntry?.startTime ? new Date(historyEntry.startTime).toISOString() : new Date().toISOString(),
+        endTime: historyEntry?.endTime ? new Date(historyEntry.endTime).toISOString() : new Date().toISOString(),
+        studyDirection: historyEntry?.studyDirection || 'front-to-back',
+        results: results.map(r => ({
+          cardId: r.flashcardId || (r as any).cardId,
+          isCorrect: r.isCorrect,
+          timeSeconds: r.timeSeconds,
+          confidenceRating: r.confidenceRating,
+        })),
       };
 
-      Logger.log(LogContext.STUDY, `Syncing session to server (attempt ${attempt})`, { 
-        sessionId, 
+      Logger.log(LogContext.STUDY, `Syncing session to server (attempt ${attempt})`, {
+        sessionId,
         resultCount: results.length,
         setId
       });
 
-      const response = await fetch('/api/study/sessions', {
+      const response = await fetch('/api/study/sessions/sync', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload)

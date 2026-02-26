@@ -71,7 +71,7 @@ export default function FlashcardsPage() {
       <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-600">My Flashcards</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">My Flashcards</h1>
           <button
             onClick={() => setShowHistoryModal(true)}
             className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
@@ -82,7 +82,7 @@ export default function FlashcardsPage() {
         </div>
 
         {/* Content */}
-        <FlashcardManager onStartStudy={handleStartStudy} sets={[]} isLoading={false} />
+        <FlashcardManager onStartStudy={handleStartStudy} isLoading={false} />
 
         <OfflineHistoryModal
           isOpen={showHistoryModal}

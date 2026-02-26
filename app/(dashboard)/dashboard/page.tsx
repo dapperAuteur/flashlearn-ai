@@ -15,6 +15,7 @@ import {
   ArrowRightIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
+import { getSubscriptionDisplay, shouldShowUpgradeCTA } from '@/lib/utils/subscription';
 
 interface StudyStats {
   totalSessions: number;
@@ -57,10 +58,11 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setIsLoadingStats(true);
       try {
+        const cacheBust = `_t=${Date.now()}`;
         const [statsRes, historyRes, dueRes] = await Promise.all([
-          fetch('/api/study/stats'),
-          fetch('/api/study/history?limit=5'),
-          fetch('/api/study/due-cards'),
+          fetch(`/api/study/stats?${cacheBust}`),
+          fetch(`/api/study/history?limit=5&${cacheBust}`),
+          fetch(`/api/study/due-cards?${cacheBust}`),
         ]);
 
         if (statsRes.ok) setStats(await statsRes.json());
@@ -284,7 +286,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Time */}
-                  <span className="flex-shrink-0 text-xs text-gray-400">
+                  <span className="flex-shrink-0 text-xs text-gray-500">
                     {formatDate(s.startTime)}
                   </span>
                 </Link>
@@ -300,11 +302,9 @@ export default function DashboardPage() {
           Your Subscription
         </h2>
         <p className="text-sm text-gray-600">
-          {user.subscriptionTier === 'Free' || !user.subscriptionTier
-            ? 'Free Plan'
-            : user.subscriptionTier}
+          {getSubscriptionDisplay(user.role, user.subscriptionTier)}
         </p>
-        {(!user.subscriptionTier || user.subscriptionTier === 'Free') && (
+        {shouldShowUpgradeCTA(user.role, user.subscriptionTier) && (
           <div className="mt-3">
             <Link
               href="/pricing"

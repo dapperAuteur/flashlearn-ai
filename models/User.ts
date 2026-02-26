@@ -58,6 +58,26 @@ const UserSchema = new Schema<IUser>({
   lastAiGenerationDate: {
     type: Date,
   },
+  preferences: {
+    defaultStudyDirection: {
+      type: String,
+      enum: ['front-to-back', 'back-to-front'],
+      default: 'front-to-back',
+    },
+    defaultStudyMode: {
+      type: String,
+      enum: ['classic', 'multiple-choice', 'type-answer'],
+      default: 'classic',
+    },
+    studyReminderEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    studyReminderTime: {
+      type: String,
+      default: '09:00',
+    },
+  },
   // Fields for the password reset functionality
   resetPasswordToken: {
     type: String,

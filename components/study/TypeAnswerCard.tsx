@@ -174,7 +174,7 @@ export default function TypeAnswerCard({
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder={hasCompletedConfidence ? 'Type your answer...' : 'Rate confidence first'}
             disabled={!hasCompletedConfidence || !!evaluation}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 disabled:bg-gray-50"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 disabled:bg-gray-50"
           />
           <motion.button
             onClick={handleSubmit}

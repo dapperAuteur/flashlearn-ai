@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useFlashcards } from '@/contexts/FlashcardContext';
 import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
@@ -23,18 +23,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface FlashcardManagerProps {
   onStartStudy: (setId: string) => void;
-  sets: PowerSyncFlashcardSet[];
   isLoading: boolean;
 }
 
-// interface Props {
-//   onStartStudy: (setId: string) => void;
-// }
-
 export default function FlashcardManager({
-  onStartStudy, 
-  sets: setsFromProps, 
-  isLoading 
+  onStartStudy,
+  isLoading
 }: FlashcardManagerProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -44,22 +38,15 @@ export default function FlashcardManager({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedSet, setSelectedSet] = useState<PowerSyncFlashcardSet | null>(null);
-  const sets = setsFromProps ? setsFromProps : localSets;
 
   const { clearLocalCache } = useMigration();
   const { toast } = useToast();
-  
+
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleStudyClick = (setId: string) => {
     onStartStudy(setId);
   };
-
-  const filteredSets = useMemo(() => {
-    return sets.filter(set =>
-      set.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [sets, searchTerm]);
   const handleEditSet = (set: PowerSyncFlashcardSet) => {
     setSelectedSet(set);
     setIsEditModalOpen(true);
@@ -130,7 +117,7 @@ export default function FlashcardManager({
       </div>
       {/* Search and Actions */}
       <div className="relative">
-        <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
         <input
           type="text"
           placeholder="Search sets..."
@@ -142,11 +129,11 @@ export default function FlashcardManager({
       {/* Action buttons */}
       <div className="flex gap-4">
         <div className="flex gap-2 w-full sm:w-auto">
-          <button onClick={() => setIsImportModalOpen(true)} className="flex-1 sm:flex-none">
+          <button onClick={() => setIsImportModalOpen(true)} className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
             <UploadIcon className="w-4 h-4 mr-2" />
             Import
           </button>
-          <button onClick={() => router.push('/generate')} className="flex-1 sm:flex-none">
+          <button onClick={() => router.push('/generate')} className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
             <PlusIcon className="w-4 h-4 mr-2" />
             New Set
           </button>

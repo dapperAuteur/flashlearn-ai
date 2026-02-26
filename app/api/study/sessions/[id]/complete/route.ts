@@ -9,7 +9,7 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise <{ id: string }> }
 ) {
-  const params = await context;
+  const { id: sessionId } = await context.params;
   const requestId = await Logger.info(LogContext.STUDY, "Complete study session request");
 
   try {
@@ -18,8 +18,6 @@ export async function POST(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const sessionId = params;
     
     // Connect to database
     const client = await clientPromise;
@@ -27,7 +25,7 @@ export async function POST(
     
     // Verify study session exists and belongs to user
     const studySession = await db.collection('studySessions').findOne({
-      _id: sessionId,
+      sessionId,
       userId: new ObjectId(session.user.id)
     });
     
@@ -37,9 +35,10 @@ export async function POST(
     
     // Mark session as complete
     await db.collection('studySessions').updateOne(
-      { _id: sessionId },
-      { 
-        $set: { 
+      { sessionId },
+      {
+        $set: {
+          status: 'completed',
           endTime: new Date(),
           updatedAt: new Date()
         }
@@ -48,7 +47,7 @@ export async function POST(
     
     // Get updated session with stats
     const updatedSession = await db.collection('studySessions').findOne({
-      _id: sessionId
+      sessionId
     });
     
     // Calculate stats
