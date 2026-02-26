@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       await CardResultModel.deleteMany({ sessionId });
 
       // Look up flashcard content so results are self-contained
-      let flashcardContentMap: Record<string, { front: string; back: string }> = {};
+      const flashcardContentMap: Record<string, { front: string; back: string }> = {};
       try {
         const set = await FlashcardSet.findById(setId).select('flashcards').lean() as any;
         if (set?.flashcards) {

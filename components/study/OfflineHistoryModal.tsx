@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { getStudyHistory, StudySessionHistory } from '@/lib/db/indexeddb';
 import { XMarkIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -16,13 +16,7 @@ export default function OfflineHistoryModal({ isOpen, onClose, onViewSession }: 
   const [isLoading, setIsLoading] = useState(false);
   const { status } = useSession();
 
-  useEffect(() => {
-    if (isOpen) {
-      loadHistory();
-    }
-  }, [isOpen]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setIsLoading(true);
     try {
       // Try IndexedDB first
@@ -64,7 +58,13 @@ export default function OfflineHistoryModal({ isOpen, onClose, onViewSession }: 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [status]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadHistory();
+    }
+  }, [isOpen, loadHistory]);
 
   if (!isOpen) return null;
 
