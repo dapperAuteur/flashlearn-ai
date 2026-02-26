@@ -29,13 +29,18 @@ export async function GET(request: NextRequest) {
     StudySession.countDocuments({ userId, status: 'completed' }),
   ]);
 
-  // Collect unique set IDs and fetch names
+  // Collect unique set IDs and fetch names (filter out invalid ObjectIds)
   const setIds = [...new Set(sessions.map((s) => s.listId.toString()))];
-  const sets = await FlashcardSet.find({
-    _id: { $in: setIds.map((id) => new mongoose.Types.ObjectId(id)) },
-  })
-    .select('title')
-    .lean();
+  const validSetIds = setIds.filter((id) => {
+    try { new mongoose.Types.ObjectId(id); return true; } catch { return false; }
+  });
+  const sets = validSetIds.length > 0
+    ? await FlashcardSet.find({
+        _id: { $in: validSetIds.map((id) => new mongoose.Types.ObjectId(id)) },
+      })
+        .select('title')
+        .lean()
+    : [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setNameMap = new Map(sets.map((s: any) => [s._id.toString(), s.title]));
@@ -44,7 +49,7 @@ export async function GET(request: NextRequest) {
   const enrichedSessions = sessions.map((s: any) => ({
     sessionId: s.sessionId,
     setId: s.listId.toString(),
-    setName: setNameMap.get(s.listId.toString()) || 'Unknown Set',
+    setName: setNameMap.get(s.listId.toString()) || s.setName || 'Unknown Set',
     startTime: s.startTime,
     endTime: s.endTime,
     totalCards: s.totalCards,

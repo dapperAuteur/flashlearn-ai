@@ -1,23 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { StudySession } from '@/models/StudySession';
 import { CardResult } from '@/models/CardResult';
 import { FlashcardSet } from '@/models/FlashcardSet';
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import CardResultRow from './CardResultRow';
 
 interface ResultsPageProps {
   params: Promise<{ sessionId: string }>;
 }
 
+async function findSession(sessionId: string) {
+  await dbConnect();
+
+  // Check if user is authenticated and owns the session
+  const authSession = await getServerSession(authOptions);
+  const userId = authSession?.user?.id;
+
+  // Owner can view their own results; otherwise require isShareable
+  let studySession: any = null;
+  if (userId) {
+    studySession = await StudySession.findOne({ sessionId, userId }).lean();
+  }
+  if (!studySession) {
+    studySession = await StudySession.findOne({ sessionId, isShareable: true }).lean();
+  }
+
+  return { studySession, isOwner: !!(userId && studySession && studySession.userId?.toString() === userId) };
+}
+
 export async function generateMetadata({ params }: ResultsPageProps) {
   const { sessionId } = await params;
-
-  await dbConnect();
-  const session = await StudySession.findOne({ sessionId, isShareable: true })
-    .select('totalCards correctCount incorrectCount listId')
-    .lean() as any;
+  const { studySession: session } = await findSession(sessionId);
 
   if (!session) {
     return { title: 'Results Not Found' };
@@ -27,7 +44,7 @@ export async function generateMetadata({ params }: ResultsPageProps) {
     ? Math.round((session.correctCount / session.totalCards) * 100)
     : 0;
 
-  let setName = 'Flashcard Set';
+  let setName = session.setName || 'Flashcard Set';
   if (session.listId) {
     const set = await FlashcardSet.findById(session.listId).select('title').lean() as any;
     if (set) setName = set.title;
@@ -45,18 +62,17 @@ export async function generateMetadata({ params }: ResultsPageProps) {
 
 export default async function PublicResultsPage({ params }: ResultsPageProps) {
   const { sessionId } = await params;
+  const { studySession, isOwner } = await findSession(sessionId);
 
-  await dbConnect();
-
-  const studySession = await StudySession.findOne({ sessionId, isShareable: true }).lean() as any;
   if (!studySession) {
     notFound();
   }
 
   const cardResults = await CardResult.find({ sessionId }).lean() as any[];
 
-  let setName = 'Flashcard Set';
+  let setName = studySession.setName || 'Flashcard Set';
   let isSetPublic = false;
+  // Build card content map using multiple key formats for robust matching
   const cardMap: Record<string, { front: string; back: string }> = {};
 
   if (studySession.listId) {
@@ -68,10 +84,33 @@ export default async function PublicResultsPage({ params }: ResultsPageProps) {
       setName = flashcardSet.title || setName;
       isSetPublic = flashcardSet.isPublic || false;
       for (const card of (flashcardSet.flashcards || [])) {
-        cardMap[card._id.toString()] = { front: card.front, back: card.back };
+        const content = { front: card.front, back: card.back };
+        // Add multiple key formats to handle ObjectId/string mismatches
+        const idStr = String(card._id);
+        cardMap[idStr] = content;
+        if (card._id?.toHexString) {
+          cardMap[card._id.toHexString()] = content;
+        }
+        if (card._id?.toString && card._id.toString() !== idStr) {
+          cardMap[card._id.toString()] = content;
+        }
       }
     }
   }
+
+  // Helper to find card content with fallback matching
+  const findCardContent = (flashcardId: string) => {
+    if (!flashcardId) return null;
+    // Direct lookup
+    if (cardMap[flashcardId]) return cardMap[flashcardId];
+    // Try String() conversion
+    const asStr = String(flashcardId);
+    if (cardMap[asStr]) return cardMap[asStr];
+    // Try trimmed
+    const trimmed = asStr.trim();
+    if (cardMap[trimmed]) return cardMap[trimmed];
+    return null;
+  };
 
   const accuracy = studySession.totalCards > 0
     ? Math.round((studySession.correctCount / studySession.totalCards) * 100)
@@ -82,6 +121,20 @@ export default async function PublicResultsPage({ params }: ResultsPageProps) {
     : 0;
   const minutes = Math.floor(durationSeconds / 60);
   const seconds = durationSeconds % 60;
+
+  // Serialize card results for client component
+  // Priority: FlashcardSet lookup > CardResult stored content > empty
+  const serializedCardResults = cardResults.map((cr: any) => {
+    const content = findCardContent(cr.flashcardId);
+    return {
+      id: cr._id?.toString() || '',
+      flashcardId: cr.flashcardId,
+      isCorrect: cr.isCorrect,
+      confidenceRating: cr.confidenceRating || null,
+      front: content?.front || cr.front || '',
+      back: content?.back || cr.back || '',
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
@@ -115,59 +168,50 @@ export default async function PublicResultsPage({ params }: ResultsPageProps) {
         </div>
 
         {/* Per-Card Results */}
-        {cardResults.length > 0 && (
+        {serializedCardResults.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Card-by-Card Results</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Tap a card to review it</p>
             </div>
             <div className="divide-y divide-gray-100">
-              {cardResults.map((cr: any, index: number) => {
-                const cardInfo = cardMap[cr.flashcardId] || {};
-                return (
-                  <div key={cr._id?.toString() || index} className="p-4 flex items-start gap-3">
-                    {cr.isCorrect ? (
-                      <CheckCircleIcon className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <XCircleIcon className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {cardInfo.front || 'Card'}
-                      </p>
-                      <p className="text-sm text-gray-500 truncate">
-                        {cardInfo.back || ''}
-                      </p>
-                    </div>
-                    {cr.confidenceRating && (
-                      <span className="text-xs text-gray-400 flex-shrink-0">
-                        Confidence: {cr.confidenceRating}/5
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+              {serializedCardResults.map((cr, index) => (
+                <CardResultRow key={cr.id || index} card={cr} index={index} />
+              ))}
             </div>
           </div>
         )}
 
         {/* CTA */}
         <div className="text-center space-y-4">
-          {isSetPublic && studySession.listId && (
+          {(isSetPublic || isOwner) && studySession.listId && (
             <Link
               href={`/study?setId=${studySession.listId}`}
               className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
             >
-              Study This Set
+              Study This Set Again
             </Link>
           )}
-          <div>
-            <Link
-              href="/"
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              Create your own flashcards with Flashlearn AI
-            </Link>
-          </div>
+          {isOwner && (
+            <div>
+              <Link
+                href="/dashboard"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
+          )}
+          {!isOwner && (
+            <div>
+              <Link
+                href="/"
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Create your own flashcards with Flashlearn AI
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

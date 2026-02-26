@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { StudySession } from '@/models/StudySession';
 import { CardResult as CardResultModel } from '@/models/CardResult';
+import { FlashcardSet } from '@/models/FlashcardSet';
 import { StudyAnalytics } from '@/models/StudyAnalytics';
 import { User } from '@/models/User';
 import { Profile } from '@/models/Profile';
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
       existingSession.incorrectCount = incorrectCount;
       existingSession.durationSeconds = durationSeconds;
       if (endTime) existingSession.endTime = new Date(endTime);
+      if (setName) existingSession.setName = setName;
       existingSession.studyDirection = studyDirection;
       existingSession.status = 'completed';
       await existingSession.save();
@@ -128,19 +130,41 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ---- 2. Save card results ----
+    // ---- 2. Save card results (with card content for review) ----
     let savedResultsCount = 0;
     if (results.length > 0) {
       await CardResultModel.deleteMany({ sessionId });
 
-      const cardResultDocs = results.map((result: SyncCardResult) => ({
-        sessionId,
-        setId,
-        flashcardId: result.cardId,
-        isCorrect: result.isCorrect,
-        timeSeconds: result.timeSeconds,
-        confidenceRating: result.confidenceRating,
-      }));
+      // Look up flashcard content so results are self-contained
+      let flashcardContentMap: Record<string, { front: string; back: string }> = {};
+      try {
+        const set = await FlashcardSet.findById(setId).select('flashcards').lean() as any;
+        if (set?.flashcards) {
+          for (const card of set.flashcards) {
+            const id = String(card._id);
+            flashcardContentMap[id] = { front: card.front, back: card.back };
+            if (card._id?.toHexString) {
+              flashcardContentMap[card._id.toHexString()] = { front: card.front, back: card.back };
+            }
+          }
+        }
+      } catch {
+        // Non-fatal — card content just won't be stored
+      }
+
+      const cardResultDocs = results.map((result: SyncCardResult) => {
+        const content = flashcardContentMap[result.cardId] || {};
+        return {
+          sessionId,
+          setId,
+          flashcardId: result.cardId,
+          front: content.front,
+          back: content.back,
+          isCorrect: result.isCorrect,
+          timeSeconds: result.timeSeconds,
+          confidenceRating: result.confidenceRating,
+        };
+      });
 
       const insertedResults = await CardResultModel.insertMany(cardResultDocs, { ordered: false }).catch(() => []);
       savedResultsCount = insertedResults.length;
