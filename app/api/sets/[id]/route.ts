@@ -68,10 +68,14 @@ export async function PATCH(
     }
 
     // Rate limiting
-    const rateLimiter = getRateLimiter('set-update', 30, 60);
-    const { success } = await rateLimiter.limit(session.user.id);
-    if (!success) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+    try {
+      const rateLimiter = getRateLimiter('set-update', 30, 60);
+      const { success } = await rateLimiter.limit(session.user.id);
+      if (!success) {
+        return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+      }
+    } catch {
+      // Rate limiter unavailable — proceed without rate limiting
     }
 
     await dbConnect();

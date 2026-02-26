@@ -58,10 +58,11 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setIsLoadingStats(true);
       try {
+        const cacheBust = `_t=${Date.now()}`;
         const [statsRes, historyRes, dueRes] = await Promise.all([
-          fetch('/api/study/stats'),
-          fetch('/api/study/history?limit=5'),
-          fetch('/api/study/due-cards'),
+          fetch(`/api/study/stats?${cacheBust}`),
+          fetch(`/api/study/history?limit=5&${cacheBust}`),
+          fetch(`/api/study/due-cards?${cacheBust}`),
         ]);
 
         if (statsRes.ok) setStats(await statsRes.json());
@@ -285,7 +286,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Time */}
-                  <span className="flex-shrink-0 text-xs text-gray-400">
+                  <span className="flex-shrink-0 text-xs text-gray-500">
                     {formatDate(s.startTime)}
                   </span>
                 </Link>

@@ -53,6 +53,7 @@ const StudySessionSchema: Schema = new Schema(
 );
 
 StudySessionSchema.index({ userId: 1, createdAt: -1 });
+StudySessionSchema.index({ userId: 1, status: 1, startTime: -1 });
 StudySessionSchema.index({ sessionId: 1 });
 
 // Virtual property to check if session is complete

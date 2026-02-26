@@ -131,7 +131,7 @@ export default function SettingsPage() {
                 id="study-direction"
                 value={preferences.defaultStudyDirection}
                 onChange={(e) => setPreferences({ ...preferences, defaultStudyDirection: e.target.value })}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md text-gray-900 bg-white"
               >
                 <option value="front-to-back">Front to Back</option>
                 <option value="back-to-front">Back to Front</option>
@@ -150,7 +150,7 @@ export default function SettingsPage() {
                 id="study-mode"
                 value={preferences.defaultStudyMode}
                 onChange={(e) => setPreferences({ ...preferences, defaultStudyMode: e.target.value })}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md text-gray-900 bg-white"
               >
                 <option value="classic">Classic (Flip card)</option>
                 <option value="multiple-choice">Multiple Choice</option>
@@ -221,7 +221,7 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     setPreferences({ ...preferences, studyReminderTime: e.target.value })
                   }
-                  className="mt-1 block w-full sm:w-48 pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  className="mt-1 block w-full sm:w-48 pl-3 pr-3 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md text-gray-900 bg-white"
                 />
               </div>
             )}

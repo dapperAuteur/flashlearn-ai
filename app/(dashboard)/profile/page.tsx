@@ -223,7 +223,7 @@ export default function ProfilePage() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md text-gray-900 px-3 py-2"
                 placeholder="Your name"
                 required
               />
@@ -238,7 +238,7 @@ export default function ProfilePage() {
                 name="email"
                 id="email"
                 value={user?.email || session?.user?.email || ''}
-                className="mt-1 shadow-sm block w-full sm:text-sm border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                className="mt-1 shadow-sm block w-full sm:text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-600 px-3 py-2"
                 disabled
               />
               <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
@@ -286,7 +286,7 @@ export default function ProfilePage() {
                 id="current-password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md text-gray-900 px-3 py-2"
                 required
               />
             </div>
@@ -300,7 +300,7 @@ export default function ProfilePage() {
                 id="new-password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md text-gray-900 px-3 py-2"
                 minLength={12}
                 required
               />
@@ -316,7 +316,7 @@ export default function ProfilePage() {
                 id="confirm-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md text-gray-900 px-3 py-2"
                 minLength={12}
                 required
               />

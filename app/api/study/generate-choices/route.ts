@@ -11,13 +11,17 @@ export async function POST(request: NextRequest) {
   const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
 
   // Rate limit: 30 choice generations per hour per IP
-  const rateLimiter = getRateLimiter('mc-choices', 30, 3600);
-  const { success } = await rateLimiter.limit(clientIP);
-  if (!success) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please wait before generating more choices.' },
-      { status: 429 },
-    );
+  try {
+    const rateLimiter = getRateLimiter('mc-choices', 30, 3600);
+    const { success } = await rateLimiter.limit(clientIP);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait before generating more choices.' },
+        { status: 429 },
+      );
+    }
+  } catch {
+    // Rate limiter unavailable — proceed without rate limiting
   }
 
   try {

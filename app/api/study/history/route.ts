@@ -59,9 +59,11 @@ export async function GET(request: NextRequest) {
     studyDirection: s.studyDirection || 'front-to-back',
   }));
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     sessions: enrichedSessions,
     total,
     hasMore: offset + limit < total,
   });
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  return response;
 }

@@ -122,7 +122,7 @@ export default function Header() {
             {session?.user && <UserMenu user={session.user} />}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
             >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />

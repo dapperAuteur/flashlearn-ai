@@ -3,10 +3,8 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   CheckIcon,
-  SparklesIcon,
   RocketLaunchIcon,
   StarIcon,
   FireIcon,
@@ -14,42 +12,22 @@ import {
 
 const tiers = [
   {
-    id: 'free',
-    name: 'Free',
-    price: '$0',
-    period: 'forever',
-    description: 'Get started with the basics',
-    icon: SparklesIcon,
-    features: [
-      '1 AI-generated set per month',
-      'Front-to-back study mode',
-      'Basic study statistics',
-      'CSV import',
-      'Unlimited manual flashcard creation',
-    ],
-    limitations: [
-      'No reverse study mode',
-      'Limited AI generations',
-      'No priority support',
-    ],
-    cta: 'Get Started',
-    ctaStyle: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50',
-    popular: false,
-  },
-  {
     id: 'monthly',
     name: 'Monthly Pro',
-    price: '$9.99',
+    price: '$10',
     period: '/month',
     description: 'Everything you need to learn faster',
     icon: RocketLaunchIcon,
     features: [
       'Unlimited AI-generated sets',
-      'All study modes (front & reverse)',
+      'Generate from PDF, YouTube, audio & images',
+      'All study modes (classic, multiple choice, typed)',
+      'AI-validated answers',
       'Full analytics & progress tracking',
       'Spaced repetition scheduling',
-      'Priority support',
       'CSV import',
+      'Offline study support',
+      'Priority support',
     ],
     limitations: [],
     cta: 'Start Monthly',
@@ -65,11 +43,13 @@ const tiers = [
     icon: StarIcon,
     badge: 'Limited Time',
     features: [
-      'Everything in Pro, forever',
+      'Everything in Monthly Pro, forever',
       'Unlimited AI-generated sets',
-      'All study modes',
-      'Full analytics & progress tracking',
+      'Generate from PDF, YouTube, audio & images',
+      'All study modes (classic, multiple choice, typed)',
+      'Full analytics, streaks & achievements',
       'Spaced repetition scheduling',
+      'Offline study support',
       'Priority support',
       'All future features included',
     ],
@@ -167,15 +147,14 @@ export default function PricingPage() {
           </span>
         </h1>
         <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-          Start free, upgrade when you&apos;re ready. Cancel anytime on monthly plans.
+          Unlock your full learning potential. Cancel anytime on monthly plans.
         </p>
       </div>
 
       {/* Pricing Cards */}
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+      <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         {tiers.map((tier) => {
           const isCurrentPlan =
-            (tier.id === 'free' && currentTier === 'Free') ||
             (tier.id === 'monthly' && currentTier === 'Monthly Pro') ||
             (tier.id === 'lifetime' && currentTier === 'Lifetime Learner');
 
@@ -234,19 +213,6 @@ export default function PricingPage() {
                     <div className="w-full py-3 px-4 rounded-xl text-center font-medium bg-green-100 text-green-800 text-sm">
                       Current Plan
                     </div>
-                  ) : tier.id === 'free' ? (
-                    isAuthenticated ? (
-                      <div className="w-full py-3 px-4 rounded-xl text-center font-medium bg-gray-100 text-gray-500 text-sm">
-                        Included
-                      </div>
-                    ) : (
-                      <Link
-                        href="/auth/signup"
-                        className={`block w-full py-3 px-4 rounded-xl text-center font-medium transition-colors text-sm ${tier.ctaStyle}`}
-                      >
-                        {tier.cta}
-                      </Link>
-                    )
                   ) : (
                     <button
                       onClick={() => handleCheckout(tier.id)}

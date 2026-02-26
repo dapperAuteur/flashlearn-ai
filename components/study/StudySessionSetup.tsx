@@ -17,6 +17,7 @@ import {
   LockClosedIcon,
   CheckCircleIcon,
   MagnifyingGlassIcon,
+  XMarkIcon,
   ClockIcon,
   AcademicCapIcon,
   ListBulletIcon,
@@ -47,6 +48,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
     dueDate?: string;
     myStatus: string;
   }>>([]);
+  const [publicSets, setPublicSets] = useState<Array<{ id: string; title: string; description: string; card_count: number }>>([]);
 
   // Pre-select set if provided via URL query param
   useEffect(() => {
@@ -61,6 +63,25 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
       setCurrentStep('direction');
     }
   }, [selectedListId, currentStep]);
+
+  // Fetch public sets for unauthenticated users (PowerSync has no data for them)
+  useEffect(() => {
+    if (status === 'authenticated' || status === 'loading') return;
+
+    fetch('/api/sets/public?limit=50')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.sets) {
+          setPublicSets(data.sets.map((s: { id: string; title: string; description: string; cardCount: number }) => ({
+            id: s.id,
+            title: s.title,
+            description: s.description,
+            card_count: s.cardCount,
+          })));
+        }
+      })
+      .catch(() => { /* silent */ });
+  }, [status]);
 
   // Fetch due card counts and assignments for authenticated users
   useEffect(() => {
@@ -123,15 +144,27 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
     }
   };
 
-  // Filter lists
-  // Filter sets - only PowerSync sets
+  // Combine PowerSync sets with API-fetched public sets for unauthenticated users
+  const allSets = useMemo(() => {
+    if (flashcardSets.length > 0) return flashcardSets;
+    // For unauthenticated users, use public sets fetched from API
+    return publicSets.map(s => ({
+      ...s,
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      card_count: s.card_count,
+    }));
+  }, [flashcardSets, publicSets]);
+
+  // Filter sets by search term
   const filteredSets = useMemo(() => {
-    return flashcardSets.filter(set => {
+    return allSets.filter(set => {
       const matchesSearch = set.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            set.description?.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesSearch;
     });
-  }, [flashcardSets, searchTerm]);
+  }, [allSets, searchTerm]);
 
   return (
     <>
@@ -205,26 +238,43 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
             <div className="space-y-4">
               {/* Search - always visible */}
               <div className="relative">
-                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                 <input
                   type="text"
                   placeholder="Search flashcard sets..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    aria-label="Clear search"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                )}
               </div>
 
             {filteredSets.length === 0 ? (
               <div className="text-center py-8">
                 <BookOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {searchTerm ? 'No sets match your search' : 'No flashcard sets found'}
+                  {searchTerm ? `No sets matching "${searchTerm}"` : 'No flashcard sets found'}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  {searchTerm ? 'Try a different search term' : 'Create your first set to get started'}
+                  {searchTerm ? 'Try a different search term or clear the search' : 'Create your first set to get started'}
                 </p>
-                {!searchTerm && (
+                {searchTerm ? (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+                  >
+                    <XMarkIcon className="h-4 w-4 mr-2" />
+                    Clear Search
+                  </button>
+                ) : (
                   <Link
                     href="/generate"
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -312,8 +362,15 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                 {filteredSets.length === 0 ? (
                   <div className="text-center py-8">
                     <MagnifyingGlassIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No sets match your search</h3>
-                    <p className="text-gray-600">Try a different search term</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No sets matching &ldquo;{searchTerm}&rdquo;</h3>
+                    <p className="text-gray-600 mb-4">Try a different search term</p>
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+                    >
+                      <XMarkIcon className="h-4 w-4 mr-2" />
+                      Clear Search
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
