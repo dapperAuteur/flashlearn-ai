@@ -51,7 +51,6 @@ const tiers = [
       'Spaced repetition scheduling',
       'Offline study support',
       'Priority support',
-      'All future features included',
     ],
     limitations: [],
     cta: 'Get Lifetime Access',
@@ -269,7 +268,7 @@ export default function PricingPage() {
             },
             {
               q: 'What does "Lifetime" mean?',
-              a: 'Pay once and get access to all Pro features forever, including any future features we add. No recurring charges.',
+              a: 'Pay once and get access to all Pro features forever. No recurring charges.',
             },
             {
               q: 'Is the $100 lifetime price permanent?',

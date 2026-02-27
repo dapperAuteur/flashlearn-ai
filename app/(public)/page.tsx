@@ -3,17 +3,20 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
-import { 
-  Brain, 
-  TrendingUp, 
-  Clock, 
-  Sparkles, 
-  BookOpen, 
-  Play, 
-  ArrowRight, 
+import {
+  Brain,
+  TrendingUp,
+  Clock,
+  Sparkles,
+  BookOpen,
+  Play,
+  ArrowRight,
   CheckCircle,
   Users,
-  Target
+  Target,
+  WifiOff,
+  MessageSquare,
+  Globe,
 } from "lucide-react";
 
 // Modern Hero Section with Conditional Content
@@ -279,11 +282,31 @@ const FeaturesShowcase = () => {
             
             <div className="flex items-start space-x-4">
               <div className="bg-orange-100 rounded-lg p-2 flex-shrink-0">
-                <Users className="h-5 w-5 text-orange-600" />
+                <WifiOff className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Team Collaboration</h3>
-                <p className="text-gray-700">Share flashcard sets with study groups and track team progress together.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Offline Study Mode</h3>
+                <p className="text-gray-700">Study anywhere, even without internet. Your progress syncs automatically when you reconnect.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-teal-100 rounded-lg p-2 flex-shrink-0">
+                <Globe className="h-5 w-5 text-teal-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Explore Community Sets</h3>
+                <p className="text-gray-700">Browse curated and community-created flashcard sets. Study any public set without an account.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-rose-100 rounded-lg p-2 flex-shrink-0">
+                <MessageSquare className="h-5 w-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">In-App Feedback</h3>
+                <p className="text-gray-700">Report bugs, request features, or share praise directly within the app. We listen and respond.</p>
               </div>
             </div>
           </div>

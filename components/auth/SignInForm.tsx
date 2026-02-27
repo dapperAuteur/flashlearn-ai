@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,7 +21,8 @@ type SignInFormData = z.infer<typeof signInSchema>;
 export default function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/flashcards';
   const [showPassword, setShowPassword] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
   const [resendEmail, setResendEmail] = useState("");
@@ -80,16 +81,15 @@ export default function SignInForm() {
           setError("Please verify your email address before signing in");
           setShowResendButton(true);
           setResendEmail(data.email);
-          router.push("/auth/error?error=email_not_verified");
+          window.location.href = "/auth/error?error=email_not_verified";
           return;
         }
         setError("Invalid email or password");
         return;
       }
-      
+
       Logger.log(LogContext.AUTH, 'User sign-in successful', { email: data.email });
-      router.push("/flashcards");
-      router.refresh();
+      window.location.href = callbackUrl;
     } catch (error: any) {
       Logger.error(LogContext.AUTH, 'Sign-in submission error', { email: data.email, error: error.message });
       setError(`Connection error: ${error.message || "Failed to connect to authentication server"}`);

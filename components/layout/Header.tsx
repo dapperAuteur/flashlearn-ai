@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Menu, X, WifiOff, RefreshCw } from 'lucide-react';
+import { Menu, X, WifiOff, RefreshCw, Shield } from 'lucide-react';
 import { usePageActions } from '@/hooks/usePageActions';
 import { useNetworkSync } from '@/hooks/useNetworkSync';
 import UserMenu from '@/components/ui/UserMenu';
@@ -18,11 +18,14 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 export default function Header() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
   const pageActions = usePageActions();
   const { isOnline, isSyncing, pendingCount } = useNetworkSync();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // DEBUG: Log session to verify role is present
+  console.log('[Header] session status:', status, '| user:', JSON.stringify(session?.user));
 
   const isActivePath = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -55,6 +58,19 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            {session?.user?.role === 'Admin' && (
+              <Link
+                href="/admin/dashboard"
+                className={`inline-flex items-center gap-1.5 px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
+                  pathname.startsWith('/admin')
+                    ? 'border-blue-500 text-blue-700'
+                    : 'border-transparent text-blue-600 hover:border-blue-300 hover:text-blue-700'
+                }`}
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Link>
+            )}
           </nav>
 
           {/* Desktop Context Actions */}
@@ -176,6 +192,20 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
+              {session?.user?.role === 'Admin' && (
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 pl-3 pr-4 py-2 text-base font-medium transition-colors ${
+                    pathname.startsWith('/admin')
+                      ? 'bg-blue-50 border-r-4 border-blue-500 text-blue-700'
+                      : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
+                >
+                  <Shield className="h-4 w-4" />
+                  Admin
+                </Link>
+              )}
             </div>
 
             {/* Mobile Context Actions */}

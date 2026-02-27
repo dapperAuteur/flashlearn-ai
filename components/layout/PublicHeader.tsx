@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { Shield } from 'lucide-react';
 
 export default function PublicHeader() {
   const { data: session } = useSession();
@@ -13,15 +14,26 @@ export default function PublicHeader() {
           <Link href="/" className="text-xl font-bold text-blue-600">
             FlashLearn AI
           </Link>
-          
+
           <div className="flex items-center space-x-4">
             {session ? (
-              <Link
-                href="/dashboard"
-                className="px-3 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-              >
-                Dashboard
-              </Link>
+              <>
+                {session.user?.role === 'Admin' && (
+                  <Link
+                    href="/admin/dashboard"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  href="/dashboard"
+                  className="px-3 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                >
+                  Dashboard
+                </Link>
+              </>
             ) : (
               <>
                 <Link

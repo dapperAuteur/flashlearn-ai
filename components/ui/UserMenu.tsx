@@ -5,7 +5,7 @@ import { signOut } from 'next-auth/react';
 // import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { User, LogOut, Settings } from 'lucide-react';
+import { User, LogOut, Settings, Shield } from 'lucide-react';
 
 
 interface UserMenuProps {
@@ -13,6 +13,7 @@ interface UserMenuProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    role?: string;
   };
 }
 
@@ -70,6 +71,16 @@ export default function UserMenu({user}: UserMenuProps) {
             <p className="text-sm font-medium text-gray-500">{user.email}</p>
           </div>
           <div className="py-1">
+            {user.role === 'Admin' && (
+              <Link
+                href="/admin/dashboard"
+                className="flex items-center px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 font-medium"
+                onClick={() => setIsOpen(false)}
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Admin Dashboard
+              </Link>
+            )}
             <Link
               href="/profile"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

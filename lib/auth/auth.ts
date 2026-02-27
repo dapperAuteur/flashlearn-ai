@@ -43,6 +43,8 @@ export const authOptions: NextAuthOptions = {
           Logger.info(LogContext.AUTH, "User authorized successfully. Preparing data for JWT.", { email, role: userDoc.role });
           return {
             id: userDoc._id.toString(),
+            name: userDoc.name,
+            email: userDoc.email,
             role: userDoc.role,
             subscriptionTier: userDoc.subscriptionTier || 'Free',
           };
@@ -57,6 +59,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger }) {
       if (user) {
         Logger.info(LogContext.AUTH, "JWT callback: Adding user data to token.", { userId: user.id, role: user.role });
+        console.log('[DEBUG AUTH] JWT callback - user object:', JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }));
         token.id = user.id;
         token.role = user.role;
         token.subscriptionTier = user.subscriptionTier || 'Free';
@@ -81,10 +84,12 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      console.log('[DEBUG AUTH] Session callback - token.role:', token?.role, '| session.user exists:', !!session.user);
       if (token && session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.subscriptionTier = token.subscriptionTier || 'Free';
+        console.log('[DEBUG AUTH] Session callback - set session.user.role to:', session.user.role);
       }
       return session;
     }

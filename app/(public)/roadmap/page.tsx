@@ -326,6 +326,7 @@ const phases: Phase[] = [
           'Lifetime Learner tier ($100 one-time)',
           'Stripe checkout & billing portal',
           'Subscription management & cancellation',
+          'Promo code support at checkout',
         ],
       },
     ],
@@ -338,14 +339,40 @@ const phases: Phase[] = [
     borderColor: 'border-red-200',
     features: [
       {
-        title: 'Admin Dashboard',
-        description: 'Platform management tools.',
-        status: 'planned',
+        title: 'Admin Dashboard & Analytics',
+        description: 'Full platform management and insights.',
+        status: 'done',
         items: [
-          'Log viewer with filtering',
+          'Admin dashboard with key metrics and charts',
           'User management (roles, suspension)',
-          'Analytics dashboard (new users, sessions)',
+          'Log viewer with filtering & search',
           'App configuration management',
+          'Onboarding funnel analytics (signup to subscription)',
+          'Revenue dashboard (MRR, churn rate, trends)',
+          'User health scores & churn alerts',
+        ],
+      },
+      {
+        title: 'Content Management',
+        description: 'Organize, curate, and moderate platform content.',
+        status: 'done',
+        items: [
+          'Set categories & tags management',
+          'Featured/curated sets for Explore page',
+          'Announcement banner (custom + AI-generated)',
+          'Flagged content queue & moderation actions',
+          'Coupon/promo code manager (via Stripe)',
+        ],
+      },
+      {
+        title: 'Communication & Growth',
+        description: 'Engage users and drive platform growth.',
+        status: 'done',
+        items: [
+          'Email campaigns to targeted user segments',
+          'Invite users by email with tracking',
+          'In-app feedback & support chat system',
+          'Re-engagement emails for at-risk users',
         ],
       },
       {
