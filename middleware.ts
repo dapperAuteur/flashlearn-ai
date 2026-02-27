@@ -22,6 +22,17 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: secret });
 
+  // --- Suspended User Check ---
+  if (token?.suspended === true) {
+    edgeLogger.warn(EdgeLogContext.AUTH, `Suspended user attempted access, redirecting to signin.`, {
+      ip: getClientIp(request),
+      userId: token?.sub,
+    });
+    const signInUrl = new URL('/auth/signin', request.url);
+    signInUrl.searchParams.set('error', 'suspended');
+    return NextResponse.redirect(signInUrl);
+  }
+
   // --- Admin Route Protection ---
   if (pathname.startsWith('/admin')) {
     if (token?.role === 'Admin') {

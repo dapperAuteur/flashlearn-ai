@@ -114,6 +114,12 @@ export async function POST(request: NextRequest) {
     
     const userId = newUser.insertedId.toString();
 
+    // Update invitation status if user was invited
+    await db.collection('invitations').updateOne(
+      { email, status: 'sent' },
+      { $set: { status: 'accepted', acceptedAt: new Date(), acceptedUserId: newUser.insertedId } }
+    );
+
     await logAuthEvent({
       request,
       event: AuthEventType.REGISTER,

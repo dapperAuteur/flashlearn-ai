@@ -16,6 +16,7 @@ declare module 'next-auth' {
     role: string;
     subscriptionTier: string;
     id: string;
+    suspended?: boolean;
   }
 
   /**
@@ -38,5 +39,6 @@ declare module 'next-auth/jwt' {
     id: string;
     role: string;
     subscriptionTier: string;
+    suspended?: boolean;
   }
 }

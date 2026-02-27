@@ -27,6 +27,7 @@
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.9",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.9.0",
     "crypto-random-string": "^5.0.0",
     "form-data": "^4.0.2",
     "html-to-image": "^1.11.13",

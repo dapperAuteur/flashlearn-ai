@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import dbConnect from '@/lib/db/dbConnect';
 import { User } from '@/models/User';
+import { RevenueEvent } from '@/models/RevenueEvent';
+import { CouponTracker } from '@/models/CouponTracker';
 import { Logger, LogContext } from '@/lib/logging/logger';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -56,6 +58,45 @@ export async function POST(request: NextRequest) {
 
         await User.findByIdAndUpdate(userId, updateData);
         Logger.info(LogContext.SYSTEM, 'User subscription updated after checkout', { userId, tier });
+
+        // Record revenue event
+        try {
+          await RevenueEvent.updateOne(
+            { stripeEventId: event.id },
+            {
+              $setOnInsert: {
+                userId,
+                stripeCustomerId: session.customer as string || undefined,
+                eventType: 'subscription_created',
+                newTier: tier,
+                amountCents: session.amount_total || 0,
+                currency: session.currency || 'usd',
+                stripeEventId: event.id,
+              },
+            },
+            { upsert: true }
+          );
+        } catch (revenueErr) {
+          Logger.warning(LogContext.SYSTEM, 'Failed to record revenue event for checkout', { error: revenueErr });
+        }
+
+        // Track coupon redemption
+        const sessionAny = session as unknown as Record<string, unknown>;
+        const sessionDiscount = sessionAny.discount as { promotion_code?: string | { id: string } } | undefined;
+        if (sessionDiscount?.promotion_code) {
+          try {
+            const promoCodeId = typeof sessionDiscount.promotion_code === 'string'
+              ? sessionDiscount.promotion_code
+              : sessionDiscount.promotion_code.id;
+            await CouponTracker.updateOne(
+              { stripePromoCodeId: promoCodeId },
+              { $push: { redemptions: { userId, redeemedAt: new Date(), subscriptionTier: tier } } }
+            );
+          } catch (couponErr) {
+            Logger.warning(LogContext.SYSTEM, 'Failed to track coupon redemption', { error: couponErr });
+          }
+        }
+
         break;
       }
 
@@ -73,13 +114,43 @@ export async function POST(request: NextRequest) {
         if (subscription.status === 'active') {
           // Determine tier from price
           const priceId = subscription.items.data[0]?.price?.id;
-          let tier = 'Monthly Pro';
+          let newTier = 'Monthly Pro';
           if (priceId === process.env.NEXT_PUBLIC_STRIPE_99_99_ANNUAL_PRICE) {
-            tier = 'Annual Pro';
+            newTier = 'Annual Pro';
           }
-          user.subscriptionTier = tier;
+
+          const previousTier = user.subscriptionTier;
+          user.subscriptionTier = newTier;
           await user.save();
-          Logger.info(LogContext.SYSTEM, 'Subscription activated', { userId: user._id, tier });
+          Logger.info(LogContext.SYSTEM, 'Subscription activated', { userId: user._id, tier: newTier });
+
+          // Record revenue event (upgraded or downgraded)
+          if (previousTier !== newTier) {
+            const tierRank: Record<string, number> = { 'Free': 0, 'Monthly Pro': 1, 'Annual Pro': 2, 'Lifetime Learner': 3 };
+            const eventType = (tierRank[newTier] || 0) >= (tierRank[previousTier] || 0) ? 'upgraded' : 'downgraded';
+            const amountCents = newTier === 'Annual Pro' ? 9999 : 999;
+
+            try {
+              await RevenueEvent.updateOne(
+                { stripeEventId: event.id },
+                {
+                  $setOnInsert: {
+                    userId: user._id,
+                    stripeCustomerId: customerId,
+                    eventType,
+                    previousTier,
+                    newTier,
+                    amountCents,
+                    currency: 'usd',
+                    stripeEventId: event.id,
+                  },
+                },
+                { upsert: true }
+              );
+            } catch (revenueErr) {
+              Logger.warning(LogContext.SYSTEM, 'Failed to record revenue event for subscription update', { error: revenueErr });
+            }
+          }
         }
         break;
       }
@@ -96,9 +167,32 @@ export async function POST(request: NextRequest) {
 
         // Only downgrade if currently on a recurring plan (not lifetime)
         if (user.subscriptionTier !== 'Lifetime Learner') {
+          const previousTier = user.subscriptionTier;
           user.subscriptionTier = 'Free';
           await user.save();
           Logger.info(LogContext.SYSTEM, 'User downgraded to Free after subscription cancellation', { userId: user._id });
+
+          // Record revenue event
+          try {
+            await RevenueEvent.updateOne(
+              { stripeEventId: event.id },
+              {
+                $setOnInsert: {
+                  userId: user._id,
+                  stripeCustomerId: customerId,
+                  eventType: 'canceled',
+                  previousTier,
+                  newTier: 'Free',
+                  amountCents: 0,
+                  currency: 'usd',
+                  stripeEventId: event.id,
+                },
+              },
+              { upsert: true }
+            );
+          } catch (revenueErr) {
+            Logger.warning(LogContext.SYSTEM, 'Failed to record revenue event for cancellation', { error: revenueErr });
+          }
         }
         break;
       }
@@ -107,6 +201,28 @@ export async function POST(request: NextRequest) {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
         Logger.warning(LogContext.SYSTEM, 'Invoice payment failed', { customerId, invoiceId: invoice.id });
+
+        // Record revenue event
+        try {
+          const failedUser = await User.findOne({ stripeCustomerId: customerId });
+          await RevenueEvent.updateOne(
+            { stripeEventId: event.id },
+            {
+              $setOnInsert: {
+                userId: failedUser?._id || undefined,
+                stripeCustomerId: customerId,
+                eventType: 'payment_failed',
+                amountCents: invoice.amount_due || 0,
+                currency: invoice.currency || 'usd',
+                stripeEventId: event.id,
+              },
+            },
+            { upsert: true }
+          );
+        } catch (revenueErr) {
+          Logger.warning(LogContext.SYSTEM, 'Failed to record revenue event for payment failure', { error: revenueErr });
+        }
+
         break;
       }
 
