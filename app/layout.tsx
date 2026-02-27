@@ -9,9 +9,12 @@ import { usePathname } from 'next/navigation';
 import { StudySessionProvider } from '@/contexts/StudySessionContext';
 import { Analytics } from "@vercel/analytics/next"
 import { FlashcardProvider } from '@/contexts/FlashcardContext';
+import { NetworkSyncProvider } from '@/contexts/NetworkSyncContext';
 import { PowerSyncContext } from '@powersync/react';
 import { useEffect, useState } from 'react';
 import AppInitializer from '@/components/providers/AppInitializer';
+import OfflineIndicator from '@/components/ui/OfflineIndicator';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -76,12 +79,16 @@ export default function RootLayout({
         <Analytics />
         <AuthProvider>
           <PowerSyncContext.Provider value={powerSyncDB}>
-            <FlashcardProvider>
-              <StudySessionProvider>
-                {isPublicRouteByPath && <PublicHeader />}
-                {children}
-              </StudySessionProvider>
-            </FlashcardProvider>
+            <NetworkSyncProvider>
+              <FlashcardProvider>
+                <StudySessionProvider>
+                  {isPublicRouteByPath && <PublicHeader />}
+                  {children}
+                  <OfflineIndicator />
+                  <Toaster />
+                </StudySessionProvider>
+              </FlashcardProvider>
+            </NetworkSyncProvider>
           </PowerSyncContext.Provider>
         </AuthProvider>
       </body>

@@ -1,11 +1,11 @@
-const CACHE_NAME = 'flashlearn-offline-v1';
+const CACHE_NAME = 'flashlearn-offline-v2';
 
 // Install: Cache critical assets
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(['/study', '/offline']);
+      return cache.addAll(['/study', '/offline', '/flashcards', '/dashboard']);
     })
   );
   self.skipWaiting();

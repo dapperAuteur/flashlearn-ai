@@ -3,10 +3,7 @@
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useSync } from '@/hooks/useSync';
-import OfflineIndicator from '@/components/ui/OfflineIndicator';
 import Header from '@/components/layout/Header';
-import { Toaster } from '@/components/ui/toaster';
 import { useOnboarding } from '@/hooks/OnboardingHooks';
 import OnboardingModal from '@/components/ui/OnboardingModal';
 
@@ -21,7 +18,6 @@ export default function DashboardLayout({
 }) {
   const { status } = useSession();
   const router = useRouter();
-  const { isOnline } = useSync();
   const {
     showOnboarding,
     currentStep,
@@ -63,8 +59,6 @@ export default function DashboardLayout({
         </div>
       </main>
 
-      <OfflineIndicator isOnline={isOnline} />
-      <Toaster />
       <OnboardingModal
         isOpen={showOnboarding}
         currentStep={currentStep}

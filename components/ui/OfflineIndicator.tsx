@@ -1,24 +1,34 @@
 'use client';
 
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Loader2 } from 'lucide-react';
+import { useNetworkSync } from '@/hooks/useNetworkSync';
 
-interface OfflineIndicatorProps {
-  isOnline: boolean;
-}
+export default function OfflineIndicator() {
+  const { isOnline, isSyncing, pendingCount, syncedCount } = useNetworkSync();
 
-/**
- * A non-intrusive banner that appears at the bottom of the screen
- * when the application detects it is offline.
- */
-export default function OfflineIndicator({ isOnline }: OfflineIndicatorProps) {
-  if (isOnline) {
-    return null; // Don't render anything if the user is online
-  }
+  const showBar = !isOnline || (isSyncing && pendingCount > 0);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-3 z-50 flex items-center justify-center shadow-lg">
-      <WifiOff className="h-5 w-5 mr-3 text-gray-400" />
-      <p className="font-semibold">You are currently offline. Your progress will be saved and synced when you reconnect.</p>
+    <div
+      className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${
+        showBar ? 'translate-y-0' : 'translate-y-full'
+      }`}
+    >
+      {!isOnline ? (
+        <div className="bg-amber-600 text-white px-4 py-3 flex items-center justify-center shadow-lg">
+          <WifiOff className="h-4 w-4 mr-2 flex-shrink-0" />
+          <p className="text-sm font-medium">
+            You&apos;re offline &mdash; progress saved locally
+          </p>
+        </div>
+      ) : isSyncing && pendingCount > 0 ? (
+        <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-center shadow-lg">
+          <Loader2 className="h-4 w-4 mr-2 flex-shrink-0 animate-spin" />
+          <p className="text-sm font-medium">
+            Syncing {syncedCount} of {syncedCount + pendingCount} item{syncedCount + pendingCount !== 1 ? 's' : ''}...
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
