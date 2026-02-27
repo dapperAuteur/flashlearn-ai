@@ -19,6 +19,10 @@ export interface IUser extends Document {
     studyReminderEnabled: boolean;
     studyReminderTime: string;
   };
+  emailVerified?: boolean;
+  emailUnsubscribed?: boolean;
+  suspended?: boolean;
+  stripeSubscriptionId?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
 }

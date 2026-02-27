@@ -78,6 +78,21 @@ const UserSchema = new Schema<IUser>({
       default: '09:00',
     },
   },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  emailUnsubscribed: {
+    type: Boolean,
+    default: false,
+  },
+  suspended: {
+    type: Boolean,
+    default: false,
+  },
+  stripeSubscriptionId: {
+    type: String,
+  },
   // Fields for the password reset functionality
   resetPasswordToken: {
     type: String,

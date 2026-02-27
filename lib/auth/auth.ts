@@ -34,7 +34,12 @@ export const authOptions: NextAuthOptions = {
             Logger.warning(LogContext.AUTH, "Authorize failed: Invalid password.", { email });
             return null;
           }
-          
+
+          if (userDoc.suspended === true) {
+            Logger.warning(LogContext.AUTH, "Authorize failed: User account is suspended.", { email });
+            return null;
+          }
+
           Logger.info(LogContext.AUTH, "User authorized successfully. Preparing data for JWT.", { email, role: userDoc.role });
           return {
             id: userDoc._id.toString(),
@@ -55,6 +60,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.subscriptionTier = user.subscriptionTier || 'Free';
+        token.suspended = user.suspended || false;
       }
       // Refresh subscriptionTier from DB on update trigger (e.g. after purchase)
       if (trigger === 'update') {
@@ -66,6 +72,7 @@ export const authOptions: NextAuthOptions = {
           if (userDoc) {
             token.subscriptionTier = userDoc.subscriptionTier || 'Free';
             token.name = userDoc.name;
+            token.suspended = userDoc.suspended || false;
           }
         } catch (error) {
           Logger.error(LogContext.AUTH, "Failed to refresh subscriptionTier in JWT.", { error });

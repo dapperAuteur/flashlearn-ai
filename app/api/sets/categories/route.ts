@@ -1,37 +1,27 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// app/api/sets/categories/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db/dbConnect';
-import { FlashcardSet } from '@/models/FlashcardSet';
-import { Profile } from '@/models/Profile';
-import { authOptions } from '@/lib/auth/auth';
+import { Category } from '@/models/Category';
 import { Logger, LogContext } from '@/lib/logging/logger';
 
-// GET /api/sets/categories - Get all categories for user's sets
-export async function GET(request: NextRequest) {
+// GET /api/sets/categories - Get all active categories (public endpoint)
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     await dbConnect();
-    
-    // Get user's profile IDs
-    const userProfiles = await Profile.find({ user: session.user.id }).select('_id').lean();
-    const userProfileIds = userProfiles.map(p => p._id);
 
-    // Get all categories from user's sets
-    const sets = await FlashcardSet.find({ 
-      profile: { $in: userProfileIds } 
-    }).select('categories').lean();
+    const categories = await Category.find({ isActive: true })
+      .select('name slug description color sortOrder')
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
 
-    // Extract unique categories
-    const allCategories = sets.flatMap(set => set.categories || []);
-    const uniqueCategories = [...new Set(allCategories)].sort();
-
-    return NextResponse.json(uniqueCategories);
+    return NextResponse.json({
+      categories: categories.map((c) => ({
+        id: String(c._id),
+        name: c.name,
+        slug: c.slug,
+        description: c.description || '',
+        color: c.color,
+      })),
+    });
   } catch (error) {
     Logger.error(LogContext.FLASHCARD, 'Error fetching categories', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -15,6 +15,8 @@ import { useEffect, useState } from 'react';
 import AppInitializer from '@/components/providers/AppInitializer';
 import OfflineIndicator from '@/components/ui/OfflineIndicator';
 import { Toaster } from '@/components/ui/toaster';
+import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
+import FeedbackWidget from '@/components/ui/FeedbackWidget';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -78,6 +80,7 @@ export default function RootLayout({
         <AppInitializer />
         <Analytics />
         <AuthProvider>
+          <AnnouncementBanner />
           <PowerSyncContext.Provider value={powerSyncDB}>
             <NetworkSyncProvider>
               <FlashcardProvider>
@@ -85,6 +88,7 @@ export default function RootLayout({
                   {isPublicRouteByPath && <PublicHeader />}
                   {children}
                   <OfflineIndicator />
+                  <FeedbackWidget />
                   <Toaster />
                 </StudySessionProvider>
               </FlashcardProvider>

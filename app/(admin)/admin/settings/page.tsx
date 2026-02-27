@@ -42,6 +42,33 @@ const DEFAULT_CONFIGS = [
     description: "Promotional lifetime price in cents (10000 = $100)",
     defaultValue: 10000,
   },
+  {
+    key: "ANNOUNCEMENT_BANNER",
+    description: "Site-wide announcement banner. Set active to true to display.",
+    defaultValue: {
+      active: false,
+      bannerId: "v1",
+      type: "info",
+      message: "",
+      linkText: "",
+      linkUrl: "",
+    },
+  },
+  {
+    key: "MAX_FEATURED_SETS",
+    description: "Maximum number of featured sets on the Explore page",
+    defaultValue: 10,
+  },
+  {
+    key: "MAX_DAILY_INVITATIONS",
+    description: "Maximum number of invitations an admin can send per day",
+    defaultValue: 20,
+  },
+  {
+    key: "AUTO_FLAG_THRESHOLD",
+    description: "Auto-hide public sets after this many flags",
+    defaultValue: 5,
+  },
 ];
 
 export default function AdminSettingsPage() {

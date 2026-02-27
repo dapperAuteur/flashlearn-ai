@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
       mode: isLifetime ? 'payment' : 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
       success_url: `${origin}/pricing?success=true&plan=${plan}`,
       cancel_url: `${origin}/pricing?canceled=true`,
       metadata: {
