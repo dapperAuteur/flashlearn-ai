@@ -30,6 +30,25 @@ interface SyncResult {
   error?: string;
 }
 
+export type SyncEventType =
+  | 'status-change'
+  | 'sync-start'
+  | 'sync-progress'
+  | 'sync-complete'
+  | 'sync-error';
+
+export interface SyncEventData {
+  type: SyncEventType;
+  isOnline: boolean;
+  isSyncing: boolean;
+  pendingCount: number;
+  syncedCount: number;
+  error?: string;
+  lastSyncedAt?: Date;
+}
+
+export type SyncEventListener = (data: SyncEventData) => void;
+
 // ============================================================================
 // UNIFIED OFFLINE SYNC SERVICE
 // ============================================================================
@@ -38,6 +57,10 @@ export class OfflineSyncService {
   private syncInProgress = false;
   private retryTimeout: NodeJS.Timeout | null = null;
   private periodicSyncInterval: NodeJS.Timeout | null = null;
+  private listeners = new Set<SyncEventListener>();
+  private _pendingCount = 0;
+  private _syncedCount = 0;
+  private _lastSyncedAt: Date | null = null;
 
   static getInstance(): OfflineSyncService {
     if (!OfflineSyncService.instance) {
@@ -86,17 +109,53 @@ export class OfflineSyncService {
   }
 
   // ============================================================================
+  // EVENT EMITTER
+  // ============================================================================
+
+  subscribe(listener: SyncEventListener): () => void {
+    this.listeners.add(listener);
+    return () => { this.listeners.delete(listener); };
+  }
+
+  private emit(type: SyncEventType, extra?: { error?: string }) {
+    const data: SyncEventData = {
+      type,
+      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+      isSyncing: this.syncInProgress,
+      pendingCount: this._pendingCount,
+      syncedCount: this._syncedCount,
+      lastSyncedAt: this._lastSyncedAt ?? undefined,
+      ...extra,
+    };
+    this.listeners.forEach(fn => fn(data));
+  }
+
+  async getPendingCount(): Promise<number> {
+    try {
+      const [sessions, changes] = await Promise.all([
+        getQueuedSessions(),
+        getPendingChanges(),
+      ]);
+      return sessions.length + changes.length;
+    } catch {
+      return 0;
+    }
+  }
+
+  // ============================================================================
   // EVENT HANDLERS
   // ============================================================================
 
   private handleOnline(): void {
     Logger.log(LogContext.SYSTEM, 'Connection restored, starting sync');
+    this.emit('status-change');
     this.syncAllPendingData();
     this.startPeriodicSync();
   }
 
   private handleOffline(): void {
     Logger.log(LogContext.SYSTEM, 'Connection lost');
+    this.emit('status-change');
     if (this.retryTimeout) {
       clearTimeout(this.retryTimeout);
       this.retryTimeout = null;
@@ -134,7 +193,10 @@ export class OfflineSyncService {
     }
 
     this.syncInProgress = true;
+    this._syncedCount = 0;
+    this._pendingCount = await this.getPendingCount();
     Logger.log(LogContext.SYSTEM, 'Starting offline data sync');
+    this.emit('sync-start');
 
     try {
       // Pull flashcard data from server into PowerSync
@@ -146,12 +208,15 @@ export class OfflineSyncService {
       // Push study sessions (not in PowerSync schema)
       await this.syncStudySessions();
 
-      Logger.log(LogContext.SYSTEM, 'Offline sync completed successfully');
-    } catch (error) {
-      Logger.error(LogContext.SYSTEM, 'Sync failed, will retry', { error });
-      this.scheduleRetry();
-    } finally {
+      this._lastSyncedAt = new Date();
       this.syncInProgress = false;
+      Logger.log(LogContext.SYSTEM, 'Offline sync completed successfully');
+      this.emit('sync-complete');
+    } catch (error) {
+      this.syncInProgress = false;
+      Logger.error(LogContext.SYSTEM, 'Sync failed, will retry', { error });
+      this.emit('sync-error', { error: error instanceof Error ? error.message : 'Sync failed' });
+      this.scheduleRetry();
     }
   }
 
@@ -274,8 +339,11 @@ export class OfflineSyncService {
         }
         
         await removePendingChange(change.id);
+        this._syncedCount++;
+        this._pendingCount = Math.max(0, this._pendingCount - 1);
         Logger.log(LogContext.SYSTEM, 'Pending change synced', { changeId: change.id });
-        
+        this.emit('sync-progress');
+
       } catch (error) {
         Logger.error(LogContext.SYSTEM, 'Failed to sync change', { 
           changeId: change.id, 
@@ -353,9 +421,12 @@ export class OfflineSyncService {
       const result = await this.syncSingleSession(sessionId);
       
       if (result.success) {
-        Logger.log(LogContext.SYSTEM, 'Study session synced successfully', { 
-          sessionId 
+        this._syncedCount++;
+        this._pendingCount = Math.max(0, this._pendingCount - 1);
+        Logger.log(LogContext.SYSTEM, 'Study session synced successfully', {
+          sessionId
         });
+        this.emit('sync-progress');
       } else {
         Logger.warning(LogContext.SYSTEM, 'Study session sync failed', { 
           sessionId,

@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, WifiOff, RefreshCw } from 'lucide-react';
 import { usePageActions } from '@/hooks/usePageActions';
+import { useNetworkSync } from '@/hooks/useNetworkSync';
 import UserMenu from '@/components/ui/UserMenu';
 import { NavigationItem } from '@/types/navigation';
 
@@ -20,6 +21,7 @@ export default function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const pageActions = usePageActions();
+  const { isOnline, isSyncing, pendingCount } = useNetworkSync();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActivePath = (href: string) => {
@@ -113,12 +115,35 @@ export default function Header() {
               </>
             )}
 
+            {/* Network Status */}
+            {!isOnline && (
+              <span className="text-amber-500" title="You are offline">
+                <WifiOff className="w-4 h-4" />
+              </span>
+            )}
+            {isOnline && isSyncing && pendingCount > 0 && (
+              <span className="text-blue-500" title={`Syncing ${pendingCount} item${pendingCount !== 1 ? 's' : ''}...`}>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              </span>
+            )}
+
             {/* User Menu */}
             {session?.user && <UserMenu user={session.user} />}
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
+            {/* Mobile Network Status */}
+            {!isOnline && (
+              <span className="text-amber-500" title="You are offline">
+                <WifiOff className="w-4 h-4" />
+              </span>
+            )}
+            {isOnline && isSyncing && pendingCount > 0 && (
+              <span className="text-blue-500" title={`Syncing ${pendingCount} item${pendingCount !== 1 ? 's' : ''}...`}>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              </span>
+            )}
             {session?.user && <UserMenu user={session.user} />}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

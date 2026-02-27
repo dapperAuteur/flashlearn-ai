@@ -19,9 +19,8 @@ interface FlashcardContextType {
   flashcardSets: PowerSyncFlashcardSet[];
   offlineSets: PowerSyncOfflineSet[];
   isSyncing: boolean;
-  isOnline: boolean;
   createFlashcardSet: (set: Omit<PowerSyncFlashcardSet, 'id' | 'created_at' | 'updated_at'>) => Promise<string>;
-  createFlashcard: (card: Omit<PowerSyncFlashcard, 'id' | 'created_at' | 'updated_at'>) => Promise<string>; // Add this
+  createFlashcard: (card: Omit<PowerSyncFlashcard, 'id' | 'created_at' | 'updated_at'>) => Promise<string>;
   updateFlashcardSet: (id: string, updates: Partial<PowerSyncFlashcardSet>) => Promise<void>;
   deleteFlashcardSet: (id: string) => Promise<void>;
   toggleOfflineAvailability: (setId: string) => Promise<void>;
@@ -33,7 +32,6 @@ const MAX_OFFLINE_SETS = 10;
 export function FlashcardProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const powerSync = usePowerSync();
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const userId = session?.user?.id || '';
@@ -60,20 +58,6 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
       : '',
     shouldQuery && userId ? [userId] : []
   );
-
-  // Online/offline listener
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   // PowerSync connection
   useEffect(() => {
@@ -255,7 +239,6 @@ export function FlashcardProvider({ children }: { children: ReactNode }) {
     flashcardSets,
     offlineSets,
     isSyncing,
-    isOnline,
     createFlashcardSet,
     createFlashcard,
     updateFlashcardSet,
