@@ -22,7 +22,7 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { role, subscriptionTier, suspended } = body;
+    const { role, subscriptionTier, suspended, emailVerified } = body;
 
     await dbConnect();
     const user = await User.findById(id);
@@ -56,11 +56,15 @@ export async function PUT(
       user.suspended = suspended;
     }
 
+    if (typeof emailVerified === 'boolean') {
+      user.emailVerified = emailVerified;
+    }
+
     await user.save();
 
     Logger.info(LogContext.SYSTEM, `Admin updated user ${id}`, {
       adminId: token.id,
-      changes: { role, subscriptionTier, suspended },
+      changes: { role, subscriptionTier, suspended, emailVerified },
     });
 
     return NextResponse.json({
