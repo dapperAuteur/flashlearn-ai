@@ -34,7 +34,7 @@ export interface IFlashcardSet extends Document {
   source: 'Prompt' | 'PDF' | 'YouTube' | 'Audio' | 'Image' | 'CSV';
   flashcards: IFlashcard[];
   parentSetId?: mongoose.Types.ObjectId; // Optional link to the original, complete set
-  category?: mongoose.Types.ObjectId;
+  categories: mongoose.Types.ObjectId[];
   tags?: string[];
   isFeatured?: boolean;
   featuredOrder?: number;
@@ -82,12 +82,10 @@ const FlashcardSetSchema = new Schema<IFlashcardSet>({
     ref: 'FlashcardSet',
     required: false, // It's only required for subsets
   },
-  category: {
+  categories: [{
     type: Schema.Types.ObjectId,
     ref: 'Category',
-    required: false,
-    index: true,
-  },
+  }],
   tags: [{
     type: String,
     trim: true,
@@ -104,6 +102,6 @@ const FlashcardSetSchema = new Schema<IFlashcardSet>({
 }, { timestamps: true });
 
 FlashcardSetSchema.index({ isPublic: 1, createdAt: -1 });
-FlashcardSetSchema.index({ category: 1, isPublic: 1, createdAt: -1 });
+FlashcardSetSchema.index({ categories: 1, isPublic: 1, createdAt: -1 });
 
 export const FlashcardSet = mongoose.models.FlashcardSet || mongoose.model('FlashcardSet', FlashcardSetSchema, 'flashcard_sets');

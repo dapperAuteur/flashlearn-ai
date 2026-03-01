@@ -16,3 +16,6 @@ I'd like to see analytics by flashcard set and by set category. allow users to s
 let's get offline working properly. it should sync when back online and have a clear signal to user when offline
 
 use ai to be a business consultant for the app to help with growth (social media, new features, new flashcards, marketing, review app analytics to recommend improvements, etc)
+
+--
+explore isn't showing on all pages menus. please put explore on all pages menu. also. unauthenticated users should see all public sets. I dont see them on explore page or study page

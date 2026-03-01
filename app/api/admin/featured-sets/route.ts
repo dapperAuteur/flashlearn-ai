@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
   try {
     await dbConnect();
     const featured = await FlashcardSet.find({ isFeatured: true })
-      .select('title description cardCount source category isFeatured featuredOrder createdAt')
-      .populate('category', 'name slug color')
+      .select('title description cardCount source categories isFeatured featuredOrder createdAt')
+      .populate('categories', 'name slug color')
       .sort({ featuredOrder: 1 })
       .lean();
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         description: s.description || '',
         cardCount: s.cardCount,
         source: s.source,
-        category: s.category || null,
+        categories: s.categories || [],
         featuredOrder: s.featuredOrder || 0,
         createdAt: s.createdAt,
       })),

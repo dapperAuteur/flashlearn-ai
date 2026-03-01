@@ -17,7 +17,7 @@ interface FlashcardSet {
   description?: string;
   isPublic: boolean;
   cardCount: number;
-  category?: string;
+  categories?: string[];
   tags?: string[];
 }
 
@@ -33,7 +33,7 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
   const [title, setTitle] = useState(set.title);
   const [description, setDescription] = useState(set.description || '');
   const [isPublic, setIsPublic] = useState(set.isPublic);
-  const [category, setCategory] = useState<string>(set.category || '');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(set.categories || []);
   const [tags, setTags] = useState<string>(set.tags?.join(', ') || '');
   const [saving, setSaving] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
@@ -44,13 +44,13 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
       setTitle(set.title);
       setDescription(set.description || '');
       setIsPublic(set.isPublic);
-      setCategory(set.category || '');
+      setSelectedCategories(set.categories || []);
       setTags(set.tags?.join(', ') || '');
     }
   }, [isOpen, set]);
 
   useEffect(() => {
-    if (!isOpen || !isAdmin) return;
+    if (!isOpen) return;
     setLoadingCategories(true);
     fetch('/api/sets/categories')
       .then((res) => (res.ok ? res.json() : null))
@@ -61,7 +61,7 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
       })
       .catch(() => { /* silent */ })
       .finally(() => setLoadingCategories(false));
-  }, [isOpen, isAdmin]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -73,10 +73,10 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
         title: title.trim(),
         description: description.trim(),
         tags: tags.split(',').map(t => t.trim()).filter(t => t),
+        categories: selectedCategories,
       };
       if (isAdmin) {
         updatedSet.isPublic = isPublic;
-        updatedSet.category = category || null;
       }
 
       // Save as pending change for offline sync
@@ -155,26 +155,38 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
                 />
               </div>
 
-              {isAdmin && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    disabled={loadingCategories}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">{loadingCategories ? 'Loading...' : 'No category'}</option>
-                    {categoryOptions.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Categories</label>
+                {loadingCategories ? (
+                  <p className="text-sm text-gray-500">Loading categories...</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {categoryOptions.map((cat) => {
+                      const isSelected = selectedCategories.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() =>
+                            isSelected
+                              ? setSelectedCategories(prev => prev.filter(id => id !== cat.id))
+                              : selectedCategories.length < 5 && setSelectedCategories(prev => [...prev, cat.id])
+                          }
+                          className="px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                          style={{
+                            backgroundColor: isSelected ? cat.color : `${cat.color}10`,
+                            color: isSelected ? 'white' : cat.color,
+                            borderColor: cat.color,
+                          }}
+                        >
+                          {cat.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Select up to 5 categories</p>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
