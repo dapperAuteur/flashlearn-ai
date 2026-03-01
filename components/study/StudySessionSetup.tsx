@@ -21,6 +21,7 @@ import {
   ClockIcon,
   AcademicCapIcon,
   ListBulletIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
 
 interface StudySessionSetupProps {
@@ -48,6 +49,10 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
     myStatus: string;
   }>>([]);
   const [publicSets, setPublicSets] = useState<Array<{ id: string; title: string; description: string; card_count: number }>>([]);
+  const [categories, setCategories] = useState<Array<{ _id: string; name: string; slug: string; color: string }>>([]);
+  const [categoryMap, setCategoryMap] = useState<Record<string, Array<{ id: string; name: string; color: string }>>>({});
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [featuredSets, setFeaturedSets] = useState<Array<{ id: string; title: string; description: string; cardCount: number; categories?: Array<{ name: string; color: string }> }>>([]);
 
   // Pre-select set if provided via URL query param
   useEffect(() => {
@@ -78,8 +83,38 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
             card_count: s.cardCount,
           })));
         }
+        if (data?.featured) setFeaturedSets(data.featured);
       })
       .catch(() => { /* silent */ });
+  }, [status]);
+
+  // Fetch categories and category map (public endpoints, available to all users)
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    fetch('/api/sets/categories')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.categories) setCategories(data.categories);
+      })
+      .catch(() => { /* silent */ });
+
+    if (status === 'authenticated') {
+      fetch('/api/sets/categories/by-sets')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) setCategoryMap(data);
+        })
+        .catch(() => { /* silent */ });
+
+      // Fetch featured sets for authenticated users
+      fetch('/api/sets/public?limit=6')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.featured) setFeaturedSets(data.featured);
+        })
+        .catch(() => { /* silent */ });
+    }
   }, [status]);
 
   // Fetch due card counts and assignments for authenticated users
@@ -156,14 +191,19 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
     }));
   }, [flashcardSets, publicSets]);
 
-  // Filter sets by search term
+  // Filter sets by search term and category
   const filteredSets = useMemo(() => {
     return allSets.filter(set => {
       const matchesSearch = set.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            set.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch;
+      if (!matchesSearch) return false;
+      if (selectedCategory) {
+        const cats = categoryMap[set.id?.toString() || ''];
+        return cats && cats.some(c => c.id === selectedCategory);
+      }
+      return true;
     });
-  }, [allSets, searchTerm]);
+  }, [allSets, searchTerm, selectedCategory, categoryMap]);
 
   return (
     <>
@@ -255,6 +295,41 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                   </button>
                 )}
               </div>
+
+              {/* Category Filter Pills */}
+              {categories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedCategory('')}
+                    className={clsx(
+                      'px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                      !selectedCategory
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    )}
+                  >
+                    All
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat._id}
+                      onClick={() => setSelectedCategory(selectedCategory === cat._id ? '' : cat._id)}
+                      className={clsx(
+                        'px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                        selectedCategory === cat._id
+                          ? 'text-white'
+                          : 'hover:opacity-80'
+                      )}
+                      style={{
+                        backgroundColor: selectedCategory === cat._id ? cat.color : `${cat.color}20`,
+                        color: selectedCategory === cat._id ? 'white' : cat.color,
+                      }}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              )}
 
             {filteredSets.length === 0 ? (
               <div className="text-center py-8">
@@ -357,6 +432,59 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                   </div>
                 )}
 
+                {/* Featured Sets */}
+                {featuredSets.length > 0 && !searchTerm && !selectedCategory && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-amber-700">
+                      <StarIcon className="h-4 w-4" />
+                      <span>Featured Sets</span>
+                    </div>
+                    {featuredSets.map((fSet) => (
+                      <div
+                        key={fSet.id}
+                        onClick={() => setSelectedListId(fSet.id)}
+                        className={clsx(
+                          'p-4 rounded-xl border-2 cursor-pointer transition-all',
+                          selectedListId === fSet.id
+                            ? 'border-amber-500 bg-amber-50 shadow-md'
+                            : 'border-amber-200 bg-amber-50/30 hover:border-amber-300 hover:shadow-sm'
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-gray-900 truncate">{fSet.title}</h3>
+                            {fSet.description && (
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-1">{fSet.description}</p>
+                            )}
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <span className="text-xs text-gray-500">{fSet.cardCount} cards</span>
+                              {fSet.categories?.map(cat => (
+                                <span
+                                  key={cat.name}
+                                  className="px-2 py-0.5 rounded-full text-xs font-medium"
+                                  style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
+                                >
+                                  {cat.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className={clsx(
+                            'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3',
+                            selectedListId === fSet.id
+                              ? 'bg-amber-600 border-amber-600'
+                              : 'border-gray-300'
+                          )}>
+                            {selectedListId === fSet.id && (
+                              <CheckCircleIcon className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Filtered Results */}
                 {filteredSets.length === 0 ? (
                   <div className="text-center py-8">
@@ -390,7 +518,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                             {set.description && (
                               <p className="text-sm text-gray-600 mt-1">{set.description}</p>
                             )}
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
                               <p className="text-xs text-gray-500">{set.card_count} cards</p>
                               {dueCounts.get(set.id?.toString() || '') && (
                                 <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
@@ -398,6 +526,15 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                                   {dueCounts.get(set.id?.toString() || '')} due
                                 </span>
                               )}
+                              {categoryMap[set.id?.toString() || '']?.map(cat => (
+                                <span
+                                  key={cat.id}
+                                  className="px-2 py-0.5 rounded-full text-xs font-medium"
+                                  style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
+                                >
+                                  {cat.name}
+                                </span>
+                              ))}
                             </div>
                           </div>
                           <div className={clsx(

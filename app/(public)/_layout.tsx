@@ -17,9 +17,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/flashcards', label: 'My Flashcards' }, // Assuming this will be a future page
+    { href: '/flashcards', label: 'My Flashcards' },
     { href: '/generate', label: 'Generate Flashcards' },
     { href: '/study', label: 'Study' },
+    { href: '/explore', label: 'Explore' },
   ];
 
   return (

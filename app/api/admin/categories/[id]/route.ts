@@ -71,8 +71,8 @@ export async function DELETE(
 
     // Remove category reference from all sets that use it
     await FlashcardSet.updateMany(
-      { category: new mongoose.Types.ObjectId(id) },
-      { $unset: { category: '' } }
+      { categories: new mongoose.Types.ObjectId(id) },
+      { $pull: { categories: new mongoose.Types.ObjectId(id) } }
     );
 
     const category = await Category.findByIdAndDelete(id);

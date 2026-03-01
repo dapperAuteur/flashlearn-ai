@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
   }
 
   if (categoryId) {
-    query.category = new mongoose.Types.ObjectId(categoryId);
+    query.categories = new mongoose.Types.ObjectId(categoryId);
   }
 
   const [sets, total] = await Promise.all([
     FlashcardSet.find(query)
-      .select('title description cardCount source category tags isFeatured createdAt')
-      .populate('category', 'name slug color')
+      .select('title description cardCount source categories tags isFeatured createdAt')
+      .populate('categories', 'name slug color')
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(limit)
@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
   let featured: Record<string, unknown>[] = [];
   if (offset === 0 && !search && !categoryId) {
     const featuredSets = await FlashcardSet.find({ isPublic: true, isFeatured: true })
-      .select('title description cardCount source category tags createdAt featuredOrder')
-      .populate('category', 'name slug color')
+      .select('title description cardCount source categories tags createdAt featuredOrder')
+      .populate('categories', 'name slug color')
       .sort({ featuredOrder: 1 })
       .lean();
 
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       description: (s.description as string) || '',
       cardCount: s.cardCount,
       source: s.source,
-      category: s.category || null,
+      categories: (s as Record<string, unknown>).categories || [],
       tags: s.tags || [],
       createdAt: s.createdAt,
     }));
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       description: (s.description as string) || '',
       cardCount: s.cardCount,
       source: s.source,
-      category: s.category || null,
+      categories: (s as Record<string, unknown>).categories || [],
       tags: s.tags || [],
       createdAt: s.createdAt,
     })),

@@ -26,7 +26,7 @@ interface PublicSet {
   description: string;
   cardCount: number;
   source: string;
-  category?: CategoryInfo | null;
+  categories?: CategoryInfo[];
   tags?: string[];
   createdAt: string;
 }
@@ -202,17 +202,18 @@ export default function ExplorePage() {
                   <div className="flex items-center gap-3 text-xs text-gray-500 mb-4 mt-auto">
                     <span>{set.cardCount} cards</span>
                     <span className="px-2 py-0.5 bg-gray-100 rounded-full">{set.source}</span>
-                    {set.category && (
+                    {set.categories?.map(cat => (
                       <span
+                        key={cat.name}
                         className="px-2 py-0.5 rounded-full"
                         style={{
-                          backgroundColor: `${set.category.color}20`,
-                          color: set.category.color,
+                          backgroundColor: `${cat.color}20`,
+                          color: cat.color,
                         }}
                       >
-                        {set.category.name}
+                        {cat.name}
                       </span>
-                    )}
+                    ))}
                   </div>
                   <Link
                     href={`/study?setId=${set.id}`}
@@ -295,17 +296,18 @@ export default function ExplorePage() {
                   <div className="flex items-center gap-2 flex-wrap text-xs text-gray-500 mb-4 mt-auto">
                     <span>{set.cardCount} cards</span>
                     <span className="px-2 py-0.5 bg-gray-100 rounded-full">{set.source}</span>
-                    {set.category && (
+                    {set.categories?.map(cat => (
                       <span
+                        key={cat.name}
                         className="px-2 py-0.5 rounded-full"
                         style={{
-                          backgroundColor: `${set.category.color}20`,
-                          color: set.category.color,
+                          backgroundColor: `${cat.color}20`,
+                          color: cat.color,
                         }}
                       >
-                        {set.category.name}
+                        {cat.name}
                       </span>
-                    )}
+                    ))}
                   </div>
                   <Link
                     href={`/study?setId=${set.id}`}

@@ -26,17 +26,22 @@ export async function POST(request: NextRequest) {
 
     const sets = await FlashcardSet.find({
       _id: { $in: limitedIds.map((id: string) => new ObjectId(id)) },
-      category: { $ne: null },
+      categories: { $exists: true, $ne: [] },
     })
-      .select('_id category')
-      .populate('category', 'name color')
+      .select('_id categories')
+      .populate('categories', 'name color')
       .lean();
 
-    const categories: Record<string, { name: string; color: string }> = {};
+    const categories: Record<string, Array<{ id: string; name: string; color: string }>> = {};
     for (const set of sets) {
-      const cat = set.category as { name?: string; color?: string } | null;
-      if (cat?.name && cat?.color) {
-        categories[String(set._id)] = { name: cat.name, color: cat.color };
+      const cats = (set as Record<string, unknown>).categories as Array<{ _id: unknown; name?: string; color?: string }> | undefined;
+      if (cats && cats.length > 0) {
+        const valid = cats
+          .filter(c => c?.name && c?.color)
+          .map(c => ({ id: String(c._id), name: c.name!, color: c.color! }));
+        if (valid.length > 0) {
+          categories[String(set._id)] = valid;
+        }
       }
     }
 

@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
 
     // Get set counts for each category
     const counts = await FlashcardSet.aggregate([
-      { $match: { category: { $ne: null } } },
-      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $match: { categories: { $exists: true, $ne: [] } } },
+      { $unwind: '$categories' },
+      { $group: { _id: '$categories', count: { $sum: 1 } } },
     ]);
     const countMap = new Map(counts.map((c) => [String(c._id), c.count]));
 

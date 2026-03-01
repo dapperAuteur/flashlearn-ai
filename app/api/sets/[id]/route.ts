@@ -86,36 +86,78 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title, description, isPublic, category, tags } = body;
+    const { title, description, isPublic, categories, tags } = body;
 
     // Find user's profiles
     const userId = new ObjectId(session.user.id);
     const userProfiles = await Profile.find({ user: userId }).select('_id').lean();
     const userProfileIds = userProfiles.map(p => p._id);
 
-    // Build update object — only admins can set isPublic and category
+    // Build update object
     const updateData: Record<string, unknown> = {
       title: title?.trim(),
       description: description?.trim(),
       tags: Array.isArray(tags) ? tags : [],
       updatedAt: new Date()
     };
-    if (session.user.role === 'Admin') {
-      updateData.isPublic = Boolean(isPublic);
-      updateData.category = category && ObjectId.isValid(category) ? new ObjectId(category) : null;
+
+    // Any user can set categories (max 5)
+    if (Array.isArray(categories)) {
+      const validCategories = categories
+        .filter((id: string) => ObjectId.isValid(id))
+        .slice(0, 5)
+        .map((id: string) => new ObjectId(id));
+      updateData.categories = validCategories;
     }
 
-    // Find and update the set (only if user owns it)
+    // Only admins can toggle isPublic
+    if (session.user.role === 'Admin') {
+      updateData.isPublic = Boolean(isPublic);
+    }
+
+    // Non-admin users cannot edit public sets, and can only edit within 7 days
+    if (session.user.role !== 'Admin') {
+      const existingSet = await FlashcardSet.findOne({ _id: new ObjectId(setId) })
+        .select('createdAt isPublic').lean() as { createdAt: Date; isPublic: boolean } | null;
+      if (existingSet?.isPublic) {
+        return NextResponse.json(
+          { error: 'Public sets can only be edited by admins.' },
+          { status: 403 }
+        );
+      }
+      if (existingSet) {
+        const daysSinceCreation = (Date.now() - new Date(existingSet.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSinceCreation > 7) {
+          return NextResponse.json(
+            { error: 'Sets can only be edited within 7 days of creation.' },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
+    // Find and update the set (only if user owns it, or admin)
+    const queryFilter = session.user.role === 'Admin'
+      ? { _id: new ObjectId(setId) }
+      : { _id: new ObjectId(setId), profile: { $in: userProfileIds } };
+
+    // Debug: verify set exists before update
+    const debugExists = await FlashcardSet.findById(setId).select('_id profile').lean();
+    console.log('[PATCH Debug] setId:', setId, '| exists:', !!debugExists, '| collection:', FlashcardSet.collection.name, '| queryFilter:', JSON.stringify(queryFilter));
+
     const updatedSet = await FlashcardSet.findOneAndUpdate(
-      {
-        _id: new ObjectId(setId),
-        profile: { $in: userProfileIds }
-      },
+      queryFilter,
       updateData,
       { new: true }
     );
 
     if (!updatedSet) {
+      Logger.warning(LogContext.FLASHCARD, 'Set update failed - not found', {
+        setId,
+        isAdmin: session.user.role === 'Admin',
+        userId: session.user.id,
+        debugExists: !!debugExists,
+      });
       return NextResponse.json({ error: 'Set not found or access denied' }, { status: 404 });
     }
 

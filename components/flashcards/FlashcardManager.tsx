@@ -66,7 +66,7 @@ export default function FlashcardManager({
   const { toast } = useToast();
 
   const [localError, setLocalError] = useState<string | null>(null);
-  const [categoryMap, setCategoryMap] = useState<Record<string, { name: string; color: string }>>({});
+  const [categoryMap, setCategoryMap] = useState<Record<string, Array<{ id: string; name: string; color: string }>>>({});
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('recent');
@@ -115,7 +115,35 @@ export default function FlashcardManager({
   const handleStudyClick = (setId: string) => {
     onStartStudy(setId);
   };
+  const canEditSet = (set: PowerSyncFlashcardSet) => {
+    if (isAdmin) return true;
+    if (set.is_public === 1) return false;
+    if (!set.created_at) return true;
+    const daysSinceCreation = (Date.now() - new Date(set.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    return daysSinceCreation <= 7;
+  };
+
+  const getEditStatus = (set: PowerSyncFlashcardSet): { label: string; color: 'gray' | 'amber' | 'red' } | null => {
+    if (isAdmin || set.is_public === 1) return null;
+    if (!set.created_at) return null;
+    const daysLeft = 7 - (Date.now() - new Date(set.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    if (daysLeft <= 0) return { label: 'Editing locked', color: 'red' };
+    if (daysLeft <= 1) return { label: 'Editing expires today', color: 'amber' };
+    if (daysLeft <= 2) return { label: 'Editing expires tomorrow', color: 'amber' };
+    return { label: `${Math.ceil(daysLeft)} days left to edit`, color: 'gray' };
+  };
+
   const handleEditSet = (set: PowerSyncFlashcardSet) => {
+    if (!canEditSet(set)) {
+      toast({
+        variant: 'destructive',
+        title: 'Edit Locked',
+        description: set.is_public === 1
+          ? 'Public sets can only be edited by admins.'
+          : 'Sets can only be edited within 7 days of creation.',
+      });
+      return;
+    }
     setSelectedSet(set);
     setIsEditModalOpen(true);
   };
@@ -179,8 +207,8 @@ export default function FlashcardManager({
 
   if (selectedCategory) {
     filtered = filtered.filter(set => {
-      const cat = categoryMap[set.id];
-      return cat && cat.name === categories.find(c => c.id === selectedCategory)?.name;
+      const cats = categoryMap[set.id];
+      return cats && cats.some(c => c.id === selectedCategory);
     });
   }
 
@@ -204,10 +232,11 @@ export default function FlashcardManager({
   // Categories that the user's sets actually have
   const userCategoryIds = new Set<string>();
   for (const set of flashcardSets) {
-    const cat = categoryMap[set.id];
-    if (cat) {
-      const match = categories.find(c => c.name === cat.name);
-      if (match) userCategoryIds.add(match.id);
+    const cats = categoryMap[set.id];
+    if (cats) {
+      for (const cat of cats) {
+        userCategoryIds.add(cat.id);
+      }
     }
   }
   const relevantCategories = categories.filter(c => userCategoryIds.has(c.id));
@@ -409,23 +438,30 @@ export default function FlashcardManager({
                   {set.description && <p className="text-sm text-gray-500 mt-1">{set.description}</p>}
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <p className="text-sm text-gray-500">{set.card_count} cards</p>
-                    {categoryMap[set.id] && (
+                    {categoryMap[set.id]?.map(cat => (
                       <span
+                        key={cat.id}
                         className="px-2 py-0.5 rounded-full text-xs font-medium"
                         style={{
-                          backgroundColor: `${categoryMap[set.id].color}20`,
-                          color: categoryMap[set.id].color,
+                          backgroundColor: `${cat.color}20`,
+                          color: cat.color,
                         }}
                       >
-                        {categoryMap[set.id].name}
+                        {cat.name}
                       </span>
-                    )}
+                    ))}
                     {dueCountMap.get(set.id) && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                         <ClockIcon className="h-3 w-3 mr-0.5" />
                         {dueCountMap.get(set.id)} due
                       </span>
                     )}
+                    {(() => {
+                      const status = getEditStatus(set);
+                      if (!status) return null;
+                      const colors = { gray: 'text-gray-400', amber: 'text-amber-600 font-medium', red: 'text-red-500 font-medium' };
+                      return <span className={`text-xs ${colors[status.color]}`}>{status.label}</span>;
+                    })()}
                   </div>
                 </div>
                 <button
@@ -453,8 +489,9 @@ export default function FlashcardManager({
                 </button>
                 <button
                   onClick={() => handleEditSet(set)}
-                  className="px-3 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
-                  title="Edit set"
+                  className={`px-3 py-2 rounded-md ${canEditSet(set) ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' : 'text-gray-300 bg-gray-50 cursor-not-allowed'}`}
+                  title={canEditSet(set) ? 'Edit set' : set.is_public === 1 ? 'Public sets are admin-only' : 'Editing locked after 7 days'}
+                  disabled={!canEditSet(set)}
                 >
                   <PencilSquareIcon className="h-5 w-5" />
                 </button>
@@ -472,17 +509,18 @@ export default function FlashcardManager({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-medium text-gray-900 truncate">{set.title}</h3>
-                  {categoryMap[set.id] && (
+                  {categoryMap[set.id]?.map(cat => (
                     <span
+                      key={cat.id}
                       className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium"
                       style={{
-                        backgroundColor: `${categoryMap[set.id].color}20`,
-                        color: categoryMap[set.id].color,
+                        backgroundColor: `${cat.color}20`,
+                        color: cat.color,
                       }}
                     >
-                      {categoryMap[set.id].name}
+                      {cat.name}
                     </span>
-                  )}
+                  ))}
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="text-xs text-gray-500">{set.card_count} cards</span>
@@ -492,6 +530,12 @@ export default function FlashcardManager({
                       {dueCountMap.get(set.id)} due
                     </span>
                   )}
+                  {(() => {
+                    const status = getEditStatus(set);
+                    if (!status) return null;
+                    const colors = { gray: 'text-gray-400', amber: 'text-amber-600 font-medium', red: 'text-red-500 font-medium' };
+                    return <span className={`text-xs ${colors[status.color]}`}>{status.label}</span>;
+                  })()}
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -512,8 +556,9 @@ export default function FlashcardManager({
                 </button>
                 <button
                   onClick={() => handleEditSet(set)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600"
-                  title="Edit set"
+                  className={`p-1.5 ${canEditSet(set) ? 'text-gray-400 hover:text-gray-600' : 'text-gray-200 cursor-not-allowed'}`}
+                  title={canEditSet(set) ? 'Edit set' : set.is_public === 1 ? 'Public sets are admin-only' : 'Editing locked after 7 days'}
+                  disabled={!canEditSet(set)}
                 >
                   <PencilSquareIcon className="h-4 w-4" />
                 </button>
