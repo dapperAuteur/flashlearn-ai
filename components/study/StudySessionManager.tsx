@@ -24,9 +24,10 @@ const formatTime = (milliseconds: number): string => {
 
 interface StudySessionManagerProps {
   preSelectedSetId?: string;
+  isReviewMode?: boolean;
 }
 
-export default function StudySessionManager({ preSelectedSetId }: StudySessionManagerProps) {
+export default function StudySessionManager({ preSelectedSetId, isReviewMode }: StudySessionManagerProps) {
   const {
     sessionId,
     flashcardSetName,
@@ -214,5 +215,5 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
     }
   }
 
-  return <StudySessionSetup preSelectedSetId={preSelectedSetId} />;
+  return <StudySessionSetup preSelectedSetId={preSelectedSetId} isReviewMode={isReviewMode} />;
 }

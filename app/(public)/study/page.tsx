@@ -8,17 +8,18 @@ import { Logger, LogContext } from '@/lib/logging/client-logger';
 export default function StudyPage() {
   const searchParams = useSearchParams();
   const setId = searchParams.get('setId') || undefined;
+  const isReviewMode = searchParams.get('review') === 'true';
 
   useEffect(() => {
-    Logger.log(LogContext.STUDY, "Study page loaded", { setId });
-  }, [setId]);
+    Logger.log(LogContext.STUDY, "Study page loaded", { setId, isReviewMode });
+  }, [setId, isReviewMode]);
 
   return (
     <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
       <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800 dark:text-gray-700">
-        Study Session
+        {isReviewMode ? 'Review Session' : 'Study Session'}
       </h1>
-      <StudySessionManager preSelectedSetId={setId} />
+      <StudySessionManager preSelectedSetId={setId} isReviewMode={isReviewMode} />
     </div>
   );
 }

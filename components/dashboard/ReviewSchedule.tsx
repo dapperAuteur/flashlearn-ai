@@ -107,13 +107,23 @@ export default function ReviewSchedule() {
             </h2>
           </div>
           {schedule.today.count > 0 && (
-            <Link
-              href="/study"
-              className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Review Now
-              <ArrowRightIcon className="h-3.5 w-3.5 ml-1" />
-            </Link>
+            schedule.today.sets.length === 1 ? (
+              <Link
+                href={`/study?setId=${schedule.today.sets[0].setId}&review=true`}
+                className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Review Now
+                <ArrowRightIcon className="h-3.5 w-3.5 ml-1" />
+              </Link>
+            ) : (
+              <button
+                onClick={() => setIsExpanded(true)}
+                className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Review Now
+                <ArrowRightIcon className="h-3.5 w-3.5 ml-1" />
+              </button>
+            )
           )}
         </div>
 
@@ -209,13 +219,19 @@ export default function ReviewSchedule() {
             {isExpanded && (
               <ul className="mt-2 space-y-1.5">
                 {schedule.today.sets.map((s) => (
-                  <li key={s.setId} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-gray-50">
-                    <span className="text-sm text-gray-700 truncate flex-1 mr-2">
-                      {s.setName}
-                    </span>
-                    <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                      {s.dueCount} due
-                    </span>
+                  <li key={s.setId}>
+                    <Link
+                      href={`/study?setId=${s.setId}&review=true`}
+                      className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-blue-50 transition-colors group"
+                    >
+                      <span className="text-sm text-gray-700 group-hover:text-blue-700 truncate flex-1 mr-2">
+                        {s.setName}
+                      </span>
+                      <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 group-hover:bg-blue-100 group-hover:text-blue-800 transition-colors">
+                        {s.dueCount} due
+                        <ArrowRightIcon className="h-3 w-3" />
+                      </span>
+                    </Link>
                   </li>
                 ))}
               </ul>

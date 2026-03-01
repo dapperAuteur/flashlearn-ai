@@ -26,9 +26,10 @@ import {
 
 interface StudySessionSetupProps {
   preSelectedSetId?: string;
+  isReviewMode?: boolean;
 }
 
-export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetupProps) {
+export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: StudySessionSetupProps) {
   const { startSession, isLoading, studyDirection, setStudyDirection, studyMode, setStudyMode } = useStudySession();
   const { flashcardSets } = useFlashcards();
   const { status } = useSession();
@@ -39,6 +40,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
   const [currentStep, setCurrentStep] = useState<'select' | 'direction' | 'ready'>('select');
   const [isSetPreSelected, setIsSetPreSelected] = useState(!!preSelectedSetId);
   const [searchTerm, setSearchTerm] = useState('');
+  const [reviewCardIds, setReviewCardIds] = useState<string[]>([]);
   const [dueCounts, setDueCounts] = useState<Map<string, number>>(new Map());
   const [assignments, setAssignments] = useState<Array<{
     _id: string;
@@ -148,12 +150,26 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
       .catch(() => { /* silent */ });
   }, [status]);
 
+  // Fetch due card IDs for review mode
+  useEffect(() => {
+    if (!isReviewMode || !preSelectedSetId || status !== 'authenticated') return;
+
+    fetch(`/api/study/due-cards?setId=${preSelectedSetId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.sets?.[0]?.dueCardIds) {
+          setReviewCardIds(data.sets[0].dueCardIds);
+        }
+      })
+      .catch(() => { /* silent */ });
+  }, [isReviewMode, preSelectedSetId, status]);
+
   const handleStartSession = async () => {
     if (!selectedListId) {
       setError('Please select a list to study');
       return;
     }
-    
+
     setError(null);
     
     // Check if offline and set not available
@@ -166,7 +182,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
     //   }
     // }
     
-    await startSession(selectedListId, studyDirection);
+    await startSession(selectedListId, studyDirection, isReviewMode && reviewCardIds.length > 0 ? reviewCardIds : undefined);
   };
 
   const handleDirectionChange = (direction: 'front-to-back' | 'back-to-front') => {
@@ -290,10 +306,14 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                 <h2 className="text-xl font-semibold text-gray-900">Flashcard Set Selected</h2>
               </div>
               {selectedSet ? (
-                <div className="flex items-center justify-between p-4 rounded-xl border-2 border-green-200 bg-green-50">
+                <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${isReviewMode ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'}`}>
                   <div>
                     <h3 className="font-medium text-gray-900">{selectedSet.title}</h3>
-                    <p className="text-sm text-gray-600">{selectedSet.card_count} cards</p>
+                    <p className="text-sm text-gray-600">
+                      {isReviewMode && reviewCardIds.length > 0
+                        ? `${reviewCardIds.length} cards due for review`
+                        : `${selectedSet.card_count} cards`}
+                    </p>
                   </div>
                   <button
                     onClick={() => {
@@ -734,7 +754,9 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-4">Ready to Start!</h2>
             <p className="text-blue-100 mb-6">
-              You&apos;re about to study {filteredSets.find(l => l.id?.toString() === selectedListId)?.card_count} flashcards
+              {isReviewMode && reviewCardIds.length > 0
+                ? <>You&apos;re about to review {reviewCardIds.length} due cards</>
+                : <>You&apos;re about to study {filteredSets.find(l => l.id?.toString() === selectedListId)?.card_count} flashcards</>}
               {studyMode !== 'classic' && <span className="block text-sm mt-1">Mode: {studyMode === 'multiple-choice' ? 'Multiple Choice' : 'Type Answer'}</span>}
             </p>
             <button
