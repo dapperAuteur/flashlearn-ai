@@ -115,7 +115,7 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
           <StudySessionResults />
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={resetSession}
+              onClick={() => { resetSession(); router.replace('/study'); }}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
             >
               Study Another Set
