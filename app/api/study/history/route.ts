@@ -45,6 +45,24 @@ export async function GET(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setNameMap = new Map(sets.map((s: any) => [s._id.toString(), s.title]));
 
+  // Backfill setName on old sessions that are missing it
+  const sessionsToBackfill = sessions.filter(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (s: any) => !s.setName && setNameMap.has(s.listId.toString())
+  );
+  if (sessionsToBackfill.length > 0) {
+    // Fire-and-forget backfill — don't block the response
+    Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sessionsToBackfill.map((s: any) =>
+        StudySession.updateOne(
+          { _id: s._id },
+          { $set: { setName: setNameMap.get(s.listId.toString()) } }
+        )
+      )
+    ).catch(() => { /* ignore backfill errors */ });
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const enrichedSessions = sessions.map((s: any) => ({
     sessionId: s.sessionId,

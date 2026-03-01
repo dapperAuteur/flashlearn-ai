@@ -14,7 +14,7 @@
  * - Implements retry logic for failed operations
  */
 
-import { Logger, LogContext } from '@/lib/logging/client-logger';
+import { Logger, LogContext } from '../../lib/logging/client-logger';
 
 // Database configuration
 const DB_NAME = 'flashlearnai-db';
@@ -118,7 +118,7 @@ export interface PendingChange {
   id: string;
   type: 'create' | 'update' | 'delete';
   entity: 'set' | 'category' | 'flashcard';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: Date;
   retryCount: number;
 }
@@ -456,7 +456,7 @@ export async function removeSessionFromQueue(sessionId: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
       const store = transaction.objectStore(SYNC_QUEUE_STORE);
-      const request = store.delete(sessionId);
+      store.delete(sessionId);
 
       transaction.oncomplete = () => {
         Logger.log(LogContext.SYSTEM, 'Session removed from sync queue', { sessionId });
@@ -548,7 +548,7 @@ export async function saveStudyHistory(
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(STUDY_HISTORY_STORE, 'readwrite');
       const store = transaction.objectStore(STUDY_HISTORY_STORE);
-      const request = store.put(session);
+      store.put(session);
 
       transaction.oncomplete = () => {
         Logger.log(LogContext.STUDY, 'Study history saved', { 
@@ -663,7 +663,7 @@ export async function saveOfflineSet(set: OfflineFlashcardSet): Promise<void> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
       const store = transaction.objectStore(OFFLINE_SETS_STORE);
-      const request = store.put(set);
+      store.put(set);
 
       transaction.oncomplete = () => {
         Logger.log(LogContext.SYSTEM, 'Offline set saved', { setId: set.setId });
@@ -747,7 +747,7 @@ export async function deleteOfflineSet(setId: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
       const store = transaction.objectStore(OFFLINE_SETS_STORE);
-      const request = store.delete(setId);
+      store.delete(setId);
 
       transaction.oncomplete = () => {
         Logger.log(LogContext.SYSTEM, 'Offline set deleted', { setId });

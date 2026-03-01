@@ -21,7 +21,6 @@ import {
   ClockIcon,
   AcademicCapIcon,
   ListBulletIcon,
-  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 
 interface StudySessionSetupProps {
@@ -506,7 +505,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                 <h2 className="text-xl font-semibold text-gray-900">Study Mode</h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => setStudyMode('classic')}
                   className={clsx(
@@ -537,22 +536,6 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
                     <h3 className="font-semibold text-gray-900 text-sm">Multiple Choice</h3>
                   </div>
                   <p className="text-xs text-gray-600">AI-generated answer options</p>
-                </button>
-
-                <button
-                  onClick={() => setStudyMode('type-answer')}
-                  className={clsx(
-                    'p-4 rounded-xl border-2 text-left transition-all',
-                    studyMode === 'type-answer'
-                      ? 'border-orange-500 bg-orange-50 shadow-md'
-                      : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <PencilSquareIcon className="h-5 w-5 text-orange-600" />
-                    <h3 className="font-semibold text-gray-900 text-sm">Type Answer</h3>
-                  </div>
-                  <p className="text-xs text-gray-600">Type your answer, AI evaluates</p>
                 </button>
               </div>
             </div>

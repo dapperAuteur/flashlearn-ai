@@ -86,27 +86,32 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title, description, isPublic, categories, tags } = body;
+    const { title, description, isPublic, category, tags } = body;
 
     // Find user's profiles
     const userId = new ObjectId(session.user.id);
     const userProfiles = await Profile.find({ user: userId }).select('_id').lean();
     const userProfileIds = userProfiles.map(p => p._id);
 
+    // Build update object — only admins can set isPublic and category
+    const updateData: Record<string, unknown> = {
+      title: title?.trim(),
+      description: description?.trim(),
+      tags: Array.isArray(tags) ? tags : [],
+      updatedAt: new Date()
+    };
+    if (session.user.role === 'Admin') {
+      updateData.isPublic = Boolean(isPublic);
+      updateData.category = category && ObjectId.isValid(category) ? new ObjectId(category) : null;
+    }
+
     // Find and update the set (only if user owns it)
     const updatedSet = await FlashcardSet.findOneAndUpdate(
-      { 
+      {
         _id: new ObjectId(setId),
         profile: { $in: userProfileIds }
       },
-      {
-        title: title?.trim(),
-        description: description?.trim(),
-        isPublic: Boolean(isPublic),
-        categories: Array.isArray(categories) ? categories : [],
-        tags: Array.isArray(tags) ? tags : [],
-        updatedAt: new Date()
-      },
+      updateData,
       { new: true }
     );
 

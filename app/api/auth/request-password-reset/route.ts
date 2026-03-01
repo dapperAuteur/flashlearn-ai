@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/User";
-import { Resend } from "resend";
+import formData from "form-data";
+import Mailgun from "mailgun.js";
 import { Logger, LogContext, LogLevel } from "@/lib/logging/logger";
 import dbConnect from "@/lib/db/dbConnect";
 import crypto from "crypto";
-import PasswordResetEmail from "@/emails/PasswordResetEmail";
+import { getPasswordResetEmailTemplate } from "@/lib/email/templates/password-reset";
 
-// Ensure the RESEND_API_KEY is available
-if (!process.env.RESEND_API_KEY) {
-  Logger.error(LogContext.SYSTEM, "RESEND_API_KEY is not set in environment variables.");
-}
-const resend = new Resend(process.env.RESEND_API_KEY);
+const mailgun = new Mailgun(formData);
+const mg = mailgun.client({
+  username: "api",
+  key: process.env.MAILGUN_API_KEY as string || "",
+});
 
 export async function POST(request: NextRequest) {
   const requestId = await Logger.info(LogContext.AUTH, "Password reset request initiated.");
@@ -36,44 +37,64 @@ export async function POST(request: NextRequest) {
     const passwordResetExpires = new Date(Date.now() + 3600000); // 1 hour
 
     // Use findOneAndUpdate to find the user and atomically set the reset token and expiration.
-    // This is a single, reliable database operation.
     const user = await User.findOneAndUpdate(
-      { email: email }, // Find the user by their email
+      { email: email },
       {
-        $set: { // Set the new values
+        $set: {
           resetPasswordToken: passwordResetToken,
           resetPasswordExpires: passwordResetExpires,
         },
       },
-      { new: false } // We don't need the updated document back, so `new: false` is fine.
+      { new: false }
     );
 
     // Security: Always return a success response to prevent email enumeration.
-    // The email sending logic only runs if the findOneAndUpdate operation found and updated a user.
     if (user) {
-
       const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`;
 
-      // Send the password reset email using Resend
-      await resend.emails.send({
-        from: "FlashLearn AI <noreply@witus.online>", // IMPORTANT: Replace with your verified Resend domain
-        to: user.email,
-        subject: "Your FlashLearn AI Password Reset Request",
-        react: PasswordResetEmail({
-          userFirstname: user.name,
-          resetPasswordUrl: resetUrl,
-        }),
+      // Validate email configuration before sending
+      if (!process.env.MAILGUN_API_KEY) {
+        Logger.error(LogContext.SYSTEM, "MAILGUN_API_KEY is not configured");
+        return NextResponse.json({
+          message: "If an account with that email exists, a password reset link has been sent.",
+        }, { status: 200 });
+      }
+      if (!process.env.MAILGUN_DOMAIN) {
+        Logger.error(LogContext.SYSTEM, "MAILGUN_DOMAIN is not configured");
+        return NextResponse.json({
+          message: "If an account with that email exists, a password reset link has been sent.",
+        }, { status: 200 });
+      }
+
+      const html = getPasswordResetEmailTemplate({
+        userName: user.name || "there",
+        resetUrl,
       });
 
-      await Logger.info(LogContext.AUTH, `Password reset email sent successfully to ${email}`,{
-        level: LogLevel.INFO,
-        userId: user._id.toString(),
+      try {
+        await mg.messages.create(process.env.MAILGUN_DOMAIN, {
+          from: process.env.EMAIL_FROM || "FlashLearn AI <noreply@flashlearn.ai>",
+          to: user.email,
+          subject: "Your FlashLearn AI Password Reset Request",
+          html,
+        });
+
+        await Logger.info(LogContext.AUTH, `Password reset email sent successfully to ${email}`, {
+          level: LogLevel.INFO,
+          userId: user._id.toString(),
+          requestId,
+        });
+      } catch (emailError) {
+        const emailMsg = emailError instanceof Error ? emailError.message : String(emailError);
+        Logger.error(LogContext.AUTH, `Failed to send password reset email: ${emailMsg}`, {
+          userId: user._id.toString(),
+          requestId,
+        });
+      }
+    } else {
+      await Logger.info(LogContext.AUTH, `Password reset requested for non-existent email: ${email}`, {
         requestId,
       });
-    } else {
-        await Logger.info(LogContext.AUTH, `Password reset requested for non-existent email: ${email}`,{
-            requestId,
-        });
     }
 
     return NextResponse.json({

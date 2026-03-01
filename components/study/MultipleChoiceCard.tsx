@@ -22,8 +22,18 @@ interface MultipleChoiceCardProps {
   hasCompletedConfidence: boolean;
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '').trim();
+}
+
 function shuffleChoices(correct: string, distractors: string[]): string[] {
-  const all = [correct, ...distractors.slice(0, 3)];
+  // Strip HTML from all choices and filter out blanks/duplicates
+  const cleanCorrect = stripHtml(correct);
+  const cleanDistractors = distractors
+    .map(d => stripHtml(d))
+    .filter(d => d && d !== cleanCorrect);
+
+  const all = [cleanCorrect, ...cleanDistractors.slice(0, 3)];
   for (let i = all.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [all[i], all[j]] = [all[j], all[i]];
@@ -47,7 +57,7 @@ export default function MultipleChoiceCard({
   const [eliminatedChoices, setEliminatedChoices] = useState<Set<string>>(new Set());
   const [choices, setChoices] = useState<string[]>([]);
 
-  const correctAnswer = flashcard.back;
+  const correctAnswer = stripHtml(flashcard.back);
   const cardId = String(flashcard._id);
 
   useEffect(() => {
@@ -204,8 +214,8 @@ export default function MultipleChoiceCard({
                       : isSelected
                         ? 'border-purple-500 bg-purple-50 shadow-md'
                         : hasCompletedConfidence
-                          ? 'border-gray-200 hover:border-purple-300 hover:shadow-sm cursor-pointer'
-                          : 'border-gray-200 opacity-60 cursor-not-allowed'
+                          ? 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-sm cursor-pointer'
+                          : 'border-gray-200 bg-white opacity-60 cursor-not-allowed'
               }`}
               whileHover={!isAnswered && hasCompletedConfidence && !isEliminated ? { scale: 1.02 } : {}}
               whileTap={!isAnswered && hasCompletedConfidence && !isEliminated ? { scale: 0.98 } : {}}

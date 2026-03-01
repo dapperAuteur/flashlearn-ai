@@ -202,25 +202,46 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       setHasCompletedConfidence(!isConfidenceRequired);
 
       // Fetch MC distractors if in multiple-choice mode
-      if (studyMode === 'multiple-choice' && !isOffline) {
-        try {
-          const mcCards = shuffled.slice(0, 30).map(c => ({
-            id: String(c._id),
-            front: c.front,
-            back: c.back,
-          }));
-          const mcRes = await fetch('/api/study/generate-choices', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cards: mcCards }),
-          });
-          if (mcRes.ok) {
-            const mcData = await mcRes.json();
-            setMultipleChoiceData(mcData.choices || {});
+      if (studyMode === 'multiple-choice') {
+        let mcChoices: Record<string, string[]> = {};
+
+        // Try AI-generated distractors if online
+        if (!isOffline) {
+          try {
+            const mcCards = shuffled.slice(0, 30).map(c => ({
+              id: String(c._id),
+              front: c.front,
+              back: c.back,
+            }));
+            const mcRes = await fetch('/api/study/generate-choices', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cards: mcCards }),
+            });
+            if (mcRes.ok) {
+              const mcData = await mcRes.json();
+              mcChoices = mcData.choices || {};
+            }
+          } catch (err) {
+            Logger.warning(LogContext.STUDY, "Failed to fetch MC distractors", { error: err });
           }
-        } catch (err) {
-          Logger.warning(LogContext.STUDY, "Failed to fetch MC distractors", { error: err });
         }
+
+        // Generate fallback distractors from other cards' backs for any missing cards
+        const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
+        const allBacks = shuffled.map(c => stripHtml(c.back)).filter(b => b.length > 0);
+
+        for (const card of shuffled) {
+          const cardId = String(card._id);
+          if (!mcChoices[cardId] || mcChoices[cardId].length === 0) {
+            const cardBack = stripHtml(card.back);
+            const otherBacks = allBacks.filter(b => b !== cardBack);
+            const shuffledBacks = [...otherBacks].sort(() => Math.random() - 0.5);
+            mcChoices[cardId] = shuffledBacks.slice(0, 3);
+          }
+        }
+
+        setMultipleChoiceData(mcChoices);
       }
 
       Logger.log(LogContext.STUDY, "Session started successfully", {
