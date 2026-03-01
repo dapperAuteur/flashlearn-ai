@@ -13,7 +13,6 @@ import { NavigationItem } from '@/types/navigation';
 const primaryNavigation: NavigationItem[] = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Flashcards', href: '/flashcards' },
-  { label: 'Study', href: '/study' },
   { label: 'Explore', href: '/explore' },
   { label: 'Versus', href: '/versus' },
   { label: 'Settings', href: '/settings' },

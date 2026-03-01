@@ -37,6 +37,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
   const [error, setError] = useState<string | null>(null);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [currentStep, setCurrentStep] = useState<'select' | 'direction' | 'ready'>('select');
+  const [isSetPreSelected, setIsSetPreSelected] = useState(!!preSelectedSetId);
   const [searchTerm, setSearchTerm] = useState('');
   const [dueCounts, setDueCounts] = useState<Map<string, number>>(new Map());
   const [assignments, setAssignments] = useState<Array<{
@@ -205,6 +206,20 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
     });
   }, [allSets, searchTerm, selectedCategory, categoryMap]);
 
+  // Resolve the selected set's details for the compact summary
+  const selectedSet = useMemo(() => {
+    if (!selectedListId) return null;
+    return allSets.find(s => s.id?.toString() === selectedListId) || null;
+  }, [allSets, selectedListId]);
+
+  // If pre-selected set ID doesn't match any loaded set, fall back to full list
+  useEffect(() => {
+    if (isSetPreSelected && allSets.length > 0 && selectedListId && !selectedSet) {
+      setIsSetPreSelected(false);
+      setCurrentStep('select');
+    }
+  }, [isSetPreSelected, allSets, selectedListId, selectedSet]);
+
   return (
     <>
       <div className="max-w-4xl mx-auto">
@@ -265,6 +280,40 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
         )}
 
         {/* Step 1: List Selection */}
+        {isSetPreSelected && currentStep !== 'select' ? (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6">
+            <div className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Flashcard Set Selected</h2>
+              </div>
+              {selectedSet ? (
+                <div className="flex items-center justify-between p-4 rounded-xl border-2 border-green-200 bg-green-50">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{selectedSet.title}</h3>
+                    <p className="text-sm text-gray-600">{selectedSet.card_count} cards</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsSetPreSelected(false);
+                      setCurrentStep('select');
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Change Set
+                  </button>
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl border-2 border-gray-200 animate-pulse">
+                  <div className="h-5 bg-gray-200 rounded w-1/3 mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-1/4" />
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6">
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-4">
@@ -572,6 +621,7 @@ export default function StudySessionSetup({ preSelectedSetId }: StudySessionSetu
             </div>{/* end outer space-y-4 */}
           </div>
         </div>
+        )}
 
         {/* Step 2: Study Direction */}
         {currentStep !== 'select' && (
