@@ -43,12 +43,6 @@ export default function PublicHeader() {
                   Explore
                 </Link>
                 <Link
-                  href="/study"
-                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
-                >
-                  Study
-                </Link>
-                <Link
                   href="/generate"
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
                 >
