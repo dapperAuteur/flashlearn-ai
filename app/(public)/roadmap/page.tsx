@@ -288,13 +288,24 @@ const phases: Phase[] = [
       },
       {
         title: 'Versus Mode',
-        description: 'Compete with friends and classmates.',
-        status: 'planned',
+        description: 'Head-to-head flashcard battles with competitive scoring.',
+        status: 'done',
         items: [
-          'Async versus: share score link, others try to beat it',
-          'Live versus: real-time matchmaking via Socket.IO',
-          'Leaderboards by set, category, and global',
-          'Time-based tiebreaker scoring',
+          'Async versus challenges with shareable codes',
+          'Composite scoring: accuracy, speed, confidence, streaks',
+          'Global and classroom leaderboards',
+          'Challenge history and win/loss statistics',
+          'ELO-style player ratings',
+        ],
+      },
+      {
+        title: 'User Profiles',
+        description: 'Customizable profiles with usernames and avatars for leaderboards.',
+        status: 'in-progress',
+        items: [
+          'Custom usernames for leaderboard display',
+          'Profile picture uploads via Cloudinary',
+          'Public profile pages',
         ],
       },
       {

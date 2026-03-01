@@ -20,6 +20,20 @@ const UserSchema = new Schema<IUser>({
     trim: true,
     lowercase: true,
   },
+  username: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    lowercase: true,
+    minlength: [3, 'Username must be at least 3 characters'],
+    maxlength: [20, 'Username must be at most 20 characters'],
+    match: [/^[a-z0-9_-]+$/, 'Username can only contain lowercase letters, numbers, underscores, and hyphens'],
+  },
+  profilePicture: {
+    type: String,
+    default: null,
+  },
   password: {
     type: String,
     // Password is not strictly required because of potential OAuth providers in the future
@@ -98,6 +112,27 @@ const UserSchema = new Schema<IUser>({
     type: String,
   },
   resetPasswordExpires: {
+    type: Date,
+  },
+  // Fields for email code login
+  loginCode: {
+    type: String,
+  },
+  loginCodeExpires: {
+    type: Date,
+  },
+  loginCodeAttempts: {
+    type: Number,
+    default: 0,
+  },
+  // Fields for pending email change
+  pendingEmail: {
+    type: String,
+  },
+  pendingEmailToken: {
+    type: String,
+  },
+  pendingEmailExpires: {
     type: Date,
   },
 }, { timestamps: true }); // Automatically adds createdAt and updatedAt timestamps

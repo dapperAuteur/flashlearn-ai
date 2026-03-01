@@ -85,22 +85,25 @@ export async function POST(request: NextRequest) {
     
     // Generate new verification token and expiry
     const verificationToken = generateVerificationToken();
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     // Update user with new token
     await db.collection("users").updateOne(
       { _id: user._id },
       {
         $set: {
           verificationToken,
-          verificationExpires,
+          verificationTokenExpires,
           updatedAt: new Date()
+        },
+        $unset: {
+          verificationExpires: ""
         }
       }
     );
 
     // Send verification email
-    await sendVerificationEmail(user.name, user.email, verificationToken);
+    await sendVerificationEmail(user.email, user.name, verificationToken);
     
     await logAuthEvent({
         request,

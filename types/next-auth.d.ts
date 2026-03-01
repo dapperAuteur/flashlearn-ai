@@ -17,6 +17,7 @@ declare module 'next-auth' {
     subscriptionTier: string;
     id: string;
     suspended?: boolean;
+    emailVerified?: boolean;
   }
 
   /**
@@ -27,6 +28,7 @@ declare module 'next-auth' {
       id: string;
       role: string;
       subscriptionTier: string;
+      emailVerified?: boolean;
     } & DefaultSession['user'];
   }
 }
@@ -40,5 +42,7 @@ declare module 'next-auth/jwt' {
     role: string;
     subscriptionTier: string;
     suspended?: boolean;
+    emailVerified?: boolean;
+    image?: string;
   }
 }

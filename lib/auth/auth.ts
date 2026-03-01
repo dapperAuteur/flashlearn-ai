@@ -1,4 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
+import crypto from "crypto";
 import { compare } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
 import { NextAuthOptions } from "next-auth";
@@ -40,6 +41,11 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
+          if (!userDoc.emailVerified) {
+            Logger.warning(LogContext.AUTH, "Authorize failed: Email not verified.", { email });
+            return null;
+          }
+
           Logger.info(LogContext.AUTH, "User authorized successfully. Preparing data for JWT.", { email, role: userDoc.role });
           return {
             id: userDoc._id.toString(),
@@ -47,12 +53,87 @@ export const authOptions: NextAuthOptions = {
             email: userDoc.email,
             role: userDoc.role,
             subscriptionTier: userDoc.subscriptionTier || 'Free',
+            emailVerified: userDoc.emailVerified,
+            image: userDoc.profilePicture || null,
           };
         } catch (error) {
           Logger.error(LogContext.AUTH, "Error during authorization.", { error });
           return null;
         }
       }
+    }),
+    CredentialsProvider({
+      id: "email-code",
+      name: "Email Code",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        code: { label: "Code", type: "text" },
+      },
+      async authorize(credentials): Promise<User | null> {
+        if (!credentials) return null;
+
+        const { email, code } = credentials;
+
+        try {
+          const client = await clientPromise;
+          const db = client.db();
+          const userDoc = await db.collection("users").findOne({ email });
+
+          if (!userDoc || !userDoc.loginCode || !userDoc.loginCodeExpires) {
+            Logger.warning(LogContext.AUTH, "Email-code authorize failed: No user or no pending code.", { email });
+            return null;
+          }
+
+          if (userDoc.suspended === true) {
+            Logger.warning(LogContext.AUTH, "Email-code authorize failed: User suspended.", { email });
+            return null;
+          }
+
+          if (new Date() > new Date(userDoc.loginCodeExpires)) {
+            Logger.warning(LogContext.AUTH, "Email-code authorize failed: Code expired.", { email });
+            return null;
+          }
+
+          if ((userDoc.loginCodeAttempts || 0) >= 5) {
+            Logger.warning(LogContext.AUTH, "Email-code authorize failed: Too many attempts.", { email });
+            return null;
+          }
+
+          const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
+
+          if (hashedCode !== userDoc.loginCode) {
+            await db.collection("users").updateOne(
+              { _id: userDoc._id },
+              { $inc: { loginCodeAttempts: 1 } }
+            );
+            Logger.warning(LogContext.AUTH, "Email-code authorize failed: Invalid code.", { email });
+            return null;
+          }
+
+          // Clear login code fields and mark email as verified (they proved ownership)
+          await db.collection("users").updateOne(
+            { _id: userDoc._id },
+            {
+              $unset: { loginCode: "", loginCodeExpires: "", loginCodeAttempts: "" },
+              $set: { emailVerified: true },
+            }
+          );
+
+          Logger.info(LogContext.AUTH, "User authorized via email code.", { email });
+          return {
+            id: userDoc._id.toString(),
+            name: userDoc.name,
+            email: userDoc.email,
+            role: userDoc.role,
+            subscriptionTier: userDoc.subscriptionTier || "Free",
+            emailVerified: true,
+            image: userDoc.profilePicture || null,
+          };
+        } catch (error) {
+          Logger.error(LogContext.AUTH, "Error during email-code authorization.", { error });
+          return null;
+        }
+      },
     })
   ],
   callbacks: {
@@ -64,6 +145,8 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.subscriptionTier = user.subscriptionTier || 'Free';
         token.suspended = user.suspended || false;
+        token.emailVerified = !!user.emailVerified;
+        token.image = user.image || undefined;
       }
       // Refresh subscriptionTier from DB on update trigger (e.g. after purchase)
       if (trigger === 'update') {
@@ -76,6 +159,8 @@ export const authOptions: NextAuthOptions = {
             token.subscriptionTier = userDoc.subscriptionTier || 'Free';
             token.name = userDoc.name;
             token.suspended = userDoc.suspended || false;
+            token.emailVerified = userDoc.emailVerified || false;
+            token.image = userDoc.profilePicture || null;
           }
         } catch (error) {
           Logger.error(LogContext.AUTH, "Failed to refresh subscriptionTier in JWT.", { error });
@@ -89,6 +174,8 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.subscriptionTier = token.subscriptionTier || 'Free';
+        session.user.emailVerified = token.emailVerified || false;
+        session.user.image = token.image || null;
         console.log('[DEBUG AUTH] Session callback - set session.user.role to:', session.user.role);
       }
       return session;

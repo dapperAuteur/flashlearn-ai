@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
+
+export const dynamic = 'force-dynamic';
 import AnalyticsDashboard from "@/components/analytics/AnalyticsDashboard";
 
 export const metadata: Metadata = {

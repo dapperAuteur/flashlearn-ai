@@ -17,6 +17,7 @@ import {
   WifiOff,
   MessageSquare,
   Globe,
+  Swords,
 } from "lucide-react";
 
 // Modern Hero Section with Conditional Content
@@ -48,7 +49,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
             </p>
 
             {/* Quick Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               <Link href="/flashcards" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Play className="h-6 w-6 text-white" />
@@ -57,7 +58,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                 <p className="text-sm text-gray-600 mb-3">Review 8 cards due for optimal retention</p>
                 <div className="text-blue-600 text-sm font-medium group-hover:text-blue-700">Start session →</div>
               </Link>
-              
+
               <Link href="/generate" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-purple-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Sparkles className="h-6 w-6 text-white" />
@@ -66,7 +67,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                 <p className="text-sm text-gray-600 mb-3">Generate from PDF or text</p>
                 <div className="text-purple-600 text-sm font-medium group-hover:text-purple-700">Generate now →</div>
               </Link>
-              
+
               <Link href="/dashboard" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-green-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-6 w-6 text-white" />
@@ -74,6 +75,15 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                 <h3 className="font-semibold text-gray-900 mb-2">View Progress</h3>
                 <p className="text-sm text-gray-600 mb-3">87% average accuracy this week</p>
                 <div className="text-green-600 text-sm font-medium group-hover:text-green-700">See details →</div>
+              </Link>
+
+              <Link href="/versus" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-orange-200 transition-all duration-300">
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Swords className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Versus Mode</h3>
+                <p className="text-sm text-gray-600 mb-3">Challenge others and climb the leaderboard</p>
+                <div className="text-orange-600 text-sm font-medium group-hover:text-orange-700">Play now →</div>
               </Link>
             </div>
             
@@ -309,6 +319,16 @@ const FeaturesShowcase = () => {
                 <p className="text-gray-700">Report bugs, request features, or share praise directly within the app. We listen and respond.</p>
               </div>
             </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-amber-100 rounded-lg p-2 flex-shrink-0">
+                <Swords className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Versus Mode</h3>
+                <p className="text-gray-700">Challenge friends and classmates to head-to-head flashcard battles. Compete on accuracy, speed, and confidence to climb the leaderboard.</p>
+              </div>
+            </div>
           </div>
           
           {/* Right Column - Visual Element */}
@@ -390,6 +410,12 @@ const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
             Try AI Generator First
           </Link>
         </div>
+        <p className="mt-8 text-blue-200 text-sm">
+          Curious about what&apos;s next?{' '}
+          <Link href="/roadmap" className="text-white underline hover:text-yellow-300 font-medium">
+            View our roadmap
+          </Link>
+        </p>
       </div>
     </div>
   );
@@ -412,7 +438,16 @@ export default async function Home() {
       <div className="min-h-screen">
         <ModernHero isAuthenticated={isAuthenticated} session={session} />
         <BenefitsSection isAuthenticated={isAuthenticated} />
-        {!isAuthenticated && <FeaturesShowcase />}
+        {!isAuthenticated && (
+          <>
+            <FeaturesShowcase />
+            <div className="bg-white pb-12 text-center">
+              <Link href="/roadmap" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                See everything we&apos;re building →
+              </Link>
+            </div>
+          </>
+        )}
         <FinalCTA isAuthenticated={isAuthenticated} />
       </div>
     </Suspense>

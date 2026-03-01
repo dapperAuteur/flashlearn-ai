@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 import { getCurrentUser } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Statistics | FlashLearn AI',
   description: 'View your statistics',
