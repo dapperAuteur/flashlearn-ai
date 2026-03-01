@@ -57,10 +57,9 @@ export async function POST(request: Request) {
       return successResponse;
     }
 
-    // Check if email is verified
-    if (!user.emailVerified) {
-      return successResponse;
-    }
+    // Note: We intentionally do NOT check emailVerified here.
+    // Sending a login code to the user's email is itself a form of email verification.
+    // If they can receive and enter the code, they own the email address.
 
     // Generate 6-digit numeric code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -81,12 +80,13 @@ export async function POST(request: Request) {
     const html = getLoginCodeEmailTemplate({ code });
 
     try {
-      await mg.messages.create(process.env.MAILGUN_DOMAIN as string, {
-        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@flashlearn.ai>',
-        to: normalizedEmail,
+      const result = await mg.messages.create(process.env.MAILGUN_DOMAIN as string, {
+        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@witus.online>',
+        to: [normalizedEmail],
         subject: 'Your FlashLearn login code',
         html,
       });
+      console.log('Login code email sent:', result.id);
     } catch (emailError) {
       console.error('Failed to send login code email:', emailError);
       // Still return the generic success response for security

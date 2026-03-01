@@ -93,11 +93,6 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          if (!userDoc.emailVerified) {
-            Logger.warning(LogContext.AUTH, "Email-code authorize failed: Email not verified.", { email });
-            throw new Error("email_not_verified");
-          }
-
           if (new Date() > new Date(userDoc.loginCodeExpires)) {
             Logger.warning(LogContext.AUTH, "Email-code authorize failed: Code expired.", { email });
             return null;
@@ -119,10 +114,13 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          // Clear login code fields on success
+          // Clear login code fields and mark email as verified (they proved ownership)
           await db.collection("users").updateOne(
             { _id: userDoc._id },
-            { $unset: { loginCode: "", loginCodeExpires: "", loginCodeAttempts: "" } }
+            {
+              $unset: { loginCode: "", loginCodeExpires: "", loginCodeAttempts: "" },
+              $set: { emailVerified: true },
+            }
           );
 
           Logger.info(LogContext.AUTH, "User authorized via email code.", { email });

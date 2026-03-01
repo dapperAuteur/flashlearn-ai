@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Send verification email
-    await sendVerificationEmail(user.name, user.email, verificationToken);
+    await sendVerificationEmail(user.email, user.name, verificationToken);
     
     await logAuthEvent({
         request,

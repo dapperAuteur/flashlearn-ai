@@ -108,7 +108,7 @@ export async function POST(request: Request) {
 
     try {
       await mg.messages.create(process.env.MAILGUN_DOMAIN as string, {
-        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@flashlearn.ai>',
+        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@witus.online>',
         to: normalizedNewEmail,
         subject: 'Confirm your new email address',
         html,

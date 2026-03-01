@@ -26,7 +26,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
     // Send mail with defined transport object
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"FlashLearn AI" <noreply@flashlearn.ai>',
+      from: process.env.EMAIL_FROM || '"FlashLearn AI" <noreply@witus.online>',
       to,
       subject,
       html,

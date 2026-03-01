@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     // Send email via Mailgun
     try {
       await mg.messages.create(process.env.MAILGUN_DOMAIN, {
-        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@flashlearn.ai>',
+        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@witus.online>',
         to: email.toLowerCase(),
         subject: `${inviterName} has invited you to FlashLearn AI`,
         html,
