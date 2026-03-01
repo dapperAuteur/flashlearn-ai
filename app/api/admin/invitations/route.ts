@@ -119,13 +119,34 @@ export async function POST(request: NextRequest) {
       signupUrl,
     });
 
+    // Validate email configuration before sending
+    if (!process.env.MAILGUN_API_KEY) {
+      Logger.error(LogContext.SYSTEM, 'MAILGUN_API_KEY is not configured');
+      return NextResponse.json({ error: 'Email service is not configured (missing API key)' }, { status: 503 });
+    }
+    if (!process.env.MAILGUN_DOMAIN) {
+      Logger.error(LogContext.SYSTEM, 'MAILGUN_DOMAIN is not configured');
+      return NextResponse.json({ error: 'Email service is not configured (missing domain)' }, { status: 503 });
+    }
+
     // Send email via Mailgun
-    await mg.messages.create(process.env.MAILGUN_DOMAIN as string, {
-      from: process.env.EMAIL_FROM as string || 'FlashLearn AI <noreply@flashlearn.ai>',
-      to: email.toLowerCase(),
-      subject: `${inviterName} has invited you to FlashLearn AI`,
-      html,
-    });
+    try {
+      await mg.messages.create(process.env.MAILGUN_DOMAIN, {
+        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@flashlearn.ai>',
+        to: email.toLowerCase(),
+        subject: `${inviterName} has invited you to FlashLearn AI`,
+        html,
+      });
+    } catch (emailError) {
+      const emailMsg = emailError instanceof Error ? emailError.message : String(emailError);
+      Logger.error(LogContext.SYSTEM, `Failed to send invitation email: ${emailMsg}`, {
+        adminId: token.id,
+        email,
+      });
+      // Clean up the invitation record since email failed
+      await Invitation.findByIdAndDelete(invitation._id).catch(() => {});
+      return NextResponse.json({ error: `Failed to send email: ${emailMsg}` }, { status: 502 });
+    }
 
     Logger.info(LogContext.SYSTEM, `Invitation sent to ${email}`, {
       adminId: token.id,
@@ -134,7 +155,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ invitation }, { status: 201 });
   } catch (error) {
-    Logger.error(LogContext.SYSTEM, 'Error sending invitation', { error });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    Logger.error(LogContext.SYSTEM, `Error sending invitation: ${msg}`, { error });
+    return NextResponse.json({ error: `Failed to send invitation: ${msg}` }, { status: 500 });
   }
 }

@@ -8,7 +8,6 @@ import StudySessionSetup from './StudySessionSetup';
 import StudySessionResults from './StudySessionResults';
 import StudyCard from './StudyCard';
 import MultipleChoiceCard from './MultipleChoiceCard';
-import TypeAnswerCard from './TypeAnswerCard';
 import CardFeedback from './CardFeedback';
 import CelebrationModal from './CelebrationModal';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -53,6 +52,13 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [newAchievements, setNewAchievements] = useState<Array<{ type: string; title: string; description: string; icon: string }>>([]);
+
+  // Reset stale session when navigating to study with a new setId
+  useEffect(() => {
+    if (preSelectedSetId && sessionId && isComplete) {
+      resetSession();
+    }
+  }, [preSelectedSetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setIsFlipped(false);
@@ -115,7 +121,7 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
             </button>
             {status === 'authenticated' && (
               <button
-                onClick={() => router.push('/flashcards')}
+                onClick={() => { resetSession(); router.push('/flashcards'); }}
                 className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
               >
                 Back to My Sets
@@ -145,8 +151,8 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
       );
     }
 
-    // Feedback screen between cards (classic mode only)
-    if (lastCardResult && studyMode === 'classic') {
+    // Feedback screen between cards
+    if (lastCardResult) {
       return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
           <div className="mb-4 h-5"></div>
@@ -163,7 +169,7 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
         ? { ...currentCard, front: currentCard.back, back: currentCard.front }
         : currentCard;
 
-      const modeLabel = studyMode === 'multiple-choice' ? 'Multiple Choice' : studyMode === 'type-answer' ? 'Type Answer' : 'Classic';
+      const modeLabel = studyMode === 'multiple-choice' ? 'Multiple Choice' : 'Classic';
 
       return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
@@ -183,15 +189,6 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
             <MultipleChoiceCard
               flashcard={cardToShow}
               distractors={multipleChoiceData[String(currentCard._id)] || []}
-              onResult={recordCardResult}
-              onConfidenceSelect={recordConfidence}
-              onEndSession={resetSession}
-              isConfidenceRequired={isConfidenceRequired}
-              hasCompletedConfidence={hasCompletedConfidence}
-            />
-          ) : studyMode === 'type-answer' ? (
-            <TypeAnswerCard
-              flashcard={cardToShow}
               onResult={recordCardResult}
               onConfidenceSelect={recordConfidence}
               onEndSession={resetSession}

@@ -9,6 +9,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserEntry {
   _id: string;
@@ -33,6 +34,7 @@ const TIERS = ["Free", "Monthly Pro", "Annual Pro", "Lifetime Learner"];
 export default function AdminUsersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
 
   const [users, setUsers] = useState<UserEntry[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
@@ -92,15 +94,25 @@ export default function AdminUsersPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || "Failed to update user");
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: data.error || "Failed to update user",
+        });
         return;
       }
       // Update local state
       setUsers((prev) =>
         prev.map((u) => (u._id === userId ? { ...u, [field]: value } : u)),
       );
+      const label = field === "subscriptionTier" ? "Subscription" : "Role";
+      toast({ title: `${label} Updated`, description: `Set to ${value}` });
     } catch {
-      alert("Failed to update user");
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Failed to update user",
+      });
     } finally {
       setUpdating(null);
     }

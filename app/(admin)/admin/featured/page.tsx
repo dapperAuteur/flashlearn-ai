@@ -47,6 +47,9 @@ export default function AdminFeaturedPage() {
       if (res.ok) {
         const data = await res.json();
         setFeatured(data.featured);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || `Failed to load featured sets (${res.status})`);
       }
     } catch {
       setError('Failed to load featured sets');
@@ -230,7 +233,7 @@ export default function AdminFeaturedPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && searchSets()}
               placeholder="Search public sets..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <button

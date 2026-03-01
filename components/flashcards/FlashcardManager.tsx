@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useFlashcards } from '@/contexts/FlashcardContext';
 import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
@@ -10,9 +10,11 @@ import {
   MagnifyingGlassIcon,
   CloudArrowDownIcon,
   CloudArrowUpIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline';
 import { SearchIcon, XIcon, DownloadIcon, UploadIcon } from 'lucide-react';
+import SetEditModal from './SetEditModal';
 
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -43,6 +45,25 @@ export default function FlashcardManager({
   const { toast } = useToast();
 
   const [localError, setLocalError] = useState<string | null>(null);
+  const [categoryMap, setCategoryMap] = useState<Record<string, { name: string; color: string }>>({});
+
+  const isAdmin = session?.user?.role === 'Admin';
+
+  // Fetch category info for user's sets
+  useEffect(() => {
+    if (flashcardSets.length === 0) return;
+    const setIds = flashcardSets.map(s => s.id);
+    fetch('/api/sets/categories/by-sets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ setIds }),
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.categories) setCategoryMap(data.categories);
+      })
+      .catch(() => { /* silent */ });
+  }, [flashcardSets]);
 
   const handleStudyClick = (setId: string) => {
     onStartStudy(setId);
@@ -183,7 +204,20 @@ export default function FlashcardManager({
               <div className="flex-1">
                 <h3 className="font-medium text-gray-900">{set.title}</h3>
                 {set.description && <p className="text-sm text-gray-500 mt-1">{set.description}</p>}
-                <p className="text-sm text-gray-500 mt-2">{set.card_count} cards</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <p className="text-sm text-gray-500">{set.card_count} cards</p>
+                  {categoryMap[set.id] && (
+                    <span
+                      className="px-2 py-0.5 rounded-full text-xs font-medium"
+                      style={{
+                        backgroundColor: `${categoryMap[set.id].color}20`,
+                        color: categoryMap[set.id].color,
+                      }}
+                    >
+                      {categoryMap[set.id].name}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => handleToggle(set.id)}
@@ -201,12 +235,21 @@ export default function FlashcardManager({
                 )}
               </button>
             </div>
-            <button
-              onClick={() => handleStudyClick(set.id)}
-              className="mt-4 block w-full text-center px-3 py-2 bg-blue-600 text-white rounded-md"
-            >
-              Study
-            </button>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => handleStudyClick(set.id)}
+                className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Study
+              </button>
+              <button
+                onClick={() => handleEditSet(set)}
+                className="px-3 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+                title="Edit set"
+              >
+                <PencilSquareIcon className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -222,41 +265,24 @@ export default function FlashcardManager({
           </Link>
         </div>
       )}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {filtered.map(set => (
-          <div key={set.id} className="bg-white rounded-lg shadow p-4 md:p-6">
-            <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900 truncate">{set.title}</h3>
-                {set.description && (
-                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{set.description}</p>
-                )}
-                <p className="text-sm text-gray-500 mt-2">{set.card_count} cards</p>
-              </div>
-              <button
-                onClick={() => handleToggle(set.id)}
-                className={`p-2 rounded-full flex-shrink-0 ${
-                  isOffline(set.id)
-                    ? 'text-green-600 bg-green-100'
-                    : 'text-gray-400 bg-gray-100'
-                }`}
-              >
-                {isOffline(set.id) ? (
-                  <CloudArrowDownIcon className="h-5 w-5" />
-                ) : (
-                  <CloudArrowUpIcon className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-            <button
-              onClick={() => handleStudyClick(set.id)}
-              className="mt-4 block w-full text-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-            >
-              Study
-            </button>
-          </div>
-        ))}
-    </div> */}
+      {selectedSet && (
+        <SetEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => { setIsEditModalOpen(false); setSelectedSet(null); }}
+          set={{
+            _id: selectedSet.id,
+            title: selectedSet.title,
+            description: selectedSet.description || undefined,
+            isPublic: selectedSet.is_public === 1,
+            cardCount: selectedSet.card_count,
+          }}
+          isAdmin={isAdmin}
+          onSave={() => {
+            setIsEditModalOpen(false);
+            setSelectedSet(null);
+          }}
+        />
+      )}
     </div>
     
   );

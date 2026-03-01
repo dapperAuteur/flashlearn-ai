@@ -48,6 +48,9 @@ export default function AdminCategoriesPage() {
       if (res.ok) {
         const data = await res.json();
         setCategories(data.categories);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || `Failed to load categories (${res.status})`);
       }
     } catch {
       setError('Failed to load categories');
@@ -180,7 +183,7 @@ export default function AdminCategoriesPage() {
                 type="text"
                 value={createForm.name}
                 onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="e.g. Medical Sciences"
               />
             </div>
@@ -197,7 +200,7 @@ export default function AdminCategoriesPage() {
                   type="text"
                   value={createForm.color}
                   onChange={(e) => setCreateForm((f) => ({ ...f, color: e.target.value }))}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
                 />
               </div>
             </div>
@@ -207,7 +210,7 @@ export default function AdminCategoriesPage() {
                 type="text"
                 value={createForm.description}
                 onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Brief description"
               />
             </div>
@@ -217,7 +220,7 @@ export default function AdminCategoriesPage() {
                 type="number"
                 value={createForm.sortOrder}
                 onChange={(e) => setCreateForm((f) => ({ ...f, sortOrder: parseInt(e.target.value) || 0 }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
@@ -273,7 +276,7 @@ export default function AdminCategoriesPage() {
                           type="text"
                           value={editForm.name || ''}
                           onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                          className="px-2 py-1 border border-gray-300 rounded text-sm w-full"
+                          className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 w-full"
                         />
                       ) : (
                         <div className="flex items-center gap-2">
@@ -292,7 +295,7 @@ export default function AdminCategoriesPage() {
                           type="text"
                           value={editForm.description || ''}
                           onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
-                          className="px-2 py-1 border border-gray-300 rounded text-sm w-full"
+                          className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 w-full"
                         />
                       ) : (
                         <span className="text-sm text-gray-500">{cat.description || '—'}</span>
@@ -307,7 +310,7 @@ export default function AdminCategoriesPage() {
                           type="number"
                           value={editForm.sortOrder ?? 0}
                           onChange={(e) => setEditForm((f) => ({ ...f, sortOrder: parseInt(e.target.value) || 0 }))}
-                          className="px-2 py-1 border border-gray-300 rounded text-sm w-16 text-center"
+                          className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 w-16 text-center"
                         />
                       ) : (
                         <span className="text-sm text-gray-500">{cat.sortOrder}</span>
@@ -318,7 +321,7 @@ export default function AdminCategoriesPage() {
                         <select
                           value={editForm.isActive ? 'active' : 'inactive'}
                           onChange={(e) => setEditForm((f) => ({ ...f, isActive: e.target.value === 'active' }))}
-                          className="px-2 py-1 border border-gray-300 rounded text-sm"
+                          className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
                         >
                           <option value="active">Active</option>
                           <option value="inactive">Inactive</option>
