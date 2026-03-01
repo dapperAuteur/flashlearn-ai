@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   TrophyIcon,
   ArrowLeftIcon,
@@ -15,6 +16,7 @@ interface LeaderboardEntry {
   rank: number;
   userId: string;
   userName: string;
+  userAvatar?: string;
   rating: number;
   wins: number;
   losses: number;
@@ -230,7 +232,20 @@ export default function LeaderboardPage() {
                     </span>
 
                     {/* Name */}
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex items-center gap-2">
+                      {entry.userAvatar ? (
+                        <Image
+                          src={entry.userAvatar}
+                          alt=""
+                          width={24}
+                          height={24}
+                          className="rounded-full flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-600 flex-shrink-0">
+                          {entry.userName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {entry.userName}
                         {isCurrentUser && (

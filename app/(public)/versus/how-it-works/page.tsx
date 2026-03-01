@@ -11,7 +11,6 @@ import {
   GlobeAltIcon,
   UserGroupIcon,
   ShieldCheckIcon,
-  QuestionMarkCircleIcon,
   ChevronDownIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';

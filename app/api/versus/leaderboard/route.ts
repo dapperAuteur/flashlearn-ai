@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import mongoose from 'mongoose';
 import dbConnect from '@/lib/db/dbConnect';
 import { authOptions } from '@/lib/auth/auth';
 import { VersusStats } from '@/models/VersusStats';
@@ -21,14 +20,15 @@ export async function GET(request: NextRequest) {
     const leaderboard = await VersusStats.find({ totalChallenges: { $gt: 0 } })
       .sort({ rating: -1 })
       .limit(limit)
-      .populate('userId', 'name')
+      .populate('userId', 'name username profilePicture')
       .lean();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const entries = leaderboard.map((entry: any, index: number) => ({
       rank: index + 1,
       userId: entry.userId?._id || entry.userId,
-      userName: entry.userId?.name || 'Unknown',
+      userName: entry.userId?.username || entry.userId?.name || 'Unknown',
+      userAvatar: entry.userId?.profilePicture || null,
       rating: entry.rating,
       wins: entry.wins,
       losses: entry.losses,
@@ -62,14 +62,15 @@ export async function GET(request: NextRequest) {
     })
       .sort({ rating: -1 })
       .limit(limit)
-      .populate('userId', 'name')
+      .populate('userId', 'name username profilePicture')
       .lean();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const entries = leaderboard.map((entry: any, index: number) => ({
       rank: index + 1,
       userId: entry.userId?._id || entry.userId,
-      userName: entry.userId?.name || 'Unknown',
+      userName: entry.userId?.username || entry.userId?.name || 'Unknown',
+      userAvatar: entry.userId?.profilePicture || null,
       rating: entry.rating,
       wins: entry.wins,
       losses: entry.losses,

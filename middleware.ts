@@ -70,6 +70,19 @@ export async function middleware(request: NextRequest) {
   ];
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
 
+  // --- Email Verification Check ---
+  const authPaths = ['/auth/', '/api/auth/'];
+  const isAuthPath = authPaths.some(path => pathname.startsWith(path));
+  if (token && token.emailVerified === false && !isPublicPath && !isAuthPath) {
+    edgeLogger.warn(EdgeLogContext.AUTH, `Unverified email user attempted access, redirecting to signin.`, {
+      ip: getClientIp(request),
+      userId: token?.sub,
+    });
+    const signInUrl = new URL('/auth/signin', request.url);
+    signInUrl.searchParams.set('error', 'email_not_verified');
+    return NextResponse.redirect(signInUrl);
+  }
+
   if (!token && !isPublicPath) {
     const signInUrl = new URL('/auth/signin', request.url);
     signInUrl.searchParams.set('callbackUrl', request.nextUrl.href);

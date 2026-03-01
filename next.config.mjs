@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+    ],
+  },
   experimental: {
     serverComponentsExternalPackages: ['mongoose'],
   },
@@ -43,7 +51,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             // THIS IS THE FIX: Allow 'data:' for connect-src to enable image sharing
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' data:; frame-src 'self'; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; media-src 'self'; object-src 'none'",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com; font-src 'self'; connect-src 'self' data:; frame-src 'self'; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; media-src 'self'; object-src 'none'",
           },
         ],
       },

@@ -13,6 +13,12 @@ import { Eye, EyeOff } from "lucide-react";
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be at most 20 characters")
+    .regex(/^[a-z0-9_-]+$/, "Only lowercase letters, numbers, underscores, and hyphens")
+    .optional()
+    .or(z.literal("")),
   email: z.string().email("Invalid email address"),
   password: z
     .string()
@@ -34,11 +40,30 @@ export default function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const router = useRouter();
   
   const { register, handleSubmit, watch, formState: { errors } } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema)
   });
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username.length < 3) {
+      setUsernameAvailable(null);
+      return;
+    }
+    setCheckingUsername(true);
+    try {
+      const res = await fetch(`/api/user/check-username?username=${encodeURIComponent(username)}`);
+      const data = await res.json();
+      setUsernameAvailable(data.available);
+    } catch {
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
   
   const onSubmit = async (data: SignUpFormData) => {
     setIsLoading(true);
@@ -52,7 +77,8 @@ export default function SignUpForm() {
         body: JSON.stringify({
           name: data.name,
           email: data.email,
-          password: data.password
+          password: data.password,
+          ...(data.username ? { username: data.username } : {}),
         })
       });
       
@@ -103,7 +129,37 @@ export default function SignUpForm() {
             <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
           )}
         </div>
-        
+
+        <div>
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+            Username <span className="text-gray-400">(optional)</span>
+          </label>
+          <input
+            id="username"
+            type="text"
+            {...register("username")}
+            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="cool_learner"
+            onChange={(e) => {
+              register("username").onChange(e);
+              checkUsernameAvailability(e.target.value.toLowerCase());
+            }}
+          />
+          {checkingUsername && (
+            <p className="mt-1 text-xs text-gray-500">Checking availability...</p>
+          )}
+          {!checkingUsername && usernameAvailable === true && (
+            <p className="mt-1 text-xs text-green-600">Username is available</p>
+          )}
+          {!checkingUsername && usernameAvailable === false && (
+            <p className="mt-1 text-xs text-red-600">Username is already taken</p>
+          )}
+          {errors.username && (
+            <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">Used on leaderboards instead of your email</p>
+        </div>
+
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Email address

@@ -69,7 +69,7 @@ export default function ResultsPage() {
   const userId = session?.user?.id || '';
 
   const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [myParticipation, setMyParticipation] = useState<MyParticipation | null>(null);
+  const [, setMyParticipation] = useState<MyParticipation | null>(null);
   const [compositeScore, setCompositeScore] = useState<CompositeScore | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

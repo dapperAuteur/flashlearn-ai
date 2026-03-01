@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import mongoose from 'mongoose';
@@ -38,7 +39,7 @@ export async function POST(
   }
 
   // Find participant
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const participant = challenge.participants.find(
     (p: any) => p.userId.toString() === userId.toString(),
   );
@@ -62,11 +63,10 @@ export async function POST(
   }
 
   // Get the specific cards in challenge order
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const allCards = (flashcardSet as any).flashcards || [];
-  const cardIdSet = new Set(challenge.cardIds);
   const cardMap = new Map(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
     allCards.map((c: any) => [c._id.toString(), c]),
   );
 
@@ -80,7 +80,7 @@ export async function POST(
     sessionId,
     userId,
     listId: challenge.flashcardSetId,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
     setName: (flashcardSet as any).title,
     startTime: new Date(),
     status: 'active',
@@ -98,7 +98,7 @@ export async function POST(
   return NextResponse.json({
     sessionId,
     challengeId: challenge._id,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
     flashcards: orderedCards.map((c: any) => ({
       _id: c._id.toString(),
       front: c.front,

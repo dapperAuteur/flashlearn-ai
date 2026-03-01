@@ -11,7 +11,6 @@ import {
   MagnifyingGlassIcon,
   CheckCircleIcon,
   BookOpenIcon,
-  UserGroupIcon,
   GlobeAltIcon,
   AcademicCapIcon,
   UserIcon,

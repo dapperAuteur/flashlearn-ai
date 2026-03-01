@@ -5,6 +5,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
+  username?: string;
+  profilePicture?: string;
   role: 'Student' | 'Teacher' | 'Tutor' | 'Parent' | 'SchoolAdmin' | 'Admin';
   schoolId?: Schema.Types.ObjectId;
   linkedStudentIds?: Schema.Types.ObjectId[];
@@ -25,4 +27,10 @@ export interface IUser extends Document {
   stripeSubscriptionId?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  loginCode?: string;
+  loginCodeExpires?: Date;
+  loginCodeAttempts?: number;
+  pendingEmail?: string;
+  pendingEmailToken?: string;
+  pendingEmailExpires?: Date;
 }

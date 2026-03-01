@@ -15,6 +15,11 @@ import { Logger, LogContext } from "@/lib/logging/logger";
 const userSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Invalid email address" }),
+  username: z.string()
+    .min(3, { message: "Username must be at least 3 characters" })
+    .max(20, { message: "Username must be at most 20 characters" })
+    .regex(/^[a-z0-9_-]+$/, { message: "Only lowercase letters, numbers, underscores, and hyphens" })
+    .optional(),
   password: z
     .string()
     .min(10, { message: "Password must be at least 10 characters" })
@@ -68,12 +73,12 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { name, email, password } = result.data;
-    
+    const { name, email, password, username } = result.data;
+
     // Connect to database
     const client = await clientPromise;
     const db = client.db();
-    
+
     // Check if user already exists
     const existingUser = await db.collection("users").findOne({ email });
     if (existingUser) {
@@ -94,15 +99,26 @@ export async function POST(request: NextRequest) {
     const verificationToken = generateVerificationToken();
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     
+    // Check username uniqueness if provided
+    if (username) {
+      const existingUsername = await db.collection("users").findOne({ username });
+      if (existingUsername) {
+        return NextResponse.json(
+          { error: "This username is already taken" },
+          { status: 409 }
+        );
+      }
+    }
+
     // Hash the password
     const hashedPassword = await hash(password, 12);
-    
+
     // Create the user
-    const newUser = await db.collection("users").insertOne({
+    const userDoc: any = {
       name,
       email,
       password: hashedPassword,
-      role: "Student", // Default role
+      role: "Student",
       emailVerified: false,
       verificationToken,
       verificationExpires,
@@ -110,7 +126,11 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
       profiles: [],
       subscriptionTier: 'Free'
-    });
+    };
+    if (username) {
+      userDoc.username = username;
+    }
+    const newUser = await db.collection("users").insertOne(userDoc);
     
     const userId = newUser.insertedId.toString();
 

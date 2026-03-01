@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import mongoose from 'mongoose';
 import dbConnect from '@/lib/db/dbConnect';
 import { authOptions } from '@/lib/auth/auth';
 import { Challenge } from '@/models/Challenge';
@@ -27,7 +27,7 @@ export async function POST(
     return NextResponse.json({ message: 'Challenge not found' }, { status: 404 });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const participant = challenge.participants.find(
     (p: any) => p.userId.toString() === userId,
   );
@@ -53,7 +53,7 @@ export async function POST(
   }
 
   // Calculate composite score
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const answers: CardAnswer[] = cardResults.map((r: any) => ({
     isCorrect: r.isCorrect,
     timeSeconds: r.timeSeconds || 10,
@@ -68,19 +68,19 @@ export async function POST(
   participant.completedAt = new Date();
 
   // Check if all participants have completed
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const allCompleted = challenge.participants.every(
     (p: any) => p.status === 'completed' || p.status === 'declined',
   );
 
   if (allCompleted) {
     // Rank participants by score
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
     const completed = challenge.participants
       .filter((p: any) => p.status === 'completed')
       .sort((a: any, b: any) => (b.compositeScore || 0) - (a.compositeScore || 0));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
     completed.forEach((p: any, index: number) => {
       p.rank = index + 1;
     });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import mongoose from 'mongoose';
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Check if already a participant
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const alreadyJoined = challenge.participants.some(
     (p: any) => p.userId.toString() === userId.toString(),
   );
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Check participant limit
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const activeParticipants = challenge.participants.filter(
     (p: any) => p.status !== 'declined',
   ).length;
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
   // Add participant
   challenge.participants.push({
     userId,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
     userName: (user as any)?.name || 'Unknown',
     status: 'accepted',
   });

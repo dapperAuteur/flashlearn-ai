@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -20,11 +21,12 @@ const tiers = [
     icon: RocketLaunchIcon,
     features: [
       'Unlimited AI-generated sets',
+      'Unlimited versus mode challenges',
+      'Advanced spaced repetition scheduling',
       'Generate from PDF, YouTube, audio & images',
       'All study modes (classic, multiple choice, typed)',
       'AI-validated answers',
       'Full analytics & progress tracking',
-      'Spaced repetition scheduling',
       'CSV import',
       'Offline study support',
       'Priority support',
@@ -45,10 +47,11 @@ const tiers = [
     features: [
       'Everything in Monthly Pro, forever',
       'Unlimited AI-generated sets',
+      'Unlimited versus mode challenges',
+      'Advanced spaced repetition scheduling',
       'Generate from PDF, YouTube, audio & images',
       'All study modes (classic, multiple choice, typed)',
       'Full analytics, streaks & achievements',
-      'Spaced repetition scheduling',
       'Offline study support',
       'Priority support',
     ],
@@ -148,6 +151,18 @@ export default function PricingPage() {
         <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
           Unlock your full learning potential. Cancel anytime on monthly plans.
         </p>
+      </div>
+
+      {/* Free Account Summary */}
+      <div className="max-w-3xl mx-auto mb-12 p-6 bg-gray-50 rounded-xl border border-gray-200 text-center">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Account</h3>
+        <p className="text-sm text-gray-600 mb-4">Get started with basic features — no credit card required</p>
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-700">
+          <span>&#10003; 3 AI-generated sets/month</span>
+          <span>&#10003; Classic study mode</span>
+          <span>&#10003; Join versus challenges</span>
+          <span>&#10003; Basic progress tracking</span>
+        </div>
       </div>
 
       {/* Pricing Cards */}
@@ -295,6 +310,16 @@ export default function PricingPage() {
             </details>
           ))}
         </div>
+      </div>
+
+      {/* Roadmap Link */}
+      <div className="max-w-3xl mx-auto mt-12 text-center">
+        <p className="text-gray-600 text-sm">
+          Want to see what features are coming next?{' '}
+          <Link href="/roadmap" className="text-blue-600 hover:text-blue-800 font-medium underline">
+            View our product roadmap
+          </Link>
+        </p>
       </div>
     </div>
   );

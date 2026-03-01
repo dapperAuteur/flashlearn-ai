@@ -45,7 +45,7 @@ interface ChallengeDetails {
 export default function PlayChallengePage() {
   const params = useParams();
   const router = useRouter();
-  const { data: session, status: authStatus } = useSession();
+  const { status: authStatus } = useSession();
   const challengeId = params.challengeId as string;
 
   // Challenge state
