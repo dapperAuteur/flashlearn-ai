@@ -24,9 +24,10 @@ const formatTime = (milliseconds: number): string => {
 
 interface StudySessionManagerProps {
   preSelectedSetId?: string;
+  isReviewMode?: boolean;
 }
 
-export default function StudySessionManager({ preSelectedSetId }: StudySessionManagerProps) {
+export default function StudySessionManager({ preSelectedSetId, isReviewMode }: StudySessionManagerProps) {
   const {
     sessionId,
     flashcardSetName,
@@ -114,7 +115,7 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
           <StudySessionResults />
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={resetSession}
+              onClick={() => { resetSession(); router.replace('/study'); }}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
             >
               Study Another Set
@@ -214,5 +215,5 @@ export default function StudySessionManager({ preSelectedSetId }: StudySessionMa
     }
   }
 
-  return <StudySessionSetup preSelectedSetId={preSelectedSetId} />;
+  return <StudySessionSetup preSelectedSetId={preSelectedSetId} isReviewMode={isReviewMode} />;
 }

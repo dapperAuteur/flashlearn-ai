@@ -63,12 +63,23 @@ export async function GET(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setNameMap = new Map(sets.map((s: any) => [s._id.toString(), s.title]));
 
-  const enriched = setsWithDue.map((s) => ({
-    setId: s.setId,
-    setName: setNameMap.get(s.setId) || 'Unknown Set',
-    dueCount: s.dueCount,
-    dueCardIds: s.dueCardIds,
-  }));
+  // Filter out sets whose FlashcardSet documents no longer exist (orphaned analytics)
+  const orphanedSetIds = setsWithDue
+    .filter((s) => !setNameMap.has(s.setId))
+    .map((s) => new mongoose.Types.ObjectId(s.setId));
+
+  if (orphanedSetIds.length > 0) {
+    StudyAnalytics.deleteMany({ profile: profileId, set: { $in: orphanedSetIds } }).catch(() => {});
+  }
+
+  const enriched = setsWithDue
+    .filter((s) => setNameMap.has(s.setId))
+    .map((s) => ({
+      setId: s.setId,
+      setName: setNameMap.get(s.setId)!,
+      dueCount: s.dueCount,
+      dueCardIds: s.dueCardIds,
+    }));
 
   const totalDue = enriched.reduce((sum, s) => sum + s.dueCount, 0);
 

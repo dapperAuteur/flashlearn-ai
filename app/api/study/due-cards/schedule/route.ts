@@ -113,11 +113,21 @@ export async function GET() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setNameMap = new Map(sets.map((s: any) => [s._id.toString(), s.title]));
 
+  // Clean up orphaned analytics (sets that no longer exist)
+  const orphanedSetIds = Array.from(allSetIds)
+    .filter((id) => !setNameMap.has(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+  if (orphanedSetIds.length > 0) {
+    StudyAnalytics.deleteMany({ profile: profileId, set: { $in: orphanedSetIds } }).catch(() => {});
+  }
+
   const buildSetList = (map: Map<string, number>): SetDue[] =>
     Array.from(map.entries())
+      .filter(([setId]) => setNameMap.has(setId))
       .map(([setId, dueCount]) => ({
         setId,
-        setName: setNameMap.get(setId) || 'Unknown Set',
+        setName: setNameMap.get(setId)!,
         dueCount,
       }))
       .sort((a, b) => b.dueCount - a.dueCount);
