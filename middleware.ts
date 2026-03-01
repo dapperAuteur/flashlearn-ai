@@ -65,6 +65,7 @@ export async function middleware(request: NextRequest) {
     '/roadmap',
     '/explore',
     '/results',
+    '/versus/how-it-works',
     '/'
   ];
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path));

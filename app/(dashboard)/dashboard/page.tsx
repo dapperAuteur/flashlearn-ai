@@ -12,9 +12,8 @@ import {
   FireIcon,
   CheckCircleIcon,
   PlusIcon,
-  ArrowRightIcon,
-  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
+import ReviewSchedule from '@/components/dashboard/ReviewSchedule';
 import { getSubscriptionDisplay, shouldShowUpgradeCTA } from '@/lib/utils/subscription';
 
 interface StudyStats {
@@ -37,11 +36,6 @@ interface HistorySession {
   studyDirection: string;
 }
 
-interface DueCardsData {
-  sets: { setId: string; setName: string; dueCount: number }[];
-  totalDue: number;
-}
-
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const user = session?.user;
@@ -49,7 +43,6 @@ export default function DashboardPage() {
 
   const [stats, setStats] = useState<StudyStats | null>(null);
   const [recentSessions, setRecentSessions] = useState<HistorySession[]>([]);
-  const [dueCards, setDueCards] = useState<DueCardsData | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
@@ -59,10 +52,9 @@ export default function DashboardPage() {
       setIsLoadingStats(true);
       try {
         const cacheBust = `_t=${Date.now()}`;
-        const [statsRes, historyRes, dueRes] = await Promise.all([
+        const [statsRes, historyRes] = await Promise.all([
           fetch(`/api/study/stats?${cacheBust}`),
           fetch(`/api/study/history?limit=5&${cacheBust}`),
-          fetch(`/api/study/due-cards?${cacheBust}`),
         ]);
 
         if (statsRes.ok) setStats(await statsRes.json());
@@ -70,7 +62,6 @@ export default function DashboardPage() {
           const data = await historyRes.json();
           setRecentSessions(data.sessions || []);
         }
-        if (dueRes.ok) setDueCards(await dueRes.json());
       } catch {
         // Silently fail — stats will show defaults
       } finally {
@@ -128,30 +119,8 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Due Cards Banner */}
-      {dueCards && dueCards.totalDue > 0 && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <ExclamationCircleIcon className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-amber-900 text-sm sm:text-base">
-                {dueCards.totalDue} card{dueCards.totalDue !== 1 ? 's' : ''} due for review
-              </h3>
-              <p className="text-xs sm:text-sm text-amber-700 mt-0.5">
-                {dueCards.sets.slice(0, 3).map((s) => s.setName).join(', ')}
-                {dueCards.sets.length > 3 && ` +${dueCards.sets.length - 3} more`}
-              </p>
-            </div>
-            <Link
-              href="/study"
-              className="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-amber-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors"
-            >
-              Study Now
-              <ArrowRightIcon className="h-3.5 w-3.5 ml-1" />
-            </Link>
-          </div>
-        </div>
-      )}
+      {/* Review Schedule */}
+      <ReviewSchedule />
 
       {/* Statistics */}
       <div data-onboarding="stats">
