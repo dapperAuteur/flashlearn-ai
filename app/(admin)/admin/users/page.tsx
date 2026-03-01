@@ -19,6 +19,7 @@ interface UserEntry {
   subscriptionTier: string;
   createdAt: string;
   stripeCustomerId?: string;
+  emailVerified?: boolean;
 }
 
 interface Pagination {
@@ -82,8 +83,8 @@ export default function AdminUsersPage() {
 
   const handleUpdate = async (
     userId: string,
-    field: "role" | "subscriptionTier",
-    value: string,
+    field: "role" | "subscriptionTier" | "emailVerified",
+    value: string | boolean,
   ) => {
     setUpdating(userId);
     try {
@@ -105,8 +106,8 @@ export default function AdminUsersPage() {
       setUsers((prev) =>
         prev.map((u) => (u._id === userId ? { ...u, [field]: value } : u)),
       );
-      const label = field === "subscriptionTier" ? "Subscription" : "Role";
-      toast({ title: `${label} Updated`, description: `Set to ${value}` });
+      const label = field === "subscriptionTier" ? "Subscription" : field === "emailVerified" ? "Email Verification" : "Role";
+      toast({ title: `${label} Updated`, description: field === "emailVerified" ? (value ? "Verified" : "Unverified") : `Set to ${value}` });
     } catch {
       toast({
         variant: "destructive",
@@ -254,7 +255,20 @@ export default function AdminUsersPage() {
                     </select>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">Joined {formatDate(user.createdAt)}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-gray-400">Joined {formatDate(user.createdAt)}</p>
+                  {user.emailVerified ? (
+                    <span className="text-xs text-green-600 font-medium">Verified</span>
+                  ) : (
+                    <button
+                      onClick={() => handleUpdate(user._id, "emailVerified", true)}
+                      disabled={updating === user._id}
+                      className="text-xs text-amber-600 hover:text-amber-700 font-medium underline"
+                    >
+                      Verify Email
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -268,6 +282,7 @@ export default function AdminUsersPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subscription</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verified</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stripe</th>
                   </tr>
@@ -302,6 +317,19 @@ export default function AdminUsersPage() {
                             <option key={t} value={t}>{t}</option>
                           ))}
                         </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        {user.emailVerified ? (
+                          <span className="text-xs text-green-600 font-medium">Yes</span>
+                        ) : (
+                          <button
+                            onClick={() => handleUpdate(user._id, "emailVerified", true)}
+                            disabled={updating === user._id}
+                            className="text-xs text-amber-600 hover:text-amber-700 font-medium underline"
+                          >
+                            Verify
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">{formatDate(user.createdAt)}</td>
                       <td className="px-4 py-3">

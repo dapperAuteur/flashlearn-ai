@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Search,
@@ -378,10 +379,13 @@ export default function AdminConversationsPage() {
           rel="noopener noreferrer"
           className="block mt-1"
         >
-          <img
+          <Image
             src={att.url}
             alt={att.filename}
+            width={240}
+            height={180}
             className="max-w-[240px] max-h-[180px] rounded-md object-cover border border-gray-200"
+            unoptimized
           />
         </a>
       );
@@ -726,10 +730,13 @@ export default function AdminConversationsPage() {
                     {replyAttachments.map((att, idx) => (
                       <div key={idx} className="relative group">
                         {att.type === 'image' || att.type === 'screenshot' ? (
-                          <img
+                          <Image
                             src={att.url}
                             alt={att.filename}
+                            width={48}
+                            height={48}
                             className="w-12 h-12 rounded object-cover border border-gray-200"
+                            unoptimized
                           />
                         ) : (
                           <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center border border-gray-200">

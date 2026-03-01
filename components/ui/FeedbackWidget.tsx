@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import {
   MessageSquare,
   X,
@@ -290,10 +291,13 @@ export default function FeedbackWidget() {
           rel="noopener noreferrer"
           className="block mt-1"
         >
-          <img
+          <Image
             src={att.url}
             alt={att.filename}
+            width={200}
+            height={150}
             className="max-w-[200px] max-h-[150px] rounded-md object-cover border border-gray-200"
+            unoptimized
           />
         </a>
       );
@@ -451,10 +455,13 @@ export default function FeedbackWidget() {
             {newAttachments.map((att, idx) => (
               <div key={idx} className="relative group">
                 {att.type === 'image' || att.type === 'screenshot' ? (
-                  <img
+                  <Image
                     src={att.url}
                     alt={att.filename}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-md object-cover border border-gray-200"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-16 h-16 rounded-md bg-gray-100 flex items-center justify-center border border-gray-200">
@@ -610,10 +617,13 @@ export default function FeedbackWidget() {
               {replyAttachments.map((att, idx) => (
                 <div key={idx} className="relative group">
                   {att.type === 'image' || att.type === 'screenshot' ? (
-                    <img
+                    <Image
                       src={att.url}
                       alt={att.filename}
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded object-cover border border-gray-200"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center border border-gray-200">
