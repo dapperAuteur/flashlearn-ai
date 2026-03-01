@@ -29,12 +29,15 @@ export async function GET(request: NextRequest) {
     const client = await clientPromise;
     const db = client.db();
     
-    // Find user with this token that has not expired
+    // Find user with this token that has not expired (support both field names)
     const user = await db.collection("users").findOne({
       verificationToken: token,
-      verificationExpires: { $gt: new Date() } 
+      $or: [
+        { verificationTokenExpires: { $gt: new Date() } },
+        { verificationExpires: { $gt: new Date() } },
+      ],
     });
-    
+
     if (!user) {
       await logAuthEvent({
         request,
@@ -51,7 +54,7 @@ export async function GET(request: NextRequest) {
       { _id: user._id },
       {
         $set: { emailVerified: true, updatedAt: new Date() },
-        $unset: { verificationToken: "", verificationExpires: "" }
+        $unset: { verificationToken: "", verificationExpires: "", verificationTokenExpires: "" }
       }
     );
     

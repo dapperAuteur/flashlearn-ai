@@ -74,9 +74,27 @@ export default function SignInForm() {
   const onSubmit = async (data: SignInFormData) => {
     setIsLoading(true);
     setError(null);
+    setShowResendButton(false);
     Logger.log(LogContext.AUTH, 'Sign-in form submitted', { email: data.email });
 
     try {
+      // Pre-check: verify email status before attempting sign-in
+      const checkRes = await fetch("/api/auth/check-email-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData.emailVerified === false) {
+          setError("Please verify your email address before signing in.");
+          setShowResendButton(true);
+          setResendEmail(data.email);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const result = await signIn("credentials", {
         redirect: false,
         email: data.email,
@@ -85,12 +103,6 @@ export default function SignInForm() {
 
       if (result?.error) {
         Logger.warning(LogContext.AUTH, 'User sign-in failed', { email: data.email, error: result.error });
-        if (result.error.includes("email_not_verified")) {
-          setError("Please verify your email address before signing in");
-          setShowResendButton(true);
-          setResendEmail(data.email);
-          return;
-        }
         setError("Invalid email or password");
         return;
       }

@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Generate verification token and expiry date (24 hours from now)
     const verificationToken = generateVerificationToken();
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     
     // Check username uniqueness if provided
     if (username) {
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       role: "Student",
       emailVerified: false,
       verificationToken,
-      verificationExpires,
+      verificationTokenExpires,
       createdAt: new Date(),
       updatedAt: new Date(),
       profiles: [],

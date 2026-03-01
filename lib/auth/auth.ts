@@ -43,7 +43,7 @@ export const authOptions: NextAuthOptions = {
 
           if (!userDoc.emailVerified) {
             Logger.warning(LogContext.AUTH, "Authorize failed: Email not verified.", { email });
-            throw new Error("email_not_verified");
+            return null;
           }
 
           Logger.info(LogContext.AUTH, "User authorized successfully. Preparing data for JWT.", { email, role: userDoc.role });
@@ -57,10 +57,6 @@ export const authOptions: NextAuthOptions = {
             image: userDoc.profilePicture || null,
           };
         } catch (error) {
-          // Re-throw email_not_verified so NextAuth passes it to the client
-          if (error instanceof Error && error.message === "email_not_verified") {
-            throw error;
-          }
           Logger.error(LogContext.AUTH, "Error during authorization.", { error });
           return null;
         }
@@ -134,9 +130,6 @@ export const authOptions: NextAuthOptions = {
             image: userDoc.profilePicture || null,
           };
         } catch (error) {
-          if (error instanceof Error && error.message === "email_not_verified") {
-            throw error;
-          }
           Logger.error(LogContext.AUTH, "Error during email-code authorization.", { error });
           return null;
         }
