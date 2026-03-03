@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -59,8 +58,9 @@ export default function SignInForm() {
         Logger.warning(LogContext.AUTH, 'Resend verification email failed', { email: resendEmail, error: data.error });
         setError(data.error || "Failed to resend verification email");
       }
-    } catch (error: any) {
-      Logger.error(LogContext.AUTH, 'Resend verification submission error', { email: resendEmail, error: error.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      Logger.error(LogContext.AUTH, 'Resend verification submission error', { email: resendEmail, error: message });
       setError("An unexpected error occurred");
     } finally {
       setResendLoading(false);
@@ -109,9 +109,10 @@ export default function SignInForm() {
 
       Logger.log(LogContext.AUTH, 'User sign-in successful', { email: data.email });
       window.location.href = callbackUrl;
-    } catch (error: any) {
-      Logger.error(LogContext.AUTH, 'Sign-in submission error', { email: data.email, error: error.message });
-      setError(`Connection error: ${error.message || "Failed to connect to authentication server"}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to connect to authentication server";
+      Logger.error(LogContext.AUTH, 'Sign-in submission error', { email: data.email, error: message });
+      setError(`Connection error: ${message}`);
     } finally {
       setIsLoading(false);
     }
