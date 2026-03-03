@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { X, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface OnboardingStep {
@@ -57,6 +58,15 @@ export default function OnboardingModal({
   onComplete,
   onSkip,
 }: OnboardingModalProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onSkip();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onSkip]);
+
   if (!isOpen) return null;
 
   const step = onboardingSteps[currentStep];
@@ -66,10 +76,14 @@ export default function OnboardingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-gray-900/50" />
-      
+      <div className="absolute inset-0 bg-gray-900/50" aria-hidden="true" />
+
       {/* Modal */}
-      <div className={`relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 ${
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="onboarding-title"
+        className={`relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 ${
         step.position === 'top' ? 'mt-8' : 
         step.position === 'bottom' ? 'mb-8' : ''
       }`}>
@@ -82,15 +96,21 @@ export default function OnboardingModal({
           </div>
           <button
             onClick={onSkip}
+            aria-label="Skip onboarding tour"
             className="text-gray-400 hover:text-gray-600"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
           <div
+            role="progressbar"
+            aria-label="Onboarding progress"
+            aria-valuenow={currentStep + 1}
+            aria-valuemin={1}
+            aria-valuemax={onboardingSteps.length}
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
             style={{ width: `${((currentStep + 1) / onboardingSteps.length) * 100}%` }}
           />
@@ -98,7 +118,7 @@ export default function OnboardingModal({
 
         {/* Content */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 id="onboarding-title" className="text-lg font-semibold text-gray-900 mb-2">
             {step.title}
           </h3>
           <p className="text-gray-600">

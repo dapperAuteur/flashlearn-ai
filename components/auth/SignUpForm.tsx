@@ -103,7 +103,7 @@ export default function SignUpForm() {
   return (
     <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
       <div className="text-center">
-        <h1 className="text-3xl font-bold">Create an Account</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Create an Account</h1>
         <p className="mt-2 text-gray-600">Join FlashLearn AI today</p>
       </div>
       
@@ -122,42 +122,48 @@ export default function SignUpForm() {
             id="name"
             type="text"
             {...register("name")}
-            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-describedby={errors.name ? 'name-error' : undefined}
+            aria-invalid={!!errors.name}
+            className="text-base text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="John Doe"
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+            <p id="name-error" className="mt-1 text-sm text-red-600">{errors.name.message}</p>
           )}
         </div>
 
         <div>
           <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-            Username <span className="text-gray-400">(optional)</span>
+            Username <span className="text-gray-500">(optional)</span>
           </label>
           <input
             id="username"
             type="text"
             {...register("username")}
-            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-describedby="username-hint username-availability"
+            aria-invalid={!!errors.username}
+            className="text-base text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="cool_learner"
             onChange={(e) => {
               register("username").onChange(e);
               checkUsernameAvailability(e.target.value.toLowerCase());
             }}
           />
-          {checkingUsername && (
-            <p className="mt-1 text-xs text-gray-500">Checking availability...</p>
-          )}
-          {!checkingUsername && usernameAvailable === true && (
-            <p className="mt-1 text-xs text-green-600">Username is available</p>
-          )}
-          {!checkingUsername && usernameAvailable === false && (
-            <p className="mt-1 text-xs text-red-600">Username is already taken</p>
-          )}
-          {errors.username && (
-            <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">Used on leaderboards instead of your email</p>
+          <div id="username-availability" aria-live="polite" aria-atomic="true">
+            {checkingUsername && (
+              <p className="mt-1 text-xs text-gray-500">Checking availability...</p>
+            )}
+            {!checkingUsername && usernameAvailable === true && (
+              <p className="mt-1 text-xs text-green-600">Username is available</p>
+            )}
+            {!checkingUsername && usernameAvailable === false && (
+              <p className="mt-1 text-xs text-red-600">Username is already taken</p>
+            )}
+            {errors.username && (
+              <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
+            )}
+          </div>
+          <p id="username-hint" className="mt-1 text-xs text-gray-500">Used on leaderboards instead of your email</p>
         </div>
 
         <div>
@@ -168,11 +174,13 @@ export default function SignUpForm() {
             id="email"
             type="email"
             {...register("email")}
-            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-describedby={errors.email ? 'signup-email-error' : undefined}
+            aria-invalid={!!errors.email}
+            className="text-base text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="you@example.com"
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+            <p id="signup-email-error" className="mt-1 text-sm text-red-600">{errors.email.message}</p>
           )}
         </div>
         
@@ -184,21 +192,24 @@ export default function SignUpForm() {
             id="password"
             type={showPassword ? "text" : "password"}
             {...register("password")}
-            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-describedby={errors.password ? 'signup-password-error' : 'signup-password-hint'}
+            aria-invalid={!!errors.password}
+            className="text-base text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
-           <button
+          <button
             type="button"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
             className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
           </button>
           <PasswordStrengthMeter password={watch("password") || ""} />
           {errors.password ? (
-            <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+            <p id="signup-password-error" className="mt-1 text-sm text-red-600">{errors.password.message}</p>
           ) : (
-            <p className="mt-1 text-xs text-gray-500">
+            <p id="signup-password-hint" className="mt-1 text-xs text-gray-500">
               Must be 10+ characters and include an uppercase, lowercase, number, and special character.
             </p>
           )}
@@ -212,18 +223,21 @@ export default function SignUpForm() {
             id="confirmPassword"
             type={showConfirmPassword ? "text" : "password"}
             {...register("confirmPassword")}
-            className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
+            aria-invalid={!!errors.confirmPassword}
+            className="text-base text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="********"
           />
           <button
             type="button"
+            aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
             className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
           >
-            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showConfirmPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
           </button>
           {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+            <p id="confirm-password-error" className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
           )}
         </div>
         
