@@ -186,7 +186,7 @@ export default function SignInForm() {
   return (
     <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
       <div className="text-center">
-        <h1 className="text-3xl font-bold">Sign In</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Sign In</h1>
         <p className="mt-2 text-gray-600">Welcome back to FlashLearn AI</p>
       </div>
 
@@ -194,6 +194,8 @@ export default function SignInForm() {
       <div className="flex rounded-lg bg-gray-100 p-1">
         <button
           type="button"
+          aria-label="Sign in with password"
+          aria-pressed={loginMode === 'password'}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
             loginMode === 'password'
               ? 'bg-white text-gray-900 shadow-sm'
@@ -201,11 +203,13 @@ export default function SignInForm() {
           }`}
           onClick={() => { setLoginMode('password'); setError(null); setCodeError(null); }}
         >
-          <Lock size={16} />
+          <Lock size={16} aria-hidden="true" />
           Password
         </button>
         <button
           type="button"
+          aria-label="Sign in with email code"
+          aria-pressed={loginMode === 'email-code'}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
             loginMode === 'email-code'
               ? 'bg-white text-gray-900 shadow-sm'
@@ -213,7 +217,7 @@ export default function SignInForm() {
           }`}
           onClick={() => { setLoginMode('email-code'); setError(null); setCodeError(null); }}
         >
-          <Mail size={16} />
+          <Mail size={16} aria-hidden="true" />
           Email Code
         </button>
       </div>
@@ -234,11 +238,13 @@ export default function SignInForm() {
               id="email"
               type="email"
               {...register("email")}
-              className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-describedby={errors.email ? 'email-error' : undefined}
+              aria-invalid={!!errors.email}
+              className="text-base text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="you@example.com"
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+              <p id="email-error" className="mt-1 text-sm text-red-600">{errors.email.message}</p>
             )}
           </div>
 
@@ -250,18 +256,21 @@ export default function SignInForm() {
               id="password"
               type={showPassword ? "text" : "password"}
               {...register("password")}
-              className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-describedby={errors.password ? 'password-error' : undefined}
+              aria-invalid={!!errors.password}
+              className="text-base text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="********"
             />
             <button
               type="button"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
               className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
             </button>
             {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+              <p id="password-error" className="mt-1 text-sm text-red-600">{errors.password.message}</p>
             )}
             {showResendButton && (
               <div className="mt-4">
@@ -339,10 +348,11 @@ export default function SignInForm() {
                   type="email"
                   value={codeEmail}
                   onChange={(e) => setCodeEmail(e.target.value)}
-                  className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-describedby="code-email-hint"
+                  className="text-base text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="you@example.com"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p id="code-email-hint" className="mt-1 text-xs text-gray-500">
                   We&apos;ll send a 6-digit login code to your email
                 </p>
               </div>
@@ -373,12 +383,13 @@ export default function SignInForm() {
                   type="text"
                   value={loginCode}
                   onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  aria-describedby="login-code-hint"
                   className="text-gray-700 w-full p-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest"
                   placeholder="000000"
                   maxLength={6}
                   autoFocus
                 />
-                <p className="mt-1 text-xs text-gray-500">Code expires in 10 minutes</p>
+                <p id="login-code-hint" className="mt-1 text-xs text-gray-500">Code expires in 10 minutes</p>
               </div>
 
               <button

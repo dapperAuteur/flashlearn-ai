@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XMarkIcon, FlagIcon } from '@heroicons/react/24/outline';
 
 interface ReportModalProps {
@@ -24,6 +24,15 @@ export default function ReportModal({ isOpen, onClose, setId, setTitle }: Report
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -80,18 +89,24 @@ export default function ReportModal({ isOpen, onClose, setId, setTitle }: Report
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-modal-title"
+        className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <FlagIcon className="h-5 w-5 text-red-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Report Set</h2>
+            <FlagIcon className="h-5 w-5 text-red-500" aria-hidden="true" />
+            <h2 id="report-modal-title" className="text-lg font-semibold text-gray-900">Report Set</h2>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close report dialog"
             className="p-1 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
           >
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -142,10 +157,11 @@ export default function ReportModal({ isOpen, onClose, setId, setTitle }: Report
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Additional details <span className="text-gray-400">(optional)</span>
+              <label htmlFor="report-description" className="block text-sm font-medium text-gray-700 mb-1">
+                Additional details <span className="text-gray-500">(optional)</span>
               </label>
               <textarea
+                id="report-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={500}
@@ -153,7 +169,7 @@ export default function ReportModal({ isOpen, onClose, setId, setTitle }: Report
                 placeholder="Provide more context about why you are reporting this set..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:ring-red-500 focus:border-red-500 resize-none"
               />
-              <p className="text-xs text-gray-400 mt-1">{description.length}/500 characters</p>
+              <p aria-live="polite" className="text-xs text-gray-500 mt-1">{description.length}/500 characters</p>
             </div>
 
             {/* Error */}

@@ -25,6 +25,14 @@ export default function Header() {
   const { isOnline, isSyncing, pendingCount } = useNetworkSync();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // DEBUG: Log session to verify role is present
   console.log('[Header] session status:', status, '| user:', JSON.stringify(session?.user));
 
@@ -45,11 +53,12 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav aria-label="Main navigation" className="hidden md:flex space-x-8">
             {primaryNavigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActivePath(item.href) ? 'page' : undefined}
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
                   isActivePath(item.href)
                     ? 'border-blue-500 text-gray-900'
@@ -165,6 +174,9 @@ export default function Header() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-menu"
             >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -177,13 +189,14 @@ export default function Header() {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200">
+          <div id="mobile-menu" className="md:hidden border-t border-gray-200">
             <div className="pt-2 pb-3 space-y-1">
               {primaryNavigation.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
+                  aria-current={isActivePath(item.href) ? 'page' : undefined}
                   className={`block pl-3 pr-4 py-2 text-base font-medium transition-colors ${
                     isActivePath(item.href)
                       ? 'bg-blue-50 border-r-4 border-blue-500 text-blue-700'
