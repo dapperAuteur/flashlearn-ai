@@ -28,6 +28,27 @@ const MlDataSchema = new mongoose.Schema({
 });
 
 // ============================
+// Per-Mode Performance Schema
+// Tracks SM-2 data and accuracy separately for each
+// (studyMode × studyDirection) combination per card.
+// ============================
+const ModePerformanceSchema = new mongoose.Schema({
+    mode: {
+        type: String,
+        enum: ['classic', 'multiple-choice', 'type-answer'],
+        required: true,
+    },
+    direction: {
+        type: String,
+        enum: ['front-to-back', 'back-to-front'],
+        required: true,
+    },
+    correctCount:   { type: Number, default: 0 },
+    incorrectCount: { type: Number, default: 0 },
+    mlData: MlDataSchema,
+});
+
+// ============================
 // Study Analytics Schema
 // Tracks performance data for a user profile.
 // ============================
@@ -50,6 +71,7 @@ const StudyAnalyticsSchema = new mongoose.Schema({
     totalTimeStudied: { type: Number, default: 0 }, // in seconds
     mlData: MlDataSchema, // Embedding the ML data for each card here
     confidenceData: ConfidenceDataSchema, // Add confidence tracking per card
+    modePerformance: [ModePerformanceSchema], // Per (mode × direction) SM-2 tracking
   }],
   // Tracks performance for the set as a whole
   setPerformance: {

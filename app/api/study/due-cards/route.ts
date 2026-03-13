@@ -42,8 +42,13 @@ export async function GET(request: NextRequest) {
 
   for (const doc of analytics) {
     const dueCards = (doc.cardPerformance || []).filter(
-      (cp: { mlData?: { nextReviewDate?: Date } }) =>
-        cp.mlData?.nextReviewDate && new Date(cp.mlData.nextReviewDate) <= now,
+      (cp: { mlData?: { nextReviewDate?: Date }; modePerformance?: Array<{ mlData?: { nextReviewDate?: Date } }> }) => {
+        // Due if aggregate SM-2 says so
+        if (cp.mlData?.nextReviewDate && new Date(cp.mlData.nextReviewDate) <= now) return true;
+        // Also due if any per-mode SM-2 is past due
+        if (cp.modePerformance?.some((mp) => mp.mlData?.nextReviewDate && new Date(mp.mlData.nextReviewDate) <= now)) return true;
+        return false;
+      },
     );
 
     if (dueCards.length > 0) {

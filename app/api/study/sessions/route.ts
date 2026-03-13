@@ -176,6 +176,24 @@ export async function POST(request: NextRequest) {
                 cardPerf.mlData.interval = updatedSM2.interval;
                 cardPerf.mlData.repetitions = updatedSM2.repetitions;
                 cardPerf.mlData.nextReviewDate = updatedSM2.nextReviewDate;
+                // Update per-mode SM-2 and accuracy
+                const sessionMode = body.sessionMeta?.studyMode || 'classic';
+                const sessionDirection = body.sessionMeta?.studyDirection || 'front-to-back';
+                if (!cardPerf.modePerformance) cardPerf.modePerformance = [];
+                let modePerf = cardPerf.modePerformance.find(
+                    (mp: any) => mp.mode === sessionMode && mp.direction === sessionDirection
+                );
+                if (!modePerf) {
+                    cardPerf.modePerformance.push({ mode: sessionMode, direction: sessionDirection, correctCount: 0, incorrectCount: 0 });
+                    modePerf = cardPerf.modePerformance[cardPerf.modePerformance.length - 1];
+                }
+                if (result.isCorrect) modePerf.correctCount++; else modePerf.incorrectCount++;
+                const updatedModeSM2 = calculateSM2(modePerf.mlData, result.isCorrect, result.confidenceRating);
+                if (!modePerf.mlData) modePerf.mlData = {};
+                modePerf.mlData.easinessFactor = updatedModeSM2.easinessFactor;
+                modePerf.mlData.interval = updatedModeSM2.interval;
+                modePerf.mlData.repetitions = updatedModeSM2.repetitions;
+                modePerf.mlData.nextReviewDate = updatedModeSM2.nextReviewDate;
                 // Update confidence data for paid users
                 // Update confidence data for authenticated users only
                 if (session?.user?.id && result.confidenceRating) {
@@ -222,6 +240,7 @@ export async function POST(request: NextRequest) {
               incorrectCount: sessionMeta?.incorrectCount ?? results.filter((r: CardResult) => !r.isCorrect).length,
               completedCards: results.length,
               studyDirection: sessionMeta?.studyDirection || 'front-to-back',
+              studyMode: sessionMeta?.studyMode || 'classic',
             };
             if (sessionMeta?.startTime) sessionData.startTime = new Date(sessionMeta.startTime);
             if (sessionMeta?.endTime) sessionData.endTime = new Date(sessionMeta.endTime);
@@ -245,6 +264,8 @@ export async function POST(request: NextRequest) {
                 isCorrect: r.isCorrect,
                 timeSeconds: r.timeSeconds,
                 ...(r.confidenceRating && { confidenceRating: r.confidenceRating }),
+                studyMode: sessionMeta?.studyMode || 'classic',
+                studyDirection: sessionMeta?.studyDirection || 'front-to-back',
               };
             });
 
@@ -293,7 +314,7 @@ export async function POST(request: NextRequest) {
       });
     }
     try {
-        const { listId, studyDirection }: { listId: string, studyDirection: StudyDirection } = body;
+        const { listId, studyDirection, studyMode }: { listId: string, studyDirection: StudyDirection, studyMode?: string } = body;
         
         // **FIX: Build query using Mongoose models, not the native driver**
         const findQuery: mongoose.FilterQuery<typeof FlashcardSet> = { _id: new mongoose.Types.ObjectId(listId) };
@@ -328,6 +349,7 @@ export async function POST(request: NextRequest) {
             status: 'active',
             totalCards: flashcards.length,
             studyDirection: studyDirection || 'front-to-back',
+            studyMode: studyMode || 'classic',
         });
         
         await Logger.info(LogContext.STUDY, "Study session created successfully", { requestId, userId: session?.user?.id, metadata: { sessionId: newSession.sessionId, studyDirection, cardCount: flashcards.length } });

@@ -23,6 +23,7 @@ export interface IStudySession extends Document {
   incorrectCount: number;
   completedCards: number;
   studyDirection?: StudyDirection;
+  studyMode?: 'classic' | 'multiple-choice' | 'type-answer';
   isShareable: boolean;
   durationSeconds: number;
 
@@ -48,6 +49,11 @@ const StudySessionSchema: Schema = new Schema(
       type: String,
       enum: ['front-to-back', 'back-to-front'],
       default: 'front-to-back'
+    },
+    studyMode: {
+      type: String,
+      enum: ['classic', 'multiple-choice', 'type-answer'],
+      default: 'classic'
     },
     isShareable: { type: Boolean, default: false }
   },

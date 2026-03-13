@@ -69,6 +69,7 @@ export interface StudySessionHistory {
   durationSeconds: number;
   isOfflineSession: boolean;
   studyDirection: string;
+  studyMode?: string;
 }
 
 export interface PendingChange {

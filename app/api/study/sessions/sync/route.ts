@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
       startTime,
       endTime,
       results = [] as SyncCardResult[],
-      studyDirection
+      studyDirection,
+      studyMode
     } = body;
 
     if (!sessionId || !setId) {
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
       if (endTime) existingSession.endTime = new Date(endTime);
       if (setName) existingSession.setName = setName;
       existingSession.studyDirection = studyDirection;
+      existingSession.studyMode = studyMode || 'classic';
       existingSession.status = 'completed';
       await existingSession.save();
 
@@ -118,6 +120,7 @@ export async function POST(request: NextRequest) {
         endTime: endTime ? new Date(endTime) : new Date(),
         status: 'completed',
         studyDirection: studyDirection || 'front-to-back',
+        studyMode: studyMode || 'classic',
       });
       await newSession.save();
 
@@ -163,6 +166,8 @@ export async function POST(request: NextRequest) {
           isCorrect: result.isCorrect,
           timeSeconds: result.timeSeconds,
           confidenceRating: result.confidenceRating,
+          studyMode: studyMode || 'classic',
+          studyDirection: studyDirection || 'front-to-back',
         };
       });
 
@@ -285,6 +290,25 @@ export async function POST(request: NextRequest) {
         cardPerf.mlData.interval = updatedSM2.interval;
         cardPerf.mlData.repetitions = updatedSM2.repetitions;
         cardPerf.mlData.nextReviewDate = updatedSM2.nextReviewDate;
+
+        // Update per-mode SM-2 and accuracy
+        const sessionMode = studyMode || 'classic';
+        const sessionDirection = studyDirection || 'front-to-back';
+        if (!cardPerf.modePerformance) cardPerf.modePerformance = [];
+        let modePerf = cardPerf.modePerformance.find(
+          (mp: any) => mp.mode === sessionMode && mp.direction === sessionDirection
+        );
+        if (!modePerf) {
+          cardPerf.modePerformance.push({ mode: sessionMode, direction: sessionDirection, correctCount: 0, incorrectCount: 0 });
+          modePerf = cardPerf.modePerformance[cardPerf.modePerformance.length - 1];
+        }
+        if (result.isCorrect) modePerf.correctCount++; else modePerf.incorrectCount++;
+        const updatedModeSM2 = calculateSM2(modePerf.mlData, result.isCorrect, result.confidenceRating);
+        if (!modePerf.mlData) modePerf.mlData = {};
+        modePerf.mlData.easinessFactor = updatedModeSM2.easinessFactor;
+        modePerf.mlData.interval = updatedModeSM2.interval;
+        modePerf.mlData.repetitions = updatedModeSM2.repetitions;
+        modePerf.mlData.nextReviewDate = updatedModeSM2.nextReviewDate;
 
         // Update confidence data
         if (result.confidenceRating) {

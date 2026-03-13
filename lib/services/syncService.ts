@@ -474,6 +474,7 @@ export class OfflineSyncService {
         startTime: historyEntry?.startTime ? new Date(historyEntry.startTime).toISOString() : new Date().toISOString(),
         endTime: historyEntry?.endTime ? new Date(historyEntry.endTime).toISOString() : new Date().toISOString(),
         studyDirection: historyEntry?.studyDirection || 'front-to-back',
+        studyMode: historyEntry?.studyMode || 'classic',
         results: results.map(r => ({
           cardId: r.flashcardId || (r as any).cardId,
           isCorrect: r.isCorrect,
