@@ -8,6 +8,7 @@ import { StudySession } from '@/models/StudySession';
 import { CardResult } from '@/models/CardResult';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import CardResultRow from './CardResultRow';
+import { studyResultsSchema } from '@/lib/structured-data';
 
 interface ResultsPageProps {
   params: Promise<{ sessionId: string }>;
@@ -50,12 +51,26 @@ export async function generateMetadata({ params }: ResultsPageProps) {
     if (set) setName = set.title;
   }
 
+  const ogTitle = `${accuracy}% on ${setName}`;
+  const description = `Study session results: ${session.correctCount}/${session.totalCards} correct on ${setName}`;
+  const ogImageUrl = `/api/og?type=results&set=${encodeURIComponent(setName)}&accuracy=${accuracy}&correct=${session.correctCount}&total=${session.totalCards}`;
+
   return {
-    title: `${accuracy}% on ${setName} | Flashlearn AI`,
-    description: `Study session results: ${session.correctCount}/${session.totalCards} correct on ${setName}`,
+    title: `${ogTitle} | FlashLearn AI`,
+    description,
+    alternates: { canonical: `/results/${sessionId}` },
     openGraph: {
-      title: `${accuracy}% on ${setName}`,
-      description: `${session.correctCount} out of ${session.totalCards} cards correct`,
+      title: ogTitle,
+      description,
+      type: 'article',
+      url: `/results/${sessionId}`,
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: ogTitle }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: ogTitle,
+      description,
+      images: [ogImageUrl],
     },
   };
 }
@@ -136,7 +151,20 @@ export default async function PublicResultsPage({ params }: ResultsPageProps) {
     };
   });
 
+  const structuredData = studyResultsSchema({
+    setName,
+    accuracy,
+    correct: studySession.correctCount,
+    total: studySession.totalCards,
+    url: `/results/${sessionId}`,
+  });
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         {/* Header */}
@@ -215,5 +243,6 @@ export default async function PublicResultsPage({ params }: ResultsPageProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -5,6 +5,7 @@ import dbConnect from "@/lib/db/mongodb";
 import { FlashcardSet, IFlashcardSet } from "@/models/FlashcardSet";
 import { isValidObjectId, Types } from "mongoose";
 import PublicSetViewer from "@/components/PublicSetViewer";
+import { flashcardSetSchema } from "@/lib/structured-data";
 
 // FIXED: Updated interface for Next.js 15 - params is now a Promise
 interface PublicSetPageProps {
@@ -35,16 +36,34 @@ export async function generateMetadata({ params }: { params: Promise<{ setId: st
 
     // FIXED: Better TypeScript typing
     const set = await FlashcardSet.findById(setId)
-        .select('title description isPublic')
+        .select('title description isPublic cardCount')
         .lean<IFlashcardSet>();
 
     if (!set || !set.isPublic) {
         return { title: 'Set Not Found' };
     }
 
+    const ogTitle = set.title;
+    const description = set.description || `Study the ${set.cardCount ?? ''} card flashcard set: ${ogTitle}`;
+    const ogImageUrl = `/api/og?type=set&title=${encodeURIComponent(ogTitle)}&description=${encodeURIComponent(description)}&cards=${set.cardCount ?? 0}`;
+
     return {
-        title: `${set.title} | Flashlearn AI`,
-        description: set.description || `Study the flashcard set: ${set.title}`,
+        title: `${ogTitle} | FlashLearn AI`,
+        description,
+        alternates: { canonical: `/sets/${setId}` },
+        openGraph: {
+            title: ogTitle,
+            description,
+            type: 'article',
+            url: `/sets/${setId}`,
+            images: [{ url: ogImageUrl, width: 1200, height: 630, alt: ogTitle }],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: ogTitle,
+            description,
+            images: [ogImageUrl],
+        },
     };
 }
 
@@ -74,14 +93,26 @@ async function getPublicFlashcardSet(setId: string): Promise<IFlashcardSet | nul
 export default async function PublicSetPage({ params }: PublicSetPageProps) {
   // FIXED: Await the params Promise
   const { setId } = await params;
-  
+
   const flashcardSet = await getPublicFlashcardSet(setId);
 
   if (!flashcardSet) {
     notFound();
   }
 
+  const structuredData = flashcardSetSchema({
+    title: flashcardSet.title,
+    description: flashcardSet.description || '',
+    cardCount: flashcardSet.cardCount,
+    url: `/sets/${setId}`,
+  });
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 md:p-8 mb-8 border border-gray-200 dark:border-gray-700">
@@ -114,5 +145,6 @@ export default async function PublicSetPage({ params }: PublicSetPageProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }
