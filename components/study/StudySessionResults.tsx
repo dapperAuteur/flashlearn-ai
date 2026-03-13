@@ -433,6 +433,8 @@ export default function StudySessionResults() {
         onClose={() => setShareModalOpen(false)}
         shareUrl={shareUrl || ''}
         title={`${results.accuracy.toFixed(0)}% on ${flashcardSetName}`}
+        heading="Share Your Results"
+        shareText="Check out my study results"
       />
     </div>
   );
