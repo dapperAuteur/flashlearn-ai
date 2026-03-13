@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import { useOnboarding } from '@/hooks/OnboardingHooks';
 import OnboardingModal from '@/components/ui/OnboardingModal';
+import { getSyncService } from '@/lib/services/syncService';
 
 /**
  * Dashboard layout with authentication check.
@@ -26,6 +27,11 @@ export default function DashboardLayout({
     completeOnboarding,
     skipOnboarding,
   } = useOnboarding();
+
+  // Initialize offline sync service (registers online/offline listeners + drains queue)
+  useEffect(() => {
+    getSyncService().initialize();
+  }, []);
 
   // Redirect unauthenticated users
   useEffect(() => {

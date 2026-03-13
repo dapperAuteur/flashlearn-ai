@@ -61,6 +61,7 @@ export class OfflineSyncService {
   private _pendingCount = 0;
   private _syncedCount = 0;
   private _lastSyncedAt: Date | null = null;
+  private _initialized = false;
 
   static getInstance(): OfflineSyncService {
     if (!OfflineSyncService.instance) {
@@ -72,13 +73,14 @@ export class OfflineSyncService {
   // ============================================================================
   // INITIALIZATION
   // ============================================================================
-  
+
   /**
    * Initialize sync service with online/offline listeners and periodic sync
-   * Call this once during app startup
+   * Call this once during app startup — safe to call multiple times (idempotent)
    */
   initialize(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || this._initialized) return;
+    this._initialized = true;
 
     // Set up online/offline event listeners
     window.addEventListener('online', this.handleOnline.bind(this));

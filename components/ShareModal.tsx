@@ -7,9 +7,11 @@ interface ShareModalProps {
   onClose: () => void;
   shareUrl: string;
   title: string;
+  heading?: string;
+  shareText?: string;
 }
 
-export default function ShareModal({ isOpen, onClose, shareUrl, title }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, shareText }: ShareModalProps) {
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
@@ -46,8 +48,9 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title }: ShareMo
     }
   };
 
+  const resolvedShareText = shareText ?? 'Check out this flashcard set';
   const encodedUrl = encodeURIComponent(shareUrl);
-  const encodedTitle = encodeURIComponent(`Check out this flashcard set: ${title}`);
+  const encodedTitle = encodeURIComponent(`${resolvedShareText}: ${title}`);
 
   return (
     <div 
@@ -58,7 +61,7 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title }: ShareMo
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md transform transition-transform duration-300 scale-95"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
       >
-        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Share This Set</h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">{heading ?? 'Share This Set'}</h2>
         
         <div className="flex items-center space-x-2 mb-4">
           <input
@@ -82,7 +85,7 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title }: ShareMo
             <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-800">
                 {/* SVG for Facebook */}
             </a>
-            <a href={`mailto:?subject=${encodedTitle}&body=Check out this flashcard set I made on Flashlearn AI: ${encodedUrl}`} className="text-gray-500 hover:text-red-500">
+            <a href={`mailto:?subject=${encodedTitle}&body=${resolvedShareText} on Flashlearn AI: ${encodedUrl}`} className="text-gray-500 hover:text-red-500">
                 {/* SVG for Email */}
             </a>
         </div>
