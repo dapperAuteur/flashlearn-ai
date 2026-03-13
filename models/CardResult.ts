@@ -9,6 +9,8 @@ export interface ICardResult extends Document {
   isCorrect: boolean;
   timeSeconds: number;
   confidenceRating?: number;
+  studyMode?: 'classic' | 'multiple-choice' | 'type-answer';
+  studyDirection?: 'front-to-back' | 'back-to-front';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,7 +24,9 @@ const CardResultSchema: Schema = new Schema(
     back: { type: String },
     isCorrect: { type: Boolean, required: true },
     timeSeconds: { type: Number, required: true, min: 0 },
-    confidenceRating: { type: Number, min: 1, max: 5 }
+    confidenceRating: { type: Number, min: 1, max: 5 },
+    studyMode: { type: String, enum: ['classic', 'multiple-choice', 'type-answer'] },
+    studyDirection: { type: String, enum: ['front-to-back', 'back-to-front'] }
   },
   { timestamps: true }
 );

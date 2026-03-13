@@ -45,7 +45,7 @@ interface StudySessionState {
   isOfflineSession: boolean;
   isSyncing: boolean;
   syncError: string | null;
-  startSession: (listId: string, direction: StudyDirection, cardIds?: string[]) => Promise<void>;
+  startSession: (listId: string, direction: StudyDirection, cardIds?: string[], mode?: StudyMode) => Promise<void>;
   recordCardResult: (isCorrect: boolean, timeSeconds: number, confidenceRating?: number) => Promise<void>;
   recordConfidence: (rating: number) => void;
   completeConfidence: () => void;
@@ -78,11 +78,13 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  const startSession = useCallback(async (listId: string, direction: StudyDirection, cardIds?: string[]) => {
+  const startSession = useCallback(async (listId: string, direction: StudyDirection, cardIds?: string[], mode?: StudyMode) => {
     try {
       setIsLoading(true);
       setError(null);
       setStudyDirection(direction);
+      const effectiveMode = mode ?? studyMode;
+      if (mode) setStudyMode(mode);
       
       const newSessionId = generateMongoId();
       const isOffline = !navigator.onLine;
@@ -202,7 +204,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       setHasCompletedConfidence(!isConfidenceRequired);
 
       // Fetch MC distractors if in multiple-choice mode
-      if (studyMode === 'multiple-choice') {
+      if (effectiveMode === 'multiple-choice') {
         let mcChoices: Record<string, string[]> = {};
 
         // Try AI-generated distractors if online
@@ -293,7 +295,8 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
           : 0,
         durationSeconds: totalTime,
         isOfflineSession,
-        studyDirection
+        studyDirection,
+        studyMode
       };
 
       await saveStudyHistory(historyEntry);
@@ -334,7 +337,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       setError("Failed to save results. Please try again.");
       setIsComplete(false);
     }
-  }, [sessionId, sessionStartTime, flashcards, flashcardSetName, isOfflineSession, studyDirection, authSession?.user?.id]);
+  }, [sessionId, sessionStartTime, flashcards, flashcardSetName, isOfflineSession, studyDirection, studyMode, authSession?.user?.id]);
 
   const recordConfidence = useCallback((rating: number) => {
     if (rating < 1 || rating > 5) {

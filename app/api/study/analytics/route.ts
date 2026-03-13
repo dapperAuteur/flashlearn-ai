@@ -89,7 +89,8 @@ export async function GET() {
     const user = await User.findById(userId).select('profiles').lean();
     const profileIds = (user as any)?.profiles || [];
 
-    let problemCards: { cardId: string; correct: number; incorrect: number; accuracy: number }[] = [];
+    let problemCards: { cardId: string; correct: number; incorrect: number; accuracy: number; weakestMode?: { mode: string; direction: string; accuracy: number } }[] = [];
+    let modeBreakdown: { mode: string; direction: string; accuracy: number; attempts: number }[] = [];
 
     if (profileIds.length > 0) {
       const analytics = await StudyAnalytics.find({
@@ -98,17 +99,41 @@ export async function GET() {
         .select('cardPerformance')
         .lean();
 
-      const allCards: { cardId: string; correct: number; incorrect: number; accuracy: number }[] = [];
+      const allCards: { cardId: string; correct: number; incorrect: number; accuracy: number; weakestMode?: { mode: string; direction: string; accuracy: number } }[] = [];
+      // Aggregate per-mode totals across all cards
+      const modeMap = new Map<string, { correct: number; incorrect: number }>();
+
       for (const a of analytics) {
         const perf = (a as any).cardPerformance || [];
         for (const p of perf) {
           const total = p.correctCount + p.incorrectCount;
           if (total >= 2) {
+            // Find weakest mode for this card
+            let weakestMode: { mode: string; direction: string; accuracy: number } | undefined;
+            for (const mp of (p.modePerformance || [])) {
+              const mpTotal = mp.correctCount + mp.incorrectCount;
+              if (mpTotal >= 1) {
+                const mpAccuracy = Math.round((mp.correctCount / mpTotal) * 100);
+                if (!weakestMode || mpAccuracy < weakestMode.accuracy) {
+                  weakestMode = { mode: mp.mode, direction: mp.direction, accuracy: mpAccuracy };
+                }
+              }
+            }
             allCards.push({
               cardId: p.cardId.toString(),
               correct: p.correctCount,
               incorrect: p.incorrectCount,
               accuracy: Math.round((p.correctCount / total) * 100),
+              weakestMode,
+            });
+          }
+          // Aggregate mode breakdown
+          for (const mp of (p.modePerformance || [])) {
+            const key = `${mp.mode}:${mp.direction}`;
+            const existing = modeMap.get(key) || { correct: 0, incorrect: 0 };
+            modeMap.set(key, {
+              correct: existing.correct + (mp.correctCount || 0),
+              incorrect: existing.incorrect + (mp.incorrectCount || 0),
             });
           }
         }
@@ -117,6 +142,18 @@ export async function GET() {
       // Sort by accuracy ascending, take top 10 worst
       allCards.sort((a, b) => a.accuracy - b.accuracy);
       problemCards = allCards.slice(0, 10);
+
+      // Build modeBreakdown array
+      modeBreakdown = Array.from(modeMap.entries()).map(([key, data]) => {
+        const [mode, direction] = key.split(':');
+        const attempts = data.correct + data.incorrect;
+        return {
+          mode,
+          direction,
+          accuracy: attempts > 0 ? Math.round((data.correct / attempts) * 100) : 0,
+          attempts,
+        };
+      }).sort((a, b) => a.mode.localeCompare(b.mode) || a.direction.localeCompare(b.direction));
     }
 
     // 4. Confidence vs accuracy data
@@ -197,6 +234,7 @@ export async function GET() {
       problemCards,
       confidenceAccuracy,
       dailyStudyTime,
+      modeBreakdown,
     });
   } catch (error) {
     console.error('Error fetching analytics:', error);
