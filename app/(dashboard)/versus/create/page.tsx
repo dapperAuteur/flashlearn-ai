@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useFlashcards } from '@/contexts/FlashcardContext';
 import ChallengeShareModal from '@/components/versus/ChallengeShareModal';
@@ -28,6 +28,7 @@ interface CreatedChallenge {
 
 export default function CreateChallengePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const { flashcardSets } = useFlashcards();
   const userId = session?.user?.id || '';
@@ -39,6 +40,17 @@ export default function CreateChallengePage() {
   // Step 1: Select flashcard set
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Pre-populate from ?setId= and skip to step 2
+  const presetSetId = searchParams.get('setId');
+  useEffect(() => {
+    if (!presetSetId || flashcardSets.length === 0) return;
+    const match = flashcardSets.find((s) => s.id === presetSetId);
+    if (match) {
+      setSelectedSetId(presetSetId);
+      setStep(2);
+    }
+  }, [presetSetId, flashcardSets]);
 
   // Step 2: Study mode and direction
   const [studyMode, setStudyMode] = useState<StudyMode>('classic');
@@ -194,7 +206,9 @@ export default function CreateChallengePage() {
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Choose a Flashcard Set</h2>
             <p className="text-sm text-gray-500 mb-4">
-              Select the set you want to use for this challenge.
+              {selectedSetId
+                ? 'A set has been pre-selected — change it here or continue.'
+                : 'Select the set you want to use for this challenge.'}
             </p>
 
             {/* Search */}
