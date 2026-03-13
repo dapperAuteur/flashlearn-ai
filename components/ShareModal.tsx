@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { track } from '@vercel/analytics';
+import { buildShareUrl, buildTwitterShareUrl, buildFacebookShareUrl, buildEmailShareUrl } from '@/lib/share-urls';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -9,9 +11,10 @@ interface ShareModalProps {
   title: string;
   heading?: string;
   shareText?: string;
+  campaign?: 'versus' | 'results' | 'set';
 }
 
-export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, shareText }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, shareText, campaign = 'set' }: ShareModalProps) {
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
@@ -25,15 +28,14 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
   }
 
   const handleCopy = async () => {
+    const urlWithUtm = buildShareUrl(shareUrl, 'copy', campaign);
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(urlWithUtm);
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-      // Fallback for older browsers
-      const textArea = document.createElement("textarea");
-      textArea.value = shareUrl;
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      const textArea = document.createElement('textarea');
+      textArea.value = urlWithUtm;
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
@@ -46,23 +48,32 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
       }
       document.body.removeChild(textArea);
     }
+    track('share_generated', { type: campaign, platform: 'copy' });
   };
 
   const resolvedShareText = shareText ?? 'Check out this flashcard set';
-  const encodedUrl = encodeURIComponent(shareUrl);
-  const encodedTitle = encodeURIComponent(`${resolvedShareText}: ${title}`);
+
+  const twitterUrl = buildTwitterShareUrl(
+    buildShareUrl(shareUrl, 'twitter', campaign),
+    resolvedShareText
+  );
+  const facebookUrl = buildFacebookShareUrl(buildShareUrl(shareUrl, 'facebook', campaign));
+  const emailUrl = buildEmailShareUrl(
+    `${resolvedShareText}: ${title}`,
+    `${resolvedShareText}\n\nStudy this set free on FlashLearn AI:\n${buildShareUrl(shareUrl, 'email', campaign)}\n\nCreate your own AI flashcards at https://www.flashlearn-ai.com`
+  );
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 transition-opacity duration-300"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md transform transition-transform duration-300 scale-95"
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+        onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">{heading ?? 'Share This Set'}</h2>
-        
+
         <div className="flex items-center space-x-2 mb-4">
           <input
             type="text"
@@ -77,19 +88,35 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
             {isCopied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-        
+
         <div className="flex justify-center space-x-4">
-            <a href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-500">
-                {/* SVG for Twitter */}
-            </a>
-            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-800">
-                {/* SVG for Facebook */}
-            </a>
-            <a href={`mailto:?subject=${encodedTitle}&body=${resolvedShareText} on Flashlearn AI: ${encodedUrl}`} className="text-gray-500 hover:text-red-500">
-                {/* SVG for Email */}
-            </a>
+          <a
+            href={twitterUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-500 hover:text-blue-500"
+            onClick={() => track('share_generated', { type: campaign, platform: 'twitter' })}
+          >
+            {/* SVG for Twitter */}
+          </a>
+          <a
+            href={facebookUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-500 hover:text-blue-800"
+            onClick={() => track('share_generated', { type: campaign, platform: 'facebook' })}
+          >
+            {/* SVG for Facebook */}
+          </a>
+          <a
+            href={emailUrl}
+            className="text-gray-500 hover:text-red-500"
+            onClick={() => track('share_generated', { type: campaign, platform: 'email' })}
+          >
+            {/* SVG for Email */}
+          </a>
         </div>
-        
+
         <button
           onClick={onClose}
           className="w-full mt-6 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded"

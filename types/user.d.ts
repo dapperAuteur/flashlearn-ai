@@ -33,4 +33,10 @@ export interface IUser extends Document {
   pendingEmail?: string;
   pendingEmailToken?: string;
   pendingEmailExpires?: Date;
+  // Attribution / referral tracking
+  signupSource?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  referredBy?: Schema.Types.ObjectId;
 }
