@@ -69,8 +69,31 @@ export const useCsvImport = (
 
     const downloadTemplate = () => {
         Logger.log(LogContext.FLASHCARD, 'Initiating CSV template download');
-        const templateContent = `"front","back"\n"Example Front 1","Example Back 1"\n"Front with, comma","Back with ""quotes"""`;
-        const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
+        // Each row is an array of [front, back]; values are RFC 4180-compliant CSV.
+        // Rules: wrap every field in double-quotes; escape a literal " as "".
+        // Newlines inside a field are fine as long as the field stays quoted.
+        const rows: [string, string][] = [
+          ['front', 'back'],
+          // Basic card
+          ['[EXAMPLE: basic] What is photosynthesis?', 'The process by which plants convert sunlight, water, and CO2 into glucose and oxygen.'],
+          // Commas inside a field
+          ['[EXAMPLE: commas in answer] Name three primary colors.', 'Red, blue, and yellow'],
+          // Double-quotes inside a field → escape each " as ""
+          ['[EXAMPLE: double quotes] What does the author mean by "the road not taken"?', 'He reflects on choices; the phrase "the road not taken" implies regret about alternatives.'],
+          // Single quotes — no escaping needed
+          ["[EXAMPLE: single quotes / apostrophes] What's Newton's first law?", "An object won't change its motion unless acted on by an external force (law of inertia)."],
+          // Multi-line answer (newline embedded inside the quoted field)
+          ['[EXAMPLE: multi-line answer] List the steps of the scientific method.', '1. Observe\n2. Question\n3. Hypothesize\n4. Experiment\n5. Analyze\n6. Conclude'],
+          // Numbers and symbols
+          ['[EXAMPLE: numbers & symbols] What is the formula for the area of a circle?', 'A = π × r²  (where r is the radius)'],
+          // Long answer with mixed punctuation
+          ['[EXAMPLE: mixed punctuation] Explain the difference between "affect" and "effect".', '"Affect" is usually a verb (to influence); "effect" is usually a noun (the result). Example: "Stress affects health; fatigue is an effect of stress."'],
+        ];
+
+        const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+        const csvContent = rows.map(row => row.map(escape).join(',')).join('\r\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
@@ -78,6 +101,7 @@ export const useCsvImport = (
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     return {

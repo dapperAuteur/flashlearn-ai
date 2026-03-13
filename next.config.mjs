@@ -8,9 +8,7 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['mongoose'],
-  },
+  serverExternalPackages: ['mongoose', 'pdf-parse'],
   webpack: (config) => {
     // DNS lookup issue fix for MongoDB connections
     config.resolve.fallback = { dns: false, net: false, tls: false };
