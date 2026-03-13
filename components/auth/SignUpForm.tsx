@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { track } from "@vercel/analytics";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -43,6 +44,22 @@ export default function SignUpForm() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Capture UTM params from the URL (may be passed through from shared links)
+  const utmSource = searchParams.get('utm_source') ?? undefined;
+  const utmMedium = searchParams.get('utm_medium') ?? undefined;
+  const utmCampaign = searchParams.get('utm_campaign') ?? undefined;
+  const signupSource = utmCampaign ?? utmSource ?? undefined;
+
+  useEffect(() => {
+    if (utmSource) {
+      // Persist to sessionStorage so it survives page reloads within the auth flow
+      sessionStorage.setItem('utm_source', utmSource);
+      sessionStorage.setItem('utm_medium', utmMedium ?? 'share');
+      sessionStorage.setItem('utm_campaign', utmCampaign ?? '');
+    }
+  }, [utmSource, utmMedium, utmCampaign]);
   
   const { register, handleSubmit, watch, formState: { errors } } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema)
@@ -71,6 +88,11 @@ export default function SignUpForm() {
     Logger.log(LogContext.AUTH, 'Sign-up form submitted', { email: data.email });
     
     try {
+      // Also pull from sessionStorage as fallback (set earlier in this auth flow)
+      const storedUtmSource = utmSource ?? sessionStorage.getItem('utm_source') ?? undefined;
+      const storedUtmMedium = utmMedium ?? sessionStorage.getItem('utm_medium') ?? undefined;
+      const storedUtmCampaign = utmCampaign ?? sessionStorage.getItem('utm_campaign') ?? undefined;
+
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,6 +101,10 @@ export default function SignUpForm() {
           email: data.email,
           password: data.password,
           ...(data.username ? { username: data.username } : {}),
+          ...(storedUtmSource ? { utmSource: storedUtmSource } : {}),
+          ...(storedUtmMedium ? { utmMedium: storedUtmMedium } : {}),
+          ...(storedUtmCampaign ? { utmCampaign: storedUtmCampaign } : {}),
+          ...(signupSource ? { signupSource } : {}),
         })
       });
       
@@ -91,6 +117,16 @@ export default function SignUpForm() {
       }
       
       Logger.log(LogContext.AUTH, 'User registration successful', { email: data.email });
+      // Fire attribution event if signup came from a share
+      if (storedUtmCampaign || storedUtmSource) {
+        track('signup_from_share', {
+          utmCampaign: storedUtmCampaign ?? '',
+          utmSource: storedUtmSource ?? '',
+        });
+        sessionStorage.removeItem('utm_source');
+        sessionStorage.removeItem('utm_medium');
+        sessionStorage.removeItem('utm_campaign');
+      }
       router.push('/auth/signin?status=signup-success');
     } catch (error: any) {
       Logger.error(LogContext.AUTH, 'Sign-up submission error', { email: data.email, error: error.message });

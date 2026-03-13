@@ -6,6 +6,8 @@ import { FlashcardSet, IFlashcardSet } from "@/models/FlashcardSet";
 import { isValidObjectId, Types } from "mongoose";
 import PublicSetViewer from "@/components/PublicSetViewer";
 import { flashcardSetSchema } from "@/lib/structured-data";
+import { StudySession } from "@/models/StudySession";
+import { ShareEventLogger } from "@/lib/share-event-logger";
 
 // FIXED: Updated interface for Next.js 15 - params is now a Promise
 interface PublicSetPageProps {
@@ -107,6 +109,13 @@ export default async function PublicSetPage({ params }: PublicSetPageProps) {
     url: `/sets/${setId}`,
   });
 
+  // Study count for social proof (only show if ≥ 10)
+  const studyCount = await StudySession.countDocuments({ listId: setId });
+  const showStudyCount = studyCount >= 10;
+
+  // Log this share link click (fire-and-forget)
+  void ShareEventLogger.logClick('set', setId, 'direct', 'set');
+
   return (
     <>
     <script
@@ -122,15 +131,27 @@ export default async function PublicSetPage({ params }: PublicSetPageProps) {
           )}
           <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
             <span>{flashcardSet.cardCount} Cards</span>
-            <span className="mx-2">·</span>
-            <span>Created by a user</span>
+            {showStudyCount && (
+              <>
+                <span className="mx-2">·</span>
+                <span>Studied {studyCount.toLocaleString()} times</span>
+              </>
+            )}
           </div>
-          <Link
-            href={`/study?setId=${setId}`}
-            className="mt-4 inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-          >
-            Study This Set
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href={`/study?setId=${setId}`}
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+            >
+              Study This Set
+            </Link>
+            <Link
+              href={`/auth/signup?callbackUrl=${encodeURIComponent(`/versus/create?setId=${setId}`)}&utm_source=set_page&utm_medium=share&utm_campaign=set`}
+              className="inline-flex items-center px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
+            >
+              ⚔️ Challenge a Friend
+            </Link>
+          </div>
         </div>
 
         <PublicSetViewer flashcardSet={flashcardSet} />

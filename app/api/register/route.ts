@@ -26,7 +26,12 @@ const userSchema = z.object({
     .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
     .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
     .regex(/[0-9]/, { message: "Password must contain at least one number" })
-    .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" })
+    .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" }),
+  // Optional attribution fields
+  utmSource: z.string().max(100).optional(),
+  utmMedium: z.string().max(100).optional(),
+  utmCampaign: z.string().max(100).optional(),
+  signupSource: z.string().max(100).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -73,7 +78,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { name, email, password, username } = result.data;
+    const { name, email, password, username, utmSource, utmMedium, utmCampaign, signupSource } = result.data;
 
     // Connect to database
     const client = await clientPromise;
@@ -125,11 +130,13 @@ export async function POST(request: NextRequest) {
       createdAt: new Date(),
       updatedAt: new Date(),
       profiles: [],
-      subscriptionTier: 'Free'
+      subscriptionTier: 'Free',
     };
-    if (username) {
-      userDoc.username = username;
-    }
+    if (username) userDoc.username = username;
+    if (utmSource) userDoc.utmSource = utmSource;
+    if (utmMedium) userDoc.utmMedium = utmMedium;
+    if (utmCampaign) userDoc.utmCampaign = utmCampaign;
+    if (signupSource) userDoc.signupSource = signupSource;
     const newUser = await db.collection("users").insertOne(userDoc);
     
     const userId = newUser.insertedId.toString();

@@ -263,9 +263,31 @@ export default function StudySessionResults() {
             {isSharing ? 'Sharing...' : 'Share Results'}
           </button>
         )}
+        {authSession?.user && flashcards[0]?.listId && (
+          <a
+            href={`/versus/create?setId=${flashcards[0].listId}`}
+            className="inline-flex items-center justify-center px-5 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors text-sm"
+          >
+            ⚔️ Challenge a Friend
+          </a>
+        )}
       </div>
 
       {shareError && <p className="mb-4 text-center text-sm text-red-600">{shareError}</p>}
+
+      {/* Sign-up prompt for non-authenticated users */}
+      {!authSession?.user && (
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
+          <p className="text-sm font-semibold text-blue-900 mb-1">Want to save your progress?</p>
+          <p className="text-xs text-blue-700 mb-3">Create a free account to track streaks, review history, and challenge friends.</p>
+          <a
+            href="/auth/signup?utm_source=post_study&utm_medium=share&utm_campaign=set"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Create Free Account →
+          </a>
+        </div>
+      )}
 
       {/* Study Style Insights */}
       {authSession?.user && (

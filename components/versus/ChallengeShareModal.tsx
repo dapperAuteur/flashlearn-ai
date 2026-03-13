@@ -5,13 +5,17 @@ import {
   ClipboardDocumentIcon,
   ClipboardDocumentCheckIcon,
   XMarkIcon,
+  ShareIcon,
 } from '@heroicons/react/24/outline';
+import { track } from '@vercel/analytics';
+import { buildShareUrl, buildTwitterShareUrl } from '@/lib/share-urls';
 
 interface ChallengeShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   challengeCode: string;
   challengeUrl: string;
+  setName?: string;
 }
 
 export default function ChallengeShareModal({
@@ -19,9 +23,15 @@ export default function ChallengeShareModal({
   onClose,
   challengeCode,
   challengeUrl,
+  setName,
 }: ChallengeShareModalProps) {
   const [codeCopied, setCodeCopied] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator !== 'undefined' && !!navigator.share);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -32,9 +42,36 @@ export default function ChallengeShareModal({
 
   if (!isOpen) return null;
 
-  const copyToClipboard = async (text: string, type: 'code' | 'url') => {
+  // Use the public preview URL for all external shares
+  const previewUrl = challengeUrl.replace('/versus/join/', '/versus/preview/');
+  const shareUrlWithUtm = buildShareUrl(previewUrl, 'copy', 'versus');
+  const shareText = setName
+    ? `I challenged you to a flashcard battle on "${setName}"! Use code ${challengeCode} or join here:`
+    : `I challenged you to a flashcard battle! Use code ${challengeCode} or join here:`;
+
+  const twitterShareUrl = buildTwitterShareUrl(
+    buildShareUrl(previewUrl, 'twitter', 'versus'),
+    shareText,
+    ['flashcards', 'studywithme', 'FlashLearnAI']
+  );
+
+  const handleNativeShare = async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.share({
+        title: 'FlashLearn AI Challenge',
+        text: shareText,
+        url: buildShareUrl(previewUrl, 'native', 'versus'),
+      });
+      track('share_generated', { type: 'versus', platform: 'native' });
+    } catch {
+      // User cancelled or API not available
+    }
+  };
+
+  const copyToClipboard = async (text: string, type: 'code' | 'url') => {
+    const valueToCopy = type === 'url' ? shareUrlWithUtm : text;
+    try {
+      await navigator.clipboard.writeText(valueToCopy);
       if (type === 'code') {
         setCodeCopied(true);
         setTimeout(() => setCodeCopied(false), 2000);
@@ -42,10 +79,9 @@ export default function ChallengeShareModal({
         setUrlCopied(true);
         setTimeout(() => setUrlCopied(false), 2000);
       }
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+    } catch {
       const textArea = document.createElement('textarea');
-      textArea.value = text;
+      textArea.value = valueToCopy;
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
@@ -62,6 +98,9 @@ export default function ChallengeShareModal({
         console.error('Fallback copy failed: ', fallbackErr);
       }
       document.body.removeChild(textArea);
+    }
+    if (type === 'url') {
+      track('share_generated', { type: 'versus', platform: 'copy' });
     }
   };
 
@@ -87,8 +126,34 @@ export default function ChallengeShareModal({
           </button>
         </div>
 
+        {/* Native share (mobile primary action) */}
+        {canNativeShare && (
+          <button
+            onClick={handleNativeShare}
+            className="w-full mb-4 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all"
+          >
+            <ShareIcon className="h-5 w-5" />
+            Share Challenge
+          </button>
+        )}
+
+        {/* Twitter */}
+        <a
+          href={twitterShareUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full mb-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-black hover:bg-gray-900 transition-colors"
+          onClick={() => track('share_generated', { type: 'versus', platform: 'twitter' })}
+        >
+          {/* X / Twitter icon */}
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          Share on X
+        </a>
+
         {/* Challenge code display */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-5">
           <p className="text-sm text-gray-500 mb-2">Challenge Code</p>
           <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
             <p className="text-3xl font-bold font-mono tracking-widest text-gray-900 dark:text-gray-100">
@@ -118,17 +183,17 @@ export default function ChallengeShareModal({
         </div>
 
         {/* Full URL */}
-        <div className="mb-6">
+        <div className="mb-5">
           <p className="text-sm text-gray-500 mb-2">Or share this link</p>
           <div className="flex items-center gap-2">
             <input
               type="text"
               readOnly
-              value={challengeUrl}
+              value={previewUrl}
               className="flex-1 p-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-300 truncate"
             />
             <button
-              onClick={() => copyToClipboard(challengeUrl, 'url')}
+              onClick={() => copyToClipboard(previewUrl, 'url')}
               className={`flex-shrink-0 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 urlCopied
                   ? 'bg-green-600 text-white'

@@ -135,6 +135,12 @@ const UserSchema = new Schema<IUser>({
   pendingEmailExpires: {
     type: Date,
   },
+  // Attribution / referral tracking
+  signupSource: { type: String },
+  utmSource: { type: String },
+  utmMedium: { type: String },
+  utmCampaign: { type: String },
+  referredBy: { type: Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true }); // Automatically adds createdAt and updatedAt timestamps
 
 // Create and export the User model. If the model already exists, use the existing one.

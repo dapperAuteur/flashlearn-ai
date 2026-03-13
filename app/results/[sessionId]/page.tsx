@@ -231,13 +231,23 @@ export default async function PublicResultsPage({ params }: ResultsPageProps) {
             </div>
           )}
           {!isOwner && (
-            <div>
-              <Link
-                href="/"
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Create your own flashcards with Flashlearn AI
-              </Link>
+            <div className="mt-2 space-y-3">
+              {studySession.listId && (
+                <Link
+                  href={`/versus/create?setId=${studySession.listId}`}
+                  className="inline-flex items-center px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium"
+                >
+                  ⚔️ Think you can do better? Start a Challenge
+                </Link>
+              )}
+              <div>
+                <Link
+                  href="/auth/signup?utm_source=results_page&utm_medium=share&utm_campaign=results"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Create your own AI flashcards — free →
+                </Link>
+              </div>
             </div>
           )}
         </div>
