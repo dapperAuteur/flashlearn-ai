@@ -17,17 +17,32 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
+  const sort = searchParams.get('sort') || 'date_desc';
 
   const userId = new mongoose.Types.ObjectId(session.user.id);
 
-  const [sessions, total] = await Promise.all([
-    StudySession.find({ userId, status: 'completed' })
-      .sort({ startTime: -1 })
+  const baseMatch = { userId, status: 'completed' };
+
+  let sessions: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const total = await StudySession.countDocuments(baseMatch);
+
+  if (sort === 'accuracy_desc' || sort === 'accuracy_asc') {
+    const sortDir = sort === 'accuracy_desc' ? -1 : 1;
+    sessions = await StudySession.aggregate([
+      { $match: baseMatch },
+      { $addFields: { accuracy: { $cond: [{ $gt: [{ $add: ['$correctCount', '$incorrectCount'] }, 0] }, { $divide: ['$correctCount', { $add: ['$correctCount', '$incorrectCount'] }] }, 0] } } },
+      { $sort: { accuracy: sortDir } },
+      { $skip: offset },
+      { $limit: limit },
+    ]);
+  } else {
+    const sortDir = sort === 'date_asc' ? 1 : -1;
+    sessions = await StudySession.find(baseMatch)
+      .sort({ startTime: sortDir })
       .skip(offset)
       .limit(limit)
-      .lean(),
-    StudySession.countDocuments({ userId, status: 'completed' }),
-  ]);
+      .lean();
+  }
 
   // Collect unique set IDs and fetch names (filter out invalid ObjectIds)
   const setIds = [...new Set(sessions.map((s) => s.listId.toString()))];
