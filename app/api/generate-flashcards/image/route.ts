@@ -94,6 +94,10 @@ Example: [{"front": "What is...?", "back": "It is..."}]
     });
   } catch (error) {
     Logger.error(LogContext.AI, 'Image flashcard generation error', { error });
+    const status = (error as { status?: number })?.status;
+    if (status === 429) {
+      return NextResponse.json({ error: 'Gemini API rate limit reached. Please wait a moment and try again.' }, { status: 429 });
+    }
     return NextResponse.json({ error: 'Failed to process images. Please try again.' }, { status: 500 });
   }
 }

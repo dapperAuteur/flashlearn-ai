@@ -1,0 +1,61 @@
+"front","back"
+"Susurrar","to whisper
+Intensity: low → (Susurrar → Hablar → Gritar)"
+"Hablar","to speak
+Intensity: medium → (Susurrar → Hablar → Gritar)"
+"Gritar","to shout
+Intensity: high → (Susurrar → Hablar → Gritar)"
+"Sonreír","to smile
+Intensity: low → (Sonreír → Reír → Carcajear)"
+"Reír","to laugh
+Intensity: medium → (Sonreír → Reír → Carcajear)"
+"Carcajear","to roar with laughter
+Intensity: high → (Sonreír → Reír → Carcajear)"
+"Mirar","to look
+Intensity: low → (Mirar → Observar → Inspeccionar)"
+"Observar","to observe
+Intensity: medium → (Mirar → Observar → Inspeccionar)"
+"Inspeccionar","to inspect closely
+Intensity: high → (Mirar → Observar → Inspeccionar)"
+"Picar","to snack
+Intensity: low → (Picar → Comer → Devorar)"
+"Comer","to eat
+Intensity: medium → (Picar → Comer → Devorar)"
+"Devorar","to devour
+Intensity: high → (Picar → Comer → Devorar)"
+"Fisurar","to crack
+Intensity: low → (Fisurar → Romper → Destrozar)"
+"Romper","to break
+Intensity: medium → (Fisurar → Romper → Destrozar)"
+"Destrozar","to smash / destroy
+Intensity: high → (Fisurar → Romper → Destrozar)"
+"Tocar","to touch
+Intensity: low → (Tocar → Apretar → Aplastar)"
+"Apretar","to squeeze
+Intensity: medium → (Tocar → Apretar → Aplastar)"
+"Aplastar","to crush
+Intensity: high → (Tocar → Apretar → Aplastar)"
+"Sorber","to sip
+Intensity: low → (Sorber → Beber → Tragar)"
+"Beber","to drink
+Intensity: medium → (Sorber → Beber → Tragar)"
+"Tragar","to gulp down
+Intensity: high → (Sorber → Beber → Tragar)"
+"Agradar","to be pleasing
+Intensity: low → (Agradar → Gustar → Querer)"
+"Gustar","to like
+Intensity: medium → (Agradar → Gustar → Querer)"
+"Querer","to love
+Intensity: high → (Agradar → Gustar → Querer)"
+"Pedir","to ask for
+Intensity: low → (Pedir → Rogar → Suplicar)"
+"Rogar","to beg
+Intensity: medium → (Pedir → Rogar → Suplicar)"
+"Suplicar","to plead
+Intensity: high → (Pedir → Rogar → Suplicar)"
+"Caminar","to walk
+Intensity: low → (Caminar → Trotar → Correr)"
+"Trotar","to jog
+Intensity: medium → (Caminar → Trotar → Correr)"
+"Correr","to run
+Intensity: high → (Caminar → Trotar → Correr)"

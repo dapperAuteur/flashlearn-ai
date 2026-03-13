@@ -281,6 +281,15 @@ export default function GenerateFlashcardsPage(){
                     )}
                   </button>
 
+                  <button
+                    onClick={downloadTemplate}
+                    disabled={anyActionInProgress}
+                    className="inline-flex items-center px-6 py-3 bg-white border-2 border-purple-300 text-purple-700 font-semibold rounded-xl hover:bg-purple-50 hover:border-purple-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  >
+                    <CloudArrowDownIcon className="h-5 w-5 mr-2" />
+                    CSV Template
+                  </button>
+
                   {flashcards.length > 0 && (
                     <button
                       onClick={handleExport}
