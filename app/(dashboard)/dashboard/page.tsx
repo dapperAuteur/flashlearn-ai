@@ -205,7 +205,7 @@ export default function DashboardPage() {
           </h2>
           {recentSessions.length > 0 && (
             <Link
-              href="/analytics"
+              href="/history"
               className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
               View all
