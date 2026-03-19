@@ -41,6 +41,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
   const [isSetPreSelected, setIsSetPreSelected] = useState(!!preSelectedSetId);
   const [searchTerm, setSearchTerm] = useState('');
   const [reviewCardIds, setReviewCardIds] = useState<string[]>([]);
+  const [studyScope, setStudyScope] = useState<'due' | 'all'>('due');
   const [dueCounts, setDueCounts] = useState<Map<string, number>>(new Map());
   const [assignments, setAssignments] = useState<Array<{
     _id: string;
@@ -150,11 +151,13 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
       .catch(() => { /* silent */ });
   }, [status]);
 
-  // Fetch due card IDs for review mode
+  // Fetch due card IDs whenever the selected set changes
   useEffect(() => {
-    if (!isReviewMode || !preSelectedSetId || status !== 'authenticated') return;
+    if (!selectedListId || status !== 'authenticated') return;
+    setReviewCardIds([]);
+    setStudyScope('due');
 
-    fetch(`/api/study/due-cards?setId=${preSelectedSetId}`)
+    fetch(`/api/study/due-cards?setId=${selectedListId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.sets?.[0]?.dueCardIds) {
@@ -162,7 +165,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
         }
       })
       .catch(() => { /* silent */ });
-  }, [isReviewMode, preSelectedSetId, status]);
+  }, [selectedListId, status]);
 
   const handleStartSession = async () => {
     if (!selectedListId) {
@@ -182,7 +185,9 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
     //   }
     // }
     
-    await startSession(selectedListId, studyDirection, isReviewMode && reviewCardIds.length > 0 ? reviewCardIds : undefined);
+    const hasDue = (dueCounts.get(selectedListId) ?? 0) > 0;
+    const cardIds = hasDue && studyScope === 'due' && reviewCardIds.length > 0 ? reviewCardIds : undefined;
+    await startSession(selectedListId, studyDirection, cardIds);
   };
 
   const handleDirectionChange = (direction: 'front-to-back' | 'back-to-front') => {
@@ -751,20 +756,58 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
 
         {/* Step 3: Start Button */}
         {currentStep === 'ready' && (
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg p-8 text-center">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg p-6 sm:p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-4">Ready to Start!</h2>
+
+            {/* Scope toggle — only shown when this set has due cards */}
+            {(dueCounts.get(selectedListId) ?? 0) > 0 && (
+              <div
+                role="group"
+                aria-label="Choose which cards to study"
+                className="flex flex-col sm:flex-row justify-center gap-3 mb-5"
+              >
+                <button
+                  onClick={() => setStudyScope('due')}
+                  aria-pressed={studyScope === 'due'}
+                  className={clsx(
+                    'flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-500',
+                    studyScope === 'due'
+                      ? 'bg-white text-blue-600 shadow-md'
+                      : 'bg-white/20 text-white hover:bg-white/30'
+                  )}
+                >
+                  <ClockIcon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                  Practice {dueCounts.get(selectedListId)} due card{(dueCounts.get(selectedListId) ?? 0) !== 1 ? 's' : ''}
+                </button>
+                <button
+                  onClick={() => setStudyScope('all')}
+                  aria-pressed={studyScope === 'all'}
+                  className={clsx(
+                    'flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-500',
+                    studyScope === 'all'
+                      ? 'bg-white text-blue-600 shadow-md'
+                      : 'bg-white/20 text-white hover:bg-white/30'
+                  )}
+                >
+                  <BookOpenIcon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                  Study all {selectedSet?.card_count} cards
+                </button>
+              </div>
+            )}
+
             <p className="text-blue-100 mb-6">
-              {isReviewMode && reviewCardIds.length > 0
-                ? <>You&apos;re about to review {reviewCardIds.length} due cards</>
-                : <>You&apos;re about to study {filteredSets.find(l => l.id?.toString() === selectedListId)?.card_count} flashcards</>}
+              {studyScope === 'due' && (dueCounts.get(selectedListId) ?? 0) > 0
+                ? <>You&apos;re about to review {reviewCardIds.length || dueCounts.get(selectedListId)} due card{((reviewCardIds.length || dueCounts.get(selectedListId)) ?? 0) !== 1 ? 's' : ''}</>
+                : <>You&apos;re about to study {selectedSet?.card_count} flashcard{(selectedSet?.card_count ?? 0) !== 1 ? 's' : ''}</>}
               {studyMode !== 'classic' && <span className="block text-sm mt-1">Mode: {studyMode === 'multiple-choice' ? 'Multiple Choice' : 'Type Answer'}</span>}
             </p>
             <button
               onClick={handleStartSession}
               disabled={isLoading}
-              className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+              className="inline-flex items-center justify-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg w-full sm:w-auto"
+              aria-busy={isLoading}
             >
-              <PlayIcon className="h-5 w-5 mr-2" />
+              <PlayIcon className="h-5 w-5 mr-2" aria-hidden="true" />
               {isLoading ? 'Starting...' : 'Begin Study Session'}
             </button>
           </div>
