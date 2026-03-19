@@ -5,6 +5,7 @@ import {
   ClockIcon,
   UserGroupIcon,
   TrophyIcon,
+  TableCellsIcon,
 } from '@heroicons/react/24/outline';
 
 interface Participant {
@@ -75,22 +76,25 @@ export default function ChallengeCard({ challenge, currentUserId }: ChallengeCar
   const currentParticipant = participants.find((p) => p.userId === currentUserId);
   const statusInfo = statusConfig[status] || statusConfig.expired;
 
-  const href =
+  const primaryHref =
     status === 'completed'
       ? `/versus/results/${_id}`
       : status === 'active'
         ? `/versus/play/${_id}`
-        : '#';
+        : null;
 
   return (
-    <Link
-      href={href}
-      className="block bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-5"
-    >
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-5">
       {/* Top row: title + status badge */}
       <div className="flex items-start justify-between mb-2">
         <div className="min-w-0 flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 truncate">{setName}</h3>
+          {primaryHref ? (
+            <Link href={primaryHref} className="hover:text-blue-600 transition-colors">
+              <h3 className="text-lg font-semibold text-gray-900 truncate">{setName}</h3>
+            </Link>
+          ) : (
+            <h3 className="text-lg font-semibold text-gray-900 truncate">{setName}</h3>
+          )}
           <p className="text-xs text-gray-400 font-mono mt-0.5">{challengeCode}</p>
         </div>
         <span
@@ -129,6 +133,37 @@ export default function ChallengeCard({ challenge, currentUserId }: ChallengeCar
           </span>
         </div>
       )}
-    </Link>
+
+      {/* Action links for completed challenges */}
+      {status === 'completed' && (
+        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+          <Link
+            href={`/versus/results/${_id}`}
+            className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+          >
+            View Results
+          </Link>
+          <Link
+            href={`/versus/board/${_id}`}
+            className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            <TableCellsIcon className="h-3.5 w-3.5 mr-1" />
+            View Board
+          </Link>
+        </div>
+      )}
+
+      {/* Active challenge link */}
+      {status === 'active' && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <Link
+            href={`/versus/play/${_id}`}
+            className="w-full inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+          >
+            Play Now
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }

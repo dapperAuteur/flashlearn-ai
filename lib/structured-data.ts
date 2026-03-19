@@ -1,4 +1,4 @@
-const BASE_URL = 'https://www.flashlearn-ai.com';
+export const BASE_URL = 'https://www.flashlearn-ai.com';
 
 export function versusEventSchema({
   topic,
@@ -51,6 +51,30 @@ export function studyResultsSchema({
       name: 'FlashLearn AI',
       url: BASE_URL,
     },
+  };
+}
+
+export function challengeArchiveSchema({
+  challenges,
+  url,
+}: {
+  challenges: { _id: string; setName: string; topScore: number; completedCount: number }[];
+  url: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'FlashLearn AI — Public Challenge Archive',
+    description: 'Browse completed multiplayer flashcard challenges. See rankings, top scores, and join the competition.',
+    url: `${BASE_URL}${url}`,
+    numberOfItems: challenges.length,
+    itemListElement: challenges.map((ch, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `${ch.setName} Challenge`,
+      description: `Top score: ${ch.topScore} · ${ch.completedCount} player${ch.completedCount !== 1 ? 's' : ''}`,
+      url: `${BASE_URL}/versus/board/${ch._id}`,
+    })),
   };
 }
 

@@ -64,6 +64,15 @@ export async function POST(
 
   // Update participant
   participant.compositeScore = scoreResult.totalScore;
+  participant.scoreBreakdown = {
+    accuracyScore: scoreResult.accuracyScore,
+    speedScore: scoreResult.speedScore,
+    confidenceScore: scoreResult.confidenceScore,
+    streakScore: scoreResult.streakScore,
+    accuracy: scoreResult.accuracy,
+    averageTimeSeconds: scoreResult.averageTimeSeconds,
+    longestStreak: scoreResult.longestStreak,
+  };
   participant.status = 'completed';
   participant.completedAt = new Date();
 
