@@ -1,11 +1,22 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface IScoreBreakdown {
+  accuracyScore: number;
+  speedScore: number;
+  confidenceScore: number;
+  streakScore: number;
+  accuracy: number;
+  averageTimeSeconds: number;
+  longestStreak: number;
+}
+
 export interface IChallengeParticipant {
   userId: mongoose.Types.ObjectId;
   userName: string;
   sessionId?: string;
   status: 'invited' | 'accepted' | 'completed' | 'declined';
   compositeScore?: number;
+  scoreBreakdown?: IScoreBreakdown;
   rank?: number;
   completedAt?: Date;
 }
@@ -29,6 +40,19 @@ export interface IChallenge extends Document {
   updatedAt: Date;
 }
 
+const ScoreBreakdownSchema = new Schema(
+  {
+    accuracyScore: { type: Number },
+    speedScore: { type: Number },
+    confidenceScore: { type: Number },
+    streakScore: { type: Number },
+    accuracy: { type: Number },
+    averageTimeSeconds: { type: Number },
+    longestStreak: { type: Number },
+  },
+  { _id: false },
+);
+
 const ParticipantSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -40,6 +64,7 @@ const ParticipantSchema = new Schema(
       default: 'accepted',
     },
     compositeScore: { type: Number },
+    scoreBreakdown: { type: ScoreBreakdownSchema },
     rank: { type: Number },
     completedAt: { type: Date },
   },

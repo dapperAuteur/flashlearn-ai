@@ -267,14 +267,22 @@ export default function VersusHubPage() {
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-gray-900">Recent Results</h2>
-          {completedChallenges.length > 0 && (
+          <div className="flex items-center gap-3">
+            {completedChallenges.length > 0 && (
+              <Link
+                href="/versus/history"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                View All
+              </Link>
+            )}
             <Link
               href="/versus/leaderboard"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm text-gray-500 hover:text-gray-700 font-medium"
             >
-              View Leaderboard
+              Leaderboard
             </Link>
-          )}
+          </div>
         </div>
         {completedChallenges.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">

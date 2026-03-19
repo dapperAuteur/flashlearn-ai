@@ -14,6 +14,7 @@ import {
   ArrowLeftIcon,
   ShareIcon,
   ExclamationTriangleIcon,
+  TableCellsIcon,
 } from '@heroicons/react/24/outline';
 
 interface Participant {
@@ -289,13 +290,20 @@ export default function ResultsPage() {
       )}
 
       {/* Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Link
           href={`/versus/create?setId=${challenge.flashcardSetId}`}
           className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
         >
           <ArrowPathIcon className="h-4 w-4 mr-2" />
           Rematch
+        </Link>
+        <Link
+          href={`/versus/board/${challengeId}`}
+          className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+        >
+          <TableCellsIcon className="h-4 w-4 mr-2" />
+          View Board
         </Link>
         <button
           onClick={() => setShowShareModal(true)}
