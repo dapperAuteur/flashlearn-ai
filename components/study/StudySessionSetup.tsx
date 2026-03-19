@@ -797,7 +797,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
 
             <p className="text-blue-100 mb-6">
               {studyScope === 'due' && (dueCounts.get(selectedListId) ?? 0) > 0
-                ? <>You&apos;re about to review {reviewCardIds.length || dueCounts.get(selectedListId)} due card{(reviewCardIds.length || dueCounts.get(selectedListId) ?? 0) !== 1 ? 's' : ''}</>
+                ? <>You&apos;re about to review {reviewCardIds.length || dueCounts.get(selectedListId)} due card{((reviewCardIds.length || dueCounts.get(selectedListId)) ?? 0) !== 1 ? 's' : ''}</>
                 : <>You&apos;re about to study {selectedSet?.card_count} flashcard{(selectedSet?.card_count ?? 0) !== 1 ? 's' : ''}</>}
               {studyMode !== 'classic' && <span className="block text-sm mt-1">Mode: {studyMode === 'multiple-choice' ? 'Multiple Choice' : 'Type Answer'}</span>}
             </p>
