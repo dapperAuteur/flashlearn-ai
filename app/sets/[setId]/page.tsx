@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ setId: st
     const ogImageUrl = `/api/og?type=set&title=${encodeURIComponent(ogTitle)}&description=${encodeURIComponent(description)}&cards=${set.cardCount ?? 0}`;
 
     return {
-        title: `${ogTitle} | FlashLearn AI`,
+        title: `${ogTitle} | FlashLearnAI.WitUS.Online`,
         description,
         alternates: { canonical: `/sets/${setId}` },
         openGraph: {

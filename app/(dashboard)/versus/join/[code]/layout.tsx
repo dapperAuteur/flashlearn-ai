@@ -47,7 +47,7 @@ export async function generateMetadata({
   const challenge = await getChallengePreview(code);
 
   if (!challenge) {
-    return { title: 'Versus Challenge | FlashLearn AI' };
+    return { title: 'Versus Challenge | FlashLearnAI.WitUS.Online' };
   }
 
   const upperCode = code.toUpperCase();

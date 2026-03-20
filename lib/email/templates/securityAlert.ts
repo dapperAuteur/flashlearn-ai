@@ -20,7 +20,7 @@ export function getSecurityAlertEmailTemplate({
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Security Alert - FlashLearn AI</title>
+      <title>Security Alert - FlashLearnAI.WitUS.Online</title>
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -78,7 +78,7 @@ export function getSecurityAlertEmailTemplate({
       <div class="container">
         <div class="alert">
           <h2>Security Alert</h2>
-          <p>We detected suspicious activity on your FlashLearn AI account.</p>
+          <p>We detected suspicious activity on your FlashLearnAI.WitUS.Online account.</p>
         </div>
         
         <p>Hello ${username},</p>
@@ -110,7 +110,7 @@ export function getSecurityAlertEmailTemplate({
         
         <p>If this was you, you can ignore this email. If you don't recognize this activity, please take immediate action to secure your account:</p>
         
-        <p><a href="https://flashlearn.ai/account/security" class="button">Secure Your Account</a></p>
+        <p><a href="https://flashlearnai.witus.online/account/security" class="button">Secure Your Account</a></p>
         
         <p>For security reasons, we recommend:</p>
         <ul>
@@ -122,7 +122,7 @@ export function getSecurityAlertEmailTemplate({
         <p>If you need any assistance, please contact our support team.</p>
       </div>
       <div class="footer">
-        <p>FlashLearn AI - The smart way to learn with flashcards</p>
+        <p>FlashLearnAI.WitUS.Online - The smart way to learn with flashcards</p>
         <p>This email was sent to you as part of our security measures. Please do not reply to this email.</p>
       </div>
     </body>

@@ -22,6 +22,13 @@ const footerLinks = {
   ],
 };
 
+const brandLinks = [
+  { label: 'CentenarianOS', href: 'https://CentenarianOS.com' },
+  { label: 'WitUS.Online', href: 'https://WitUS.Online' },
+  { label: 'BrandAnthonyMcDonald.com', href: 'https://BrandAnthonyMcDonald.com' },
+  { label: 'Official merch at AwesomeWebStore.com', href: 'https://AwesomeWebStore.com' },
+];
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
@@ -31,8 +38,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
-            <Link href="/" className="text-xl font-bold text-white" aria-label="FlashLearn AI home">
-              FlashLearn AI
+            <Link href="/" className="text-xl font-bold text-white" aria-label="FlashLearnAI home">
+              FlashLearnAI<span className="text-blue-400">.WitUS.Online</span>
             </Link>
             <p className="mt-3 text-sm text-gray-400 max-w-xs">
               AI-powered flashcard generation, spaced repetition, and competitive learning — for students, teachers, and developers.
@@ -61,23 +68,50 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-10 pt-8 border-t border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <p className="text-xs text-gray-500">
-            &copy; {year} FlashLearn AI. All rights reserved.
-          </p>
-          <div className="flex gap-4">
-            <a
-              href="/api/v1/openapi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-gray-500 hover:text-gray-300"
-            >
-              OpenAPI Spec
+        {/* Powered by + Brand links */}
+        <div className="mt-10 pt-8 border-t border-gray-800">
+          <p className="text-sm text-gray-400 mb-4">
+            Powered by{' '}
+            <a href="https://WitUS.Online" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400 transition-colors">
+              WitUS.Online
             </a>
-            <Link href="/docs/api" className="text-xs text-gray-500 hover:text-gray-300">
-              API Reference
-            </Link>
+            , a{' '}
+            <span className="text-gray-300 font-medium">B4C LLC</span>{' '}
+            brand
+          </p>
+
+          <nav aria-label="Brand links" className="flex flex-wrap gap-x-6 gap-y-2 mb-6">
+            {brandLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-500 hover:text-white transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          {/* Bottom bar */}
+          <div className="pt-6 border-t border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p className="text-xs text-gray-500">
+              &copy; {year} FlashLearnAI.WitUS.Online. All rights reserved.
+            </p>
+            <div className="flex gap-4">
+              <a
+                href="/api/v1/openapi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-gray-500 hover:text-gray-300"
+              >
+                OpenAPI Spec
+              </a>
+              <Link href="/docs/api" className="text-xs text-gray-500 hover:text-gray-300">
+                API Reference
+              </Link>
+            </div>
           </div>
         </div>
       </div>

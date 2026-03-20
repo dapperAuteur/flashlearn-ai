@@ -253,7 +253,7 @@ function StudySession({ setId, apiKey }) {
 
   // Start session on mount
   useEffect(() => {
-    fetch('https://flashlearn.ai/api/v1/study/sessions', {
+    fetch('https://flashlearnai.witus.online/api/v1/study/sessions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ setId, studyMode: 'classic' }),
@@ -281,7 +281,7 @@ function StudySession({ setId, apiKey }) {
   };
 
   const completeSession = async (allResults) => {
-    const res = await fetch(`https://flashlearn.ai/api/v1/study/sessions/${session.sessionId}/complete`, {
+    const res = await fetch(`https://flashlearnai.witus.online/api/v1/study/sessions/${session.sessionId}/complete`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ results: allResults }),

@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: ResultsPageProps) {
   const ogImageUrl = `/api/og?type=results&set=${encodeURIComponent(setName)}&accuracy=${accuracy}&correct=${session.correctCount}&total=${session.totalCards}`;
 
   return {
-    title: `${ogTitle} | FlashLearn AI`,
+    title: `${ogTitle} | FlashLearnAI.WitUS.Online`,
     description,
     alternates: { canonical: `/results/${sessionId}` },
     openGraph: {

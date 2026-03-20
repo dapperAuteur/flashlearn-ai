@@ -35,7 +35,7 @@ export async function generateMetadata({
   const { code } = await params;
   const challenge = await getChallengePreview(code);
 
-  if (!challenge) return { title: 'Flashcard Challenge | FlashLearn AI' };
+  if (!challenge) return { title: 'Flashcard Challenge | FlashLearnAI.WitUS.Online' };
 
   const { setName, cardCount, maxParticipants, participantCount } = challenge;
   const upperCode = code.toUpperCase();

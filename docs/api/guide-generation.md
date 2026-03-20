@@ -199,7 +199,7 @@ Returns your current billing period usage, limits, and tier:
 class FlashLearnAPI {
   constructor(apiKey) {
     this.apiKey = apiKey;
-    this.baseUrl = 'https://flashlearn.ai/api/v1';
+    this.baseUrl = 'https://flashlearnai.witus.online/api/v1';
   }
 
   async request(method, path, body) {
@@ -240,7 +240,7 @@ import requests
 class FlashLearnAPI:
     def __init__(self, api_key):
         self.api_key = api_key
-        self.base_url = 'https://flashlearn.ai/api/v1'
+        self.base_url = 'https://flashlearnai.witus.online/api/v1'
         self.headers = {
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',

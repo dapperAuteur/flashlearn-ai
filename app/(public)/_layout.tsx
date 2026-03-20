@@ -32,7 +32,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  FlashLearn AI
+                  FlashLearnAI.WitUS.Online
                 </Link>
               </div>
               {/* Desktop Navigation */}
@@ -168,7 +168,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-            &copy; {new Date().getFullYear()} FlashLearn AI. All rights reserved.
+            &copy; {new Date().getFullYear()} FlashLearnAI.WitUS.Online. All rights reserved.
           </p>
         </div>
       </footer>

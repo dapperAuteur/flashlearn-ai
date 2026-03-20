@@ -215,7 +215,7 @@ export default function BillingPage() {
           </p>
         </div>
         <a
-          href="mailto:support@flashlearn.ai?subject=Enterprise%20API%20Plan"
+          href="mailto:support@flashlearnai.witus.online?subject=Enterprise%20API%20Plan"
           className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50"
         >
           <CreditCard className="w-4 h-4" />

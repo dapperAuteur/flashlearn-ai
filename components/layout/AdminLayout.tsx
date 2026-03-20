@@ -281,7 +281,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <Menu className="h-5 w-5" />
           </button>
           <span className="text-sm font-semibold text-gray-900">
-            FlashLearn AI Admin
+            FlashLearnAI.WitUS.Online Admin
           </span>
         </div>
 

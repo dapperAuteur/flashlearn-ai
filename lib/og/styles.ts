@@ -1,7 +1,7 @@
 // Shared brand constants for OG image templates
 
 export const BRAND = {
-  name: 'FlashLearn AI',
+  name: 'FlashLearnAI.WitUS.Online',
   primaryBlue: '#3B82F6',
   darkBlue: '#1D4ED8',
   green: '#16A34A',

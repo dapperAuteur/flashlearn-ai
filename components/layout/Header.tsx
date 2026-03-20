@@ -49,7 +49,7 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/" className="text-xl font-bold text-blue-600">
-              FlashLearn AI
+              FlashLearnAI.WitUS.Online
             </Link>
           </div>
 

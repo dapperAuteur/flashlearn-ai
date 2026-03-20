@@ -32,7 +32,7 @@ Players don't just compete on correctness. The scoring rewards well-rounded perf
 
 ```javascript
 const API_KEY = 'fl_pub_host_key';
-const BASE = 'https://flashlearn.ai/api/v1';
+const BASE = 'https://flashlearnai.witus.online/api/v1';
 
 async function api(method, path, body) {
   const res = await fetch(`${BASE}${path}`, {
@@ -170,7 +170,7 @@ A teacher automates weekly review quizzes:
 import requests
 
 API_KEY = 'fl_pub_teacher_key'
-BASE = 'https://flashlearn.ai/api/v1'
+BASE = 'https://flashlearnai.witus.online/api/v1'
 headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
 
 # Monday: Generate cards from this week's lesson
@@ -210,4 +210,4 @@ for p in board['participants']:
 - 1,000 API calls/month = dozens of games
 - 3 challenges/day on Free, unlimited on Developer ($19/mo)
 
-[Get your API key](https://flashlearn.ai/developer) and build your first quiz game today.
+[Get your API key](https://flashlearnai.witus.online/developer) and build your first quiz game today.

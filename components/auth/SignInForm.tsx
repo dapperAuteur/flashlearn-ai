@@ -188,7 +188,7 @@ export default function SignInForm() {
     <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
       <div className="text-center">
         <h1 className="text-2xl sm:text-3xl font-bold">Sign In</h1>
-        <p className="mt-2 text-gray-600">Welcome back to FlashLearn AI</p>
+        <p className="mt-2 text-gray-600">Welcome back to FlashLearnAI.WitUS.Online</p>
       </div>
 
       {/* Login mode toggle */}

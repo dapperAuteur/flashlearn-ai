@@ -146,7 +146,7 @@ export async function POST(
         await mg.messages.create(process.env.MAILGUN_DOMAIN as string, {
           from: process.env.EMAIL_FROM as string,
           to: user.email,
-          subject: `Re: ${conversation.subject} - FlashLearn AI Support`,
+          subject: `Re: ${conversation.subject} - FlashLearnAI.WitUS.Online Support`,
           html,
         });
       }

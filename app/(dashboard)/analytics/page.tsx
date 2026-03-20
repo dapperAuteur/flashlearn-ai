@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 import AnalyticsDashboard from "@/components/analytics/AnalyticsDashboard";
 
 export const metadata: Metadata = {
-  title: "Analytics | FlashLearn AI",
+  title: "Analytics | FlashLearnAI.WitUS.Online",
   description: "Track your learning progress",
 };
 

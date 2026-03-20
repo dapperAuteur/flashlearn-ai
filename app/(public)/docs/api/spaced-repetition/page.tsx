@@ -41,13 +41,13 @@ export default function SpacedRepetitionPage() {
         <h2 id="workflow" className="text-xl font-semibold text-gray-900 mt-10 mb-4">Study Workflow</h2>
 
         <h3 className="text-lg font-medium text-gray-800 mt-6 mb-3">1. Check due cards</h3>
-        <Code code={`curl https://flashlearn.ai/api/v1/study/due-cards \\
+        <Code code={`curl https://flashlearnai.witus.online/api/v1/study/due-cards \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY"
 
 # Response: { "data": { "sets": [{ "setId": "abc", "setName": "Biology", "dueCount": 8 }], "totalDue": 8 } }`} />
 
         <h3 className="text-lg font-medium text-gray-800 mt-6 mb-3">2. Get review schedule</h3>
-        <Code code={`curl https://flashlearn.ai/api/v1/study/due-cards/schedule \\
+        <Code code={`curl https://flashlearnai.witus.online/api/v1/study/due-cards/schedule \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY"
 
 # Response: { "data": { "today": 8, "tomorrow": 3, "thisWeek": 15, "next14Days": [...] } }`} />
@@ -87,7 +87,7 @@ export default function SpacedRepetitionPage() {
         <p className="text-sm text-gray-500 mt-2">Confidence ratings (1-5) affect the SM-2 quality score. A lucky guess (1) scores worse than a confident correct answer (5).</p>
 
         <h3 className="text-lg font-medium text-gray-800 mt-6 mb-3">6. View analytics</h3>
-        <Code code={`curl https://flashlearn.ai/api/v1/study/analytics/SET_ID \\
+        <Code code={`curl https://flashlearnai.witus.online/api/v1/study/analytics/SET_ID \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY"
 
 # Returns per-card: easinessFactor, interval, repetitions, nextReviewDate, correctCount, confidence`} />

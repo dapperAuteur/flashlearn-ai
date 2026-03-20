@@ -23,7 +23,7 @@ export function getInvitationEmailTemplate({
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>You're Invited to FlashLearn AI</title>
+      <title>You're Invited to FlashLearnAI.WitUS.Online</title>
     </head>
     <body style="margin: 0; padding: 0; background-color: #F3F4F6; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F3F4F6; padding: 40px 20px;">
@@ -33,7 +33,7 @@ export function getInvitationEmailTemplate({
               <!-- Header -->
               <tr>
                 <td style="background-color: #3B82F6; padding: 30px 40px; border-radius: 8px 8px 0 0; text-align: center;">
-                  <h1 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: bold;">FlashLearn AI</h1>
+                  <h1 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: bold;">FlashLearnAI.WitUS.Online</h1>
                   <p style="margin: 8px 0 0; color: #DBEAFE; font-size: 14px;">The smart way to learn with flashcards</p>
                 </td>
               </tr>
@@ -44,13 +44,13 @@ export function getInvitationEmailTemplate({
                   <h2 style="margin: 0 0 20px; color: #1F2937; font-size: 20px; font-weight: bold;">You've Been Invited!</h2>
 
                   <p style="margin: 0 0 16px; color: #4B5563; font-size: 16px;">
-                    You've been invited to FlashLearn AI by <strong>${inviterName}</strong>.
+                    You've been invited to FlashLearnAI.WitUS.Online by <strong>${inviterName}</strong>.
                   </p>
 
                   ${personalNoteBlock}
 
                   <p style="margin: 0 0 16px; color: #4B5563; font-size: 16px;">
-                    FlashLearn AI helps you create, study, and master flashcards using the power of artificial intelligence. Join today and start learning smarter.
+                    FlashLearnAI.WitUS.Online helps you create, study, and master flashcards using the power of artificial intelligence. Join today and start learning smarter.
                   </p>
 
                   <!-- CTA Button -->
@@ -77,7 +77,7 @@ export function getInvitationEmailTemplate({
               <tr>
                 <td style="background-color: #F9FAFB; padding: 24px 40px; border-radius: 0 0 8px 8px; border-top: 1px solid #E5E7EB; text-align: center;">
                   <p style="margin: 0 0 8px; color: #6B7280; font-size: 13px; font-weight: 600;">
-                    FlashLearn AI - The smart way to learn with flashcards
+                    FlashLearnAI.WitUS.Online - The smart way to learn with flashcards
                   </p>
                   <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
                     This is an automated invitation email. Please do not reply.

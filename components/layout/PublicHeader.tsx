@@ -20,8 +20,8 @@ export default function PublicHeader() {
     <header className="bg-white shadow-sm border-b border-gray-200" role="banner">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="text-xl font-bold text-blue-600" aria-label="FlashLearn AI home">
-            FlashLearn AI
+          <Link href="/" className="text-xl font-bold text-blue-600" aria-label="FlashLearnAI.WitUS.Online home">
+            FlashLearnAI.WitUS.Online
           </Link>
 
           {/* Desktop nav */}

@@ -58,7 +58,7 @@ export default function ChallengeShareModal({
   const handleNativeShare = async () => {
     try {
       await navigator.share({
-        title: 'FlashLearn AI Challenge',
+        title: 'FlashLearnAI.WitUS.Online Challenge',
         text: shareText,
         url: buildShareUrl(previewUrl, 'native', 'versus'),
       });

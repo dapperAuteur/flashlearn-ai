@@ -38,7 +38,7 @@ export default function SignInPageClient() {
         <h2 className="text-2xl font-bold text-gray-900">
           Sign in to your account
         </h2>
-        <p className="mt-2 text-gray-600">Welcome back to FlashLearn AI</p>
+        <p className="mt-2 text-gray-600">Welcome back to FlashLearnAI.WitUS.Online</p>
       </div>
       <SignInForm />
     </div>

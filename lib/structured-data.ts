@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://www.flashlearn-ai.com';
+export const BASE_URL = 'https://flashlearnai.witus.online';
 
 export function versusEventSchema({
   topic,
@@ -21,7 +21,7 @@ export function versusEventSchema({
     eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
     organizer: {
       '@type': 'Organization',
-      name: 'FlashLearn AI',
+      name: 'FlashLearnAI.WitUS.Online',
       url: BASE_URL,
     },
   };
@@ -48,7 +48,7 @@ export function studyResultsSchema({
     url: `${BASE_URL}${url}`,
     publisher: {
       '@type': 'Organization',
-      name: 'FlashLearn AI',
+      name: 'FlashLearnAI.WitUS.Online',
       url: BASE_URL,
     },
   };
@@ -64,7 +64,7 @@ export function challengeArchiveSchema({
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'FlashLearn AI — Public Challenge Archive',
+    name: 'FlashLearnAI.WitUS.Online — Public Challenge Archive',
     description: 'Browse completed multiplayer flashcard challenges. See rankings, top scores, and join the competition.',
     url: `${BASE_URL}${url}`,
     numberOfItems: challenges.length,
@@ -98,7 +98,7 @@ export function flashcardSetSchema({
     numberOfCredits: cardCount,
     provider: {
       '@type': 'Organization',
-      name: 'FlashLearn AI',
+      name: 'FlashLearnAI.WitUS.Online',
       url: BASE_URL,
     },
   };

@@ -17,7 +17,7 @@ A simple study flow:
 
 ## Prerequisites
 
-- A FlashLearn API key (free at [flashlearn.ai/developer](https://flashlearn.ai/developer))
+- A FlashLearn API key (free at [flashlearnai.witus.online/developer](https://flashlearnai.witus.online/developer))
 - Node.js or any language that can make HTTP requests
 
 ---
@@ -26,7 +26,7 @@ A simple study flow:
 
 ```javascript
 const API_KEY = 'fl_pub_your_key';
-const BASE = 'https://flashlearn.ai/api/v1';
+const BASE = 'https://flashlearnai.witus.online/api/v1';
 
 async function api(method, path, body) {
   const res = await fetch(`${BASE}${path}`, {
@@ -170,4 +170,4 @@ console.log(`Tomorrow: ${schedule.tomorrow} cards to review`);
 
 All of this works on the **Free tier** (100 generations/month, 1,000 API calls). No credit card needed.
 
-[Get your API key](https://flashlearn.ai/developer) and start building.
+[Get your API key](https://flashlearnai.witus.online/developer) and start building.

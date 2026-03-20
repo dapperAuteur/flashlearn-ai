@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Getting Started',
-  description: 'Get started with the FlashLearn AI API in 60 seconds. Create an API key, make your first request, and understand rate limits and pricing.',
+  description: 'Get started with the FlashLearnAI.WitUS.Online API in 60 seconds. Create an API key, make your first request, and understand rate limits and pricing.',
   openGraph: {
-    title: 'Getting Started with the FlashLearn AI API',
+    title: 'Getting Started with the FlashLearnAI.WitUS.Online API',
     description: 'Generate AI flashcards with one API call. Free tier included.',
   },
 };
@@ -38,7 +38,7 @@ export default function GettingStartedPage() {
         </h2>
         <p className="text-gray-600 mb-4">
           Sign up at{' '}
-          <Link href="/auth/signup" className="text-blue-600 hover:underline font-medium">flashlearn.ai/auth/signup</Link>.
+          <Link href="/auth/signup" className="text-blue-600 hover:underline font-medium">flashlearnai.witus.online/auth/signup</Link>.
           Then go to the{' '}
           <Link href="/developer" className="text-blue-600 hover:underline font-medium">Developer Portal</Link>{' '}
           and click <strong>New Key</strong>.
@@ -54,7 +54,7 @@ export default function GettingStartedPage() {
           <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
           Make Your First Request
         </h2>
-        <CodeBlock code={`curl -X POST https://flashlearn.ai/api/v1/generate \\
+        <CodeBlock code={`curl -X POST https://flashlearnai.witus.online/api/v1/generate \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"topic": "Introduction to Machine Learning"}'`} />

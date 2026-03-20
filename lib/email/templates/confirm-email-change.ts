@@ -25,7 +25,7 @@ export function getConfirmEmailChangeTemplate({
               <!-- Header -->
               <tr>
                 <td style="background-color: #3B82F6; padding: 30px 40px; border-radius: 8px 8px 0 0; text-align: center;">
-                  <h1 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: bold;">FlashLearn AI</h1>
+                  <h1 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: bold;">FlashLearnAI.WitUS.Online</h1>
                   <p style="margin: 8px 0 0; color: #DBEAFE; font-size: 14px;">Email Address Change</p>
                 </td>
               </tr>
@@ -86,7 +86,7 @@ export function getConfirmEmailChangeTemplate({
               <tr>
                 <td style="background-color: #F9FAFB; padding: 24px 40px; border-radius: 0 0 8px 8px; border-top: 1px solid #E5E7EB; text-align: center;">
                   <p style="margin: 0 0 8px; color: #6B7280; font-size: 13px; font-weight: 600;">
-                    FlashLearn AI - The smart way to learn with flashcards
+                    FlashLearnAI.WitUS.Online - The smart way to learn with flashcards
                   </p>
                   <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
                     This is an automated email. Please do not reply.

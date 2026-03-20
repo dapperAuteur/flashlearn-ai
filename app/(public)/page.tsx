@@ -221,7 +221,7 @@ const BenefitsSection = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            {isAuthenticated ? "Your Learning Advantage" : "Why FlashLearn AI Works"}
+            {isAuthenticated ? "Your Learning Advantage" : "Why FlashLearnAI.WitUS.Online Works"}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             {isAuthenticated 
@@ -388,7 +388,7 @@ const DeveloperAPISection = () => (
       <div className="max-w-2xl mx-auto mb-12">
         <pre className="bg-gray-800 rounded-xl p-5 overflow-x-auto text-sm leading-relaxed" role="region" aria-label="API code example">
           <code className="text-gray-300">
-{`curl -X POST https://flashlearn.ai/api/v1/generate \\
+{`curl -X POST https://flashlearnai.witus.online/api/v1/generate \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"topic": "Machine Learning Basics"}'

@@ -311,7 +311,7 @@ export default function AdminCampaignNewPage() {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 font-mono focus:ring-blue-500 focus:border-blue-500"
           />
           <p className="text-xs text-gray-400 mt-1">
-            Write raw HTML. It will be wrapped in the FlashLearn AI branded email template.
+            Write raw HTML. It will be wrapped in the FlashLearnAI.WitUS.Online branded email template.
           </p>
         </div>
 
