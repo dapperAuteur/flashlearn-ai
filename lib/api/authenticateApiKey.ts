@@ -6,6 +6,17 @@ import { Logger, LogContext } from '@/lib/logging/logger';
 import { type ApiKeyType, type ApiAuthContext } from '@/types/api';
 
 /**
+ * Checks if an IP address falls within a CIDR range (e.g., 10.0.0.0/8).
+ */
+function isIPInCIDR(ip: string, cidr: string): boolean {
+  const [range, bits] = cidr.split('/');
+  const mask = ~(2 ** (32 - parseInt(bits)) - 1);
+  const ipNum = ip.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct), 0);
+  const rangeNum = range.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct), 0);
+  return (ipNum & mask) === (rangeNum & mask);
+}
+
+/**
  * Detects the key type from the prefix of the API key string.
  */
 function detectKeyType(key: string): ApiKeyType | null {
@@ -21,7 +32,8 @@ function detectKeyType(key: string): ApiKeyType | null {
  * Returns the authenticated context or null with a reason.
  */
 export async function authenticateApiKey(
-  authHeader: string | null
+  authHeader: string | null,
+  clientIP?: string
 ): Promise<{ context: ApiAuthContext } | { error: string; status: number }> {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return { error: 'Missing or malformed Authorization header. Expected: Bearer <api_key>', status: 401 };
@@ -53,6 +65,24 @@ export async function authenticateApiKey(
       keyPrefix: rawKey.slice(0, 16) + '...',
     });
     return { error: 'Invalid or revoked API key.', status: 401 };
+  }
+
+  // Check IP allowlist (Enterprise feature)
+  if (apiKey.allowedIPs && apiKey.allowedIPs.length > 0 && clientIP) {
+    const allowed = apiKey.allowedIPs.some((ip: string) => {
+      if (ip.includes('/')) {
+        // CIDR notation support (e.g., 192.168.1.0/24)
+        return isIPInCIDR(clientIP, ip);
+      }
+      return ip === clientIP;
+    });
+    if (!allowed) {
+      Logger.warning(LogContext.SYSTEM, 'API key request from non-allowlisted IP.', {
+        keyPrefix: apiKey.keyPrefix,
+        clientIP,
+      });
+      return { error: 'Request IP is not in the allowlist for this API key.', status: 403 };
+    }
   }
 
   // Check expiration

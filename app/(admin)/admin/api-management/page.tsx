@@ -33,6 +33,9 @@ interface ApiKeyEntry {
     monthlyGenerations?: number;
     monthlyApiCalls?: number;
   };
+  allowedIPs?: string[];
+  webhookUrl?: string;
+  prioritySupport?: boolean;
   lastUsedAt: string | null;
   usageCount: number;
   createdAt: string;
@@ -182,6 +185,17 @@ export default function ApiManagementPage() {
       setKeys(prev =>
         prev.map(k => (k._id === keyId ? { ...k, apiTier: newTier } : k))
       );
+    }
+  };
+
+  const updateEnterprise = async (keyId: string, fields: Record<string, unknown>) => {
+    const res = await fetch(`/api/admin/api-keys/${keyId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    });
+    if (res.ok) {
+      await fetchKeys();
     }
   };
 
@@ -504,6 +518,7 @@ export default function ApiManagementPage() {
                   <ExpandedKeyDetails
                     apiKey={key}
                     onUpdateLimits={(limits) => updateCustomLimits(key._id, limits)}
+                    onUpdateEnterprise={updateEnterprise}
                   />
                 )}
               </div>
@@ -547,20 +562,37 @@ function StatCard({
 function ExpandedKeyDetails({
   apiKey,
   onUpdateLimits,
+  onUpdateEnterprise,
 }: {
   apiKey: ApiKeyEntry;
   onUpdateLimits: (limits: { burstPerMinute?: number; monthlyGenerations?: number; monthlyApiCalls?: number } | null) => void;
+  onUpdateEnterprise: (keyId: string, fields: Record<string, unknown>) => void;
 }) {
   const [burst, setBurst] = useState(apiKey.customRateLimits?.burstPerMinute?.toString() || "");
   const [monthlyGens, setMonthlyGens] = useState(apiKey.customRateLimits?.monthlyGenerations?.toString() || "");
   const [monthlyCalls, setMonthlyCalls] = useState(apiKey.customRateLimits?.monthlyApiCalls?.toString() || "");
+  const [allowedIPs, setAllowedIPs] = useState(apiKey.allowedIPs?.join(", ") || "");
+  const [webhookUrl, setWebhookUrl] = useState(apiKey.webhookUrl || "");
+  const [prioritySupport, setPrioritySupport] = useState(apiKey.prioritySupport || false);
 
-  const handleSave = () => {
+  const handleSaveLimits = () => {
     const limits: { burstPerMinute?: number; monthlyGenerations?: number; monthlyApiCalls?: number } = {};
     if (burst) limits.burstPerMinute = parseInt(burst);
     if (monthlyGens) limits.monthlyGenerations = parseInt(monthlyGens);
     if (monthlyCalls) limits.monthlyApiCalls = parseInt(monthlyCalls);
     onUpdateLimits(Object.keys(limits).length > 0 ? limits : null);
+  };
+
+  const handleSaveEnterprise = () => {
+    const ips = allowedIPs
+      .split(",")
+      .map((ip) => ip.trim())
+      .filter(Boolean);
+    onUpdateEnterprise(apiKey._id, {
+      allowedIPs: ips.length > 0 ? ips : [],
+      webhookUrl: webhookUrl.trim() || undefined,
+      prioritySupport,
+    });
   };
 
   return (
@@ -584,53 +616,52 @@ function ExpandedKeyDetails({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
             <label className="text-xs text-gray-500">Burst/min</label>
-            <input
-              type="number"
-              value={burst}
-              onChange={(e) => setBurst(e.target.value)}
-              placeholder="Default"
-              className="w-full text-xs border rounded px-2 py-1 mt-0.5"
-            />
+            <input type="number" value={burst} onChange={(e) => setBurst(e.target.value)}
+              placeholder="Default" className="w-full text-xs border rounded px-2 py-1 mt-0.5" />
           </div>
           <div>
             <label className="text-xs text-gray-500">Monthly Generations</label>
-            <input
-              type="number"
-              value={monthlyGens}
-              onChange={(e) => setMonthlyGens(e.target.value)}
-              placeholder="Default"
-              className="w-full text-xs border rounded px-2 py-1 mt-0.5"
-            />
+            <input type="number" value={monthlyGens} onChange={(e) => setMonthlyGens(e.target.value)}
+              placeholder="Default" className="w-full text-xs border rounded px-2 py-1 mt-0.5" />
           </div>
           <div>
             <label className="text-xs text-gray-500">Monthly API Calls</label>
-            <input
-              type="number"
-              value={monthlyCalls}
-              onChange={(e) => setMonthlyCalls(e.target.value)}
-              placeholder="Default"
-              className="w-full text-xs border rounded px-2 py-1 mt-0.5"
-            />
+            <input type="number" value={monthlyCalls} onChange={(e) => setMonthlyCalls(e.target.value)}
+              placeholder="Default" className="w-full text-xs border rounded px-2 py-1 mt-0.5" />
           </div>
         </div>
         <div className="flex gap-2 mt-2">
-          <button
-            onClick={handleSave}
-            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Save Limits
-          </button>
-          <button
-            onClick={() => {
-              setBurst("");
-              setMonthlyGens("");
-              setMonthlyCalls("");
-              onUpdateLimits(null);
-            }}
-            className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-          >
-            Reset to Defaults
-          </button>
+          <button onClick={handleSaveLimits}
+            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Save Limits</button>
+          <button onClick={() => { setBurst(""); setMonthlyGens(""); setMonthlyCalls(""); onUpdateLimits(null); }}
+            className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Reset to Defaults</button>
+        </div>
+      </div>
+
+      {/* Enterprise Features */}
+      <div>
+        <h4 className="text-xs font-semibold text-gray-600 mb-2">Enterprise Features</h4>
+        <div className="space-y-2">
+          <div>
+            <label className="text-xs text-gray-500">Allowed IPs <span className="text-gray-400">(comma-separated, CIDR supported, blank = all)</span></label>
+            <input type="text" value={allowedIPs} onChange={(e) => setAllowedIPs(e.target.value)}
+              placeholder="e.g. 203.0.113.5, 10.0.0.0/8"
+              className="w-full text-xs border rounded px-2 py-1 mt-0.5 font-mono" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500">Webhook URL <span className="text-gray-400">(usage milestone notifications)</span></label>
+            <input type="url" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder="https://example.com/webhook"
+              className="w-full text-xs border rounded px-2 py-1 mt-0.5" />
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id={`priority-${apiKey._id}`} checked={prioritySupport}
+              onChange={(e) => setPrioritySupport(e.target.checked)}
+              className="rounded border-gray-300" />
+            <label htmlFor={`priority-${apiKey._id}`} className="text-xs text-gray-600">Priority Support</label>
+          </div>
+          <button onClick={handleSaveEnterprise}
+            className="px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700">Save Enterprise Settings</button>
         </div>
       </div>
 

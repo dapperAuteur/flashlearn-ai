@@ -37,8 +37,12 @@ export function withApiAuth(handler: ApiHandler, options: WithApiAuthOptions = {
     const startTime = Date.now();
 
     // 1. Authenticate
+    const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '';
     const authResult = await authenticateApiKey(
-      request.headers.get('authorization')
+      request.headers.get('authorization'),
+      clientIP
     );
 
     if ('error' in authResult) {

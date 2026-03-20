@@ -49,6 +49,10 @@ export interface IApiKey extends Document {
     monthlyGenerations?: number;
     monthlyApiCalls?: number;
   };
+  // Enterprise features
+  allowedIPs?: string[];
+  webhookUrl?: string;
+  prioritySupport?: boolean;
   expiresAt?: Date;
   lastUsedAt?: Date;
   usageCount: number;

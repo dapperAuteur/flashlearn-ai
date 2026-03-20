@@ -83,6 +83,22 @@ export async function PATCH(
     apiKey.permissions = permissions;
   }
 
+  // Enterprise: IP allowlisting
+  const { allowedIPs, webhookUrl, prioritySupport } = body;
+  if (allowedIPs !== undefined) {
+    apiKey.allowedIPs = Array.isArray(allowedIPs) ? allowedIPs : [];
+  }
+
+  // Enterprise: Webhook URL
+  if (webhookUrl !== undefined) {
+    apiKey.webhookUrl = webhookUrl || undefined;
+  }
+
+  // Enterprise: Priority support
+  if (prioritySupport !== undefined) {
+    apiKey.prioritySupport = !!prioritySupport;
+  }
+
   await apiKey.save();
 
   Logger.info(LogContext.SYSTEM, `Admin updated API key: ${apiKey.keyPrefix}`, {
