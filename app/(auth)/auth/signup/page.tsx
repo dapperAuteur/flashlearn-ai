@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import SignUpForm from "@/components/auth/SignUpForm";
 
 export const metadata: Metadata = {
-  title: "Sign Up | FlashLearn AI",
-  description: "Create a new FlashLearn AI account",
+  title: "Sign Up | FlashLearnAI.WitUS.Online",
+  description: "Create a new FlashLearnAI.WitUS.Online account",
 };
 
 export default function SignUpPage() {

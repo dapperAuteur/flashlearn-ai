@@ -46,7 +46,7 @@ export default function ApiDocsPage() {
           hideDownloadButton: false,
           darkMode: false,
           metaData: {
-            title: "FlashLearn AI API",
+            title: "FlashLearnAI.WitUS.Online API",
             description: "Interactive API documentation",
           },
         })}

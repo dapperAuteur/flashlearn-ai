@@ -46,7 +46,7 @@ export async function generateMetadata({
   const challenge = await getResultsPreview(challengeId);
 
   if (!challenge) {
-    return { title: 'Versus Results | FlashLearn AI' };
+    return { title: 'Versus Results | FlashLearnAI.WitUS.Online' };
   }
 
   const { setName, challengeCode, participantCount, completedCount } = challenge;

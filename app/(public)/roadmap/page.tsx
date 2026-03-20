@@ -435,7 +435,7 @@ export default function RoadmapPage() {
         </h1>
 
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          FlashLearn AI is evolving fast. Here&apos;s a transparent look at what&apos;s shipped, what&apos;s in progress, and what&apos;s coming next.
+          FlashLearnAI.WitUS.Online is evolving fast. Here&apos;s a transparent look at what&apos;s shipped, what&apos;s in progress, and what&apos;s coming next.
         </p>
       </div>
 

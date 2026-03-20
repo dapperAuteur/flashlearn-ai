@@ -1,15 +1,15 @@
 /**
- * OpenAPI 3.1 specification for the FlashLearn AI Public API v1.
+ * OpenAPI 3.1 specification for the FlashLearnAI.WitUS.Online Public API v1.
  */
 export const openApiSpec = {
   openapi: '3.1.0',
   info: {
-    title: 'FlashLearn AI API',
+    title: 'FlashLearnAI.WitUS.Online API',
     version: '1.0.0',
     description:
       'AI-powered flashcard generation and management API. Generate flashcards from text topics, manage sets, and browse public content.',
     contact: {
-      name: 'FlashLearn AI Support',
+      name: 'FlashLearnAI.WitUS.Online Support',
       email: 'support@flashlearnai.witus.online',
     },
   },

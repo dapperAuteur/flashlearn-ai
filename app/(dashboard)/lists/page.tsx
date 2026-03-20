@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Lists | FlashLearn AI',
+  title: 'Lists | FlashLearnAI.WitUS.Online',
   description: 'Manage your lists',
 };
 

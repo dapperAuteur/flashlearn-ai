@@ -11,11 +11,11 @@ const mg = mailgun.client({
 // Email verification template
 const createVerificationEmailContent = (userName: string, verificationUrl: string) => {
   return {
-    subject: 'Verify your FlashLearn AI account',
-    text: `Hello ${userName},\n\nPlease verify your email address by clicking on the link below:\n\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you did not create an account, please ignore this email.\n\nThanks,\nThe FlashLearn AI Team`,
+    subject: 'Verify your FlashLearnAI.WitUS.Online account',
+    text: `Hello ${userName},\n\nPlease verify your email address by clicking on the link below:\n\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you did not create an account, please ignore this email.\n\nThanks,\nThe FlashLearnAI.WitUS.Online Team`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>Welcome to FlashLearn AI!</h2>
+        <h2>Welcome to FlashLearnAI.WitUS.Online!</h2>
         <p>Hello ${userName},</p>
         <p>Please verify your email address by clicking on the button below:</p>
         <p style="text-align: center; margin: 30px 0;">
@@ -30,7 +30,7 @@ const createVerificationEmailContent = (userName: string, verificationUrl: strin
         </p>
         <p>This link will expire in 24 hours.</p>
         <p>If you did not create an account, please ignore this email.</p>
-        <p>Thanks,<br>The FlashLearn AI Team</p>
+        <p>Thanks,<br>The FlashLearnAI.WitUS.Online Team</p>
       </div>
     `,
   };
@@ -70,15 +70,15 @@ export async function sendWelcomeEmail(email: string, userName: string) {
     const response = await mg.messages.create(process.env.MAILGUN_DOMAIN as string, {
       from: process.env.EMAIL_FROM as string,
       to: email,
-      subject: 'Welcome to FlashLearn AI!',
-      text: `Hello ${userName},\n\nThank you for verifying your email address. Your FlashLearn AI account is now active.\n\nYou can now create flashcards and start learning.\n\nThanks,\nThe FlashLearn AI Team`,
+      subject: 'Welcome to FlashLearnAI.WitUS.Online!',
+      text: `Hello ${userName},\n\nThank you for verifying your email address. Your FlashLearnAI.WitUS.Online account is now active.\n\nYou can now create flashcards and start learning.\n\nThanks,\nThe FlashLearnAI.WitUS.Online Team`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Welcome to FlashLearn AI!</h2>
+          <h2>Welcome to FlashLearnAI.WitUS.Online!</h2>
           <p>Hello ${userName},</p>
-          <p>Thank you for verifying your email address. Your FlashLearn AI account is now active.</p>
+          <p>Thank you for verifying your email address. Your FlashLearnAI.WitUS.Online account is now active.</p>
           <p>You can now create flashcards and start learning.</p>
-          <p>Thanks,<br>The FlashLearn AI Team</p>
+          <p>Thanks,<br>The FlashLearnAI.WitUS.Online Team</p>
         </div>
       `,
     });

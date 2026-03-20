@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     return new NextResponse(
-      getHtmlPage('You have been unsubscribed from FlashLearn AI emails.'),
+      getHtmlPage('You have been unsubscribed from FlashLearnAI.WitUS.Online emails.'),
       {
         headers: { 'Content-Type': 'text/html; charset=utf-8' },
       }
@@ -72,7 +72,7 @@ function getHtmlPage(message: string): string {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Unsubscribe - FlashLearn AI</title>
+      <title>Unsubscribe - FlashLearnAI.WitUS.Online</title>
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -109,7 +109,7 @@ function getHtmlPage(message: string): string {
     </head>
     <body>
       <div class="card">
-        <div class="logo">FlashLearn AI</div>
+        <div class="logo">FlashLearnAI.WitUS.Online</div>
         <p class="message">${message}</p>
       </div>
     </body>

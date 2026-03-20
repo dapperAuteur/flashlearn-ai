@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Flashcard Generation API',
   description: 'Generate AI-powered flashcards from any topic with the FlashLearn API. Supports batch generation, set CRUD, public set browsing, and categories.',
   openGraph: {
-    title: 'FlashLearn AI Flashcard Generation API Guide',
+    title: 'FlashLearnAI.WitUS.Online Flashcard Generation API Guide',
     description: 'Generate flashcards with one API call. Node.js and Python examples included.',
   },
 };

@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
     try {
       const result = await mg.messages.create(process.env.MAILGUN_DOMAIN as string, {
-        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@witus.online>',
+        from: process.env.EMAIL_FROM || 'FlashLearnAI.WitUS.Online <noreply@witus.online>',
         to: [normalizedEmail],
         subject: 'Your FlashLearn login code',
         html,

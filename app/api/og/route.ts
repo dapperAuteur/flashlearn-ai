@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     // Default fallback
     return new ImageResponse(
-      SetTemplate({ title: 'FlashLearn AI', description: 'AI-powered flashcard study', cardCount: 0 }),
+      SetTemplate({ title: 'FlashLearnAI.WitUS.Online', description: 'AI-powered flashcard study', cardCount: 0 }),
       { width: IMAGE_WIDTH, height: IMAGE_HEIGHT }
     );
   } catch {

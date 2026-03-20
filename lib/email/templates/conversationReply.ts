@@ -13,7 +13,7 @@ export function getConversationReplyTemplate({
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>New Reply - FlashLearn AI</title>
+      <title>New Reply - FlashLearnAI.WitUS.Online</title>
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -105,7 +105,7 @@ export function getConversationReplyTemplate({
     <body>
       <div class="container">
         <div class="header">
-          <h1>FlashLearn AI</h1>
+          <h1>FlashLearnAI.WitUS.Online</h1>
           <p>You have a new reply to your conversation</p>
         </div>
         <div class="body-content">
@@ -123,7 +123,7 @@ export function getConversationReplyTemplate({
           </p>
         </div>
         <div class="footer">
-          <p>FlashLearn AI - The smart way to learn with flashcards</p>
+          <p>FlashLearnAI.WitUS.Online - The smart way to learn with flashcards</p>
           <p>This is an automated notification. Please do not reply to this email.</p>
         </div>
       </div>

@@ -11,7 +11,7 @@ export function getCampaignEmailWrapper({
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>FlashLearn AI</title>
+      <title>FlashLearnAI.WitUS.Online</title>
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -75,14 +75,14 @@ export function getCampaignEmailWrapper({
     <body>
       <div class="wrapper">
         <div class="header">
-          <p class="header-logo">FlashLearn AI</p>
+          <p class="header-logo">FlashLearnAI.WitUS.Online</p>
           <p class="header-tagline">The smart way to learn with flashcards</p>
         </div>
         <div class="content">
           ${content}
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} FlashLearn AI. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} FlashLearnAI.WitUS.Online. All rights reserved.</p>
           <p class="unsubscribe">
             <a href="${unsubscribeUrl}">Unsubscribe</a> from these emails.
           </p>

@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Verification Error | FlashLearn AI",
+  title: "Verification Error | FlashLearnAI.WitUS.Online",
   description: "Email verification error",
 };
 

@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     // Get inviter name for the email template
     const inviter = await User.findById(token.id).select('name').lean();
-    const inviterName = (inviter as { name?: string })?.name || 'A FlashLearn AI admin';
+    const inviterName = (inviter as { name?: string })?.name || 'A FlashLearnAI.WitUS.Online admin';
 
     // Generate email HTML
     const html = getInvitationEmailTemplate({
@@ -132,9 +132,9 @@ export async function POST(request: NextRequest) {
     // Send email via Mailgun
     try {
       await mg.messages.create(process.env.MAILGUN_DOMAIN, {
-        from: process.env.EMAIL_FROM || 'FlashLearn AI <noreply@witus.online>',
+        from: process.env.EMAIL_FROM || 'FlashLearnAI.WitUS.Online <noreply@witus.online>',
         to: email.toLowerCase(),
-        subject: `${inviterName} has invited you to FlashLearn AI`,
+        subject: `${inviterName} has invited you to FlashLearnAI.WitUS.Online`,
         html,
       });
     } catch (emailError) {

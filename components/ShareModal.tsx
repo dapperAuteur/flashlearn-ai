@@ -60,7 +60,7 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
   const facebookUrl = buildFacebookShareUrl(buildShareUrl(shareUrl, 'facebook', campaign));
   const emailUrl = buildEmailShareUrl(
     `${resolvedShareText}: ${title}`,
-    `${resolvedShareText}\n\nStudy this set free on FlashLearn AI:\n${buildShareUrl(shareUrl, 'email', campaign)}\n\nCreate your own AI flashcards at https://flashlearnai.witus.online`
+    `${resolvedShareText}\n\nStudy this set free on FlashLearnAI.WitUS.Online:\n${buildShareUrl(shareUrl, 'email', campaign)}\n\nCreate your own AI flashcards at https://flashlearnai.witus.online`
   );
 
   return (

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const topSetNames = topSets.map((s) => s.title).join(', ');
 
-    const prompt = `You are a marketing copywriter for FlashLearn AI, an AI-powered flashcard study platform. Generate a short, engaging announcement banner message (max 120 characters) based on these app stats:
+    const prompt = `You are a marketing copywriter for FlashLearnAI.WitUS.Online, an AI-powered flashcard study platform. Generate a short, engaging announcement banner message (max 120 characters) based on these app stats:
 
 - Total users: ${totalUsers}
 - New users this week: ${newUsersThisWeek}

@@ -14,20 +14,20 @@ export function getContentWarningTemplate(
   const reasonText = reasonLabels[reason] || reason;
 
   return {
-    subject: 'Content Warning - Your FlashLearn AI set has been flagged',
+    subject: 'Content Warning - Your FlashLearnAI.WitUS.Online set has been flagged',
     html: `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Content Warning - FlashLearn AI</title>
+        <title>Content Warning - FlashLearnAI.WitUS.Online</title>
       </head>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f5f5f5;">
         <div style="background-color: #ffffff; border-radius: 8px; overflow: hidden; margin: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           <!-- Header -->
           <div style="background-color: #4A7BF7; padding: 24px 32px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 22px; font-weight: 600;">FlashLearn AI</h1>
+            <h1 style="color: white; margin: 0; font-size: 22px; font-weight: 600;">FlashLearnAI.WitUS.Online</h1>
           </div>
 
           <!-- Warning Banner -->
@@ -58,13 +58,13 @@ export function getContentWarningTemplate(
 
             <p style="color: #6B7280; font-size: 14px;">Repeated violations may result in further restrictions on your account, including suspension.</p>
 
-            <p style="margin-bottom: 0;">Regards,<br><strong>The FlashLearn AI Team</strong></p>
+            <p style="margin-bottom: 0;">Regards,<br><strong>The FlashLearnAI.WitUS.Online Team</strong></p>
           </div>
 
           <!-- Footer -->
           <div style="background-color: #F9FAFB; padding: 16px 32px; border-top: 1px solid #E5E7EB;">
             <p style="margin: 0; font-size: 12px; color: #9CA3AF; text-align: center;">
-              This is an automated message from FlashLearn AI. Please do not reply to this email.<br>
+              This is an automated message from FlashLearnAI.WitUS.Online. Please do not reply to this email.<br>
               If you need assistance, contact us at support@flashlearnai.witus.online
             </p>
           </div>

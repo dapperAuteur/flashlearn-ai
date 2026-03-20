@@ -7,10 +7,10 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://flashlearnai.witus.online'),
-  title: 'FlashLearn AI',
+  title: 'FlashLearnAI.WitUS.Online',
   description: 'AI-powered flashcard creation and multiplayer study challenges',
   openGraph: {
-    siteName: 'FlashLearn AI',
+    siteName: 'FlashLearnAI.WitUS.Online',
     type: 'website',
   },
   twitter: {

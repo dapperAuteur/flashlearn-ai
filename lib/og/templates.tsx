@@ -44,7 +44,7 @@ export function VersusTemplate({
           VS
         </div>
         <span style={{ fontSize: '24px', fontWeight: 600, color: '#93c5fd', letterSpacing: '1px' }}>
-          FlashLearn AI · Challenge
+          FlashLearnAI.WitUS.Online · Challenge
         </span>
       </div>
 
@@ -118,7 +118,7 @@ export function ResultsTemplate({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
         <span style={{ fontSize: '20px', fontWeight: 600, color: BRAND.primaryBlue }}>
-          FlashLearn AI · Study Results
+          FlashLearnAI.WitUS.Online · Study Results
         </span>
       </div>
 
@@ -187,7 +187,7 @@ export function SetTemplate({ title, description, cardCount }: SetTemplateProps)
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '40px' }}>
         <span style={{ fontSize: '20px', fontWeight: 600, color: BRAND.primaryBlue }}>
-          FlashLearn AI · Flashcard Set
+          FlashLearnAI.WitUS.Online · Flashcard Set
         </span>
       </div>
 

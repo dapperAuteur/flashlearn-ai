@@ -63,7 +63,7 @@ export default function ExportPage() {
             What&apos;s New & What&apos;s Next
           </h1>
           <p className="mt-4 text-lg max-w-2xl mx-auto text-gray-600">
-            We&apos;re constantly working to make FlashLearn AI the best learning tool for you. Here&apos;s a look at our progress.
+            We&apos;re constantly working to make FlashLearnAI.WitUS.Online the best learning tool for you. Here&apos;s a look at our progress.
           </p>
         </div>
 

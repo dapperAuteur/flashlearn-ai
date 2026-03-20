@@ -113,7 +113,7 @@ const UnauthenticatedHome = () => {
       <div className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4">
-            Why FlashLearn AI Works
+            Why FlashLearnAI.WitUS.Online Works
           </h2>
           <p className="text-xl text-gray-600 text-center mb-16 max-w-3xl mx-auto">
             Backed by cognitive science, our approach combines proven learning techniques with modern AI to maximize your retention and minimize study time.
@@ -203,7 +203,7 @@ const UnauthenticatedHome = () => {
             Ready to Transform Your Learning?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of students and professionals who&apos;ve supercharged their learning with FlashLearn AI.
+            Join thousands of students and professionals who&apos;ve supercharged their learning with FlashLearnAI.WitUS.Online.
           </p>
           <Link
             href="/auth/signup"

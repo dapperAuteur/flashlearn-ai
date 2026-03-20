@@ -140,7 +140,7 @@ export default function SignUpForm() {
     <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
       <div className="text-center">
         <h1 className="text-2xl sm:text-3xl font-bold">Create an Account</h1>
-        <p className="mt-2 text-gray-600">Join FlashLearn AI today</p>
+        <p className="mt-2 text-gray-600">Join FlashLearnAI.WitUS.Online today</p>
       </div>
       
       {error && (

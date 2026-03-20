@@ -1,5 +1,5 @@
 /**
- * Enhanced IndexedDB Operations for FlashLearn AI
+ * Enhanced IndexedDB Operations for FlashLearnAI.WitUS.Online
  * 
  * Purpose: Provides reliable local storage with transaction safety
  * Key Features:

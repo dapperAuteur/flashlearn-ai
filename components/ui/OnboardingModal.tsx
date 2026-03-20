@@ -12,7 +12,7 @@ interface OnboardingStep {
 
 const onboardingSteps: OnboardingStep[] = [
   {
-    title: "Welcome to FlashLearn AI!",
+    title: "Welcome to FlashLearnAI.WitUS.Online!",
     description: "Let's take a quick tour of your dashboard and show you how to get started.",
     position: 'center'
   },

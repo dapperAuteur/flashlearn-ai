@@ -124,7 +124,7 @@ const AdaptiveStatsSection = ({ isAuthenticated }: { isAuthenticated: boolean })
           The Science Behind Better Learning
         </h2>
         <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-          FlashLearn AI combines proven cognitive science with modern AI to create the most effective study experience possible.
+          FlashLearnAI.WitUS.Online combines proven cognitive science with modern AI to create the most effective study experience possible.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

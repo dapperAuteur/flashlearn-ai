@@ -32,7 +32,7 @@ export async function generateMetadata({ searchParams }: ArchivePageProps): Prom
   const periodLabel = PERIOD_OPTIONS.find((p) => p.key === period)?.label ?? 'All Time';
   const sortLabel = SORT_OPTIONS.find((s) => s.key === sort)?.label ?? 'Most Recent';
 
-  const title = 'Public Challenge Archive — FlashLearn AI';
+  const title = 'Public Challenge Archive — FlashLearnAI.WitUS.Online';
   const description = `Browse completed multiplayer flashcard challenges. Sorted by ${sortLabel} · ${periodLabel}. See top scores, rankings, and compete against other learners.`;
   const url = '/versus/archive';
 
@@ -45,7 +45,7 @@ export async function generateMetadata({ searchParams }: ArchivePageProps): Prom
       description,
       url: `${BASE_URL}${url}`,
       type: 'website',
-      siteName: 'FlashLearn AI',
+      siteName: 'FlashLearnAI.WitUS.Online',
     },
     twitter: {
       card: 'summary_large_image',

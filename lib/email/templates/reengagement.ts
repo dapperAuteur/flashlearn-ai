@@ -8,14 +8,14 @@ export function getReengagementTemplate(
   switch (template) {
     case 'we-miss-you':
       return {
-        subject: 'We miss you at FlashLearn AI!',
+        subject: 'We miss you at FlashLearnAI.WitUS.Online!',
         html: getEmailWrapper(`
           <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 22px;">
             We miss you, ${firstName}!
           </h2>
           <p style="color: #4b5563; font-size: 15px; line-height: 1.7; margin: 0 0 16px 0;">
             Learning is a journey, and every journey has its pauses. We noticed you haven&rsquo;t
-            visited FlashLearn AI in a while, and we wanted to let you know &mdash; your flashcards
+            visited FlashLearnAI.WitUS.Online in a while, and we wanted to let you know &mdash; your flashcards
             are right where you left them.
           </p>
           <p style="color: #4b5563; font-size: 15px; line-height: 1.7; margin: 0 0 16px 0;">
@@ -37,13 +37,13 @@ export function getReengagementTemplate(
 
     case 'new-features':
       return {
-        subject: "Check out what's new at FlashLearn AI",
+        subject: "Check out what's new at FlashLearnAI.WitUS.Online",
         html: getEmailWrapper(`
           <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 22px;">
-            What&rsquo;s new at FlashLearn AI
+            What&rsquo;s new at FlashLearnAI.WitUS.Online
           </h2>
           <p style="color: #4b5563; font-size: 15px; line-height: 1.7; margin: 0 0 16px 0;">
-            Hi ${firstName}, we have been busy making FlashLearn AI even better for you!
+            Hi ${firstName}, we have been busy making FlashLearnAI.WitUS.Online even better for you!
             Here are some of the latest improvements:
           </p>
           <div style="margin: 24px 0;">
@@ -117,19 +117,19 @@ export function getReengagementTemplate(
 
     default:
       return {
-        subject: 'Hello from FlashLearn AI',
+        subject: 'Hello from FlashLearnAI.WitUS.Online',
         html: getEmailWrapper(`
           <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 22px;">
             Hello, ${firstName}!
           </h2>
           <p style="color: #4b5563; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
             We wanted to reach out and let you know we are here to help with your
-            learning journey. Visit FlashLearn AI anytime to continue studying.
+            learning journey. Visit FlashLearnAI.WitUS.Online anytime to continue studying.
           </p>
           <div style="text-align: center; margin: 32px 0;">
             <a href="${baseUrl}/dashboard"
                style="background-color: #4A7BF7; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 15px;">
-              Visit FlashLearn AI
+              Visit FlashLearnAI.WitUS.Online
             </a>
           </div>
         `),
@@ -144,13 +144,13 @@ function getEmailWrapper(content: string): string {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>FlashLearn AI</title>
+      <title>FlashLearnAI.WitUS.Online</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f5;">
       <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background-color: #4A7BF7; padding: 24px 32px; border-radius: 8px 8px 0 0; text-align: center;">
           <p style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0; letter-spacing: -0.5px;">
-            FlashLearn AI
+            FlashLearnAI.WitUS.Online
           </p>
           <p style="color: #BFDBFE; font-size: 13px; margin: 4px 0 0 0;">
             The smart way to learn with flashcards
@@ -161,10 +161,10 @@ function getEmailWrapper(content: string): string {
         </div>
         <div style="background-color: #f9fafb; padding: 24px 32px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none; text-align: center;">
           <p style="margin: 0; font-size: 12px; color: #9ca3af;">
-            &copy; ${new Date().getFullYear()} FlashLearn AI. All rights reserved.
+            &copy; ${new Date().getFullYear()} FlashLearnAI.WitUS.Online. All rights reserved.
           </p>
           <p style="margin: 8px 0 0 0; font-size: 12px; color: #9ca3af;">
-            You received this email because you have an account at FlashLearn AI.
+            You received this email because you have an account at FlashLearnAI.WitUS.Online.
           </p>
         </div>
       </div>

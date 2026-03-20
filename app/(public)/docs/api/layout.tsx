@@ -4,13 +4,13 @@ import PublicHeader from '@/components/layout/PublicHeader';
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | FlashLearn AI API Docs',
-    default: 'API Documentation | FlashLearn AI',
+    template: '%s | FlashLearnAI.WitUS.Online API Docs',
+    default: 'API Documentation | FlashLearnAI.WitUS.Online',
   },
-  description: 'Developer documentation for the FlashLearn AI Public API. Generate flashcards, run spaced repetition, and build competitive quizzes.',
+  description: 'Developer documentation for the FlashLearnAI.WitUS.Online Public API. Generate flashcards, run spaced repetition, and build competitive quizzes.',
   openGraph: {
-    title: 'FlashLearn AI API Documentation',
-    description: 'Build with the FlashLearn AI API. Free tier available.',
+    title: 'FlashLearnAI.WitUS.Online API Documentation',
+    description: 'Build with the FlashLearnAI.WitUS.Online API. Free tier available.',
     type: 'website',
   },
   robots: { index: true, follow: true },

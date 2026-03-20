@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Getting Started',
-  description: 'Get started with the FlashLearn AI API in 60 seconds. Create an API key, make your first request, and understand rate limits and pricing.',
+  description: 'Get started with the FlashLearnAI.WitUS.Online API in 60 seconds. Create an API key, make your first request, and understand rate limits and pricing.',
   openGraph: {
-    title: 'Getting Started with the FlashLearn AI API',
+    title: 'Getting Started with the FlashLearnAI.WitUS.Online API',
     description: 'Generate AI flashcards with one API call. Free tier included.',
   },
 };

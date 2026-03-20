@@ -47,17 +47,17 @@ export function getVerificationEmailTemplate({
     </head>
     <body>
       <div class="container">
-        <h2>Welcome to FlashLearn AI!</h2>
+        <h2>Welcome to FlashLearnAI.WitUS.Online!</h2>
         <p>Hello ${username},</p>
-        <p>Thank you for registering with FlashLearn AI. To complete your registration and verify your email address, please click the button below:</p>
+        <p>Thank you for registering with FlashLearnAI.WitUS.Online. To complete your registration and verify your email address, please click the button below:</p>
         <p><a href="${verificationUrl}" class="button">Verify Your Email</a></p>
         <p>Or copy and paste this link into your browser:</p>
         <p>${verificationUrl}</p>
         <p>This link will expire in 24 hours.</p>
-        <p>If you didn't create an account with FlashLearn AI, you can safely ignore this email.</p>
+        <p>If you didn't create an account with FlashLearnAI.WitUS.Online, you can safely ignore this email.</p>
       </div>
       <div class="footer">
-        <p>FlashLearn AI - The smart way to learn with flashcards</p>
+        <p>FlashLearnAI.WitUS.Online - The smart way to learn with flashcards</p>
         <p>This is an automated message, please do not reply.</p>
       </div>
     </body>

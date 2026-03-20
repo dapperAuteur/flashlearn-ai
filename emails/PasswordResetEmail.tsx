@@ -13,7 +13,7 @@ export default function PasswordResetEmail({
     <div>
       <h1>Hi {userFirstname},</h1>
       <p>
-        Someone recently requested a password change for your FlashLearn AI account.
+        Someone recently requested a password change for your FlashLearnAI.WitUS.Online account.
         If this was you, you can set a new password here:
       </p>
       <a href={resetPasswordUrl}>Set a new password</a>
@@ -25,7 +25,7 @@ export default function PasswordResetEmail({
         To keep your account secure, please don&apos;t forward this email to anyone.
       </p>
       <p>Thanks,</p>
-      <p>The FlashLearn AI Team</p>
+      <p>The FlashLearnAI.WitUS.Online Team</p>
     </div>
   );
 }

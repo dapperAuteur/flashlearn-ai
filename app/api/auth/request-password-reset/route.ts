@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
 
       try {
         await mg.messages.create(process.env.MAILGUN_DOMAIN, {
-          from: process.env.EMAIL_FROM || "FlashLearn AI <noreply@witus.online>",
+          from: process.env.EMAIL_FROM || "FlashLearnAI.WitUS.Online <noreply@witus.online>",
           to: user.email,
-          subject: "Your FlashLearn AI Password Reset Request",
+          subject: "Your FlashLearnAI.WitUS.Online Password Reset Request",
           html,
         });
 
