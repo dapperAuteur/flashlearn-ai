@@ -1,60 +1,43 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import Script from "next/script";
 
 /**
- * Public API documentation page using Scalar (https://github.com/scalar/scalar).
- * Loads the OpenAPI spec from /api/v1/openapi and renders interactive docs.
+ * Interactive API Reference page powered by Scalar.
+ * Renders the OpenAPI spec in a visual, try-it-out interface.
  */
 export default function ApiDocsPage() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
 
-  useEffect(() => {
-    // Scalar will auto-initialize when the script loads
-    // and finds the data-configuration attribute
-  }, []);
-
-  const initScalar = () => {
-    if (initialized.current) return;
-    initialized.current = true;
-
-    // Scalar auto-discovers the element with id="api-reference"
-    // when it loads, so nothing to do here
-  };
-
   return (
-    <div className="min-h-screen">
-      {/* Page header */}
-      <div className="bg-white border-b px-4 py-6 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900">API Documentation</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            FlashLearn AI Public API v1 — Generate flashcards, manage sets, and more.
-          </p>
-          <div className="flex gap-3 mt-3">
-            <a
-              href="/api/v1/openapi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:underline"
-            >
-              OpenAPI Spec (JSON)
-            </a>
-            <a
-              href="/developer/keys"
-              className="text-xs text-blue-600 hover:underline"
-            >
-              Get an API Key
-            </a>
-          </div>
+    <article>
+      <header className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          Interactive API Reference
+        </h1>
+        <p className="text-sm sm:text-base text-gray-500 mt-2">
+          Explore all 23 endpoints. Click any endpoint to see parameters, try it live, and view response schemas.
+        </p>
+        <div className="flex flex-wrap gap-3 mt-4">
+          <a
+            href="/api/v1/openapi"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100"
+          >
+            OpenAPI Spec (JSON)
+          </a>
+          <a
+            href="/developer/keys"
+            className="inline-flex items-center text-xs font-medium text-green-600 bg-green-50 px-3 py-1.5 rounded-full hover:bg-green-100"
+          >
+            Get an API Key
+          </a>
         </div>
-      </div>
+      </header>
 
-      {/* Scalar API Reference */}
       <div
-        ref={containerRef}
         id="api-reference"
         data-url="/api/v1/openapi"
         data-configuration={JSON.stringify({
@@ -63,17 +46,19 @@ export default function ApiDocsPage() {
           hideDownloadButton: false,
           darkMode: false,
           metaData: {
-            title: "FlashLearn AI API Docs",
-            description: "Interactive API documentation for FlashLearn AI",
+            title: "FlashLearn AI API",
+            description: "Interactive API documentation",
           },
         })}
+        role="region"
+        aria-label="Interactive API reference explorer"
       />
 
       <Script
         src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@latest"
-        onLoad={initScalar}
+        onLoad={() => { initialized.current = true; }}
         strategy="afterInteractive"
       />
-    </div>
+    </article>
   );
 }

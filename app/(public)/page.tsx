@@ -18,7 +18,11 @@ import {
   MessageSquare,
   Globe,
   Swords,
+  Code,
+  Zap,
+  Trophy,
 } from "lucide-react";
+import Footer from "@/components/layout/Footer";
 
 // Modern Hero Section with Conditional Content
 const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; session?: any }) => {
@@ -363,6 +367,86 @@ const FeaturesShowcase = () => {
   );
 };
 
+// Developer API Highlight Section
+const DeveloperAPISection = () => (
+  <section className="py-20 bg-gray-900 text-white" aria-labelledby="dev-api-heading">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-12">
+        <div className="inline-flex items-center space-x-2 bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <Code className="h-4 w-4" />
+          <span>Public API — Free Tier Available</span>
+        </div>
+        <h2 id="dev-api-heading" className="text-3xl md:text-4xl font-bold mb-4">
+          Build with the FlashLearn API
+        </h2>
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          The first flashcard platform with a public API. Generate cards, run spaced repetition, and create competitive quizzes — all via REST.
+        </p>
+      </div>
+
+      {/* Code sample */}
+      <div className="max-w-2xl mx-auto mb-12">
+        <pre className="bg-gray-800 rounded-xl p-5 overflow-x-auto text-sm leading-relaxed" role="region" aria-label="API code example">
+          <code className="text-gray-300">
+{`curl -X POST https://flashlearn.ai/api/v1/generate \\
+  -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"topic": "Machine Learning Basics"}'
+
+# Returns 10-20 AI-generated flashcards in seconds`}
+          </code>
+        </pre>
+      </div>
+
+      {/* Feature pills */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+        <div className="flex items-start gap-4 bg-gray-800 rounded-xl p-5">
+          <Zap className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <h3 className="font-semibold text-white mb-1">AI Generation</h3>
+            <p className="text-sm text-gray-400">Generate flashcards from any topic. Batch support for Pro/Enterprise.</p>
+          </div>
+        </div>
+        <div className="flex items-start gap-4 bg-gray-800 rounded-xl p-5">
+          <Brain className="h-6 w-6 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <h3 className="font-semibold text-white mb-1">Spaced Repetition</h3>
+            <p className="text-sm text-gray-400">SM-2 algorithm with due cards, sessions, and per-card analytics.</p>
+          </div>
+        </div>
+        <div className="flex items-start gap-4 bg-gray-800 rounded-xl p-5">
+          <Trophy className="h-6 w-6 text-purple-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <h3 className="font-semibold text-white mb-1">Versus Mode</h3>
+            <p className="text-sm text-gray-400">Competitive challenges with composite scoring and leaderboards.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* CTAs */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <Link
+          href="/docs/api/getting-started"
+          className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+        >
+          Read the Docs
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+        <Link
+          href="/docs/api"
+          className="inline-flex items-center justify-center px-6 py-3 border border-gray-600 text-gray-300 font-semibold rounded-xl hover:bg-gray-800 transition-colors"
+        >
+          Interactive API Reference
+        </Link>
+      </div>
+
+      <p className="text-center text-sm text-gray-500 mt-6">
+        23 endpoints. Free tier: 100 generations/month. No credit card required.
+      </p>
+    </div>
+  </section>
+);
+
 // Final CTA Section
 const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   if (isAuthenticated) {
@@ -448,7 +532,9 @@ export default async function Home() {
             </div>
           </>
         )}
+        <DeveloperAPISection />
         <FinalCTA isAuthenticated={isAuthenticated} />
+        <Footer />
       </div>
     </Suspense>
   );
