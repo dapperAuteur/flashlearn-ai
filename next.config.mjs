@@ -18,6 +18,17 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // CORS headers for the public API (v1)
+        source: '/api/v1/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PATCH, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Request-Id' },
+          { key: 'Access-Control-Expose-Headers', value: 'X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Request-Id' },
+          { key: 'Access-Control-Max-Age', value: '86400' },
+        ],
+      },
+      {
         // Apply these headers to all routes
         source: '/:path*',
         headers: [
