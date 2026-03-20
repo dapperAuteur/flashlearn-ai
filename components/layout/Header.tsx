@@ -15,6 +15,7 @@ const primaryNavigation: NavigationItem[] = [
   { label: 'Flashcards', href: '/flashcards' },
   { label: 'Explore', href: '/explore' },
   { label: 'Versus', href: '/versus' },
+  { label: 'Developer', href: '/developer' },
   { label: 'Settings', href: '/settings' },
 ];
 

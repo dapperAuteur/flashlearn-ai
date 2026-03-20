@@ -4,6 +4,7 @@ import dbConnect from '@/lib/db/dbConnect';
 import { User } from '@/models/User';
 import { RevenueEvent } from '@/models/RevenueEvent';
 import { CouponTracker } from '@/models/CouponTracker';
+import { ApiKey } from '@/models/ApiKey';
 import { Logger, LogContext } from '@/lib/logging/logger';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -40,6 +41,55 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
+        const isApiSubscription = session.metadata?.isApiSubscription === 'true';
+
+        // ===== API Subscription Checkout =====
+        if (isApiSubscription) {
+          const apiTier = session.metadata?.apiTier;
+          const apiKeyId = session.metadata?.apiKeyId;
+
+          if (!userId || !apiTier) {
+            Logger.warning(LogContext.SYSTEM, 'API checkout completed but missing metadata', { sessionId: session.id });
+            break;
+          }
+
+          // Upgrade all public keys for this user to the new tier,
+          // or a specific key if apiKeyId was provided
+          const keyFilter: Record<string, unknown> = {
+            userId,
+            keyType: 'public',
+            status: 'active',
+          };
+          if (apiKeyId) keyFilter._id = apiKeyId;
+
+          await ApiKey.updateMany(keyFilter, { $set: { apiTier: apiTier } });
+          Logger.info(LogContext.SYSTEM, 'API key tier upgraded after checkout', { userId, apiTier, apiKeyId });
+
+          // Record revenue event
+          try {
+            await RevenueEvent.updateOne(
+              { stripeEventId: event.id },
+              {
+                $setOnInsert: {
+                  userId,
+                  stripeCustomerId: session.customer as string || undefined,
+                  eventType: 'api_subscription_created',
+                  newTier: apiTier,
+                  amountCents: session.amount_total || 0,
+                  currency: session.currency || 'usd',
+                  stripeEventId: event.id,
+                },
+              },
+              { upsert: true }
+            );
+          } catch (revenueErr) {
+            Logger.warning(LogContext.SYSTEM, 'Failed to record API revenue event', { error: revenueErr });
+          }
+
+          break;
+        }
+
+        // ===== Consumer Subscription Checkout =====
         const tier = session.metadata?.tier;
 
         if (!userId || !tier) {

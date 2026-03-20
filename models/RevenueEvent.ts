@@ -3,7 +3,7 @@ import { Schema, model, models, Document } from 'mongoose';
 export interface IRevenueEvent extends Document {
   userId?: Schema.Types.ObjectId;
   stripeCustomerId?: string;
-  eventType: 'subscription_created' | 'upgraded' | 'downgraded' | 'canceled' | 'payment_succeeded' | 'payment_failed' | 'refund';
+  eventType: 'subscription_created' | 'upgraded' | 'downgraded' | 'canceled' | 'payment_succeeded' | 'payment_failed' | 'refund' | 'api_subscription_created' | 'api_upgraded' | 'api_downgraded' | 'api_canceled';
   previousTier?: string;
   newTier?: string;
   amountCents: number;
@@ -21,7 +21,7 @@ const RevenueEventSchema = new Schema<IRevenueEvent>({
   },
   eventType: {
     type: String,
-    enum: ['subscription_created', 'upgraded', 'downgraded', 'canceled', 'payment_succeeded', 'payment_failed', 'refund'],
+    enum: ['subscription_created', 'upgraded', 'downgraded', 'canceled', 'payment_succeeded', 'payment_failed', 'refund', 'api_subscription_created', 'api_upgraded', 'api_downgraded', 'api_canceled'],
     required: true,
   },
   previousTier: {
