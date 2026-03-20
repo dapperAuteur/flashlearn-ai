@@ -1,8 +1,11 @@
 import { getRateLimiter } from './ratelimit';
 import { ApiUsage } from '@/models/ApiUsage';
+import { ApiKey } from '@/models/ApiKey';
 import { AppConfig } from '@/models/AppConfig';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { type ApiKeyType, type ApiTier, type ApiRateLimitConfig, DEFAULT_RATE_LIMITS } from '@/types/api';
+import { checkAndDispatchWebhooks } from '@/lib/api/webhookDispatcher';
+import { reportOverageToStripe } from '@/lib/api/reportOverageToStripe';
 import { Redis } from '@upstash/redis';
 
 const redis = new Redis({
@@ -163,7 +166,10 @@ export async function getMonthlyUsage(
 
 /**
  * Checks monthly quota for an API key. Returns whether the call is allowed.
- * Admin and admin_public keys skip this check entirely.
+ * - Admin/admin_public keys: always allowed
+ * - Free tier: hard cap (blocked when exceeded)
+ * - Developer/Pro tiers: soft cap (allowed with overage flag when exceeded)
+ * - Enterprise: unlimited
  */
 export async function checkMonthlyQuota(
   apiKeyId: string,
@@ -172,7 +178,7 @@ export async function checkMonthlyQuota(
   apiTier: ApiTier,
   isGenerationCall: boolean,
   customRateLimits?: { burstPerMinute?: number; monthlyGenerations?: number; monthlyApiCalls?: number }
-): Promise<{ allowed: boolean; reason?: string }> {
+): Promise<{ allowed: boolean; overage?: boolean; reason?: string }> {
   // Admin and admin_public keys bypass quotas
   if (keyType === 'admin' || keyType === 'admin_public') {
     return { allowed: true };
@@ -181,8 +187,14 @@ export async function checkMonthlyQuota(
   const limits = getEffectiveRateLimits(keyType, apiTier, customRateLimits);
   const usage = await getMonthlyUsage(apiKeyId, userId, keyType);
 
+  // Paid tiers (Developer, Pro) get soft caps — overage allowed but billed
+  const isPaidTier = apiTier === 'Developer' || apiTier === 'Pro';
+
   // Check total API calls quota
   if (isFinite(limits.monthlyApiCalls) && usage.apiCalls >= limits.monthlyApiCalls) {
+    if (isPaidTier) {
+      return { allowed: true, overage: true };
+    }
     return {
       allowed: false,
       reason: `Monthly API call limit of ${limits.monthlyApiCalls} reached.`,
@@ -191,6 +203,9 @@ export async function checkMonthlyQuota(
 
   // Check generation-specific quota
   if (isGenerationCall && isFinite(limits.monthlyGenerations) && usage.generationCalls >= limits.monthlyGenerations) {
+    if (isPaidTier) {
+      return { allowed: true, overage: true };
+    }
     return {
       allowed: false,
       reason: `Monthly generation limit of ${limits.monthlyGenerations} reached.`,
@@ -202,13 +217,16 @@ export async function checkMonthlyQuota(
 
 /**
  * Increments usage counters after a successful API call.
- * Updates both MongoDB and invalidates Redis cache.
+ * If overage, also increments overageCalls and reports to Stripe.
+ * Checks for webhook milestones and dispatches notifications.
  */
 export async function incrementUsage(
   apiKeyId: string,
   userId: string,
   keyType: ApiKeyType,
-  isGenerationCall: boolean
+  isGenerationCall: boolean,
+  isOverage: boolean = false,
+  apiTier?: ApiTier
 ): Promise<void> {
   const { periodStart, periodEnd } = getCurrentPeriod();
   const cacheKey = `api_usage:${apiKeyId}:${periodStart.toISOString().slice(0, 7)}`;
@@ -217,9 +235,12 @@ export async function incrementUsage(
   if (isGenerationCall) {
     update.generationCalls = 1;
   }
+  if (isOverage) {
+    update.overageCalls = 1;
+  }
 
   try {
-    await ApiUsage.findOneAndUpdate(
+    const updatedUsage = await ApiUsage.findOneAndUpdate(
       { apiKeyId, periodStart },
       {
         $inc: update,
@@ -227,14 +248,37 @@ export async function incrementUsage(
           userId,
           keyType,
           periodEnd,
-          overageCalls: 0,
         },
       },
-      { upsert: true }
+      { upsert: true, new: true }
     );
 
     // Invalidate Redis cache
     await redis.del(cacheKey);
+
+    // Report overage to Stripe (fire-and-forget)
+    if (isOverage && apiTier && isGenerationCall) {
+      reportOverageToStripe(userId, apiTier, 1).catch(() => {});
+    }
+
+    // Check for webhook milestones (fire-and-forget)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const key: any = await ApiKey.findById(apiKeyId)
+      .select('webhookUrl keyPrefix apiTier customRateLimits')
+      .lean();
+
+    if (key?.webhookUrl) {
+      const limits = getEffectiveRateLimits(keyType, key.apiTier, key.customRateLimits);
+      checkAndDispatchWebhooks(
+        apiKeyId,
+        key.keyPrefix,
+        keyType,
+        key.apiTier,
+        key.webhookUrl,
+        { apiCalls: updatedUsage.apiCalls, generationCalls: updatedUsage.generationCalls },
+        limits
+      ).catch(() => {});
+    }
   } catch (error) {
     Logger.error(LogContext.SYSTEM, 'Failed to increment API usage.', {
       apiKeyId, keyType, error,

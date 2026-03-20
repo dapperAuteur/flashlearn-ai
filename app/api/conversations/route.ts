@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Conversation } from '@/models/Conversation';
 import { Message } from '@/models/Message';
+import { checkUserHasPrioritySupport, notifyAdminOfPriorityConversation } from '@/lib/api/prioritySupport';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -43,10 +44,15 @@ export async function POST(request: Request) {
 
     await dbConnect();
 
+    // Check if user has priority support via any active API key
+    const hasPriority = await checkUserHasPrioritySupport(session.user.id);
+
     const conversation = await Conversation.create({
       userId: session.user.id,
       type: type || 'general',
       subject,
+      isPriority: hasPriority,
+      tags: hasPriority ? ['priority'] : [],
       lastMessageAt: new Date(),
       unreadByAdmin: true,
       unreadByUser: false,
@@ -59,6 +65,16 @@ export async function POST(request: Request) {
       content: message,
       attachments: attachments || [],
     });
+
+    // Notify admin immediately for priority conversations
+    if (hasPriority) {
+      const user = session.user as { name?: string; email?: string };
+      notifyAdminOfPriorityConversation(
+        subject,
+        user.name || 'Unknown',
+        user.email || ''
+      ).catch(() => {}); // fire-and-forget
+    }
 
     return NextResponse.json({ conversation }, { status: 201 });
   } catch (error) {

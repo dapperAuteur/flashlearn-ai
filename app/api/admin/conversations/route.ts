@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const status = searchParams.get('status') || '';
     const type = searchParams.get('type') || '';
+    const isPriority = searchParams.get('isPriority');
 
     await dbConnect();
 
@@ -25,11 +26,12 @@ export async function GET(request: NextRequest) {
     const filter: Record<string, unknown> = {};
     if (status) filter.status = status;
     if (type) filter.type = type;
+    if (isPriority === 'true') filter.isPriority = true;
 
     const [conversations, total] = await Promise.all([
       Conversation.find(filter)
         .populate('userId', 'name email subscriptionTier')
-        .sort({ lastMessageAt: -1 })
+        .sort({ isPriority: -1, lastMessageAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
