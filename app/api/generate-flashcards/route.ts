@@ -5,67 +5,10 @@ import { Logger, LogContext, AnalyticsLogger } from "@/lib/logging/logger";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
 import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLimitGemini';
-import { FLASHCARD_MAX, FLASHCARD_MIN, MODEL } from '@/lib/constants';
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 import dbConnect from "@/lib/db/dbConnect";
 import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering";
-
-// Define a local Flashcard interface to avoid conflicts and simplify code
-interface Flashcard {
-  front: string;
-  back: string;
-}
-
-async function generateFlashcardsFromAI(topic: string, requestId: string): Promise<Flashcard[]> {
-    const fullPrompt = `
-      Based on the following topic, generate a set of ${FLASHCARD_MIN} to ${FLASHCARD_MAX} flashcards.
-      The topic is: "${topic}".
-      IMPORTANT: Use only information from vetted, peer-reviewed, and trustworthy sources to generate the content for these flashcards.
-      Please respond with ONLY a valid JSON array of objects. Each object should represent a flashcard and have two properties: "front" (the question or term) and "back" (the answer or definition).
-      Do not include any text, explanation, or markdown formatting before or after the JSON array.
-
-      Example format:
-      [\n        {\n          "front": "What is the capital of France?",\n          "back": "Paris"\n        },\n        {\n          "front": "What is 2 + 2?",\n          "back": "4"\n        }\n      ]
-    `;
-
-    try {
-        const result = await MODEL.generateContent(fullPrompt);
-        const responseText = result.response.text();
-
-        if (!responseText) {
-            await Logger.warning(LogContext.AI, "AI returned an empty response.", { requestId, metadata: { topic } });
-            throw new Error("AI returned an empty response.");
-        }
-
-        const jsonMatch = responseText.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-        if (!jsonMatch) {
-            await Logger.warning(LogContext.AI, "AI response did not contain a valid JSON array.", {
-                requestId,
-                metadata: { responseText }
-            });
-            throw new Error("Could not parse flashcards from AI response.");
-        }
-
-        const flashcards: Flashcard[] = JSON.parse(jsonMatch[0]);
-
-        if (!Array.isArray(flashcards) || flashcards.some(card => !card.front || !card.back)) {
-            await Logger.warning(LogContext.AI, "Parsed JSON from AI is not in the expected Flashcard[] format.", {
-                requestId,
-                metadata: { parsedJson: flashcards }
-            });
-            throw new Error("Parsed JSON from AI is not in the expected Flashcard[] format.");
-        }
-        return flashcards;
-    } catch (error) {
-        const errorMessage = getErrorMessage(error);
-        await Logger.error(
-            LogContext.AI,
-            `Error in AI flashcard generation: ${errorMessage}`,
-            { requestId, metadata: { error, stack: error instanceof Error ? error.stack : undefined } }
-        );
-        throw error;
-    }
-}
+import { generateFlashcardsFromAI } from "@/lib/services/flashcardGeneration";
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
