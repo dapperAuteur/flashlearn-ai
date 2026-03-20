@@ -20,6 +20,7 @@ import {
   MessageSquare,
   ScrollText,
   Settings,
+  Key,
   ChevronDown,
   ChevronRight,
   Menu,
@@ -91,6 +92,7 @@ const navGroups: NavGroup[] = [
   {
     label: "System",
     items: [
+      { label: "API Management", href: "/admin/api-management", icon: Key },
       { label: "Logs", href: "/admin/logs", icon: ScrollText },
       { label: "Settings", href: "/admin/settings", icon: Settings },
     ],
