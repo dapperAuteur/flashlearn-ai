@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
           // Determine tier from price
           const priceId = subscription.items.data[0]?.price?.id;
           let newTier = 'Monthly Pro';
-          if (priceId === process.env.NEXT_PUBLIC_STRIPE_99_99_ANNUAL_PRICE) {
+          if (priceId === process.env.NEXT_PUBLIC_STRIPE_100_ANNUAL_PRICE) {
             newTier = 'Annual Pro';
           }
 
