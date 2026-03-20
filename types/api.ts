@@ -20,8 +20,8 @@ export const API_KEY_PREFIXES: Record<ApiKeyType, string> = {
 export const DEFAULT_PERMISSIONS: Record<ApiKeyType, string[]> = {
   admin: ['admin:*', 'generate', 'sets:*', 'study:*', 'users:*', 'analytics:*'],
   app: ['generate', 'sets:read', 'sets:write', 'study:*', 'categories:read'],
-  public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read'],
-  admin_public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read', 'admin:bypass_quota'],
+  public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read', 'study:*', 'versus:*'],
+  admin_public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read', 'study:*', 'versus:*', 'admin:bypass_quota'],
 } as const;
 
 export const GEMINI_KEY_ENV_MAP: Record<ApiKeyType, string> = {

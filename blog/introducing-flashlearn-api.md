@@ -139,6 +139,83 @@ curl -X POST https://flashlearn.ai/api/v1/generate/batch \
 
 ---
 
+## Spaced Repetition via API
+
+FlashLearn uses the SM-2 algorithm (the same one behind Anki) to schedule reviews at optimal intervals. The API gives you full access to this system:
+
+```javascript
+// 1. Check what's due for review
+const dueRes = await fetch('https://flashlearn.ai/api/v1/study/due-cards', {
+  headers: { 'Authorization': `Bearer ${API_KEY}` },
+});
+const { data } = await dueRes.json();
+// data.sets = [{ setId, setName, dueCount, dueCardIds }]
+// data.totalDue = 15
+
+// 2. Start a study session
+const sessionRes = await fetch('https://flashlearn.ai/api/v1/study/sessions', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ setId: 'abc123', studyMode: 'type-answer' }),
+});
+// Returns shuffled flashcards + sessionId
+
+// 3. Submit results when done
+const completeRes = await fetch(`https://flashlearn.ai/api/v1/study/sessions/${sessionId}/complete`, {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    results: [
+      { cardId: 'card1', isCorrect: true, timeSeconds: 4.2, confidenceRating: 5 },
+      { cardId: 'card2', isCorrect: false, timeSeconds: 8.1, confidenceRating: 2 },
+    ]
+  }),
+});
+// Returns: accuracy, correctCount, durationSeconds
+// SM-2 automatically reschedules each card based on performance
+```
+
+You can also get detailed analytics per card — easiness factor, interval, repetitions, and next review date:
+
+```bash
+curl https://flashlearn.ai/api/v1/study/analytics/SET_ID \
+  -H "Authorization: Bearer fl_pub_YOUR_KEY"
+```
+
+---
+
+## Versus Mode: Competitive Learning via API
+
+Build quiz competitions, classroom challenges, or tournament brackets. The Versus API handles scoring, ranking, and leaderboards.
+
+```javascript
+// 1. Create a challenge
+const challenge = await fetch('https://flashlearn.ai/api/v1/versus/challenges', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    flashcardSetId: 'abc123',
+    scope: 'public',       // 'direct' (1v1), 'classroom', or 'public'
+    studyMode: 'classic',
+  }),
+});
+// Returns: challengeCode (e.g., "X7K2M9"), challengeId
+
+// 2. Others join with the code
+await fetch('https://flashlearn.ai/api/v1/versus/join', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${THEIR_API_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ challengeCode: 'X7K2M9' }),
+});
+
+// 3. Play and complete — get a composite score (0-1000)
+// Score = 40% accuracy + 25% speed + 20% confidence calibration + 15% streak
+```
+
+The composite scoring rewards not just correctness, but speed, confidence calibration (knowing when you know), and consistency (longest correct streak).
+
+---
+
 ## Full Feature List
 
 ### Generation
@@ -146,6 +223,23 @@ curl -X POST https://flashlearn.ai/api/v1/generate/batch \
 - **Batch Generation** — Generate multiple topics in one request (Pro/Enterprise)
 - **Smart Deduplication** — Returns existing high-quality public sets when available (saves you money)
 - **Spaced Repetition Ready** — Every card is initialized with SM-2 algorithm data
+
+### Study & Spaced Repetition
+- **Due Cards** — Get cards ready for review based on SM-2 scheduling
+- **Review Schedule** — Forecast upcoming reviews (today, tomorrow, 14-day breakdown)
+- **Study Sessions** — Start sessions with shuffled cards, submit results, track progress
+- **AI Answer Evaluation** — Check typed answers against correct answers with AI (typos, synonyms)
+- **SM-2 Analytics** — Per-card easiness factor, interval, repetitions, next review date
+- **Multi-Mode Support** — Classic, multiple choice, and type-answer study modes
+
+### Versus Mode
+- **Create Challenges** — Generate shareable 6-character challenge codes
+- **Join by Code** — Players join challenges with a single API call
+- **Composite Scoring** — 0-1000 score from accuracy (40%), speed (25%), confidence (20%), streak (15%)
+- **Leaderboards** — Per-challenge rankings with full score breakdowns
+- **Open Challenges** — Browse and join public challenges
+- **ELO Rating** — Player ratings that adjust with wins and losses
+- **Win Streaks** — Track current and best win streaks
 
 ### Set Management
 - **Full CRUD** — Create, read, update, and delete flashcard sets via API
