@@ -48,6 +48,21 @@ const ApiKeySchema = new Schema<IApiKey>({
     monthlyGenerations: { type: Number },
     monthlyApiCalls: { type: Number },
   },
+  // Enterprise: IP allowlisting (empty array = all IPs allowed)
+  allowedIPs: [{
+    type: String,
+    trim: true,
+  }],
+  // Enterprise: Webhook URL for usage milestone notifications
+  webhookUrl: {
+    type: String,
+    trim: true,
+  },
+  // Enterprise: Priority support flag
+  prioritySupport: {
+    type: Boolean,
+    default: false,
+  },
   expiresAt: {
     type: Date,
   },
