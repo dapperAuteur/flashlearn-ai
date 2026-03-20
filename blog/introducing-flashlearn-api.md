@@ -15,7 +15,7 @@ Meanwhile, students spend hours manually creating flashcards instead of studying
 The FlashLearn AI API lets you generate, manage, and retrieve AI-powered flashcards with a single HTTP request. We handle the AI, validation, storage, and spaced repetition initialization. You get structured JSON back in seconds.
 
 ```bash
-curl -X POST https://flashlearn.ai/api/v1/generate \
+curl -X POST https://flashlearnai.witus.online/api/v1/generate \
   -H "Authorization: Bearer fl_pub_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{"topic": "Photosynthesis in plants"}'
@@ -62,7 +62,7 @@ If you're building a study app, tutoring platform, or any product where users ne
 
 ```javascript
 // Node.js / Next.js example
-const response = await fetch('https://flashlearn.ai/api/v1/generate', {
+const response = await fetch('https://flashlearnai.witus.online/api/v1/generate', {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${process.env.FLASHLEARN_API_KEY}`,
@@ -89,7 +89,7 @@ import requests
 
 def generate_study_set(topic, api_key):
     response = requests.post(
-        'https://flashlearn.ai/api/v1/generate',
+        'https://flashlearnai.witus.online/api/v1/generate',
         headers={
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ White-label flashcard generation in your product. Your users get AI-generated st
 **Batch generation** lets Pro and Enterprise tiers generate up to 10 topics in a single request:
 
 ```bash
-curl -X POST https://flashlearn.ai/api/v1/generate/batch \
+curl -X POST https://flashlearnai.witus.online/api/v1/generate/batch \
   -H "Authorization: Bearer fl_pub_your_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -145,7 +145,7 @@ FlashLearn uses the SM-2 algorithm (the same one behind Anki) to schedule review
 
 ```javascript
 // 1. Check what's due for review
-const dueRes = await fetch('https://flashlearn.ai/api/v1/study/due-cards', {
+const dueRes = await fetch('https://flashlearnai.witus.online/api/v1/study/due-cards', {
   headers: { 'Authorization': `Bearer ${API_KEY}` },
 });
 const { data } = await dueRes.json();
@@ -153,7 +153,7 @@ const { data } = await dueRes.json();
 // data.totalDue = 15
 
 // 2. Start a study session
-const sessionRes = await fetch('https://flashlearn.ai/api/v1/study/sessions', {
+const sessionRes = await fetch('https://flashlearnai.witus.online/api/v1/study/sessions', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({ setId: 'abc123', studyMode: 'type-answer' }),
@@ -161,7 +161,7 @@ const sessionRes = await fetch('https://flashlearn.ai/api/v1/study/sessions', {
 // Returns shuffled flashcards + sessionId
 
 // 3. Submit results when done
-const completeRes = await fetch(`https://flashlearn.ai/api/v1/study/sessions/${sessionId}/complete`, {
+const completeRes = await fetch(`https://flashlearnai.witus.online/api/v1/study/sessions/${sessionId}/complete`, {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -178,7 +178,7 @@ const completeRes = await fetch(`https://flashlearn.ai/api/v1/study/sessions/${s
 You can also get detailed analytics per card — easiness factor, interval, repetitions, and next review date:
 
 ```bash
-curl https://flashlearn.ai/api/v1/study/analytics/SET_ID \
+curl https://flashlearnai.witus.online/api/v1/study/analytics/SET_ID \
   -H "Authorization: Bearer fl_pub_YOUR_KEY"
 ```
 
@@ -190,7 +190,7 @@ Build quiz competitions, classroom challenges, or tournament brackets. The Versu
 
 ```javascript
 // 1. Create a challenge
-const challenge = await fetch('https://flashlearn.ai/api/v1/versus/challenges', {
+const challenge = await fetch('https://flashlearnai.witus.online/api/v1/versus/challenges', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -202,7 +202,7 @@ const challenge = await fetch('https://flashlearn.ai/api/v1/versus/challenges', 
 // Returns: challengeCode (e.g., "X7K2M9"), challengeId
 
 // 2. Others join with the code
-await fetch('https://flashlearn.ai/api/v1/versus/join', {
+await fetch('https://flashlearnai.witus.online/api/v1/versus/join', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${THEIR_API_KEY}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({ challengeCode: 'X7K2M9' }),
@@ -282,13 +282,13 @@ The Free tier is genuinely useful — 100 generations is enough to build a proto
 
 ## Get Started in 60 Seconds
 
-1. **Sign up** at [flashlearn.ai](https://flashlearn.ai)
+1. **Sign up** at [flashlearnai.witus.online](https://flashlearnai.witus.online)
 2. Go to the **Developer Portal** at `/developer`
 3. Click **New Key** to create a Public API key
 4. Copy your key (shown once) and make your first request:
 
 ```bash
-curl -X POST https://flashlearn.ai/api/v1/generate \
+curl -X POST https://flashlearnai.witus.online/api/v1/generate \
   -H "Authorization: Bearer fl_pub_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"topic": "Introduction to Machine Learning"}'
@@ -306,6 +306,6 @@ We're building this in the open because we believe study tools should be composa
 
 ---
 
-**Ready to try it?** [Create a free account](https://flashlearn.ai/auth/signup) and generate your first flashcards via API today.
+**Ready to try it?** [Create a free account](https://flashlearnai.witus.online/auth/signup) and generate your first flashcards via API today.
 
-Questions? Reach out at support@flashlearn.ai or open an issue on our GitHub.
+Questions? Reach out at support@flashlearnai.witus.online or open an issue on our GitHub.

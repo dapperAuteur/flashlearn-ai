@@ -81,7 +81,7 @@ POST /api/v1/versus/challenges/{id}/complete
 // Returns: { "compositeScore": { "totalScore": 847, "accuracyScore": 360, ... }, "rank": 1 }`} />
 
         <h3 className="text-lg font-medium text-gray-800 mt-6 mb-3">5. View the leaderboard</h3>
-        <Code code={`curl https://flashlearn.ai/api/v1/versus/challenges/{id}/board \\
+        <Code code={`curl https://flashlearnai.witus.online/api/v1/versus/challenges/{id}/board \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY"
 
 # Returns ranked participants with full score breakdowns`} />

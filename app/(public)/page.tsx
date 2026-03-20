@@ -388,7 +388,7 @@ const DeveloperAPISection = () => (
       <div className="max-w-2xl mx-auto mb-12">
         <pre className="bg-gray-800 rounded-xl p-5 overflow-x-auto text-sm leading-relaxed" role="region" aria-label="API code example">
           <code className="text-gray-300">
-{`curl -X POST https://flashlearn.ai/api/v1/generate \\
+{`curl -X POST https://flashlearnai.witus.online/api/v1/generate \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"topic": "Machine Learning Basics"}'

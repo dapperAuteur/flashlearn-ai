@@ -6,7 +6,7 @@ import ClientRoot from './ClientRoot';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.flashlearn-ai.com'),
+  metadataBase: new URL('https://flashlearnai.witus.online'),
   title: 'FlashLearn AI',
   description: 'AI-powered flashcard creation and multiplayer study challenges',
   openGraph: {

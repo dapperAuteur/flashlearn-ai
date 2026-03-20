@@ -110,7 +110,7 @@ export function getSecurityAlertEmailTemplate({
         
         <p>If this was you, you can ignore this email. If you don't recognize this activity, please take immediate action to secure your account:</p>
         
-        <p><a href="https://flashlearn.ai/account/security" class="button">Secure Your Account</a></p>
+        <p><a href="https://flashlearnai.witus.online/account/security" class="button">Secure Your Account</a></p>
         
         <p>For security reasons, we recommend:</p>
         <ul>

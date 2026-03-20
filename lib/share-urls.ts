@@ -1,7 +1,7 @@
 type ShareSource = 'twitter' | 'facebook' | 'email' | 'copy' | 'native';
 type ShareCampaign = 'versus' | 'results' | 'set' | 'challenge_preview';
 
-const BASE_URL = 'https://www.flashlearn-ai.com';
+const BASE_URL = 'https://flashlearnai.witus.online';
 
 /**
  * Appends UTM parameters to any internal path or full URL.

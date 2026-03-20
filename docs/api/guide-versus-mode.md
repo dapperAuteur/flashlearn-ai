@@ -256,7 +256,7 @@ A teacher creates challenges for weekly review, students compete for top scores:
 import requests
 
 API_KEY = 'fl_pub_teacher_key'
-BASE = 'https://flashlearn.ai/api/v1'
+BASE = 'https://flashlearnai.witus.online/api/v1'
 headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
 
 # Teacher generates flashcards for the week's topic
@@ -298,7 +298,7 @@ function ChallengeJoin({ apiKey }) {
   const [challenge, setChallenge] = useState(null);
 
   const join = async () => {
-    const res = await fetch('https://flashlearn.ai/api/v1/versus/join', {
+    const res = await fetch('https://flashlearnai.witus.online/api/v1/versus/join', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ challengeCode: code }),

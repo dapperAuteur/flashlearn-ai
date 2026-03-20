@@ -28,7 +28,7 @@ export default function GenerationGuidePage() {
 
       <section aria-labelledby="generate">
         <h2 id="generate" className="text-xl font-semibold text-gray-900 mt-8 mb-4">Generate from a Topic</h2>
-        <Code lang="bash" code={`curl -X POST https://flashlearn.ai/api/v1/generate \\
+        <Code lang="bash" code={`curl -X POST https://flashlearnai.witus.online/api/v1/generate \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"topic": "Photosynthesis", "title": "Bio: Photosynthesis"}'`} />
@@ -37,7 +37,7 @@ export default function GenerationGuidePage() {
 
       <section aria-labelledby="batch">
         <h2 id="batch" className="text-xl font-semibold text-gray-900 mt-10 mb-4">Batch Generation <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full ml-2">Pro / Enterprise</span></h2>
-        <Code lang="bash" code={`curl -X POST https://flashlearn.ai/api/v1/generate/batch \\
+        <Code lang="bash" code={`curl -X POST https://flashlearnai.witus.online/api/v1/generate/batch \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -73,7 +73,7 @@ export default function GenerationGuidePage() {
 
       <section aria-labelledby="node-example">
         <h2 id="node-example" className="text-xl font-semibold text-gray-900 mt-10 mb-4">Node.js Example</h2>
-        <Code lang="javascript" code={`const response = await fetch('https://flashlearn.ai/api/v1/generate', {
+        <Code lang="javascript" code={`const response = await fetch('https://flashlearnai.witus.online/api/v1/generate', {
   method: 'POST',
   headers: {
     'Authorization': \`Bearer \${process.env.FLASHLEARN_API_KEY}\`,
@@ -94,7 +94,7 @@ console.log(\`Generated \${data.cardCount} cards (set: \${data.setId})\`);`} />
         <Code lang="python" code={`import requests
 
 response = requests.post(
-    'https://flashlearn.ai/api/v1/generate',
+    'https://flashlearnai.witus.online/api/v1/generate',
     headers={
         'Authorization': f'Bearer {api_key}',
         'Content-Type': 'application/json',

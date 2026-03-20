@@ -77,7 +77,7 @@ export async function notifyAdminOfPriorityConversation(
     });
 
     await mg.messages.create(process.env.MAILGUN_DOMAIN || '', {
-      from: process.env.EMAIL_FROM || 'noreply@flashlearn.ai',
+      from: process.env.EMAIL_FROM || 'noreply@flashlearnai.witus.online',
       to: adminEmail,
       subject: `[PRIORITY] New support ticket: ${subject}`,
       text: `A priority support user has submitted a new ticket.\n\nUser: ${userName} (${userEmail})\nSubject: ${subject}\n\nView it in the admin panel at /admin/conversations`,
@@ -90,7 +90,7 @@ export async function notifyAdminOfPriorityConversation(
             <p><strong>User:</strong> ${userName} (${userEmail})</p>
             <p><strong>Subject:</strong> ${subject}</p>
             <p style="margin-top: 20px;">
-              <a href="${process.env.NEXTAUTH_URL || 'https://flashlearn.ai'}/admin/conversations"
+              <a href="${process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online'}/admin/conversations"
                  style="background: #7C3AED; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">
                 View in Admin Panel
               </a>

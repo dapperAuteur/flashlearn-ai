@@ -10,7 +10,7 @@ export const openApiSpec = {
       'AI-powered flashcard generation and management API. Generate flashcards from text topics, manage sets, and browse public content.',
     contact: {
       name: 'FlashLearn AI Support',
-      email: 'support@flashlearn.ai',
+      email: 'support@flashlearnai.witus.online',
     },
   },
   servers: [
@@ -19,7 +19,7 @@ export const openApiSpec = {
       description: 'FlashLearn API server',
       variables: {
         baseUrl: {
-          default: 'https://flashlearn.ai',
+          default: 'https://flashlearnai.witus.online',
         },
       },
     },

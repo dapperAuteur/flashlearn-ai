@@ -2,7 +2,7 @@ export function getReengagementTemplate(
   template: string,
   userName: string
 ): { subject: string; html: string } {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://flashlearn.ai';
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
   const firstName = userName.split(' ')[0] || 'there';
 
   switch (template) {

@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://www.flashlearn-ai.com';
+export const BASE_URL = 'https://flashlearnai.witus.online';
 
 export function versusEventSchema({
   topic,

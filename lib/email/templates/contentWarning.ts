@@ -51,7 +51,7 @@ export function getContentWarningTemplate(
 
             <p><strong>What you should do:</strong></p>
             <ul style="padding-left: 20px; color: #4B5563;">
-              <li>Review our <a href="https://flashlearn.ai/guidelines" style="color: #4A7BF7; text-decoration: none;">Community Guidelines</a></li>
+              <li>Review our <a href="https://flashlearnai.witus.online/guidelines" style="color: #4A7BF7; text-decoration: none;">Community Guidelines</a></li>
               <li>Edit or remove any content that may violate our policies</li>
               <li>Reach out to our support team if you believe this was a mistake</li>
             </ul>
@@ -65,7 +65,7 @@ export function getContentWarningTemplate(
           <div style="background-color: #F9FAFB; padding: 16px 32px; border-top: 1px solid #E5E7EB;">
             <p style="margin: 0; font-size: 12px; color: #9CA3AF; text-align: center;">
               This is an automated message from FlashLearn AI. Please do not reply to this email.<br>
-              If you need assistance, contact us at support@flashlearn.ai
+              If you need assistance, contact us at support@flashlearnai.witus.online
             </p>
           </div>
         </div>
