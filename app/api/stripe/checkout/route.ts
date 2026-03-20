@@ -10,9 +10,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 const PRICE_MAP: Record<string, string | undefined> = {
-  monthly: process.env.NEXT_PUBLIC_STRIPE_9_99_MONTHLY_PRICE,
-  annual: process.env.NEXT_PUBLIC_STRIPE_99_99_ANNUAL_PRICE,
-  lifetime: process.env.NEXT_PUBLIC_STRIPE_499_99_LIFETIME_PRICE,
+  monthly: process.env.NEXT_PUBLIC_STRIPE_10_MONTHLY_PRICE,
+  annual: process.env.NEXT_PUBLIC_STRIPE_100_ANNUAL_PRICE,
+  lifetime: process.env.NEXT_PUBLIC_STRIPE_100_LIFETIME_PRICE,
 };
 
 const TIER_MAP: Record<string, string> = {
