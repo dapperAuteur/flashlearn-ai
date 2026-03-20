@@ -6,6 +6,7 @@ export interface IConversation extends Document {
   subject: string;
   status: 'open' | 'in-progress' | 'resolved' | 'closed';
   tags: string[];
+  isPriority: boolean;
   lastMessageAt: Date;
   unreadByAdmin: boolean;
   unreadByUser: boolean;
@@ -38,6 +39,10 @@ const ConversationSchema = new Schema<IConversation>(
     tags: {
       type: [String],
     },
+    isPriority: {
+      type: Boolean,
+      default: false,
+    },
     lastMessageAt: {
       type: Date,
       default: Date.now,
@@ -57,6 +62,7 @@ const ConversationSchema = new Schema<IConversation>(
 ConversationSchema.index({ userId: 1 });
 ConversationSchema.index({ status: 1, lastMessageAt: -1 });
 ConversationSchema.index({ unreadByAdmin: 1 });
+ConversationSchema.index({ isPriority: -1, lastMessageAt: -1 });
 
 export const Conversation =
   mongoose.models.Conversation ||

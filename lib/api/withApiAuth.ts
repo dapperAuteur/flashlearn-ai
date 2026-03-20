@@ -113,6 +113,8 @@ export function withApiAuth(handler: ApiHandler, options: WithApiAuthOptions = {
       return apiError('QUOTA_EXCEEDED', requestId, undefined, quotaResult.reason);
     }
 
+    const isOverage = quotaResult.overage === true;
+
     // 6. Execute the handler
     let response: NextResponse;
     let statusCode = 200;
@@ -129,12 +131,14 @@ export function withApiAuth(handler: ApiHandler, options: WithApiAuthOptions = {
       statusCode = 500;
     }
 
-    // 7. Increment usage (fire-and-forget)
+    // 7. Increment usage (fire-and-forget, with overage + webhook support)
     incrementUsage(
       apiKeyId,
       String(apiKey.userId),
       keyType,
-      isGenerationRoute
+      isGenerationRoute,
+      isOverage,
+      apiTier
     ).catch(() => {});
 
     // 8. Log the request (fire-and-forget)
@@ -158,6 +162,9 @@ export function withApiAuth(handler: ApiHandler, options: WithApiAuthOptions = {
     headers.set('X-RateLimit-Remaining', String(burstResult.remaining));
     headers.set('X-RateLimit-Reset', String(burstResult.reset));
     headers.set('X-Request-Id', requestId);
+    if (isOverage) {
+      headers.set('X-Overage', 'true');
+    }
 
     return new NextResponse(response.body, {
       status: response.status,
