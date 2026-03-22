@@ -21,6 +21,7 @@ import {
   ScrollText,
   Settings,
   Key,
+  Search,
   ChevronDown,
   ChevronRight,
   Menu,
@@ -93,6 +94,7 @@ const navGroups: NavGroup[] = [
     label: "System",
     items: [
       { label: "API Management", href: "/admin/api-management", icon: Key },
+      { label: "SEO", href: "/admin/seo", icon: Search },
       { label: "Logs", href: "/admin/logs", icon: ScrollText },
       { label: "Settings", href: "/admin/settings", icon: Settings },
     ],

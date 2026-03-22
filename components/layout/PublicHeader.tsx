@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Shield, Menu, X } from 'lucide-react';
 
@@ -14,7 +15,9 @@ const publicLinks = [
 
 export default function PublicHeader() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200" role="banner">
@@ -56,7 +59,8 @@ export default function PublicHeader() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                    aria-current={isActive(link.href) ? 'page' : undefined}
+                    className={`px-3 py-2 text-sm font-medium rounded-md ${isActive(link.href) ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:bg-gray-100'}`}
                   >
                     {link.label}
                   </Link>
