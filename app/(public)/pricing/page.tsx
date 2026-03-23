@@ -270,6 +270,54 @@ export default function PricingPage() {
         </div>
       )}
 
+      {/* API Pricing Section */}
+      <section className="max-w-3xl mx-auto mt-16 sm:mt-20" aria-labelledby="api-pricing-heading">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 bg-gray-900 text-gray-300 px-4 py-2 rounded-full text-sm font-medium mb-4">
+            <span>Developer API</span>
+          </div>
+          <h2 id="api-pricing-heading" className="text-2xl font-bold text-gray-900 mb-2">
+            Build with the FlashLearnAI.WitUS.Online API
+          </h2>
+          <p className="text-gray-600 text-sm">
+            23 REST endpoints. Generate flashcards, run spaced repetition, and create quiz challenges from your own app.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[
+            { name: 'Free', price: '$0', gens: '100', calls: '1,000' },
+            { name: 'Developer', price: '$19/mo', gens: '5,000', calls: '50,000' },
+            { name: 'Pro', price: '$49/mo', gens: '25,000', calls: '250,000' },
+            { name: 'Enterprise', price: 'Custom', gens: 'Unlimited', calls: 'Unlimited' },
+          ].map((tier) => (
+            <div key={tier.name} className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+              <p className="text-sm font-semibold text-gray-900">{tier.name}</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{tier.price}</p>
+              <p className="text-xs text-gray-500 mt-2">{tier.gens} generations/mo</p>
+              <p className="text-xs text-gray-500">{tier.calls} API calls/mo</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <Link href="/docs/api/getting-started" className="text-sm text-blue-600 hover:text-blue-800 font-medium underline">
+            Read the API docs
+          </Link>
+          <span className="mx-2 text-gray-300">|</span>
+          <Link href="/developer" className="text-sm text-blue-600 hover:text-blue-800 font-medium underline">
+            Get your free API key
+          </Link>
+        </div>
+
+        <div className="mt-6 p-4 bg-purple-50 rounded-xl border border-purple-100 text-center">
+          <p className="text-sm font-medium text-purple-900">White-Label App — Coming Soon</p>
+          <p className="text-xs text-purple-700 mt-1">
+            Deploy your own branded study app powered by the API. Custom name, colors, logo, and features. Perfect for schools and companies.
+          </p>
+        </div>
+      </section>
+
       {/* FAQ / Trust */}
       <div className="max-w-3xl mx-auto mt-16 sm:mt-20">
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
@@ -292,6 +340,14 @@ export default function PricingPage() {
             {
               q: 'Do I need an account to study?',
               a: 'You can study shared flashcard sets without an account. Sign up to create your own sets, track progress, and use AI generation.',
+            },
+            {
+              q: 'Is the API really free?',
+              a: 'Yes! The Free tier gives you 100 AI generations and 1,000 API calls per month. No credit card required. Upgrade anytime if you need more.',
+            },
+            {
+              q: 'What is the white-label app?',
+              a: 'It\'s a ready-to-deploy study app that uses the FlashLearnAI.WitUS.Online API. Schools and companies can customize the branding (name, colors, logo) and deploy it as their own. Coming soon.',
             },
           ].map((item) => (
             <details
