@@ -215,9 +215,9 @@ export default function VersusHubPage() {
         </div>
         {activeChallenges.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-            <BoltIcon className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+            <BoltIcon className="h-10 w-10 text-gray-500 mx-auto mb-3" />
             <p className="text-sm text-gray-500">No active challenges.</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Create a new challenge or join one with a code.
             </p>
           </div>
@@ -244,9 +244,9 @@ export default function VersusHubPage() {
         </div>
         {openChallenges.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-            <GlobeAltIcon className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+            <GlobeAltIcon className="h-10 w-10 text-gray-500 mx-auto mb-3" />
             <p className="text-sm text-gray-500">No public challenges available right now.</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Be the first to create a public challenge!
             </p>
           </div>
@@ -286,9 +286,9 @@ export default function VersusHubPage() {
         </div>
         {completedChallenges.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-            <TrophyIcon className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+            <TrophyIcon className="h-10 w-10 text-gray-500 mx-auto mb-3" />
             <p className="text-sm text-gray-500">No completed challenges yet.</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Complete a challenge to see your results here.
             </p>
           </div>

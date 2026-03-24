@@ -192,7 +192,7 @@ export default function AdminInvitationsPage() {
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Personal Note{" "}
-              <span className="text-gray-400 font-normal">(optional)</span>
+              <span className="text-gray-600 font-normal">(optional)</span>
             </label>
             <textarea
               id="invite-note"

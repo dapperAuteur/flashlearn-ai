@@ -39,20 +39,20 @@ export default function WaitingForOpponent({
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
       {/* Waiting message */}
       <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4" aria-hidden="true">
           <ClockIcon className="h-8 w-8 text-blue-600 animate-pulse" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900">
           Waiting for opponents
-          <span className="inline-block animate-pulse">...</span>
+          <span className="inline-block animate-pulse" aria-hidden="true">...</span>
         </h3>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-gray-600 mt-1">
           Results will appear once everyone has finished
         </p>
       </div>
 
       {/* Participant status list */}
-      <div className="space-y-2 mb-6">
+      <div className="space-y-2 mb-6" aria-live="polite" aria-label="Participant completion status">
         {participants.map((participant) => {
           const isCurrentUser = participant.userId === currentUserId;
           const isCompleted = participant.status === 'completed';
@@ -67,9 +67,9 @@ export default function WaitingForOpponent({
               {/* Status icon */}
               <div className="flex-shrink-0">
                 {isCompleted ? (
-                  <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                  <CheckCircleIcon className="h-5 w-5 text-green-500" aria-hidden="true" />
                 ) : (
-                  <ClockIcon className="h-5 w-5 text-amber-500" />
+                  <ClockIcon className="h-5 w-5 text-amber-500" aria-hidden="true" />
                 )}
               </div>
 
@@ -104,12 +104,13 @@ export default function WaitingForOpponent({
       <div className="text-center">
         <button
           onClick={onRefresh}
+          aria-label="Refresh participant status"
           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
         >
-          <ArrowPathIcon className="h-4 w-4" />
+          <ArrowPathIcon className="h-4 w-4" aria-hidden="true" />
           Refresh
         </button>
-        <p className="text-xs text-gray-400 mt-2">Auto-refreshes every 30 seconds</p>
+        <p className="text-xs text-gray-600 mt-2">Auto-refreshes every 30 seconds</p>
       </div>
     </div>
   );

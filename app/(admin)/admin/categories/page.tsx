@@ -245,7 +245,7 @@ export default function AdminCategoriesPage() {
       {/* Categories list */}
       {categories.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <FolderIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <FolderIcon className="h-12 w-12 text-gray-500 mx-auto mb-3" />
           <p className="text-gray-500">No categories yet. Create one to get started.</p>
         </div>
       ) : (
@@ -268,7 +268,7 @@ export default function AdminCategoriesPage() {
                 {categories.map((cat) => (
                   <tr key={cat._id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <GripVertical className="h-4 w-4 text-gray-300" />
+                      <GripVertical className="h-4 w-4 text-gray-500" />
                     </td>
                     <td className="px-4 py-3">
                       {editingId === cat._id ? (
@@ -285,7 +285,7 @@ export default function AdminCategoriesPage() {
                             style={{ backgroundColor: cat.color }}
                           />
                           <span className="font-medium text-gray-900 text-sm">{cat.name}</span>
-                          <span className="text-xs text-gray-400">/{cat.slug}</span>
+                          <span className="text-xs text-gray-600">/{cat.slug}</span>
                         </div>
                       )}
                     </td>
@@ -350,7 +350,7 @@ export default function AdminCategoriesPage() {
                           </button>
                           <button
                             onClick={() => { setEditingId(null); setEditForm({}); }}
-                            className="p-1.5 text-gray-400 hover:bg-gray-100 rounded"
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -359,13 +359,13 @@ export default function AdminCategoriesPage() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => startEdit(cat)}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                            className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(cat._id, cat.name)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                            className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

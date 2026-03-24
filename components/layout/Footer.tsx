@@ -41,7 +41,7 @@ export default function Footer() {
             <Link href="/" className="text-xl font-bold text-white" aria-label="FlashLearnAI home">
               FlashLearnAI<span className="text-blue-400">.WitUS.Online</span>
             </Link>
-            <p className="mt-3 text-sm text-gray-400 max-w-xs">
+            <p className="mt-3 text-sm text-gray-300 max-w-xs">
               AI-powered flashcard generation, spaced repetition, and competitive learning — for students, teachers, and developers.
             </p>
           </div>
@@ -49,7 +49,7 @@ export default function Footer() {
           {/* Link columns */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+              <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-4">
                 {category}
               </h3>
               <ul className="space-y-2.5" role="list">
@@ -57,7 +57,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-gray-400 hover:text-white transition-colors"
+                      className="text-sm text-gray-300 hover:text-white transition-colors"
                     >
                       {link.label}
                     </Link>

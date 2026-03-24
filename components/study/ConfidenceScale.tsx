@@ -25,16 +25,19 @@ export default function ConfidenceScale({ onRatingSelect, disabled = false }: Co
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-      <h3 className="text-sm font-semibold text-blue-900 mb-3">
+      <h3 className="text-sm font-semibold text-blue-900 mb-3" id="confidence-scale-label">
         Rate your confidence before seeing the answer:
       </h3>
-      
-      <div className="space-y-2">
+
+      <div className="space-y-2" role="radiogroup" aria-label="Confidence rating" aria-labelledby="confidence-scale-label">
         {CONFIDENCE_SCALE.map(({ value, label, color }) => (
           <button
             key={value}
             onClick={() => handleSelect(value)}
             disabled={disabled}
+            role="radio"
+            aria-checked={selectedRating === value}
+            aria-label={`${value} out of 5: ${label}`}
             className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
               selectedRating === value
                 ? 'ring-2 ring-blue-500 transform scale-[1.02]'
@@ -45,7 +48,7 @@ export default function ConfidenceScale({ onRatingSelect, disabled = false }: Co
           >
             <span className="font-medium">{value}. {label}</span>
             {selectedRating === value && (
-              <span className="text-blue-600 font-bold">✓</span>
+              <span className="text-blue-600 font-bold" aria-hidden="true">✓</span>
             )}
           </button>
         ))}

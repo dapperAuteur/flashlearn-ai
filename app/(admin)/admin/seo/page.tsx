@@ -109,9 +109,9 @@ export default function SEOAdminPage() {
             >
               <div>
                 <p className="font-medium text-sm text-gray-900">{page.title}</p>
-                <p className="text-xs text-gray-400 font-mono">{page.path}</p>
+                <p className="text-xs text-gray-600 font-mono">{page.path}</p>
               </div>
-              <span className="text-xs text-gray-400">{expandedPath === page.path ? 'Collapse' : 'Edit'}</span>
+              <span className="text-xs text-gray-600">{expandedPath === page.path ? 'Collapse' : 'Edit'}</span>
             </button>
 
             {expandedPath === page.path && (
@@ -127,7 +127,7 @@ export default function SEOAdminPage() {
                   <textarea id={`desc-${index}`} value={page.description} rows={2}
                     onChange={e => updatePage(index, 'description', e.target.value)}
                     className="w-full border rounded-lg px-3 py-2 text-sm" />
-                  <p className="text-xs text-gray-400 mt-1">{page.description.length}/160 characters</p>
+                  <p className="text-xs text-gray-600 mt-1">{page.description.length}/160 characters</p>
                 </div>
                 <div>
                   <label htmlFor={`og-title-${index}`} className="block text-xs text-gray-500 mb-1">OG Title (optional)</label>
@@ -146,7 +146,7 @@ export default function SEOAdminPage() {
 
                 {/* Google Preview */}
                 <div className="p-3 bg-gray-50 rounded-lg" role="region" aria-label="Search result preview">
-                  <p className="text-xs text-gray-400 mb-2">Google Search Preview</p>
+                  <p className="text-xs text-gray-600 mb-2">Google Search Preview</p>
                   <p className="text-blue-700 text-sm font-medium truncate">{page.title} | FlashLearnAI.WitUS.Online</p>
                   <p className="text-green-700 text-xs truncate">flashlearnai.witus.online{page.path}</p>
                   <p className="text-gray-600 text-xs line-clamp-2 mt-0.5">{page.description}</p>

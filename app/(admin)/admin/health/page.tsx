@@ -307,7 +307,7 @@ export default function AdminHealthPage() {
             {summary.total > 0 ? (
               <Doughnut data={doughnutData} options={doughnutOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-full text-gray-600 text-sm">
                 No data yet
               </div>
             )}
@@ -347,7 +347,7 @@ export default function AdminHealthPage() {
         </div>
       ) : users.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <Users className="h-12 w-12 text-gray-500 mx-auto mb-3" />
           <p className="text-gray-500">No users found for this filter.</p>
         </div>
       ) : (
@@ -467,7 +467,7 @@ export default function AdminHealthPage() {
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400">N/A</span>
+                        <span className="text-xs text-gray-600">N/A</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -483,7 +483,7 @@ export default function AdminHealthPage() {
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400">--</span>
+                        <span className="text-xs text-gray-600">--</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -492,7 +492,7 @@ export default function AdminHealthPage() {
                           {u.health.riskLevel}
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400">--</span>
+                        <span className="text-xs text-gray-600">--</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -556,7 +556,7 @@ export default function AdminHealthPage() {
             {/* Close button */}
             <button
               onClick={() => { if (!sending) setReengageUser(null); }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-600"
               disabled={sending}
             >
               <X className="h-5 w-5" />
@@ -571,7 +571,7 @@ export default function AdminHealthPage() {
               <p className="text-sm text-gray-500 mt-1">
                 Send a re-engagement email to <span className="font-medium text-gray-700">{reengageUser.name}</span>
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">{reengageUser.email}</p>
+              <p className="text-xs text-gray-600 mt-0.5">{reengageUser.email}</p>
             </div>
 
             {/* Template selector */}

@@ -131,7 +131,7 @@ export default function ShareableResultsCard({ initialResults, cardResults = [] 
 
   return (
     <div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8" role="region" aria-label="Shareable study results">
         <div ref={cardRef} className="flex flex-col justify-between h-full">
             
         <div>
@@ -164,8 +164,8 @@ export default function ShareableResultsCard({ initialResults, cardResults = [] 
       </div>
       <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
         <p className="text-lg font-bold text-gray-800 dark:text-gray-200">Flashlearn AI</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{typeof window !== 'undefined' ? window.location.host : ''}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">{typeof window !== 'undefined' ? window.location.host : ''}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           {results.sessionDate ? formatDateTime(results.sessionDate) : (typeof window !== 'undefined' ? window.location.host : '')}
         </p>
         </div>
@@ -180,6 +180,7 @@ export default function ShareableResultsCard({ initialResults, cardResults = [] 
         <button
           onClick={handleShare}
           disabled={isSharing}
+          aria-label={isSharing ? 'Generating share image' : 'Share your study results'}
           className="w-full sm:w-auto py-3 px-8 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors disabled:opacity-50"
         >
           {isSharing ? 'Generating Image...' : 'Share Your Results'}
@@ -190,8 +191,8 @@ export default function ShareableResultsCard({ initialResults, cardResults = [] 
 }
 
 const StatCard = ({ label, value, color = 'text-gray-800' }: { label: string, value: string | number, color?: string }) => (
-  <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center sm:text-left">
-    <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+  <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center sm:text-left" role="group" aria-label={`${label}: ${value}`}>
+    <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>
     <p className={`text-2xl font-bold ${color} dark:text-white`}>{value}</p>
   </div>
 );

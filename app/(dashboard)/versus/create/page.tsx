@@ -175,7 +175,7 @@ export default function CreateChallengePage() {
                     ? 'bg-blue-600 text-white'
                     : isActive
                       ? 'bg-blue-100 text-blue-700 border-2 border-blue-600'
-                      : 'bg-gray-100 text-gray-400'
+                      : 'bg-gray-100 text-gray-600'
                 }`}
               >
                 {isCompleted ? (
@@ -213,7 +213,7 @@ export default function CreateChallengePage() {
 
             {/* Search */}
             <div className="relative mb-4">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
               <input
                 type="text"
                 placeholder="Search your sets..."
@@ -226,7 +226,7 @@ export default function CreateChallengePage() {
             {/* Set List */}
             {userSets.length === 0 ? (
               <div className="text-center py-8">
-                <BookOpenIcon className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                <BookOpenIcon className="h-10 w-10 text-gray-500 mx-auto mb-2" />
                 <p className="text-sm text-gray-500">
                   {searchQuery ? 'No sets match your search.' : 'You have no flashcard sets yet.'}
                 </p>
@@ -427,7 +427,7 @@ export default function CreateChallengePage() {
                     {maxParticipants}
                   </span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-gray-600 mt-2">
                   Free tier: up to 5 participants. Upgrade for more.
                 </p>
               </div>

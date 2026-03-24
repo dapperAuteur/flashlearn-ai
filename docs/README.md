@@ -1,63 +1,83 @@
-# Gemini Flashcard Maker
+# FlashLearnAI.WitUS.Online
 
 ## Overview
 
-This web application allows users to instantly generate interactive, flippable flashcards for any topic using the Google Gemini API. Enter a subject, concept, or even a list of term/definition pairs, and the app will leverage AI to create study cards.
+FlashLearn AI is a full-featured, AI-powered flashcard platform for students, teachers, and developers. Generate flashcards from text, PDFs, YouTube videos, audio, or images using Google Gemini AI. Study with spaced repetition (SM-2), compete in versus challenges, and access everything offline.
 
-## Features
+## Key Features
 
-*   **AI-Powered Generation:** Uses the Google Gemini API (`gemini-2.0-flash-exp` model) to create flashcard content based on user input.
-*   **Flexible Input:** Accepts general topics (e.g., "Ancient Rome") or specific "Term: Definition" pairs provided by the user.
-*   **Interactive Flashcards:** Displays generated content as flippable cards (term on the front, definition on the back).
-*   **Simple Interface:** Easy-to-use web interface built with HTML, CSS, and TypeScript.
-*   **Dynamic Display:** Fetches data from the API and dynamically renders the flashcards on the page.
-*   **Visual Feedback:** Includes loading states and error messages.
-*   **Modern Styling:** Features a clean design with light/dark mode support based on system preferences.
-
-## How it Works
-
-1.  The user enters a topic or term/definition pairs into the text area.
-2.  Clicking "Generate Flashcards" triggers a request to the Google Gemini API.
-3.  A prompt is constructed asking the Gemini model to generate flashcards in a "Term: Definition" format based on the user's input.
-4.  The application receives the response, parses the text to extract terms and definitions.
-5.  Interactive HTML flashcard elements are created dynamically and displayed in the container.
-6.  Users can click on any flashcard to flip it and reveal the definition.
+- **AI-Powered Generation** — Create flashcards from text prompts, PDFs, YouTube transcripts, audio, and images using Gemini 2.5 Flash
+- **Multiple Study Modes** — Classic flip, multiple choice, type-your-answer, and confidence rating
+- **Spaced Repetition (SM-2)** — Scientifically-proven algorithm for optimal retention scheduling
+- **Versus Mode** — Competitive async challenges with composite scoring (accuracy, speed, confidence, streak)
+- **Offline-First** — Full PWA with PowerSync, IndexedDB, and service worker for offline study
+- **Public API** — 23 REST endpoints for generation, sets, study, and versus (Free/Developer/Pro/Enterprise tiers)
+- **White-Label Starter App** — Deployable study app powered by the Public API with custom branding
+- **Admin Dashboard** — User management, analytics, content moderation, campaigns, API key management, SEO tools
+- **Admin Card Quantity Selector** — Admins can choose exact card count (1-50) during AI generation
+- **Progress Analytics** — Accuracy rates, streaks, charts, problem card identification
+- **Achievements & Gamification** — Badges, streaks, and progress tracking
+- **Sharing & Discovery** — Public set pages, shareable results, community explore page
 
 ## Technology Stack
 
-*   **Frontend:** HTML, CSS, TypeScript
-*   **AI:** Google Gemini API (via `@google/genai` SDK)
-*   **Build Tool:** Vite
-*   **Styling:** Custom CSS with CSS Variables for theming.
+- **Framework:** Next.js 15 (App Router), React 19, TypeScript
+- **Styling:** Tailwind CSS v4
+- **Database:** MongoDB with Mongoose ODM
+- **Offline Sync:** PowerSync + IndexedDB
+- **AI:** Google Gemini API (gemini-2.5-flash)
+- **Auth:** NextAuth.js v4 (credentials + email code)
+- **Payments:** Stripe (subscriptions + metered API billing)
+- **Email:** Mailgun / Nodemailer / Resend
+- **Media:** Cloudinary (image hosting)
+- **Analytics:** Vercel Analytics, Chart.js
+- **Deployment:** Vercel
 
-## Run Locally
+## Getting Started
 
-**Prerequisites:** Node.js
-
-1.  Install dependencies:
-    ```bash
-    npm install
-    ```
-2.  Set the `API_KEY` in .env.local to your Gemini API key. You can obtain one from Google AI Studio.
-    ```.env.local
-    API_KEY=YOUR_API_KEY_HERE
-    ```
-3.  Run the app:
-    ```bash
-    npm run dev
-    ```
-4.  Open your browser to the local address provided by Vite (usually `http://localhost:5173`).
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js 18+, MongoDB
 
 1. Install dependencies:
-   `npm install`
-2. Set the `API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+
+2. Copy `.env.example` to `.env.local` and fill in your API keys:
+   - `GEMINI_API_KEY` — Google Gemini API key
+   - `MONGODB_URI` — MongoDB connection string
+   - `NEXTAUTH_SECRET` — NextAuth secret
+   - `STRIPE_SECRET_KEY` — Stripe API key
+
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000)
+
+## Project Structure
+
+```
+app/              Next.js App Router pages and API routes
+  (public)/       Public marketing pages (landing, pricing, explore, docs)
+  (dashboard)/    Authenticated user dashboard
+  (admin)/        Admin panel
+  api/            API endpoints
+components/       Reusable React components
+hooks/            Custom React hooks
+lib/              Shared utilities, services, database, logging
+models/           Mongoose data models
+docs/             Documentation and guides
+blog/             Blog content
+standalone/       White-label starter app
+```
+
+## Documentation
+
+- [API Getting Started](api/getting-started.md)
+- [Generation Guide](api/guide-generation.md)
+- [Spaced Repetition Guide](api/guide-spaced-repetition.md)
+- [Versus Mode Guide](api/guide-versus-mode.md)
+- [Admin Dashboard Guide](guides/admin-dashboard-guide.md)
+- [Coding Style Guide](guides/CODING_STYLE_GUIDE.md)
+- [UI Component Guidelines](guides/ui-component-guidelines.md)

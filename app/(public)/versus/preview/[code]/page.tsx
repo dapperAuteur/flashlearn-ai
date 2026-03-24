@@ -93,7 +93,7 @@ export default async function ChallengePreviewPage({ params }: PreviewPageProps)
             {/* Leaderboard (if scores available) */}
             {completedParticipants.length > 0 && (
               <div className="mb-5">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Current Standings</p>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Current Standings</p>
                 <div className="space-y-2">
                   {completedParticipants.map((p, i) => (
                     <div

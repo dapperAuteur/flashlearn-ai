@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { savePendingChange } from '@/lib/db/indexeddb';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -63,6 +63,35 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
       .finally(() => setLoadingCategories(false));
   }, [isOpen]);
 
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap: keep focus within the modal while open
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+    if (e.key === 'Tab' && modalRef.current) {
+      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  }, [onClose]);
+
   if (!isOpen) return null;
 
   const handleSave = async () => {
@@ -117,15 +146,21 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-gray-500/75" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onKeyDown={handleKeyDown}>
+      <div className="fixed inset-0 bg-gray-500/75" onClick={onClose} aria-hidden="true" />
 
-      <div className="relative z-10 bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="set-edit-modal-title"
+        className="relative z-10 bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
         <div className="px-4 pt-5 pb-4 sm:p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium text-gray-900">Edit Flashcard Set</h3>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                <XMarkIcon className="h-6 w-6" />
+              <h3 id="set-edit-modal-title" className="text-lg font-medium text-gray-900">Edit Flashcard Set</h3>
+              <button onClick={onClose} aria-label="Close dialog" className="text-gray-600 hover:text-gray-800">
+                <XMarkIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
 
@@ -158,7 +193,7 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Categories</label>
                 {loadingCategories ? (
-                  <p className="text-sm text-gray-500">Loading categories...</p>
+                  <p className="text-sm text-gray-600">Loading categories...</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {categoryOptions.map((cat) => {
@@ -185,7 +220,7 @@ export default function SetEditModal({ isOpen, onClose, set, onSave, isAdmin }: 
                     })}
                   </div>
                 )}
-                <p className="text-xs text-gray-500 mt-1">Select up to 5 categories</p>
+                <p className="text-xs text-gray-600 mt-1">Select up to 5 categories</p>
               </div>
 
               <div>

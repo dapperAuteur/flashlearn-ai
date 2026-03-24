@@ -63,8 +63,8 @@ interface HistoricalSessionViewProps {
 }
 
 const StatCard = ({ label, value, color = 'text-gray-800' }: { label: string; value: string | number; color?: string }) => (
-  <div className="bg-gray-100 p-3 rounded-lg text-center">
-    <p className="text-xs text-gray-500">{label}</p>
+  <div className="bg-gray-100 p-3 rounded-lg text-center" role="group" aria-label={`${label}: ${value}`}>
+    <p className="text-xs text-gray-600">{label}</p>
     <p className={`text-lg sm:text-xl font-bold ${color}`}>{value}</p>
   </div>
 );
@@ -161,7 +161,7 @@ export default function HistoricalSessionView({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 max-w-2xl mx-auto">
+    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 max-w-2xl mx-auto" role="region" aria-label="Historical session results">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 text-center">
         Session Complete!
       </h2>
@@ -170,8 +170,8 @@ export default function HistoricalSessionView({
       </p>
 
       {/* Stats + Chart */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6" aria-label="Session statistics" role="region">
+        <div className="grid grid-cols-2 gap-3" aria-label="Score breakdown">
           <StatCard label="Accuracy" value={`${accuracy}%`} color="text-blue-600" />
           <StatCard label="Correct" value={correctCount} color="text-green-600" />
           <StatCard label="Incorrect" value={incorrectCount} color="text-red-600" />
@@ -198,7 +198,7 @@ export default function HistoricalSessionView({
               href={`/study?setId=${setId}`}
               className="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors text-sm"
             >
-              <ArrowPathIcon className="h-4 w-4 mr-2" />
+              <ArrowPathIcon className="h-4 w-4 mr-2" aria-hidden="true" />
               Review {missedCount} Missed Card{missedCount !== 1 ? 's' : ''}
             </Link>
           )}
@@ -207,7 +207,7 @@ export default function HistoricalSessionView({
             disabled={isSharing}
             className="inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors text-sm"
           >
-            <ShareIcon className="h-4 w-4 mr-2" />
+            <ShareIcon className="h-4 w-4 mr-2" aria-hidden="true" />
             {isSharing ? 'Sharing...' : 'Share Results'}
           </button>
           {setId && (
@@ -246,15 +246,17 @@ export default function HistoricalSessionView({
         <div className="mb-6 border border-blue-100 rounded-xl overflow-hidden">
           <button
             onClick={() => setInsightExpanded((v) => !v)}
+            aria-expanded={insightExpanded}
+            aria-label="Study Style Insights"
             className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition-colors"
           >
             <div className="flex items-center gap-2 text-blue-800 font-semibold text-sm">
-              <LightBulbIcon className="h-4 w-4" />
+              <LightBulbIcon className="h-4 w-4" aria-hidden="true" />
               Study Style Insights
             </div>
             {insightExpanded
-              ? <ChevronUpIcon className="h-4 w-4 text-blue-600" />
-              : <ChevronDownIcon className="h-4 w-4 text-blue-600" />}
+              ? <ChevronUpIcon className="h-4 w-4 text-blue-600" aria-hidden="true" />
+              : <ChevronDownIcon className="h-4 w-4 text-blue-600" aria-hidden="true" />}
           </button>
 
           {insightExpanded && (
@@ -287,15 +289,15 @@ export default function HistoricalSessionView({
                         <span className="font-medium text-gray-800 leading-tight">{combo.label}</span>
                         {isCurrent && <span className="text-blue-600 font-semibold text-xs">This session</span>}
                         {!isCurrent && isWeak && <span className="text-red-600 font-semibold text-xs">Weak</span>}
-                        {!isCurrent && isUntried && <span className="text-gray-400 font-semibold text-xs">Not tried</span>}
+                        {!isCurrent && isUntried && <span className="text-gray-600 font-semibold text-xs">Not tried</span>}
                       </div>
                       {entry ? (
                         <div className="text-gray-700">
                           <span className={`font-bold ${isWeak ? 'text-red-700' : 'text-green-700'}`}>{entry.accuracy}%</span>
-                          <span className="text-gray-400 ml-1">({entry.attempts} attempts)</span>
+                          <span className="text-gray-600 ml-1">({entry.attempts} attempts)</span>
                         </div>
                       ) : (
-                        <span className="text-gray-400 italic">No data yet</span>
+                        <span className="text-gray-600 italic">No data yet</span>
                       )}
                       {!isCurrent && setId && (
                         <a
@@ -321,12 +323,14 @@ export default function HistoricalSessionView({
             <h3 className="text-base font-semibold text-gray-700">Card Results</h3>
           </div>
 
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1" role="tablist" aria-label="Filter card results">
             {(['all', 'missed', 'correct'] as CardFilter[]).map((filter) => {
               const count = filter === 'all' ? cardResults.length : filter === 'missed' ? missedCount : correctCount;
               return (
                 <button
                   key={filter}
+                  role="tab"
+                  aria-selected={cardFilter === filter}
                   onClick={() => setCardFilter(filter)}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                     cardFilter === filter

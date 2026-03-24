@@ -301,7 +301,7 @@ export default function AdminFlagsPage() {
         </div>
       ) : flags.length === 0 ? (
         <div className="text-center py-16">
-          <Flag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <Flag className="h-12 w-12 text-gray-500 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-1">No flags found</h3>
           <p className="text-sm text-gray-500">
             {activeTab ? `No ${activeTab} flags at this time.` : 'No content has been flagged yet.'}
@@ -334,7 +334,7 @@ export default function AdminFlagsPage() {
                               {flag.setId.title}
                             </span>
                           ) : (
-                            <span className="font-semibold text-gray-400 italic">
+                            <span className="font-semibold text-gray-600 italic">
                               [Set deleted]
                             </span>
                           )}
@@ -381,7 +381,7 @@ export default function AdminFlagsPage() {
                         </div>
 
                         {flag.reviewedBy && (
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-gray-600 mt-1">
                             Reviewed by: {flag.reviewedBy.name}
                           </p>
                         )}
@@ -445,7 +445,7 @@ export default function AdminFlagsPage() {
                             disabled={updatingId === flag._id}
                             placeholder="Optional notes..."
                             rows={1}
-                            className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 resize-none"
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 resize-none"
                           />
                         </div>
                       </div>

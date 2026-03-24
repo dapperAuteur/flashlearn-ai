@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
       <div className="bg-white rounded-lg shadow p-4 mb-4">
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
             <input
               type="text"
               placeholder="Search by name or email..."
@@ -255,7 +255,7 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs text-gray-400">Joined {formatDate(user.createdAt)}</p>
+                  <p className="text-xs text-gray-600">Joined {formatDate(user.createdAt)}</p>
                   {user.emailVerified ? (
                     <span className="text-xs text-green-600 font-medium">Verified</span>
                   ) : (
@@ -335,7 +335,7 @@ export default function AdminUsersPage() {
                         {user.stripeCustomerId ? (
                           <span className="text-xs text-green-600 font-medium">Connected</span>
                         ) : (
-                          <span className="text-xs text-gray-400">—</span>
+                          <span className="text-xs text-gray-600">—</span>
                         )}
                       </td>
                     </tr>

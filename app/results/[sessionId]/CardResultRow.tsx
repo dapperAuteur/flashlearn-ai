@@ -49,7 +49,7 @@ export default function CardResultRow({ card, index }: CardResultRowProps) {
           )}
           {hasContent && (
             <ChevronDownIcon
-              className={`h-4 w-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+              className={`h-4 w-4 text-gray-600 transition-transform ${expanded ? 'rotate-180' : ''}`}
             />
           )}
         </div>

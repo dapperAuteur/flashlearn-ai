@@ -127,7 +127,7 @@ export default function AnalyticsDashboard() {
   if (!hasData && achievements.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow p-8 text-center">
-        <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+        <ChartBarIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
         <h3 className="text-base font-medium text-gray-900 mb-1">No analytics data yet</h3>
         <p className="text-sm text-gray-500">Complete some study sessions to see your performance analytics.</p>
       </div>

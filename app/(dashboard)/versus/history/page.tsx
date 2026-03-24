@@ -194,9 +194,9 @@ export default function ChallengeHistoryPage() {
         </div>
       ) : challenges.length === 0 ? (
         <div className="text-center py-20" aria-live="polite">
-          <TrophyIcon className="h-12 w-12 text-gray-200 mx-auto mb-4" aria-hidden="true" />
+          <TrophyIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" aria-hidden="true" />
           <p className="text-gray-600 font-medium mb-1">No challenges found</p>
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm text-gray-600 mb-6">
             {statusFilter !== 'all' || scopeFilter !== 'all'
               ? 'Try clearing the filters.'
               : "You haven't hosted or joined any challenges yet."}
@@ -247,7 +247,7 @@ export default function ChallengeHistoryPage() {
           )}
 
           {!hasMore && challenges.length > PAGE_SIZE && (
-            <p className="mt-6 text-center text-xs text-gray-400" aria-live="polite">
+            <p className="mt-6 text-center text-xs text-gray-600" aria-live="polite">
               All {total} challenge{total !== 1 ? 's' : ''} loaded
             </p>
           )}

@@ -35,11 +35,11 @@ function getRankTextColor(rank: number): string {
     case 1:
       return 'text-amber-600';
     case 2:
-      return 'text-gray-500';
+      return 'text-gray-600';
     case 3:
       return 'text-amber-800';
     default:
-      return 'text-gray-500';
+      return 'text-gray-600';
   }
 }
 
@@ -68,7 +68,7 @@ export default function ScoreComparison({ participants, currentUserId }: ScoreCo
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
-        <TrophyIcon className="h-5 w-5 text-amber-500" />
+        <TrophyIcon className="h-5 w-5 text-amber-500" aria-hidden="true" />
         <h3 className="text-lg font-semibold text-gray-900">Leaderboard</h3>
       </div>
 
@@ -83,6 +83,7 @@ export default function ScoreComparison({ participants, currentUserId }: ScoreCo
           return (
             <div
               key={participant.userId}
+              aria-label={`${participant.userName}${isCurrentUser ? ' (you)' : ''}: ${isFinished ? `rank ${participant.rank}, score ${participant.compositeScore}` : 'did not finish'}`}
               className={`flex items-center gap-3 p-3 rounded-lg border ${
                 isCurrentUser
                   ? `${getRankBorderColor(participant.rank)} bg-blue-50`
@@ -96,7 +97,7 @@ export default function ScoreComparison({ participants, currentUserId }: ScoreCo
                     {participant.rank}
                   </span>
                 ) : (
-                  <span className="text-sm text-gray-400">--</span>
+                  <span className="text-sm text-gray-600">--</span>
                 )}
               </div>
 
@@ -114,14 +115,15 @@ export default function ScoreComparison({ participants, currentUserId }: ScoreCo
                 </p>
 
                 {isFinished ? (
-                  <div className="mt-1.5 w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="mt-1.5 w-full bg-gray-200 rounded-full h-2.5" role="img" aria-label={`Score ${participant.compositeScore} out of ${MAX_SCORE}`}>
                     <div
                       className={`h-2.5 rounded-full ${getRankColor(participant.rank)}`}
                       style={{ width: `${barWidth}%` }}
+                      aria-hidden="true"
                     />
                   </div>
                 ) : (
-                  <p className="mt-1 text-xs text-gray-400 italic">Did Not Finish</p>
+                  <p className="mt-1 text-xs text-gray-600 italic">Did Not Finish</p>
                 )}
               </div>
 
@@ -132,7 +134,7 @@ export default function ScoreComparison({ participants, currentUserId }: ScoreCo
                     {participant.compositeScore}
                   </span>
                 ) : (
-                  <span className="text-xs text-gray-400">DNF</span>
+                  <span className="text-xs text-gray-600">DNF</span>
                 )}
               </div>
             </div>

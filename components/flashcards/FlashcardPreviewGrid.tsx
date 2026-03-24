@@ -40,20 +40,21 @@ export default function FlashcardPreviewGrid({ flashcards }: FlashcardPreviewGri
           <p className="text-gray-600">
             Click any card to flip between question and answer
           </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-600 mt-1">
             {flashcards.length} flashcard{flashcards.length === 1 ? '' : 's'} created
           </p>
         </div>
         
         {/* Grid of cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div role="list" aria-label="Flashcard previews" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {flashcards.map((card, index) => (
-            <FlashcardCard
-              key={index}
-              front={card.front}
-              back={card.back}
-              index={index}
-            />
+            <div key={index} role="listitem">
+              <FlashcardCard
+                front={card.front}
+                back={card.back}
+                index={index}
+              />
+            </div>
           ))}
         </div>
       </motion.div>

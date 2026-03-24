@@ -260,7 +260,7 @@ export default function ResultsPage() {
         ) : (
           <>
             <div className="inline-flex items-center justify-center bg-gray-100 rounded-full p-4 mb-4">
-              <TrophyIcon className="h-10 w-10 text-gray-400" />
+              <TrophyIcon className="h-10 w-10 text-gray-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">
               {myPart?.rank === 2 ? 'Runner Up!' : `Rank #${myPart?.rank}`}
@@ -272,9 +272,9 @@ export default function ResultsPage() {
         )}
 
         <div className="mt-2">
-          <span className="text-xs text-gray-400 font-mono">{challenge.challengeCode}</span>
-          <span className="mx-2 text-gray-300">|</span>
-          <span className="text-xs text-gray-400">{challenge.setName}</span>
+          <span className="text-xs text-gray-600 font-mono">{challenge.challengeCode}</span>
+          <span className="mx-2 text-gray-500">|</span>
+          <span className="text-xs text-gray-600">{challenge.setName}</span>
         </div>
       </div>
 

@@ -78,14 +78,14 @@ export default function StatisticCard({
           )}
           <div className={`${icon ? 'ml-5' : ''} w-0 flex-1`}>
             <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">
+              <dt className="text-sm font-medium text-gray-700 truncate">
                 {title}
               </dt>
               <dd>
                 <div className="text-lg font-medium text-gray-900">{value}</div>
               </dd>
               {description && (
-                <dd className="mt-1 text-sm text-gray-500">{description}</dd>
+                <dd className="mt-1 text-sm text-gray-600">{description}</dd>
               )}
             </dl>
           </div>

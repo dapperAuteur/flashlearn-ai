@@ -185,7 +185,7 @@ export default function AdminCampaignsPage() {
 
       {campaigns.length === 0 && !loading ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Mail className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <Mail className="h-12 w-12 text-gray-500 mx-auto mb-3" />
           <p className="text-gray-500">No campaigns yet. Create one to get started.</p>
         </div>
       ) : (
@@ -338,7 +338,7 @@ export default function AdminCampaignsPage() {
                           )}
                         </span>
                       ) : (
-                        <span className="text-gray-400">--</span>
+                        <span className="text-gray-600">--</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
@@ -356,7 +356,7 @@ export default function AdminCampaignsPage() {
                           <button
                             onClick={() => handleDelete(campaign._id, campaign.name)}
                             disabled={deleting === campaign._id}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                            className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

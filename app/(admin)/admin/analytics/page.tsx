@@ -236,7 +236,7 @@ export default function AdminAnalyticsPage() {
                       <span className="text-sm font-normal text-gray-500 ml-1.5">{biggestDropOff.label}</span>
                     </p>
                   ) : (
-                    <p className="text-2xl font-semibold text-gray-400">--</p>
+                    <p className="text-2xl font-semibold text-gray-600">--</p>
                   )}
                 </div>
               </div>
@@ -250,7 +250,7 @@ export default function AdminAnalyticsPage() {
               {steps.length > 0 ? (
                 <Bar data={chartData} options={chartOptions} />
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                <div className="flex items-center justify-center h-full text-gray-600 text-sm">
                   No data available for this period
                 </div>
               )}

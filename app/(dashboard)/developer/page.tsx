@@ -56,7 +56,7 @@ export default function DeveloperOverview() {
       {/* Keys Summary */}
       {activeKeys.length === 0 ? (
         <div className="bg-white rounded-lg border p-8 text-center">
-          <Key className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <Key className="w-10 h-10 text-gray-500 mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-gray-900 mb-1">No API Keys Yet</h3>
           <p className="text-sm text-gray-500 mb-4">
             Create your first API key to start using the FlashLearn API.
@@ -93,7 +93,7 @@ export default function DeveloperOverview() {
                   <div className="text-sm font-mono">
                     {key.usage.apiCalls.toLocaleString()}
                     {key.limits.monthlyApiCalls && (
-                      <span className="text-gray-400"> / {key.limits.monthlyApiCalls.toLocaleString()}</span>
+                      <span className="text-gray-600"> / {key.limits.monthlyApiCalls.toLocaleString()}</span>
                     )}
                   </div>
                   <div className="text-xs text-gray-500">API calls this month</div>
@@ -111,7 +111,7 @@ export default function DeveloperOverview() {
           className="bg-white rounded-lg border p-4 hover:border-blue-300 transition-colors group"
         >
           <div className="flex items-center gap-3">
-            <BarChart3 className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+            <BarChart3 className="w-5 h-5 text-gray-600 group-hover:text-blue-500" />
             <div>
               <h3 className="text-sm font-medium text-gray-900">Usage Analytics</h3>
               <p className="text-xs text-gray-500">View detailed usage breakdowns and history</p>
@@ -123,7 +123,7 @@ export default function DeveloperOverview() {
           className="bg-white rounded-lg border p-4 hover:border-blue-300 transition-colors group"
         >
           <div className="flex items-center gap-3">
-            <Key className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+            <Key className="w-5 h-5 text-gray-600 group-hover:text-blue-500" />
             <div>
               <h3 className="text-sm font-medium text-gray-900">API Keys</h3>
               <p className="text-xs text-gray-500">Create, rotate, and revoke API keys</p>

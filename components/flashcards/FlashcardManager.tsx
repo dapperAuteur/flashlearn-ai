@@ -264,10 +264,12 @@ export default function FlashcardManager({
         <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl overflow-hidden">
           <button
             onClick={() => setIsDueSectionExpanded(!isDueSectionExpanded)}
+            aria-expanded={isDueSectionExpanded}
+            aria-label="Toggle due for review section"
             className="w-full flex items-center justify-between px-4 py-3"
           >
             <div className="flex items-center gap-2">
-              <ClockIcon className="h-5 w-5 text-amber-600" />
+              <ClockIcon className="h-5 w-5 text-amber-600" aria-hidden="true" />
               <span className="font-semibold text-amber-900 text-sm sm:text-base">
                 {dueSets.reduce((sum, s) => sum + s.dueCount, 0)} cards due for review
               </span>
@@ -276,9 +278,9 @@ export default function FlashcardManager({
               </span>
             </div>
             {isDueSectionExpanded ? (
-              <ChevronUpIcon className="h-4 w-4 text-amber-600" />
+              <ChevronUpIcon className="h-4 w-4 text-amber-600" aria-hidden="true" />
             ) : (
-              <ChevronDownIcon className="h-4 w-4 text-amber-600" />
+              <ChevronDownIcon className="h-4 w-4 text-amber-600" aria-hidden="true" />
             )}
           </button>
           {isDueSectionExpanded && (
@@ -296,6 +298,7 @@ export default function FlashcardManager({
                   </div>
                   <button
                     onClick={() => handleStudyClick(ds.setId)}
+                    aria-label={`Study ${ds.setName}`}
                     className="flex-shrink-0 ml-2 px-3 py-1 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 transition-colors"
                   >
                     Study
@@ -310,7 +313,7 @@ export default function FlashcardManager({
       {/* Search, Sort, and View Toggle */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" aria-hidden="true" />
           <input
             type="text"
             placeholder="Search sets..."
@@ -332,17 +335,21 @@ export default function FlashcardManager({
           <div className="flex border rounded-md overflow-hidden">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-400 hover:text-gray-600'}`}
+              className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-600 hover:text-gray-800'}`}
               title="Grid view"
+              aria-label="Grid view"
+              aria-pressed={viewMode === 'grid'}
             >
-              <Squares2X2Icon className="h-5 w-5" />
+              <Squares2X2Icon className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-400 hover:text-gray-600'}`}
+              className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-600 hover:text-gray-800'}`}
               title="List view"
+              aria-label="List view"
+              aria-pressed={viewMode === 'list'}
             >
-              <ListBulletIcon className="h-5 w-5" />
+              <ListBulletIcon className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -380,18 +387,18 @@ export default function FlashcardManager({
       {/* Action buttons */}
       <div className="flex gap-4">
         <div className="flex gap-2 w-full sm:w-auto">
-          <button onClick={() => setIsImportModalOpen(true)} className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
-            <UploadIcon className="w-4 h-4 mr-2" />
+          <button onClick={() => setIsImportModalOpen(true)} aria-label="Import flashcards from CSV" className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+            <UploadIcon className="w-4 h-4 mr-2" aria-hidden="true" />
             Import
           </button>
-          <button onClick={() => router.push('/generate')} className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
-            <PlusIcon className="w-4 h-4 mr-2" />
+          <button onClick={() => router.push('/generate')} aria-label="Create a new flashcard set" className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+            <PlusIcon className="w-4 h-4 mr-2" aria-hidden="true" />
             New Set
           </button>
         </div>
 
-      <Link href="/generate" className="inline-flex items-end px-4 py-2 bg-blue-600 text-white rounded-md">
-        <PlusIcon className="h-4 w-4 mr-2" />
+      <Link href="/generate" aria-label="Create a new flashcard set" className="inline-flex items-end px-4 py-2 bg-blue-600 text-white rounded-md">
+        <PlusIcon className="h-4 w-4 mr-2" aria-hidden="true" />
         Create Set
       </Link>
       </div>
@@ -429,15 +436,15 @@ export default function FlashcardManager({
 
       {/* Grid View */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div role="list" aria-label="Flashcard sets" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sorted.map(set => (
-            <div key={set.id} className="bg-white rounded-lg shadow p-6">
+            <div key={set.id} role="listitem" className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900">{set.title}</h3>
-                  {set.description && <p className="text-sm text-gray-500 mt-1">{set.description}</p>}
+                  {set.description && <p className="text-sm text-gray-600 mt-1">{set.description}</p>}
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <p className="text-sm text-gray-500">{set.card_count} cards</p>
+                    <p className="text-sm text-gray-600">{set.card_count} cards</p>
                     {categoryMap[set.id]?.map(cat => (
                       <span
                         key={cat.id}
@@ -452,14 +459,14 @@ export default function FlashcardManager({
                     ))}
                     {dueCountMap.get(set.id) && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                        <ClockIcon className="h-3 w-3 mr-0.5" />
+                        <ClockIcon className="h-3 w-3 mr-0.5" aria-hidden="true" />
                         {dueCountMap.get(set.id)} due
                       </span>
                     )}
                     {(() => {
                       const status = getEditStatus(set);
                       if (!status) return null;
-                      const colors = { gray: 'text-gray-400', amber: 'text-amber-600 font-medium', red: 'text-red-500 font-medium' };
+                      const colors = { gray: 'text-gray-600', amber: 'text-amber-600 font-medium', red: 'text-red-500 font-medium' };
                       return <span className={`text-xs ${colors[status.color]}`}>{status.label}</span>;
                     })()}
                   </div>
@@ -469,31 +476,34 @@ export default function FlashcardManager({
                   className={`p-2 rounded-full ${
                     isOffline(set.id)
                       ? 'text-green-600 bg-green-100'
-                      : 'text-gray-400 bg-gray-100'
+                      : 'text-gray-600 bg-gray-100'
                   }`}
                   title={isOffline(set.id) ? 'Remove from offline' : 'Add to offline'}
+                  aria-label={isOffline(set.id) ? `Remove ${set.title} from offline` : `Save ${set.title} for offline`}
                 >
                   {isOffline(set.id) ? (
-                    <CloudArrowDownIcon className="h-5 w-5" />
+                    <CloudArrowDownIcon className="h-5 w-5" aria-hidden="true" />
                   ) : (
-                    <CloudArrowUpIcon className="h-5 w-5" />
+                    <CloudArrowUpIcon className="h-5 w-5" aria-hidden="true" />
                   )}
                 </button>
               </div>
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={() => handleStudyClick(set.id)}
+                  aria-label={`Study ${set.title}`}
                   className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
                   Study
                 </button>
                 <button
                   onClick={() => handleEditSet(set)}
-                  className={`px-3 py-2 rounded-md ${canEditSet(set) ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' : 'text-gray-300 bg-gray-50 cursor-not-allowed'}`}
+                  className={`px-3 py-2 rounded-md ${canEditSet(set) ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' : 'text-gray-500 bg-gray-50 cursor-not-allowed'}`}
                   title={canEditSet(set) ? 'Edit set' : set.is_public === 1 ? 'Public sets are admin-only' : 'Editing locked after 7 days'}
+                  aria-label={`Edit ${set.title}`}
                   disabled={!canEditSet(set)}
                 >
-                  <PencilSquareIcon className="h-5 w-5" />
+                  <PencilSquareIcon className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -503,9 +513,9 @@ export default function FlashcardManager({
 
       {/* List View */}
       {viewMode === 'list' && (
-        <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
+        <div role="list" aria-label="Flashcard sets" className="bg-white rounded-lg shadow divide-y divide-gray-100">
           {sorted.map(set => (
-            <div key={set.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+            <div key={set.id} role="listitem" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-medium text-gray-900 truncate">{set.title}</h3>
@@ -523,17 +533,17 @@ export default function FlashcardManager({
                   ))}
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-xs text-gray-500">{set.card_count} cards</span>
+                  <span className="text-xs text-gray-600">{set.card_count} cards</span>
                   {dueCountMap.get(set.id) && (
                     <span className="inline-flex items-center text-xs text-amber-700">
-                      <ClockIcon className="h-3 w-3 mr-0.5" />
+                      <ClockIcon className="h-3 w-3 mr-0.5" aria-hidden="true" />
                       {dueCountMap.get(set.id)} due
                     </span>
                   )}
                   {(() => {
                     const status = getEditStatus(set);
                     if (!status) return null;
-                    const colors = { gray: 'text-gray-400', amber: 'text-amber-600 font-medium', red: 'text-red-500 font-medium' };
+                    const colors = { gray: 'text-gray-600', amber: 'text-amber-600 font-medium', red: 'text-red-500 font-medium' };
                     return <span className={`text-xs ${colors[status.color]}`}>{status.label}</span>;
                   })()}
                 </div>
@@ -544,26 +554,29 @@ export default function FlashcardManager({
                   className={`p-1.5 rounded-full ${
                     isOffline(set.id)
                       ? 'text-green-600'
-                      : 'text-gray-400'
+                      : 'text-gray-600'
                   }`}
                   title={isOffline(set.id) ? 'Remove from offline' : 'Add to offline'}
+                  aria-label={isOffline(set.id) ? `Remove ${set.title} from offline` : `Save ${set.title} for offline`}
                 >
                   {isOffline(set.id) ? (
-                    <CloudArrowDownIcon className="h-4 w-4" />
+                    <CloudArrowDownIcon className="h-4 w-4" aria-hidden="true" />
                   ) : (
-                    <CloudArrowUpIcon className="h-4 w-4" />
+                    <CloudArrowUpIcon className="h-4 w-4" aria-hidden="true" />
                   )}
                 </button>
                 <button
                   onClick={() => handleEditSet(set)}
-                  className={`p-1.5 ${canEditSet(set) ? 'text-gray-400 hover:text-gray-600' : 'text-gray-200 cursor-not-allowed'}`}
+                  className={`p-1.5 ${canEditSet(set) ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 cursor-not-allowed'}`}
                   title={canEditSet(set) ? 'Edit set' : set.is_public === 1 ? 'Public sets are admin-only' : 'Editing locked after 7 days'}
+                  aria-label={`Edit ${set.title}`}
                   disabled={!canEditSet(set)}
                 >
-                  <PencilSquareIcon className="h-4 w-4" />
+                  <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => handleStudyClick(set.id)}
+                  aria-label={`Study ${set.title}`}
                   className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700"
                 >
                   Study
@@ -578,7 +591,7 @@ export default function FlashcardManager({
         <div className="text-center py-12">
           {selectedCategory ? (
             <>
-              <p className="text-gray-500">
+              <p className="text-gray-600">
                 No {categories.find(c => c.id === selectedCategory)?.name || ''} sets yet.
               </p>
               <div className="mt-4 flex justify-center gap-3">
@@ -598,7 +611,7 @@ export default function FlashcardManager({
             </>
           ) : (
             <>
-              <p className="text-gray-500">No flashcard sets found</p>
+              <p className="text-gray-600">No flashcard sets found</p>
               <Link
                 href="/generate"
                 className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"

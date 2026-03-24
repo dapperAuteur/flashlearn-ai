@@ -36,7 +36,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               className="hidden lg:block sticky top-8 self-start"
               aria-label="Documentation navigation"
             >
-              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+              <h2 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-4">
                 API Docs
               </h2>
               <ul className="space-y-1" role="list">
@@ -47,7 +47,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 rounded-lg transition-colors"
                     >
                       <span className="font-medium">{item.label}</span>
-                      <span className="block text-xs text-gray-400 mt-0.5">{item.description}</span>
+                      <span className="block text-xs text-gray-600 mt-0.5">{item.description}</span>
                     </Link>
                   </li>
                 ))}

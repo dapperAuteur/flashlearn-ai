@@ -73,7 +73,7 @@ export default function ReviewSchedule() {
     return (
       <div className="bg-white shadow rounded-xl p-6">
         <div className="flex items-center gap-2 mb-3">
-          <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
+          <CalendarDaysIcon className="h-5 w-5 text-gray-600" />
           <h2 className="text-base sm:text-lg font-medium text-gray-900">
             Review Schedule
           </h2>
@@ -133,7 +133,7 @@ export default function ReviewSchedule() {
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
               Today
             </p>
-            <p className={`text-xl sm:text-2xl font-bold mt-1 ${schedule.today.count > 0 ? 'text-amber-700' : 'text-gray-400'}`}>
+            <p className={`text-xl sm:text-2xl font-bold mt-1 ${schedule.today.count > 0 ? 'text-amber-700' : 'text-gray-600'}`}>
               {schedule.today.count}
             </p>
             <p className="text-xs text-gray-500">cards</p>
@@ -142,7 +142,7 @@ export default function ReviewSchedule() {
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
               Tomorrow
             </p>
-            <p className={`text-xl sm:text-2xl font-bold mt-1 ${schedule.tomorrow.count > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+            <p className={`text-xl sm:text-2xl font-bold mt-1 ${schedule.tomorrow.count > 0 ? 'text-blue-600' : 'text-gray-600'}`}>
               {schedule.tomorrow.count}
             </p>
             <p className="text-xs text-gray-500">cards</p>
@@ -151,7 +151,7 @@ export default function ReviewSchedule() {
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
               This Week
             </p>
-            <p className={`text-xl sm:text-2xl font-bold mt-1 ${schedule.thisWeek.count > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
+            <p className={`text-xl sm:text-2xl font-bold mt-1 ${schedule.thisWeek.count > 0 ? 'text-purple-600' : 'text-gray-600'}`}>
               {schedule.thisWeek.count}
             </p>
             <p className="text-xs text-gray-500">cards</p>
@@ -190,7 +190,7 @@ export default function ReviewSchedule() {
           <div className="flex gap-1 mt-1">
             {schedule.next14Days.map((day, i) => (
               <div key={day.date} className="flex-1 text-center">
-                <span className="text-[9px] text-gray-400 leading-none">
+                <span className="text-[9px] text-gray-600 leading-none">
                   {i % 2 === 0 ? formatDay(day.date, i) : ''}
                 </span>
               </div>

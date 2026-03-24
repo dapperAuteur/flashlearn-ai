@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Flashcard } from '@/types/flashcard';
 import ConfidenceScale from './ConfidenceScale';
@@ -57,6 +57,8 @@ export default function MultipleChoiceCard({
   const [eliminatedChoices, setEliminatedChoices] = useState<Set<string>>(new Set());
   const [choices, setChoices] = useState<string[]>([]);
 
+  const [focusedIndex, setFocusedIndex] = useState<number>(0);
+  const choiceRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const correctAnswer = stripHtml(flashcard.back);
   const cardId = String(flashcard._id);
 
@@ -66,6 +68,7 @@ export default function MultipleChoiceCard({
     setIsAnswered(false);
     setHintUsed(false);
     setEliminatedChoices(new Set());
+    setFocusedIndex(0);
   }, [cardId, correctAnswer, distractors]);
 
   const handleSelect = useCallback(
@@ -123,6 +126,39 @@ export default function MultipleChoiceCard({
 
       if (!hasCompletedConfidence) return;
 
+      // Arrow key navigation for choices
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        setFocusedIndex(prev => {
+          let next = (prev + 1) % choices.length;
+          while (eliminatedChoices.has(choices[next]) && next !== prev) {
+            next = (next + 1) % choices.length;
+          }
+          choiceRefs.current[next]?.focus();
+          return next;
+        });
+        return;
+      }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setFocusedIndex(prev => {
+          let next = (prev - 1 + choices.length) % choices.length;
+          while (eliminatedChoices.has(choices[next]) && next !== prev) {
+            next = (next - 1 + choices.length) % choices.length;
+          }
+          choiceRefs.current[next]?.focus();
+          return next;
+        });
+        return;
+      }
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (!eliminatedChoices.has(choices[focusedIndex])) {
+          handleSelect(choices[focusedIndex]);
+        }
+        return;
+      }
+
       const keyMap: Record<string, number> = { '1': 0, '2': 1, '3': 2, '4': 3, a: 0, b: 1, c: 2, d: 3 };
       const idx = keyMap[e.key.toLowerCase()];
       if (idx !== undefined && idx < choices.length && !eliminatedChoices.has(choices[idx])) {
@@ -132,7 +168,7 @@ export default function MultipleChoiceCard({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAnswered, hintUsed, hasCompletedConfidence, choices, eliminatedChoices, handleHint, handleSelect, onEndSession]);
+  }, [isAnswered, hintUsed, hasCompletedConfidence, choices, eliminatedChoices, handleHint, handleSelect, onEndSession, focusedIndex]);
 
   const labels = ['A', 'B', 'C', 'D'];
 
@@ -191,7 +227,7 @@ export default function MultipleChoiceCard({
       </div>
 
       {/* Answer Choices */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Answer choices">
         {choices.map((choice, idx) => {
           const isEliminated = eliminatedChoices.has(choice);
           const isSelected = selectedAnswer === choice;
@@ -202,8 +238,13 @@ export default function MultipleChoiceCard({
           return (
             <motion.button
               key={`${cardId}-${idx}`}
+              ref={(el) => { choiceRefs.current[idx] = el; }}
               onClick={() => !isEliminated && handleSelect(choice)}
               disabled={isAnswered || !hasCompletedConfidence || isEliminated}
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={`Option ${labels[idx]}: ${choice}`}
+              tabIndex={focusedIndex === idx ? 0 : -1}
               className={`relative p-4 rounded-xl border-2 text-left transition-all ${
                 isEliminated
                   ? 'border-gray-200 bg-gray-100 opacity-40 cursor-not-allowed'
@@ -245,9 +286,15 @@ export default function MultipleChoiceCard({
         })}
       </div>
 
+      {/* Answer feedback for screen readers */}
+      <div aria-live="polite" className="sr-only">
+        {isAnswered && selectedAnswer === correctAnswer && 'Correct answer selected.'}
+        {isAnswered && selectedAnswer !== correctAnswer && `Incorrect. The correct answer is ${correctAnswer}.`}
+      </div>
+
       {/* Keyboard shortcuts */}
       <div className="hidden sm:block text-center">
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-600">
           Keys: <kbd className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">1-4</kbd> Select &middot;{' '}
           <kbd className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">H</kbd> Hint &middot;{' '}
           <kbd className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">Esc</kbd> End

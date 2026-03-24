@@ -212,7 +212,7 @@ export default function AdminSettingsPage() {
                   )}
                 </div>
                 {updatedAt && (
-                  <span className="text-xs text-gray-400 flex-shrink-0">
+                  <span className="text-xs text-gray-600 flex-shrink-0">
                     Updated {new Date(updatedAt).toLocaleDateString()}
                   </span>
                 )}

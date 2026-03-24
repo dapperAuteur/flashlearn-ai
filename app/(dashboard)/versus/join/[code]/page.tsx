@@ -189,7 +189,7 @@ export default function JoinChallengePage() {
             </span>
             <h1 className="text-xl font-bold text-gray-900">{challenge.setName}</h1>
           </div>
-          <p className="text-sm text-gray-400 font-mono">{challenge.challengeCode}</p>
+          <p className="text-sm text-gray-600 font-mono">{challenge.challengeCode}</p>
         </div>
 
         {/* Details grid */}
@@ -213,7 +213,7 @@ export default function JoinChallengePage() {
           <div>
             <p className="text-xs text-gray-500">Time Remaining</p>
             <div className="flex items-center gap-1">
-              <ClockIcon className="h-4 w-4 text-gray-400" />
+              <ClockIcon className="h-4 w-4 text-gray-600" />
               <p className="text-sm font-medium text-gray-900">
                 {getTimeRemaining(challenge.expiresAt)}
               </p>

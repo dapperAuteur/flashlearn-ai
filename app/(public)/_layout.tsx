@@ -91,7 +91,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="md:hidden flex items-center">
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                 >
                     <span className="sr-only">Open main menu</span>
                     {isMenuOpen ? (
@@ -138,7 +138,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                         </div>
                         <button
                             onClick={() => { signOut(); setIsMenuOpen(false); }}
-                            className="ml-auto flex-shrink-0 bg-white dark:bg-gray-800 p-1 text-gray-400 rounded-full hover:text-gray-500 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                            className="ml-auto flex-shrink-0 bg-white dark:bg-gray-800 p-1 text-gray-600 rounded-full hover:text-gray-700 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
                         >
                            <span className="sr-only">Sign out</span>
                            {/* Sign out icon */}

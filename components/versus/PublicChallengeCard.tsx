@@ -56,7 +56,7 @@ export default function PublicChallengeCard({ challenge }: { challenge: PublicCh
             <h2 className="text-base font-semibold text-gray-900 leading-snug line-clamp-2">
               {setName}
             </h2>
-            <p className="text-xs text-gray-400 font-mono mt-0.5">{challengeCode}</p>
+            <p className="text-xs text-gray-600 font-mono mt-0.5">{challengeCode}</p>
           </div>
           <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
             Completed
@@ -66,12 +66,12 @@ export default function PublicChallengeCard({ challenge }: { challenge: PublicCh
         {/* Meta */}
         <dl className="space-y-1.5 text-sm text-gray-600">
           <div className="flex items-center gap-1.5">
-            <UserGroupIcon className="h-4 w-4 text-gray-400 shrink-0" aria-hidden="true" />
+            <UserGroupIcon className="h-4 w-4 text-gray-600 shrink-0" aria-hidden="true" />
             <dt className="sr-only">Players</dt>
             <dd>
               <span className="font-medium text-gray-800">{completedCount}</span>
               {participantCount > completedCount && (
-                <span className="text-gray-400"> / {participantCount}</span>
+                <span className="text-gray-600"> / {participantCount}</span>
               )}{' '}
               player{completedCount !== 1 ? 's' : ''}
             </dd>
@@ -84,13 +84,13 @@ export default function PublicChallengeCard({ challenge }: { challenge: PublicCh
               <dd>
                 <span className="font-medium text-gray-800">{topScore}</span> top score
                 {winnerName && (
-                  <span className="text-gray-400"> · {winnerName}</span>
+                  <span className="text-gray-600"> · {winnerName}</span>
                 )}
               </dd>
             </div>
           )}
 
-          <div className="flex items-center gap-3 text-xs text-gray-400 pt-0.5">
+          <div className="flex items-center gap-3 text-xs text-gray-600 pt-0.5">
             <span>{modeLabel[studyMode] ?? studyMode}</span>
             <span aria-hidden="true">·</span>
             <span>{cardCount} cards</span>

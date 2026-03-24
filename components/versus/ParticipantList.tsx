@@ -52,7 +52,7 @@ export default function ParticipantList({
         Participants ({participants.length}{maxParticipants != null ? `/${maxParticipants}` : ''})
       </h3>
 
-      <div className="space-y-2">
+      <div className="space-y-2" role="list" aria-label="Challenge participants">
         {/* Existing participants */}
         {participants.map((participant) => {
           const isCurrentUser = participant.userId === currentUserId;
@@ -61,6 +61,8 @@ export default function ParticipantList({
           return (
             <div
               key={participant.userId}
+              role="listitem"
+              aria-label={`${participant.userName}${isCurrentUser ? ' (you)' : ''}, ${config.label}`}
               className={`flex items-center gap-3 p-3 rounded-lg ${
                 isCurrentUser ? 'bg-blue-50 border border-blue-100' : 'bg-gray-50'
               }`}
@@ -73,6 +75,7 @@ export default function ParticipantList({
               >
                 <UserIcon
                   className={`h-4 w-4 ${isCurrentUser ? 'text-blue-700' : 'text-gray-600'}`}
+                  aria-hidden="true"
                 />
               </div>
 
@@ -103,12 +106,14 @@ export default function ParticipantList({
         {Array.from({ length: openSlots }).map((_, i) => (
           <div
             key={`open-${i}`}
+            role="listitem"
+            aria-label="Open slot"
             className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50/50"
           >
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <UserIcon className="h-4 w-4 text-gray-300" />
+              <UserIcon className="h-4 w-4 text-gray-500" aria-hidden="true" />
             </div>
-            <span className="text-sm text-gray-400 italic">Open</span>
+            <span className="text-sm text-gray-600 italic">Open</span>
           </div>
         ))}
       </div>

@@ -65,6 +65,9 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="share-modal-title"
       className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 transition-opacity duration-300"
       onClick={onClose}
     >
@@ -72,7 +75,7 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md transform transition-transform duration-300 scale-95"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">{heading ?? 'Share This Set'}</h2>
+        <h2 id="share-modal-title" className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">{heading ?? 'Share This Set'}</h2>
 
         <div className="flex items-center space-x-2 mb-4">
           <input
@@ -83,6 +86,7 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
           />
           <button
             onClick={handleCopy}
+            aria-label={isCopied ? 'Link copied' : 'Copy share link'}
             className={`px-4 py-2 rounded-md text-white font-semibold ${isCopied ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
             {isCopied ? 'Copied!' : 'Copy'}

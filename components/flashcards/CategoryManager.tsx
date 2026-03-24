@@ -68,15 +68,16 @@ export default function CategoryManager({
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
         
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div role="dialog" aria-modal="true" aria-labelledby="category-manager-title" className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Manage Categories</h3>
+              <h3 id="category-manager-title" className="text-lg font-medium text-gray-900">Manage Categories</h3>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close dialog"
+                className="text-gray-600 hover:text-gray-800"
               >
-                <XMarkIcon className="h-6 w-6" />
+                <XMarkIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
             
@@ -104,6 +105,8 @@ export default function CategoryManager({
                     <button
                       key={color}
                       onClick={() => setNewCategoryColor(color)}
+                      aria-label={`Select color ${color}`}
+                      aria-pressed={newCategoryColor === color}
                       className={`w-8 h-8 rounded-full border-2 ${
                         newCategoryColor === color ? 'border-gray-800' : 'border-gray-300'
                       }`}
@@ -118,7 +121,7 @@ export default function CategoryManager({
                 disabled={!newCategoryName.trim() || saving}
                 className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
               >
-                <PlusIcon className="h-4 w-4 mr-2" />
+                <PlusIcon className="h-4 w-4 mr-2" aria-hidden="true" />
                 {saving ? 'Adding...' : 'Add Category'}
               </button>
             </div>
@@ -127,12 +130,13 @@ export default function CategoryManager({
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-3">Existing Categories</h4>
               {categories.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">No categories yet</p>
+                <p className="text-sm text-gray-600 italic">No categories yet</p>
               ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div role="list" aria-label="Existing categories" className="space-y-2 max-h-60 overflow-y-auto">
                   {categories.map(category => (
                     <div
                       key={category.id}
+                      role="listitem"
                       className="flex items-center justify-between p-3 border border-gray-200 rounded-md"
                     >
                       <div className="flex items-center space-x-3">
@@ -149,9 +153,10 @@ export default function CategoryManager({
                           // TODO: Implement delete category
                           Logger.log(LogContext.FLASHCARD, 'Delete category clicked', { categoryId: category.id });
                         }}
+                        aria-label={`Delete category ${category.name}`}
                         className="text-red-400 hover:text-red-600"
                       >
-                        <TrashIcon className="h-4 w-4" />
+                        <TrashIcon className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                   ))}

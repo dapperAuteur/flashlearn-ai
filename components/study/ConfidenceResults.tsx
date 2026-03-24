@@ -154,47 +154,51 @@ export default function ConfidenceResults({ cardResults }: ConfidenceResultsProp
   const insights = generateInsights();
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="mt-6 space-y-6" role="region" aria-label="Confidence analysis results">
       {/* Chart */}
       <div className="bg-white rounded-lg p-6 shadow-sm border">
-        <Bar data={chartData} options={chartOptions} />
+        <h3 className="sr-only">Confidence vs Performance Chart</h3>
+        <div role="img" aria-label="Bar chart showing confidence levels versus correct and incorrect answers">
+          <Bar data={chartData} options={chartOptions} />
+        </div>
       </div>
       
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-50 p-4 rounded-lg text-center">
+      <h3 className="sr-only">Confidence Statistics</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4" aria-label="Confidence statistics" role="region">
+        <div className="bg-gray-50 p-4 rounded-lg text-center" role="group" aria-label={`Average Confidence: ${confidenceStats.averageConfidence.toFixed(1)}`}>
           <div className="text-2xl font-bold text-gray-800">
             {confidenceStats.averageConfidence.toFixed(1)}
           </div>
           <div className="text-sm text-gray-600">Avg Confidence</div>
         </div>
-        
-        <div className="bg-yellow-50 p-4 rounded-lg text-center">
+
+        <div className="bg-yellow-50 p-4 rounded-lg text-center" role="group" aria-label={`Lucky Guesses: ${confidenceStats.luckyGuesses}`}>
           <div className="text-2xl font-bold text-yellow-800">
             {confidenceStats.luckyGuesses}
           </div>
-          <div className="text-sm text-yellow-600">Lucky Guesses</div>
+          <div className="text-sm text-yellow-700">Lucky Guesses</div>
         </div>
-        
-        <div className="bg-red-50 p-4 rounded-lg text-center">
+
+        <div className="bg-red-50 p-4 rounded-lg text-center" role="group" aria-label={`Overconfident Errors: ${confidenceStats.overconfidentErrors}`}>
           <div className="text-2xl font-bold text-red-800">
             {confidenceStats.overconfidentErrors}
           </div>
-          <div className="text-sm text-red-600">Overconfident Errors</div>
+          <div className="text-sm text-red-700">Overconfident Errors</div>
         </div>
-        
-        <div className="bg-blue-50 p-4 rounded-lg text-center">
+
+        <div className="bg-blue-50 p-4 rounded-lg text-center" role="group" aria-label={`Accuracy: ${Math.round((cardResults.filter(r => r.isCorrect).length / cardResults.length) * 100)}%`}>
           <div className="text-2xl font-bold text-blue-800">
             {Math.round((cardResults.filter(r => r.isCorrect).length / cardResults.length) * 100)}%
           </div>
-          <div className="text-sm text-blue-600">Accuracy</div>
+          <div className="text-sm text-blue-700">Accuracy</div>
         </div>
       </div>
 
       {/* Insights */}
       {insights.length > 0 && (
         <div className="bg-white rounded-lg p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">📊 Study Insights</h3>
+          <h3 className="text-lg font-semibold mb-4"><span aria-hidden="true">📊 </span>Study Insights</h3>
           <div className="space-y-3">
             {insights.map((insight, index) => (
               <div
@@ -209,7 +213,7 @@ export default function ConfidenceResults({ cardResults }: ConfidenceResultsProp
                     : 'bg-blue-50 border-blue-400 text-blue-800'
                 }`}
               >
-                <span className="mr-2">{insight.icon}</span>
+                <span className="mr-2" aria-hidden="true">{insight.icon}</span>
                 {insight.text}
               </div>
             ))}

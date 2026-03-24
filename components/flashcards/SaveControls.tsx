@@ -50,6 +50,7 @@ export default function SaveControls({
                 <Switch
                   checked={isPublic}
                   onChange={onPublicToggle}
+                  aria-label={isPublic ? 'Set is public. Toggle to make private.' : 'Set is private. Toggle to make public.'}
                   className={`${
                     isPublic ? 'bg-blue-600' : 'bg-gray-200'
                   } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
@@ -79,7 +80,7 @@ export default function SaveControls({
                 </>
               ) : (
                 <>
-                  <CheckCircleIcon className="h-5 w-5 mr-2" />
+                  <CheckCircleIcon className="h-5 w-5 mr-2" aria-hidden="true" />
                   Save to Account
                 </>
               )}

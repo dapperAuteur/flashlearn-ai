@@ -359,7 +359,7 @@ export default function AdminCouponsPage() {
                   Discount Value <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 text-sm">
                     {formData.discountType === 'percent_off' ? '%' : '$'}
                   </span>
                   <input
@@ -418,7 +418,7 @@ export default function AdminCouponsPage() {
               {/* Max Redemptions */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Max Redemptions <span className="text-gray-400 text-xs">(optional)</span>
+                  Max Redemptions <span className="text-gray-600 text-xs">(optional)</span>
                 </label>
                 <input
                   type="number"
@@ -433,7 +433,7 @@ export default function AdminCouponsPage() {
               {/* Expiry Date */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Expiry Date <span className="text-gray-400 text-xs">(optional)</span>
+                  Expiry Date <span className="text-gray-600 text-xs">(optional)</span>
                 </label>
                 <input
                   type="date"
@@ -448,7 +448,7 @@ export default function AdminCouponsPage() {
             {/* Description (full width) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description <span className="text-gray-400 text-xs">(optional, internal only)</span>
+                Description <span className="text-gray-600 text-xs">(optional, internal only)</span>
               </label>
               <textarea
                 value={formData.description}
@@ -485,7 +485,7 @@ export default function AdminCouponsPage() {
       {/* Coupons List */}
       {coupons.length === 0 && !loading ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Ticket className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <Ticket className="h-12 w-12 text-gray-500 mx-auto mb-3" />
           <p className="text-gray-500">No coupons yet. Create one to get started.</p>
         </div>
       ) : (
@@ -537,7 +537,7 @@ export default function AdminCouponsPage() {
                   </span>
                 </div>
 
-                <div className="text-xs text-gray-400 mt-2">
+                <div className="text-xs text-gray-600 mt-2">
                   Created {formatDate(coupon.createdAt)}
                   {coupon.expiresAt && ` | Expires ${formatDate(coupon.expiresAt)}`}
                 </div>
@@ -576,7 +576,7 @@ export default function AdminCouponsPage() {
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     {loadingDetails === coupon._id ? (
                       <div className="flex items-center justify-center py-3">
-                        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
                       </div>
                     ) : (expandedDetails[coupon._id] || coupon.redemptions)?.length > 0 ? (
                       <div className="space-y-2">
@@ -588,7 +588,7 @@ export default function AdminCouponsPage() {
                           return (
                             <div key={i} className="flex justify-between items-center text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded">
                               <span>{user?.email || user?.name || (typeof r.userId === 'string' ? r.userId : 'Unknown')}</span>
-                              <span className="text-gray-400">
+                              <span className="text-gray-600">
                                 {r.subscriptionTier} - {formatDateTime(r.redeemedAt)}
                               </span>
                             </div>
@@ -596,7 +596,7 @@ export default function AdminCouponsPage() {
                         })}
                       </div>
                     ) : (
-                      <p className="text-xs text-gray-400">No redemption details available.</p>
+                      <p className="text-xs text-gray-600">No redemption details available.</p>
                     )}
                   </div>
                 )}
@@ -674,7 +674,7 @@ export default function AdminCouponsPage() {
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {formatDate(coupon.createdAt)}
                         {coupon.expiresAt && (
-                          <span className="block text-xs text-gray-400">
+                          <span className="block text-xs text-gray-600">
                             Exp: {formatDate(coupon.expiresAt)}
                           </span>
                         )}
@@ -695,7 +695,7 @@ export default function AdminCouponsPage() {
                           {coupon.redemptionCount > 0 && (
                             <button
                               onClick={() => toggleExpanded(coupon._id)}
-                              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                              className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded"
                               title="View redemptions"
                             >
                               {expandedRows.has(coupon._id) ? (
@@ -709,7 +709,7 @@ export default function AdminCouponsPage() {
                             <button
                               onClick={() => handleDeactivate(coupon)}
                               disabled={deactivating === coupon._id}
-                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                              className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
                               title="Deactivate coupon"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -725,7 +725,7 @@ export default function AdminCouponsPage() {
                         <td colSpan={8} className="px-4 py-3 bg-gray-50">
                           {loadingDetails === coupon._id ? (
                             <div className="flex items-center justify-center py-3">
-                              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                              <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
                             </div>
                           ) : (expandedDetails[coupon._id] || coupon.redemptions)?.length > 0 ? (
                             <div>
@@ -747,7 +747,7 @@ export default function AdminCouponsPage() {
                                         <span className="inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium">
                                           {r.subscriptionTier}
                                         </span>
-                                        <span className="text-gray-400">
+                                        <span className="text-gray-600">
                                           {formatDateTime(r.redeemedAt)}
                                         </span>
                                       </div>
@@ -757,7 +757,7 @@ export default function AdminCouponsPage() {
                               </div>
                             </div>
                           ) : (
-                            <p className="text-xs text-gray-400 text-center py-2">
+                            <p className="text-xs text-gray-600 text-center py-2">
                               No redemption details available.
                             </p>
                           )}
