@@ -5,7 +5,19 @@ self.addEventListener('install', (event) => {
   console.log('[SW] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(['/study', '/offline', '/flashcards', '/dashboard']);
+      return cache.addAll([
+        '/study',
+        '/offline',
+        '/flashcards',
+        '/dashboard',
+        '/generate',
+        '/explore',
+        '/history',
+        '/versus',
+        '/profile',
+        '/settings',
+        '/analytics',
+      ]);
     })
   );
   self.skipWaiting();

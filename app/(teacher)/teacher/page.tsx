@@ -156,7 +156,7 @@ export default function TeacherDashboardPage() {
                     </div>
                   </div>
                   {a.dueDate && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-600 mt-1">
                       Due: {new Date(a.dueDate).toLocaleDateString()}
                     </p>
                   )}

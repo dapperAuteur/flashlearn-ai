@@ -184,7 +184,7 @@ export default function AdminFeaturedPage() {
                 key={set.id}
                 className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg"
               >
-                <span className="text-xs font-medium text-gray-400 w-6 text-center">
+                <span className="text-xs font-medium text-gray-600 w-6 text-center">
                   {idx + 1}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -197,20 +197,20 @@ export default function AdminFeaturedPage() {
                   <button
                     onClick={() => moveSet(set.id, 'up')}
                     disabled={idx === 0}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded disabled:opacity-30"
+                    className="p-1.5 text-gray-600 hover:text-gray-600 hover:bg-gray-200 rounded disabled:opacity-30"
                   >
                     <ArrowUp className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => moveSet(set.id, 'down')}
                     disabled={idx === featured.length - 1}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded disabled:opacity-30"
+                    className="p-1.5 text-gray-600 hover:text-gray-600 hover:bg-gray-200 rounded disabled:opacity-30"
                   >
                     <ArrowDown className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => unfeatureSet(set.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                    className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -226,7 +226,7 @@ export default function AdminFeaturedPage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Find Sets to Feature</h2>
         <div className="flex gap-2 mb-4">
           <div className="relative flex-1">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
             <input
               type="text"
               value={searchTerm}

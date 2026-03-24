@@ -73,13 +73,20 @@ export default function PasswordStrengthMeter({ password }: PasswordStrengthMete
   
   return (
     <div className="mt-1 mb-3">
-      <div className="w-full h-2 bg-gray-200 rounded-full">
-        <div 
-          className={`h-full rounded-full ${getBarColor()}`} 
+      <div
+        role="progressbar"
+        aria-valuenow={strength}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Password strength: ${message}`}
+        className="w-full h-2 bg-gray-200 rounded-full"
+      >
+        <div
+          className={`h-full rounded-full ${getBarColor()}`}
           style={{ width: `${strength}%` }}
-        ></div>
+        />
       </div>
-      <p className={`text-sm mt-1 ${getBarColor().replace('bg-', 'text-')}`}>
+      <p aria-live="polite" className={`text-sm mt-1 ${getBarColor().replace('bg-', 'text-')}`}>
         {message}
       </p>
     </div>

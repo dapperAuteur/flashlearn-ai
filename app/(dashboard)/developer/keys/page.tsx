@@ -191,7 +191,7 @@ export default function KeysPage() {
         {/* Keys list */}
         {keys.length === 0 ? (
           <div className="p-8 text-center">
-            <Key className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <Key className="w-8 h-8 text-gray-500 mx-auto mb-2" />
             <p className="text-sm text-gray-500">No API keys yet. Create one to get started.</p>
           </div>
         ) : (
@@ -214,7 +214,7 @@ export default function KeysPage() {
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 mt-0.5 font-mono">{key.keyPrefix}...</div>
-                    <div className="text-xs text-gray-400 mt-0.5">
+                    <div className="text-xs text-gray-600 mt-0.5">
                       {key.usageCount.toLocaleString()} total calls
                       {key.lastUsedAt && ` · Last used ${new Date(key.lastUsedAt).toLocaleDateString()}`}
                     </div>
@@ -224,14 +224,14 @@ export default function KeysPage() {
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
                         onClick={() => rotateKey(keyId)}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded"
                         title="Rotate key"
                       >
                         <RotateCw className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => revokeKey(keyId)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
                         title="Revoke key"
                       >
                         <Trash2 className="w-4 h-4" />

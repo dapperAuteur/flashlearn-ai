@@ -28,7 +28,7 @@ export default async function StatisticsPage() {
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="text-center py-12">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-12 w-12 text-gray-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

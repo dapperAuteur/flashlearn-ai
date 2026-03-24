@@ -423,7 +423,7 @@ export default function AdminConversationsPage() {
           {/* Search + filters */}
           <div className="p-3 border-b border-gray-200 space-y-2">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
               <input
                 type="text"
                 placeholder="Search conversations..."
@@ -486,7 +486,7 @@ export default function AdminConversationsPage() {
                   >
                     <div className="flex items-start gap-2">
                       <TypeIcon
-                        className={`w-4 h-4 mt-0.5 flex-shrink-0 ${TYPE_CONFIG[conv.type]?.color || 'text-gray-400'}`}
+                        className={`w-4 h-4 mt-0.5 flex-shrink-0 ${TYPE_CONFIG[conv.type]?.color || 'text-gray-600'}`}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
@@ -504,7 +504,7 @@ export default function AdminConversationsPage() {
                           {conv.subject}
                         </p>
                         {conv.lastMessagePreview && (
-                          <p className="text-xs text-gray-400 truncate mt-0.5">
+                          <p className="text-xs text-gray-600 truncate mt-0.5">
                             {conv.lastMessagePreview.senderRole === 'admin'
                               ? 'You: '
                               : ''}
@@ -522,7 +522,7 @@ export default function AdminConversationsPage() {
                           >
                             {conv.status}
                           </span>
-                          <span className="text-[10px] text-gray-400 ml-auto">
+                          <span className="text-[10px] text-gray-600 ml-auto">
                             {formatTime(conv.lastMessageAt)}
                           </span>
                         </div>
@@ -567,9 +567,9 @@ export default function AdminConversationsPage() {
           }`}
         >
           {!selectedId ? (
-            <div className="flex-1 flex items-center justify-center text-gray-400">
+            <div className="flex-1 flex items-center justify-center text-gray-600">
               <div className="text-center">
-                <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-500" />
                 <p className="text-sm">Select a conversation to view</p>
               </div>
             </div>
@@ -611,7 +611,7 @@ export default function AdminConversationsPage() {
                           </span>
                         )}
                         {(selectedConversation.userId as any)?.createdAt && (
-                          <span className="text-[10px] text-gray-400">
+                          <span className="text-[10px] text-gray-600">
                             Member since{' '}
                             {formatDate(
                               (selectedConversation.userId as any).createdAt
@@ -712,7 +712,7 @@ export default function AdminConversationsPage() {
                         </p>
                         {msg.attachments?.map((att) => renderAttachment(att))}
                         <p
-                          className={`text-[10px] mt-1 ${isAdmin ? 'text-blue-200' : 'text-gray-400'}`}
+                          className={`text-[10px] mt-1 ${isAdmin ? 'text-blue-200' : 'text-gray-600'}`}
                         >
                           {formatTime(msg.createdAt)}
                         </p>
@@ -763,7 +763,7 @@ export default function AdminConversationsPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                    className="p-2 text-gray-600 hover:text-gray-600 transition-colors disabled:opacity-50"
                   >
                     <Paperclip className="w-4 h-4" />
                   </button>

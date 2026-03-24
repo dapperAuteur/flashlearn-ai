@@ -325,7 +325,7 @@ export default function PlayChallengePage() {
           }`}
         >
           {/* Label */}
-          <p className="absolute top-4 left-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+          <p className="absolute top-4 left-4 text-xs font-medium text-gray-600 uppercase tracking-wider">
             {isFlipped
               ? studyDirection === 'back-to-front'
                 ? 'Front'
@@ -342,7 +342,7 @@ export default function PlayChallengePage() {
 
           {/* Tap to flip hint */}
           {!isFlipped && (
-            <p className="absolute bottom-4 text-xs text-gray-400">Tap to reveal answer</p>
+            <p className="absolute bottom-4 text-xs text-gray-600">Tap to reveal answer</p>
           )}
         </div>
       </div>
@@ -390,7 +390,7 @@ export default function PlayChallengePage() {
               </button>
             ))}
           </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-2 px-1">
+          <div className="flex justify-between text-xs text-gray-600 mt-2 px-1">
             <span>Guessing</span>
             <span>Very Sure</span>
           </div>
@@ -401,7 +401,7 @@ export default function PlayChallengePage() {
       {showConfidence && (
         <button
           onClick={() => handleConfidence(3)}
-          className="w-full inline-flex items-center justify-center text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          className="w-full inline-flex items-center justify-center text-sm text-gray-600 hover:text-gray-800 transition-colors"
         >
           Skip (default 3)
           <ArrowRightIcon className="h-3 w-3 ml-1" />

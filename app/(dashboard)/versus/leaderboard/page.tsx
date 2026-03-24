@@ -34,7 +34,7 @@ function getRankDisplay(rank: number): { icon: string; color: string } {
     case 3:
       return { icon: '3rd', color: 'text-amber-700 bg-amber-100' };
     default:
-      return { icon: `${rank}`, color: 'text-gray-400 bg-gray-50' };
+      return { icon: `${rank}`, color: 'text-gray-600 bg-gray-50' };
   }
 }
 
@@ -187,7 +187,7 @@ export default function LeaderboardPage() {
         </div>
       ) : leaderboard.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
-          <TrophyIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <TrophyIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
           <h3 className="text-base font-medium text-gray-900 mb-1">No Rankings Yet</h3>
           <p className="text-sm text-gray-500">
             {activeTab === 'classroom'

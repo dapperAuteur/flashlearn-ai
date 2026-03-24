@@ -104,7 +104,7 @@ export default function ReportModal({ isOpen, onClose, setId, setTitle }: Report
           <button
             onClick={onClose}
             aria-label="Close report dialog"
-            className="p-1 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+            className="p-1 text-gray-600 hover:text-gray-800 transition-colors rounded-lg hover:bg-gray-100"
           >
             <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -167,7 +167,7 @@ export default function ReportModal({ isOpen, onClose, setId, setTitle }: Report
                 maxLength={500}
                 rows={3}
                 placeholder="Provide more context about why you are reporting this set..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:ring-red-500 focus:border-red-500 resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:ring-red-500 focus:border-red-500 resize-none"
               />
               <p aria-live="polite" className="text-xs text-gray-500 mt-1">{description.length}/500 characters</p>
             </div>

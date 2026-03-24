@@ -93,7 +93,7 @@ export default function StudyCard({
   }, [isFlipped, hasCompletedConfidence, handleResult, onPrevious, onEndSession, handleFlip]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6" role="region" aria-label="Study flashcard">
       {/* Instructions Header */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-4 shadow-sm">
         <div className="flex items-center justify-between">
@@ -114,7 +114,7 @@ export default function StudyCard({
               </p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+          <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
             <CommandLineIcon className="h-4 w-4" />
             <span>Space • ← → • ↑ • Esc</span>
           </div>
@@ -143,9 +143,18 @@ export default function StudyCard({
       <div
         className={`relative h-96 ${canFlip ? 'cursor-pointer' : 'cursor-not-allowed'}`}
         onClick={handleFlip}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleFlip();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={canFlip ? 'Flip flashcard' : 'Rate confidence to unlock card'}
       >
         {/* Front of card */}
-        <div className={`absolute inset-0 transition-opacity duration-300 ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`absolute inset-0 transition-opacity duration-300 ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} aria-hidden={isFlipped}>
           <div className="w-full h-full bg-gradient-to-br from-white to-blue-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-200/30 to-pink-200/30 rounded-full blur-2xl" />
@@ -182,7 +191,7 @@ export default function StudyCard({
         </div>
 
         {/* Back of card */}
-        <div className={`absolute inset-0 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`absolute inset-0 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} aria-hidden={!isFlipped} aria-live="polite">
           <div className="w-full h-full bg-gradient-to-br from-white to-green-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-28 h-28 bg-gradient-to-br from-green-200/30 to-emerald-200/30 rounded-full blur-3xl" />
             <div className="absolute bottom-0 right-0 w-20 h-20 bg-gradient-to-tr from-teal-200/30 to-cyan-200/30 rounded-full blur-2xl" />
@@ -254,7 +263,7 @@ export default function StudyCard({
               
               {/* Keyboard shortcuts reminder */}
               <div className="mt-4 text-center">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-600">
                   Quick keys: <kbd className="bg-gray-100 px-2 py-1 rounded text-xs">←</kbd> Wrong • <kbd className="bg-gray-100 px-2 py-1 rounded text-xs">→</kbd> Right
                 </p>
               </div>

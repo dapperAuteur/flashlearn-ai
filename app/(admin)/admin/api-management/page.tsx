@@ -457,7 +457,7 @@ export default function ApiManagementPage() {
                       {key.status === "active" ? (
                         <ToggleRight className="w-6 h-6 text-emerald-500" />
                       ) : (
-                        <ToggleLeft className="w-6 h-6 text-gray-400" />
+                        <ToggleLeft className="w-6 h-6 text-gray-600" />
                       )}
                     </button>
                     <div className="min-w-0">
@@ -493,7 +493,7 @@ export default function ApiManagementPage() {
 
                     <div className="text-right hidden sm:block">
                       <div className="text-xs font-mono">{key.usageCount.toLocaleString()} calls</div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-gray-600">
                         {key.lastUsedAt
                           ? `Last: ${new Date(key.lastUsedAt).toLocaleDateString()}`
                           : "Never used"}
@@ -554,7 +554,7 @@ function StatCard({
       <div className="text-xl font-bold text-gray-900">
         {typeof value === "number" ? value.toLocaleString() : value}
       </div>
-      {sublabel && <div className="text-xs text-gray-400 mt-0.5">{sublabel}</div>}
+      {sublabel && <div className="text-xs text-gray-600 mt-0.5">{sublabel}</div>}
     </div>
   );
 }
@@ -611,7 +611,7 @@ function ExpandedKeyDetails({
       <div>
         <h4 className="text-xs font-semibold text-gray-600 mb-2">
           Custom Rate Limits
-          <span className="font-normal text-gray-400 ml-1">(blank = use tier defaults)</span>
+          <span className="font-normal text-gray-600 ml-1">(blank = use tier defaults)</span>
         </h4>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
@@ -643,13 +643,13 @@ function ExpandedKeyDetails({
         <h4 className="text-xs font-semibold text-gray-600 mb-2">Enterprise Features</h4>
         <div className="space-y-2">
           <div>
-            <label className="text-xs text-gray-500">Allowed IPs <span className="text-gray-400">(comma-separated, CIDR supported, blank = all)</span></label>
+            <label className="text-xs text-gray-500">Allowed IPs <span className="text-gray-600">(comma-separated, CIDR supported, blank = all)</span></label>
             <input type="text" value={allowedIPs} onChange={(e) => setAllowedIPs(e.target.value)}
               placeholder="e.g. 203.0.113.5, 10.0.0.0/8"
               className="w-full text-xs border rounded px-2 py-1 mt-0.5 font-mono" />
           </div>
           <div>
-            <label className="text-xs text-gray-500">Webhook URL <span className="text-gray-400">(usage milestone notifications)</span></label>
+            <label className="text-xs text-gray-500">Webhook URL <span className="text-gray-600">(usage milestone notifications)</span></label>
             <input type="url" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)}
               placeholder="https://example.com/webhook"
               className="w-full text-xs border rounded px-2 py-1 mt-0.5" />
@@ -665,7 +665,7 @@ function ExpandedKeyDetails({
         </div>
       </div>
 
-      <div className="text-xs text-gray-400">
+      <div className="text-xs text-gray-600">
         Created: {new Date(apiKey.createdAt).toLocaleString()}
         {apiKey.lastUsedAt && (
           <span className="ml-3">Last used: {new Date(apiKey.lastUsedAt).toLocaleString()}</span>

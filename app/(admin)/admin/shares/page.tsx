@@ -209,7 +209,7 @@ export default function AdminSharesPage() {
               key={type}
               className="bg-white shadow rounded-lg p-4 text-center"
             >
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
                 {type === "versus"
                   ? "Challenges"
                   : type === "results"
@@ -234,7 +234,7 @@ export default function AdminSharesPage() {
           {timeline.length > 0 ? (
             <Line data={chartData} options={chartOptions} />
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-full text-gray-600 text-sm">
               No share activity in the last 30 days
             </div>
           )}
@@ -273,7 +273,7 @@ export default function AdminSharesPage() {
                   <tr>
                     <td
                       colSpan={4}
-                      className="px-4 py-6 text-center text-sm text-gray-400"
+                      className="px-4 py-6 text-center text-sm text-gray-600"
                     >
                       No data
                     </td>
@@ -341,7 +341,7 @@ export default function AdminSharesPage() {
                   <tr>
                     <td
                       colSpan={4}
-                      className="px-4 py-6 text-center text-sm text-gray-400"
+                      className="px-4 py-6 text-center text-sm text-gray-600"
                     >
                       No challenge data
                     </td>

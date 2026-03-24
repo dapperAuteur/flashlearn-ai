@@ -122,7 +122,7 @@ export default function AdminLogsPage() {
                   <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getLevelBadgeClass(log.level)}`}>
                     {log.level}
                   </span>
-                  <span className="text-xs text-gray-400">{formatDate(log.timestamp)}</span>
+                  <span className="text-xs text-gray-600">{formatDate(log.timestamp)}</span>
                 </div>
                 <p className="text-sm text-gray-800 mb-1">{log.message}</p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">

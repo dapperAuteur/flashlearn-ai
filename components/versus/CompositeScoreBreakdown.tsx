@@ -65,9 +65,9 @@ export default function CompositeScoreBreakdown({ score }: CompositeScoreBreakdo
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
       {/* Total score */}
       <div className="text-center mb-6">
-        <p className="text-sm text-gray-500 uppercase tracking-wide font-medium">Total Score</p>
+        <p className="text-sm text-gray-600 uppercase tracking-wide font-medium">Total Score</p>
         <p className="text-5xl font-bold text-gray-900 mt-1">{score.totalScore}</p>
-        <p className="text-sm text-gray-400 mt-1">out of 1000</p>
+        <p className="text-sm text-gray-600 mt-1">out of 1000</p>
       </div>
 
       {/* Category bars */}
@@ -76,20 +76,21 @@ export default function CompositeScoreBreakdown({ score }: CompositeScoreBreakdo
           const pct = Math.min((cat.value / cat.max) * 100, 100);
 
           return (
-            <div key={cat.label}>
+            <div key={cat.label} aria-label={`${cat.label}: ${cat.value} out of ${cat.max}, ${cat.detail}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-gray-700">{cat.label}</span>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-600">
                   {cat.value} / {cat.max}
                 </span>
               </div>
-              <div className={`w-full ${cat.bgColor} rounded-full h-3`}>
+              <div className={`w-full ${cat.bgColor} rounded-full h-3`} aria-hidden="true">
                 <div
                   className={`h-3 rounded-full ${cat.color} transition-all duration-500`}
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-0.5">{cat.detail}</p>
+              <span className="sr-only">{Math.round(pct)}% of maximum</span>
+              <p className="text-xs text-gray-600 mt-0.5">{cat.detail}</p>
             </div>
           );
         })}

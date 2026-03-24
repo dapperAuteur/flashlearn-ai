@@ -33,12 +33,12 @@ export default function OfflineResultsModal({ sessionId, onClose }: Props) {
   if (!sessionId || !sessionData) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-auto" role="dialog" aria-modal="true" aria-labelledby="offline-results-title">
       <div className="bg-white rounded-lg max-w-4xl w-full my-8">
         <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center rounded-t-lg">
-          <h2 className="text-xl font-semibold">Session Results</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded">
-            <XMarkIcon className="h-6 w-6" />
+          <h2 id="offline-results-title" className="text-xl font-semibold">Session Results</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded" aria-label="Close results">
+            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
         

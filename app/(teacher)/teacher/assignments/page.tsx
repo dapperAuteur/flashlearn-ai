@@ -203,7 +203,7 @@ export default function AssignmentsPage() {
       {/* Assignment list */}
       {assignments.length === 0 ? (
         <div className="bg-white rounded-xl shadow p-8 text-center">
-          <ClockIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <ClockIcon className="h-12 w-12 text-gray-500 mx-auto mb-3" />
           <h3 className="text-base font-medium text-gray-900 mb-1">No assignments yet</h3>
           <p className="text-sm text-gray-500">Create an assignment to send flashcard sets to your students.</p>
         </div>
@@ -253,7 +253,7 @@ export default function AssignmentsPage() {
                   <span className="inline-flex items-center gap-1 text-yellow-600">
                     <ClockIcon className="h-3.5 w-3.5" /> {inProgress} in progress
                   </span>
-                  <span className="inline-flex items-center gap-1 text-gray-400">
+                  <span className="inline-flex items-center gap-1 text-gray-600">
                     <XCircleIcon className="h-3.5 w-3.5" /> {total - completed - inProgress} not started
                   </span>
                   {avgAccuracy > 0 && (

@@ -40,6 +40,8 @@ export default function CardFeedback() {
       variants={feedbackVariants}
       initial="hidden"
       animate="visible"
+      aria-live="assertive"
+      role="status"
       className={`w-full h-80 rounded-lg flex flex-col items-center justify-center text-white p-6 shadow-lg ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`}
     >
       {isCorrect ? (

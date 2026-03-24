@@ -90,14 +90,14 @@ export default function OnboardingModal({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-500">
+            <span className="text-sm font-medium text-gray-700">
               Step {currentStep + 1} of {onboardingSteps.length}
             </span>
           </div>
           <button
             onClick={onSkip}
             aria-label="Skip onboarding tour"
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-600 hover:text-gray-800"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>

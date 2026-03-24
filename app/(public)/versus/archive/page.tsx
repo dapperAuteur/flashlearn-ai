@@ -159,7 +159,7 @@ export default async function ArchivePage({ searchParams }: ArchivePageProps) {
             Browse completed multiplayer flashcard challenges. See rankings, top scores, and challenge yourself against other learners.
           </p>
           {total > 0 && (
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               <span className="font-medium text-gray-600">{total}</span> completed challenge{total !== 1 ? 's' : ''}
             </p>
           )}
@@ -214,7 +214,7 @@ export default async function ArchivePage({ searchParams }: ArchivePageProps) {
         {challenges.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-500 text-lg mb-2">No completed challenges yet</p>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-gray-600 text-sm mb-6">
               {period !== 'all'
                 ? 'Try expanding the time range.'
                 : 'Be the first to complete a public challenge!'}

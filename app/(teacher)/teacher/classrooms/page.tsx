@@ -129,7 +129,7 @@ export default function ClassroomsPage() {
       {/* Classroom list */}
       {classrooms.length === 0 ? (
         <div className="bg-white rounded-xl shadow p-8 text-center">
-          <UserGroupIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <UserGroupIcon className="h-12 w-12 text-gray-500 mx-auto mb-3" />
           <h3 className="text-base font-medium text-gray-900 mb-1">No classrooms yet</h3>
           <p className="text-sm text-gray-500">Create a classroom and share the join code with your students.</p>
         </div>
@@ -143,7 +143,7 @@ export default function ClassroomsPage() {
                 </Link>
                 <button
                   onClick={() => handleDelete(c._id)}
-                  className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                  className="text-gray-600 hover:text-red-500 transition-colors p-1"
                   title="Delete classroom"
                 >
                   <TrashIcon className="h-4 w-4" />
@@ -163,7 +163,7 @@ export default function ClassroomsPage() {
                 <code className="text-sm font-bold text-gray-900 tracking-wider">{c.joinCode}</code>
                 <button
                   onClick={() => copyCode(c.joinCode)}
-                  className="ml-auto text-gray-400 hover:text-blue-600 transition-colors"
+                  className="ml-auto text-gray-600 hover:text-blue-600 transition-colors"
                   title="Copy code"
                 >
                   <ClipboardDocumentIcon className="h-4 w-4" />

@@ -224,7 +224,7 @@ export default function SignInForm() {
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-100 rounded-md">
+        <div role="alert" className="p-3 text-sm text-red-600 bg-red-100 rounded-md">
           {error}
         </div>
       )}
@@ -333,7 +333,7 @@ export default function SignInForm() {
       ) : (
         <div className="space-y-6">
           {codeError && (
-            <div className="p-3 text-sm text-red-600 bg-red-100 rounded-md">
+            <div role="alert" className="p-3 text-sm text-red-600 bg-red-100 rounded-md">
               {codeError}
             </div>
           )}

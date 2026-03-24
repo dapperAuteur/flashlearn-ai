@@ -120,13 +120,13 @@ function DiffRow({ label, youValue, themValue, youRaw, themRaw, higherIsBetter =
   const equal = youRaw === themRaw;
   return (
     <tr className="border-b border-gray-100 last:border-0">
-      <td className="py-2 pr-3 text-xs text-gray-500 font-medium whitespace-nowrap">{label}</td>
+      <td className="py-2 pr-3 text-xs text-gray-600 font-medium whitespace-nowrap">{label}</td>
       <td className={`py-2 px-3 text-sm font-semibold text-center ${equal ? 'text-gray-700' : youWins ? 'text-green-700' : 'text-red-600'}`}>
         {youValue}
       </td>
       <td className="py-2 px-2 text-center">
         {equal ? (
-          <MinusIcon className="h-3.5 w-3.5 text-gray-400 mx-auto" aria-hidden="true" />
+          <MinusIcon className="h-3.5 w-3.5 text-gray-600 mx-auto" aria-hidden="true" />
         ) : youWins ? (
           <ChevronUpIcon className="h-3.5 w-3.5 text-green-500 mx-auto" aria-hidden="true" />
         ) : (
@@ -242,7 +242,7 @@ function ComparisonPanel({ you, them, onClose }: ComparisonPanelProps) {
       </table>
 
       {(!youBreak || !themBreak) && (
-        <p className="text-xs text-gray-400 mt-2 text-center">
+        <p className="text-xs text-gray-600 mt-2 text-center">
           Detailed breakdown available for challenges completed after the board update.
         </p>
       )}
@@ -280,7 +280,7 @@ function Podium({ top3, currentUserId, sortMetric }: PodiumProps) {
                 {p.userName}
                 {p.userId === currentUserId && <span className="ml-1.5 text-xs text-blue-500 font-normal">(you)</span>}
               </p>
-              <p className="text-xs text-gray-500">{getSortDisplay(p, sortMetric)}</p>
+              <p className="text-xs text-gray-600">{getSortDisplay(p, sortMetric)}</p>
             </div>
           </div>
         ))}
@@ -376,11 +376,11 @@ export default function ChallengeBoard({ challenge, participants, currentUserId 
             {scopeLabel}
           </span>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-600">
           {modeLabel} · {dirLabel} · {challenge.cardCount} cards ·{' '}
           <span className="font-medium text-gray-700">{completedCount}/{participants.length}</span> completed
         </p>
-        <p className="text-xs text-gray-400 mt-0.5 font-mono">{challenge.challengeCode}</p>
+        <p className="text-xs text-gray-600 mt-0.5 font-mono">{challenge.challengeCode}</p>
       </div>
 
       {/* Podium */}
@@ -395,7 +395,7 @@ export default function ChallengeBoard({ challenge, participants, currentUserId 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           {/* Sort controls */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 overflow-x-auto" role="toolbar" aria-label="Sort rankings by">
-            <span className="text-xs text-gray-500 shrink-0 mr-1">Sort:</span>
+            <span className="text-xs text-gray-600 shrink-0 mr-1">Sort:</span>
             {SORT_OPTIONS.map((opt) => (
               <button
                 key={opt.key}
@@ -438,9 +438,9 @@ export default function ChallengeBoard({ challenge, participants, currentUserId 
                         {rankDisplay && rankDisplay <= 3 ? (
                           <span className="text-lg">{MEDAL_EMOJI[rankDisplay - 1]}</span>
                         ) : rankDisplay ? (
-                          <span className="text-sm font-bold text-gray-400">#{rankDisplay}</span>
+                          <span className="text-sm font-bold text-gray-600">#{rankDisplay}</span>
                         ) : (
-                          <span className="text-sm text-gray-300">⏳</span>
+                          <span className="text-sm text-gray-500">⏳</span>
                         )}
                       </div>
 
@@ -462,19 +462,19 @@ export default function ChallengeBoard({ challenge, participants, currentUserId 
                               />
                             </div>
                             {p.scoreBreakdown && (
-                              <p className="text-xs text-gray-400 mt-0.5">
+                              <p className="text-xs text-gray-600 mt-0.5">
                                 {p.scoreBreakdown.accuracy.toFixed(0)}% acc · {formatTime(p.scoreBreakdown.averageTimeSeconds)} avg · {p.scoreBreakdown.longestStreak} streak
                               </p>
                             )}
                           </>
                         ) : (
-                          <p className="text-xs text-gray-400 italic mt-0.5">In progress…</p>
+                          <p className="text-xs text-gray-600 italic mt-0.5">In progress…</p>
                         )}
                       </div>
 
                       {/* Score */}
                       <div className="shrink-0 text-right w-14">
-                        <span className={`text-sm font-semibold ${isCompleted ? 'text-gray-800' : 'text-gray-300'}`}>
+                        <span className={`text-sm font-semibold ${isCompleted ? 'text-gray-800' : 'text-gray-500'}`}>
                           {getSortDisplay(p, sortMetric)}
                         </span>
                       </div>

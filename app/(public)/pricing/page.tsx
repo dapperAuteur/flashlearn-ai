@@ -304,7 +304,7 @@ export default function PricingPage() {
           <Link href="/docs/api/getting-started" className="text-sm text-blue-600 hover:text-blue-800 font-medium underline">
             Read the API docs
           </Link>
-          <span className="mx-2 text-gray-300">|</span>
+          <span className="mx-2 text-gray-500">|</span>
           <Link href="/developer" className="text-sm text-blue-600 hover:text-blue-800 font-medium underline">
             Get your free API key
           </Link>
@@ -356,7 +356,7 @@ export default function PricingPage() {
             >
               <summary className="flex items-center justify-between p-4 sm:p-5 cursor-pointer text-sm sm:text-base font-medium text-gray-900 hover:bg-gray-50 transition-colors">
                 {item.q}
-                <span className="ml-4 text-gray-400 group-open:rotate-180 transition-transform">
+                <span className="ml-4 text-gray-600 group-open:rotate-180 transition-transform">
                   &#9660;
                 </span>
               </summary>

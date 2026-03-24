@@ -165,6 +165,9 @@ export default function TypeAnswerCard({
 
       {/* Answer Input */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-6 shadow-sm">
+        <p id="type-answer-hint" className="sr-only">
+          {hasCompletedConfidence ? 'Type your answer and press Enter or click submit' : 'Rate your confidence before typing an answer'}
+        </p>
         <div className="flex gap-3">
           <input
             ref={inputRef}
@@ -174,7 +177,9 @@ export default function TypeAnswerCard({
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder={hasCompletedConfidence ? 'Type your answer...' : 'Rate confidence first'}
             disabled={!hasCompletedConfidence || !!evaluation}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 disabled:bg-gray-50"
+            aria-label="Type your answer"
+            aria-describedby="type-answer-hint"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 disabled:bg-gray-50"
           />
           <motion.button
             onClick={handleSubmit}
@@ -193,6 +198,7 @@ export default function TypeAnswerCard({
       </div>
 
       {/* Evaluation Result */}
+      <div aria-live="polite">
       {evaluation && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -228,7 +234,7 @@ export default function TypeAnswerCard({
                 {evaluation.similarity > 0 && evaluation.similarity < 1 && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">Match:</span>
+                      <span className="text-xs text-gray-600">Match:</span>
                       <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-32">
                         <div
                           className={`h-2 rounded-full transition-all ${
@@ -237,7 +243,7 @@ export default function TypeAnswerCard({
                           style={{ width: `${evaluation.similarity * 100}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-500">{Math.round(evaluation.similarity * 100)}%</span>
+                      <span className="text-xs text-gray-600">{Math.round(evaluation.similarity * 100)}%</span>
                     </div>
                   </div>
                 )}
@@ -246,6 +252,7 @@ export default function TypeAnswerCard({
           </div>
         </motion.div>
       )}
+      </div>
     </div>
   );
 }

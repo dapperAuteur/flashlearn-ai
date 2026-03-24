@@ -42,7 +42,7 @@ export default function UsagePage() {
   if (!data || data.keys.length === 0) {
     return (
       <div className="bg-white rounded-lg border p-8 text-center">
-        <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <BarChart3 className="w-10 h-10 text-gray-500 mx-auto mb-3" />
         <h3 className="text-lg font-semibold text-gray-900 mb-1">No Usage Data</h3>
         <p className="text-sm text-gray-500">Create an API key and start making requests to see usage data here.</p>
       </div>
@@ -72,7 +72,7 @@ export default function UsagePage() {
                   </span>
                   <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">{key.apiTier}</span>
                 </div>
-                <span className="text-xs text-gray-400 font-mono">{key.keyPrefix}...</span>
+                <span className="text-xs text-gray-600 font-mono">{key.keyPrefix}...</span>
               </div>
             </div>
 
@@ -95,7 +95,7 @@ export default function UsagePage() {
                 {/* 24h Activity */}
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Clock className="w-4 h-4 text-gray-400" />
+                    <Clock className="w-4 h-4 text-gray-600" />
                     <span className="text-xs text-gray-500">24h Calls</span>
                   </div>
                   <div className="text-lg font-bold text-gray-900">{key.activity24h.calls.toLocaleString()}</div>
@@ -103,7 +103,7 @@ export default function UsagePage() {
                 {/* Avg Response */}
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Clock className="w-4 h-4 text-gray-400" />
+                    <Clock className="w-4 h-4 text-gray-600" />
                     <span className="text-xs text-gray-500">Avg Response</span>
                   </div>
                   <div className="text-lg font-bold text-gray-900">
@@ -148,7 +148,7 @@ function UsageMetric({
       </div>
       <div className="text-lg font-bold text-gray-900">
         {value.toLocaleString()}
-        {limit && <span className="text-sm font-normal text-gray-400"> / {limit.toLocaleString()}</span>}
+        {limit && <span className="text-sm font-normal text-gray-600"> / {limit.toLocaleString()}</span>}
       </div>
       {limit && (
         <div className="mt-1.5 w-full bg-gray-100 rounded-full h-1.5">

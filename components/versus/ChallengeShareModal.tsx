@@ -108,21 +108,26 @@ export default function ChallengeShareModal({
     <div
       className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 transition-opacity duration-300"
       onClick={onClose}
+      role="presentation"
     >
       <div
         className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md transform transition-transform duration-300"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-modal-title"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+          <h2 id="share-modal-title" className="text-xl font-bold text-gray-800 dark:text-gray-200">
             Share Challenge
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Close share dialog"
+            className="p-1 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -132,7 +137,7 @@ export default function ChallengeShareModal({
             onClick={handleNativeShare}
             className="w-full mb-4 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all"
           >
-            <ShareIcon className="h-5 w-5" />
+            <ShareIcon className="h-5 w-5" aria-hidden="true" />
             Share Challenge
           </button>
         )}
@@ -146,7 +151,7 @@ export default function ChallengeShareModal({
           onClick={() => track('share_generated', { type: 'versus', platform: 'twitter' })}
         >
           {/* X / Twitter icon */}
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
           Share on X
@@ -154,7 +159,7 @@ export default function ChallengeShareModal({
 
         {/* Challenge code display */}
         <div className="text-center mb-5">
-          <p className="text-sm text-gray-500 mb-2">Challenge Code</p>
+          <p className="text-sm text-gray-600 mb-2">Challenge Code</p>
           <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
             <p className="text-3xl font-bold font-mono tracking-widest text-gray-900 dark:text-gray-100">
               {challengeCode}
@@ -162,6 +167,7 @@ export default function ChallengeShareModal({
           </div>
           <button
             onClick={() => copyToClipboard(challengeCode, 'code')}
+            aria-label="Copy challenge code to clipboard"
             className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               codeCopied
                 ? 'bg-green-100 text-green-700'
@@ -170,12 +176,12 @@ export default function ChallengeShareModal({
           >
             {codeCopied ? (
               <>
-                <ClipboardDocumentCheckIcon className="h-4 w-4" />
+                <ClipboardDocumentCheckIcon className="h-4 w-4" aria-hidden="true" />
                 Copied!
               </>
             ) : (
               <>
-                <ClipboardDocumentIcon className="h-4 w-4" />
+                <ClipboardDocumentIcon className="h-4 w-4" aria-hidden="true" />
                 Copy Code
               </>
             )}
@@ -184,16 +190,18 @@ export default function ChallengeShareModal({
 
         {/* Full URL */}
         <div className="mb-5">
-          <p className="text-sm text-gray-500 mb-2">Or share this link</p>
+          <p className="text-sm text-gray-600 mb-2">Or share this link</p>
           <div className="flex items-center gap-2">
             <input
               type="text"
               readOnly
               value={previewUrl}
+              aria-label="Challenge share URL"
               className="flex-1 p-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-300 truncate"
             />
             <button
               onClick={() => copyToClipboard(previewUrl, 'url')}
+              aria-label="Copy share URL to clipboard"
               className={`flex-shrink-0 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 urlCopied
                   ? 'bg-green-600 text-white'

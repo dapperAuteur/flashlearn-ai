@@ -69,12 +69,12 @@ export default function OfflineHistoryModal({ isOpen, onClose, onViewSession }: 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="offline-history-title">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
         <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Study History</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded">
-            <XMarkIcon className="h-6 w-6" />
+          <h2 id="offline-history-title" className="text-xl font-semibold">Study History</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded" aria-label="Close study history">
+            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
         
@@ -86,7 +86,7 @@ export default function OfflineHistoryModal({ isOpen, onClose, onViewSession }: 
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-12">
-              <ClockIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <ClockIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" aria-hidden="true" />
               <p className="text-gray-600">No study history yet</p>
             </div>
           ) : (
@@ -94,10 +94,20 @@ export default function OfflineHistoryModal({ isOpen, onClose, onViewSession }: 
               {history.map((session) => (
                 <div
                   key={session.sessionId}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View session: ${session.setName}, ${session.accuracy.toFixed(0)}% accuracy`}
                   className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
                   onClick={() => {
                     onViewSession(session.sessionId);
                     onClose();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onViewSession(session.sessionId);
+                      onClose();
+                    }
                   }}
                 >
                   <div className="flex justify-between items-start">

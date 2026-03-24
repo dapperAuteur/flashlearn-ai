@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useStudySession } from '@/contexts/StudySessionContext';
@@ -53,6 +53,7 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [newAchievements, setNewAchievements] = useState<Array<{ type: string; title: string; description: string; icon: string }>>([]);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
 
   // Reset stale session when navigating to study with a new setId
   useEffect(() => {
@@ -63,6 +64,10 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
 
   useEffect(() => {
     setIsFlipped(false);
+    // Move focus to the card container when a new card appears
+    if (cardContainerRef.current) {
+      cardContainerRef.current.focus();
+    }
   }, [currentIndex]);
 
   useEffect(() => {
@@ -173,11 +178,11 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
       const modeLabel = studyMode === 'multiple-choice' ? 'Multiple Choice' : 'Classic';
 
       return (
-        <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
+        <div ref={cardContainerRef} tabIndex={-1} className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 outline-none" aria-label={`Studying ${flashcardSetName || 'Study Set'}, card ${currentIndex + 1} of ${flashcards.length}`}>
           <h3 className="font-bold text-lg truncate text-white mb-2" title={flashcardSetName || 'Study Set'}>
             {flashcardSetName || 'Study Set'}
           </h3>
-          <div className="mb-4 flex flex-wrap justify-between items-center gap-2 text-gray-300">
+          <div className="mb-4 flex flex-wrap justify-between items-center gap-2 text-gray-300" aria-live="polite">
             <span>Card {currentIndex + 1} of {flashcards.length}</span>
             <span className="text-xs bg-gray-700 px-2 py-1 rounded-full">{modeLabel}</span>
             <span>Time: {formatTime(elapsedTime)}</span>

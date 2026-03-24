@@ -272,7 +272,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
             <div className="w-8 h-px bg-gray-300" />
             <div className={`flex items-center space-x-2 ${
               currentStep === 'direction' ? 'text-blue-600' : 
-              currentStep === 'ready' ? 'text-green-600' : 'text-gray-400'
+              currentStep === 'ready' ? 'text-green-600' : 'text-gray-600'
             }`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 currentStep === 'direction' ? 'bg-blue-100 border-2 border-blue-600' :
@@ -283,7 +283,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
               <span className="text-sm font-medium">Study Mode</span>
             </div>
             <div className="w-8 h-px bg-gray-300" />
-            <div className={`flex items-center space-x-2 ${currentStep === 'ready' ? 'text-blue-600' : 'text-gray-400'}`}>
+            <div className={`flex items-center space-x-2 ${currentStep === 'ready' ? 'text-blue-600' : 'text-gray-600'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 currentStep === 'ready' ? 'bg-blue-100 border-2 border-blue-600' : 'bg-gray-100'
               }`}>
@@ -348,21 +348,22 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
               <h2 className="text-xl font-semibold text-gray-900">Select Flashcard Set</h2>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4" aria-required="true">
               {/* Search - always visible */}
               <div className="relative">
-                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
                 <input
                   type="text"
                   placeholder="Search flashcard sets..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  aria-label="Search flashcard sets"
                   className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-700"
                     aria-label="Clear search"
                   >
                     <XMarkIcon className="h-5 w-5" />
@@ -407,7 +408,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
 
             {filteredSets.length === 0 ? (
               <div className="text-center py-8">
-                <BookOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <BookOpenIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   {searchTerm ? `No sets matching "${searchTerm}"` : 'No flashcard sets found'}
                 </h3>
@@ -466,12 +467,12 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                                 {a.myStatus === 'in_progress' ? 'In Progress' : 'Not Started'}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-600 mt-1">
                               {a.title} &middot; {a.classroomId?.name}
                               {a.teacherId?.name && ` · ${a.teacherId.name}`}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-gray-500">{a.flashcardSetId?.cardCount} cards</span>
+                              <span className="text-xs text-gray-600">{a.flashcardSetId?.cardCount} cards</span>
                               {a.dueDate && (
                                 <span className={clsx(
                                   'text-xs px-2 py-0.5 rounded-full',
@@ -498,7 +499,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                       </div>
                     ))}
                     {filteredSets.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mt-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-600 mt-4">
                         <BookOpenIcon className="h-4 w-4" />
                         <span>Your Sets</span>
                       </div>
@@ -531,7 +532,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                               <p className="text-sm text-gray-600 mt-1 line-clamp-1">{fSet.description}</p>
                             )}
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
-                              <span className="text-xs text-gray-500">{fSet.cardCount} cards</span>
+                              <span className="text-xs text-gray-600">{fSet.cardCount} cards</span>
                               {fSet.categories?.map(cat => (
                                 <span
                                   key={cat.name}
@@ -562,7 +563,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                 {/* Filtered Results */}
                 {filteredSets.length === 0 ? (
                   <div className="text-center py-8">
-                    <MagnifyingGlassIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <MagnifyingGlassIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No sets matching &ldquo;{searchTerm}&rdquo;</h3>
                     <p className="text-gray-600 mb-4">Try a different search term</p>
                     <button
@@ -593,7 +594,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                               <p className="text-sm text-gray-600 mt-1">{set.description}</p>
                             )}
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
-                              <p className="text-xs text-gray-500">{set.card_count} cards</p>
+                              <p className="text-xs text-gray-600">{set.card_count} cards</p>
                               {dueCounts.get(set.id?.toString() || '') && (
                                 <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
                                   <ClockIcon className="h-3 w-3" />
@@ -656,12 +657,14 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                 <div className="bg-purple-100 p-2 rounded-lg">
                   <SparklesIcon className="h-5 w-5 text-purple-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Choose Study Direction</h2>
+                <h2 className="text-xl font-semibold text-gray-900" id="study-direction-label">Choose Study Direction</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" role="group" aria-labelledby="study-direction-label">
                 <button
                   onClick={() => handleDirectionChange('front-to-back')}
+                  aria-pressed={studyDirection === 'front-to-back'}
+                  aria-describedby="dir-ftb-desc"
                   className={clsx(
                     'p-6 rounded-xl border-2 text-left transition-all',
                     studyDirection === 'front-to-back'
@@ -673,13 +676,15 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                     <h3 className="font-semibold text-gray-900">Front → Back</h3>
                     <ArrowRightIcon className="h-5 w-5 text-gray-600" />
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p id="dir-ftb-desc" className="text-sm text-gray-600">
                     See the question first, then reveal the answer. Perfect for testing recall.
                   </p>
                 </button>
 
                 <button
                   onClick={() => handleDirectionChange('back-to-front')}
+                  aria-pressed={studyDirection === 'back-to-front'}
+                  aria-describedby="dir-btf-desc"
                   className={clsx(
                     'p-6 rounded-xl border-2 text-left transition-all relative',
                     studyDirection === 'back-to-front'
@@ -697,7 +702,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                     <h3 className="font-semibold text-gray-900">Back → Front</h3>
                     <ArrowRightIcon className="h-5 w-5 text-gray-600 transform rotate-180" />
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p id="dir-btf-desc" className="text-sm text-gray-600">
                     See the answer first, then the question. Great for reverse learning.
                   </p>
                 </button>
@@ -714,12 +719,14 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                 <div className="bg-orange-100 p-2 rounded-lg">
                   <ListBulletIcon className="h-5 w-5 text-orange-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Study Mode</h2>
+                <h2 className="text-xl font-semibold text-gray-900" id="study-mode-label">Study Mode</h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-labelledby="study-mode-label">
                 <button
                   onClick={() => setStudyMode('classic')}
+                  aria-pressed={studyMode === 'classic'}
+                  aria-describedby="mode-classic-desc"
                   className={clsx(
                     'p-4 rounded-xl border-2 text-left transition-all',
                     studyMode === 'classic'
@@ -731,11 +738,13 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                     <SparklesIcon className="h-5 w-5 text-blue-600" />
                     <h3 className="font-semibold text-gray-900 text-sm">Classic</h3>
                   </div>
-                  <p className="text-xs text-gray-600">Flip cards and self-grade</p>
+                  <p id="mode-classic-desc" className="text-xs text-gray-600">Flip cards and self-grade</p>
                 </button>
 
                 <button
                   onClick={() => setStudyMode('multiple-choice')}
+                  aria-pressed={studyMode === 'multiple-choice'}
+                  aria-describedby="mode-mc-desc"
                   className={clsx(
                     'p-4 rounded-xl border-2 text-left transition-all',
                     studyMode === 'multiple-choice'
@@ -747,7 +756,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                     <ListBulletIcon className="h-5 w-5 text-purple-600" />
                     <h3 className="font-semibold text-gray-900 text-sm">Multiple Choice</h3>
                   </div>
-                  <p className="text-xs text-gray-600">AI-generated answer options</p>
+                  <p id="mode-mc-desc" className="text-xs text-gray-600">AI-generated answer options</p>
                 </button>
               </div>
             </div>

@@ -110,7 +110,7 @@ export default function ClassroomDetailPage() {
         <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
           <span className="text-xs text-gray-500">Join Code:</span>
           <code className="text-sm font-bold text-gray-900 tracking-wider">{classroom.joinCode}</code>
-          <button onClick={copyCode} className="text-gray-400 hover:text-blue-600" title="Copy">
+          <button onClick={copyCode} className="text-gray-600 hover:text-blue-600" title="Copy">
             <ClipboardDocumentIcon className="h-4 w-4" />
           </button>
           {copiedCode && <span className="text-xs text-green-600">Copied!</span>}
@@ -120,7 +120,7 @@ export default function ClassroomDetailPage() {
       {/* Students */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <UserGroupIcon className="h-5 w-5 text-gray-400" />
+          <UserGroupIcon className="h-5 w-5 text-gray-600" />
           <h2 className="text-base font-semibold text-gray-900">
             Students ({classroom.students?.length || 0})
           </h2>
@@ -175,7 +175,7 @@ export default function ClassroomDetailPage() {
                       <p className="text-xs text-gray-500">{a.flashcardSetId?.title} &middot; {a.flashcardSetId?.cardCount} cards</p>
                     </div>
                     {a.dueDate && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-600">
                         Due {new Date(a.dueDate).toLocaleDateString()}
                       </span>
                     )}
@@ -187,7 +187,7 @@ export default function ClassroomDetailPage() {
                     <span className="inline-flex items-center gap-1 text-yellow-600">
                       <ClockIcon className="h-3.5 w-3.5" /> {inProgress} in progress
                     </span>
-                    <span className="inline-flex items-center gap-1 text-gray-400">
+                    <span className="inline-flex items-center gap-1 text-gray-600">
                       <XCircleIcon className="h-3.5 w-3.5" /> {notStarted} not started
                     </span>
                   </div>

@@ -54,20 +54,25 @@ export default function CelebrationModal({ achievements, onClose }: CelebrationM
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="celebration-modal-title"
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       >
         {/* Confetti */}
-        {confettiPieces.map((piece) => (
-          <motion.div
-            key={piece.id}
-            initial={{ y: -20, x: `${piece.x}vw`, opacity: 1 }}
-            animate={{ y: '110vh', opacity: 0 }}
-            transition={{ duration: 2 + Math.random(), delay: piece.delay, ease: 'linear' }}
-            className="fixed top-0 w-2 h-2 rounded-full"
-            style={{ backgroundColor: piece.color, left: `${piece.x}%` }}
-          />
-        ))}
+        <div aria-hidden="true">
+          {confettiPieces.map((piece) => (
+            <motion.div
+              key={piece.id}
+              initial={{ y: -20, x: `${piece.x}vw`, opacity: 1 }}
+              animate={{ y: '110vh', opacity: 0 }}
+              transition={{ duration: 2 + Math.random(), delay: piece.delay, ease: 'linear' }}
+              className="fixed top-0 w-2 h-2 rounded-full"
+              style={{ backgroundColor: piece.color, left: `${piece.x}%` }}
+            />
+          ))}
+        </div>
 
         {/* Modal */}
         <motion.div
@@ -83,11 +88,12 @@ export default function CelebrationModal({ achievements, onClose }: CelebrationM
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 300 }}
             className="text-5xl mb-4"
+            aria-hidden="true"
           >
             {ICON_MAP[achievements[0].icon] || '\u{1F3C6}'}
           </motion.div>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+          <h2 id="celebration-modal-title" className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
             Achievement Unlocked!
           </h2>
 
@@ -108,6 +114,7 @@ export default function CelebrationModal({ achievements, onClose }: CelebrationM
 
           <button
             onClick={onClose}
+            aria-label="Close achievement modal"
             className="mt-6 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all shadow-lg"
           >
             Awesome!

@@ -78,7 +78,7 @@ export default function Header() {
                     : 'border-transparent text-blue-600 hover:border-blue-300 hover:text-blue-700'
                 }`}
               >
-                <Shield className="h-4 w-4" />
+                <Shield className="h-4 w-4" aria-hidden="true" />
                 Admin
               </Link>
             )}
@@ -144,13 +144,13 @@ export default function Header() {
 
             {/* Network Status */}
             {!isOnline && (
-              <span className="text-amber-500" title="You are offline">
-                <WifiOff className="w-4 h-4" />
+              <span className="text-amber-500" role="status" aria-label="You are offline">
+                <WifiOff className="w-4 h-4" aria-hidden="true" />
               </span>
             )}
             {isOnline && isSyncing && pendingCount > 0 && (
-              <span className="text-blue-500" title={`Syncing ${pendingCount} item${pendingCount !== 1 ? 's' : ''}...`}>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+              <span className="text-blue-500" role="status" aria-label={`Syncing ${pendingCount} item${pendingCount !== 1 ? 's' : ''}`}>
+                <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
               </span>
             )}
 
@@ -162,13 +162,13 @@ export default function Header() {
           <div className="md:hidden flex items-center space-x-4">
             {/* Mobile Network Status */}
             {!isOnline && (
-              <span className="text-amber-500" title="You are offline">
-                <WifiOff className="w-4 h-4" />
+              <span className="text-amber-500" role="status" aria-label="You are offline">
+                <WifiOff className="w-4 h-4" aria-hidden="true" />
               </span>
             )}
             {isOnline && isSyncing && pendingCount > 0 && (
-              <span className="text-blue-500" title={`Syncing ${pendingCount} item${pendingCount !== 1 ? 's' : ''}...`}>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+              <span className="text-blue-500" role="status" aria-label={`Syncing ${pendingCount} item${pendingCount !== 1 ? 's' : ''}`}>
+                <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
               </span>
             )}
             {session?.user && <UserMenu user={session.user} />}
@@ -217,7 +217,7 @@ export default function Header() {
                       : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
                   }`}
                 >
-                  <Shield className="h-4 w-4" />
+                  <Shield className="h-4 w-4" aria-hidden="true" />
                   Admin
                 </Link>
               )}

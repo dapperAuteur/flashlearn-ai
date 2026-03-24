@@ -254,7 +254,7 @@ export default function AdminRevenuePage() {
             {data.mrrTrend.length > 0 ? (
               <Line data={mrrTrendData} options={mrrChartOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-full text-gray-600 text-sm">
                 No MRR data available
               </div>
             )}
@@ -270,7 +270,7 @@ export default function AdminRevenuePage() {
             {data.totalActiveSubscribers > 0 ? (
               <Doughnut data={tierDoughnutData} options={doughnutOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-full text-gray-600 text-sm">
                 No active subscriptions
               </div>
             )}
@@ -287,7 +287,7 @@ export default function AdminRevenuePage() {
         </div>
 
         {data.recentTransactions.length === 0 ? (
-          <div className="px-4 sm:px-6 py-8 text-center text-gray-400 text-sm">
+          <div className="px-4 sm:px-6 py-8 text-center text-gray-600 text-sm">
             No transactions recorded yet
           </div>
         ) : (
@@ -314,7 +314,7 @@ export default function AdminRevenuePage() {
                       <span className="text-xs text-gray-500 truncate max-w-[160px]">
                         {tx.userId || tx.stripeCustomerId || "N/A"}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-600">
                         {new Date(tx.createdAt).toLocaleDateString()}
                       </span>
                     </div>

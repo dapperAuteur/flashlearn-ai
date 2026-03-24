@@ -423,6 +423,7 @@ const phases: Phase[] = [
           'Announcement banner (custom + AI-generated)',
           'Flagged content queue & moderation actions',
           'Coupon/promo code manager (via Stripe)',
+          'Admin-only card quantity selector for AI generation (1-50 cards)',
         ],
       },
       {
@@ -590,7 +591,7 @@ export default function RoadmapPage() {
                         ) : feature.status === 'in-progress' ? (
                           <Clock className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
                         ) : (
-                          <Circle className="h-4 w-4 text-gray-300 mt-0.5 flex-shrink-0" />
+                          <Circle className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
                         )}
                         <span className={feature.status === 'done' ? 'text-gray-700' : 'text-gray-600'}>{item}</span>
                       </li>

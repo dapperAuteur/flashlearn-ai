@@ -84,7 +84,7 @@ export default function ChallengeCard({ challenge, currentUserId }: ChallengeCar
         : null;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-5">
+    <article role="article" aria-label={`Challenge: ${setName}, status: ${statusInfo.label}`} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-5">
       {/* Top row: title + status badge */}
       <div className="flex items-start justify-between mb-2">
         <div className="min-w-0 flex-1">
@@ -95,7 +95,7 @@ export default function ChallengeCard({ challenge, currentUserId }: ChallengeCar
           ) : (
             <h3 className="text-lg font-semibold text-gray-900 truncate">{setName}</h3>
           )}
-          <p className="text-xs text-gray-400 font-mono mt-0.5">{challengeCode}</p>
+          <p className="text-xs text-gray-600 font-mono mt-0.5">{challengeCode}</p>
         </div>
         <span
           className={`flex-shrink-0 ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.classes}`}
@@ -105,30 +105,30 @@ export default function ChallengeCard({ challenge, currentUserId }: ChallengeCar
       </div>
 
       {/* Meta row */}
-      <div className="flex items-center gap-4 text-sm text-gray-500 mt-3">
+      <div className="flex items-center gap-4 text-sm text-gray-600 mt-3">
         <span className="inline-flex items-center gap-1">
-          <UserGroupIcon className="h-4 w-4" />
+          <UserGroupIcon className="h-4 w-4" aria-hidden="true" />
           {participants.length}/{maxParticipants} players
         </span>
 
         {status === 'active' && (
           <span className="inline-flex items-center gap-1">
-            <ClockIcon className="h-4 w-4" />
+            <ClockIcon className="h-4 w-4" aria-hidden="true" />
             {getTimeRemaining(expiresAt)}
           </span>
         )}
 
-        <span className="text-xs text-gray-400 capitalize">{studyMode}</span>
+        <span className="text-xs text-gray-600 capitalize">{studyMode}</span>
       </div>
 
       {/* Completed results for current user */}
       {status === 'completed' && currentParticipant && currentParticipant.rank > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3">
-          <TrophyIcon className="h-5 w-5 text-amber-500" />
+          <TrophyIcon className="h-5 w-5 text-amber-500" aria-hidden="true" />
           <span className="text-sm font-medium text-gray-700">
             Rank #{currentParticipant.rank}
           </span>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-600">
             Score: {currentParticipant.compositeScore}
           </span>
         </div>
@@ -139,15 +139,17 @@ export default function ChallengeCard({ challenge, currentUserId }: ChallengeCar
         <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
           <Link
             href={`/versus/results/${_id}`}
+            aria-label={`View results for ${setName}`}
             className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
           >
             View Results
           </Link>
           <Link
             href={`/versus/board/${_id}`}
+            aria-label={`View board for ${setName}`}
             className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
           >
-            <TableCellsIcon className="h-3.5 w-3.5 mr-1" />
+            <TableCellsIcon className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
             View Board
           </Link>
         </div>
@@ -158,12 +160,13 @@ export default function ChallengeCard({ challenge, currentUserId }: ChallengeCar
         <div className="mt-3 pt-3 border-t border-gray-100">
           <Link
             href={`/versus/play/${_id}`}
+            aria-label={`Play ${setName} challenge now`}
             className="w-full inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
           >
             Play Now
           </Link>
         </div>
       )}
-    </div>
+    </article>
   );
 }

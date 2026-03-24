@@ -332,9 +332,9 @@ export default function FeedbackWidget() {
           </div>
         ) : conversations.length === 0 ? (
           <div className="text-center py-10 px-4">
-            <MessageSquare className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">No conversations yet</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <MessageSquare className="w-10 h-10 text-gray-600 mx-auto mb-2" aria-hidden="true" />
+            <p className="text-sm text-gray-600">No conversations yet</p>
+            <p className="text-xs text-gray-600 mt-1">
               Start a new conversation to get help
             </p>
           </div>
@@ -349,7 +349,7 @@ export default function FeedbackWidget() {
               >
                 <div className="flex items-start gap-2">
                   <TypeIcon
-                    className={`w-4 h-4 mt-0.5 flex-shrink-0 ${TYPE_CONFIG[conv.type]?.color || 'text-gray-400'}`}
+                    className={`w-4 h-4 mt-0.5 flex-shrink-0 ${TYPE_CONFIG[conv.type]?.color || 'text-gray-600'}`}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -366,7 +366,7 @@ export default function FeedbackWidget() {
                       >
                         {conv.status}
                       </span>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-gray-600">
                         {formatTime(conv.lastMessageAt)}
                       </span>
                     </div>
@@ -598,7 +598,7 @@ export default function FeedbackWidget() {
                     </p>
                     {msg.attachments?.map((att) => renderAttachment(att))}
                     <p
-                      className={`text-[10px] mt-1 ${isUser ? 'text-blue-200' : 'text-gray-400'}`}
+                      className={`text-[10px] mt-1 ${isUser ? 'text-blue-200' : 'text-gray-600'}`}
                     >
                       {formatTime(msg.createdAt)}
                     </p>
@@ -648,7 +648,7 @@ export default function FeedbackWidget() {
             <button
               onClick={() => replyFileInputRef.current?.click()}
               disabled={uploading}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+              className="p-2 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
             >
               <Paperclip className="w-4 h-4" />
             </button>
@@ -695,9 +695,10 @@ export default function FeedbackWidget() {
       {!isOpen && (
         <button
           onClick={handleOpenPanel}
+          aria-label={hasUnread ? 'Open feedback - new messages' : 'Open feedback'}
           className="fixed bottom-5 right-5 z-50 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all hover:scale-105 flex items-center justify-center"
         >
-          <MessageSquare className="w-5 h-5" />
+          <MessageSquare className="w-5 h-5" aria-hidden="true" />
           {hasUnread && (
             <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
           )}
@@ -706,7 +707,7 @@ export default function FeedbackWidget() {
 
       {/* Panel */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 sm:bottom-5 sm:right-5 z-50 w-full sm:w-[320px] h-[480px] bg-white rounded-t-xl sm:rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+        <div role="dialog" aria-modal="true" aria-label="Help and feedback" className="fixed bottom-0 right-0 sm:bottom-5 sm:right-5 z-50 w-full sm:w-[320px] h-[480px] bg-white rounded-t-xl sm:rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
           {/* Panel header */}
           <div className="flex items-center justify-between px-4 py-3 bg-blue-500 text-white rounded-t-xl">
             <div className="flex items-center gap-2">
@@ -720,9 +721,10 @@ export default function FeedbackWidget() {
                 setSelectedConversationId(null);
                 setMessages([]);
               }}
+              aria-label="Close feedback panel"
               className="p-1 hover:bg-blue-600 rounded-md transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 

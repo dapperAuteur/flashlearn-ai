@@ -201,7 +201,7 @@ export default function AdminDashboardPage() {
             {signupsPerDay.length > 0 ? (
               <Line data={userGrowthData} options={chartOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-full text-gray-600 text-sm">
                 No signup data available
               </div>
             )}
@@ -217,7 +217,7 @@ export default function AdminDashboardPage() {
             {sessionsPerDay.length > 0 ? (
               <Bar data={studyActivityData} options={chartOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-full text-gray-600 text-sm">
                 No study session data available
               </div>
             )}
@@ -313,7 +313,7 @@ export default function AdminDashboardPage() {
                     {u.subscriptionTier || "Free"}
                   </span>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   {new Date(u.createdAt).toLocaleDateString()}
                 </p>
               </div>

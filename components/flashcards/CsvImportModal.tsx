@@ -95,8 +95,14 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Import Flashcards from CSV</h3>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="csv-import-modal-title"
+        aria-describedby="csv-import-instructions"
+        className="bg-gray-900 rounded-lg p-6 w-full max-w-md mx-4"
+      >
+        <h3 id="csv-import-modal-title" className="text-lg font-semibold mb-4">Import Flashcards from CSV</h3>
         
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -114,7 +120,7 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
             onChange={handleFileChange}
             className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
           />
-          <p className="text-xs text-gray-300 mt-1">
+          <p id="csv-import-instructions" className="text-xs text-gray-300 mt-1">
             Expected format: Front, Back columns
           </p>
         </div>
@@ -167,7 +173,7 @@ export default function CsvImportModal({ isOpen, onClose, onImportSuccess }: Csv
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+            className="px-4 py-2 text-gray-300 border border-gray-300 rounded hover:bg-gray-800"
           >
             Cancel
           </button>

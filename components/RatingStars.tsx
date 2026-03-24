@@ -58,14 +58,17 @@ export default function RatingStars({
             Thanks for your feedback! You rated this {submittedRating} out of 5.
           </p>
         ) : (
-          <div className="flex">
+          <div role="radiogroup" aria-label="Rate these flashcards" className="flex">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
+                role="radio"
+                aria-checked={(hoveredRating || submittedRating) >= star}
+                aria-label={`${star} star${star !== 1 ? 's' : ''}`}
                 className={`h-8 w-8 mx-1 flex items-center justify-center text-xl ${
                   (hoveredRating || submittedRating) >= star
                     ? 'text-yellow-500'
-                    : 'text-gray-300'
+                    : 'text-gray-400'
                 }`}
                 onClick={() => {
                   if (!isSubmitting) {
@@ -87,7 +90,7 @@ export default function RatingStars({
       </div>
       
       {initialRating > 0 && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-600">
           Rated {initialRating.toFixed(1)} by {totalRatings} users
         </p>
       )}

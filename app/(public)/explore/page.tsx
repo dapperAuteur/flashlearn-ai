@@ -188,7 +188,7 @@ export default function ExplorePage() {
                     {session && (
                       <button
                         onClick={(e) => { e.preventDefault(); setReportingSet(set); }}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                        className="p-1 text-gray-600 hover:text-red-500 transition-colors"
                         title="Report this set"
                       >
                         <FlagIcon className="h-4 w-4" />
@@ -252,7 +252,7 @@ export default function ExplorePage() {
         {/* Empty state */}
         {!isLoading && sets.length === 0 && (
           <div className="text-center py-16">
-            <BookOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <BookOpenIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {searchTerm ? `No sets matching "${searchTerm}"` : 'No public sets available yet'}
             </h3>
@@ -283,7 +283,7 @@ export default function ExplorePage() {
                   {session && (
                     <button
                       onClick={(e) => { e.preventDefault(); setReportingSet(set); }}
-                      className="absolute top-3 right-3 p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      className="absolute top-3 right-3 p-1 text-gray-600 hover:text-red-500 transition-colors"
                       title="Report this set"
                     >
                       <FlagIcon className="h-4 w-4" />

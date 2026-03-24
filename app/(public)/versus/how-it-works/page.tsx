@@ -252,7 +252,7 @@ export default function HowItWorksPage() {
                 >
                   <span className="font-medium text-gray-900 pr-4">{faq.q}</span>
                   <ChevronDownIcon
-                    className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform ${
+                    className={`h-5 w-5 text-gray-600 flex-shrink-0 transition-transform ${
                       openFaq === i ? 'rotate-180' : ''
                     }`}
                   />

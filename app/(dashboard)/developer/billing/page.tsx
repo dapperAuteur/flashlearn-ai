@@ -184,7 +184,7 @@ export default function BillingPage() {
                   Current Plan
                 </div>
               ) : plan.disabled ? (
-                <div className="w-full py-2 text-center text-sm font-medium text-gray-400 bg-gray-50 rounded-lg">
+                <div className="w-full py-2 text-center text-sm font-medium text-gray-600 bg-gray-50 rounded-lg">
                   {plan.cta}
                 </div>
               ) : (

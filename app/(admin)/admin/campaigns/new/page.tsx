@@ -226,7 +226,7 @@ export default function AdminCampaignNewPage() {
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/admin/campaigns"
-          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+          className="p-2 text-gray-600 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -310,7 +310,7 @@ export default function AdminCampaignNewPage() {
             placeholder="<h2>Hello!</h2><p>Your email content here...</p>"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 font-mono focus:ring-blue-500 focus:border-blue-500"
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-600 mt-1">
             Write raw HTML. It will be wrapped in the FlashLearnAI.WitUS.Online branded email template.
           </p>
         </div>
@@ -370,7 +370,7 @@ export default function AdminCampaignNewPage() {
               <h3 className="text-sm font-semibold text-gray-900">Email Preview</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                className="p-1 text-gray-600 hover:text-gray-600 rounded"
               >
                 <X className="h-5 w-5" />
               </button>

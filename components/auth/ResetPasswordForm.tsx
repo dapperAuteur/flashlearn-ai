@@ -116,7 +116,7 @@ export default function ResetPasswordForm() {
         </p>
       </div>
       <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             New Password

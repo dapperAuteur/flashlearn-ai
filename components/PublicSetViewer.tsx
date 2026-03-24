@@ -24,14 +24,23 @@ export default function PublicSetViewer({ flashcardSet }: PublicSetViewerProps) 
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 perspective">
+    <div role="list" aria-label="Flashcards" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 perspective">
       {flashcardSet.flashcards
         .filter(card => card._id)
         .map((card, index) => (
           <div
             key={card._id!.toString()}
+            role="listitem"
+            tabIndex={0}
+            aria-label={`Card ${index + 1}: ${flippedCardIndices.has(index) ? card.back : card.front}. Press Enter to flip.`}
             className={`flashcard cursor-pointer h-48 rounded-lg shadow-md ${flippedCardIndices.has(index) ? 'flipped' : ''}`}
             onClick={() => toggleFlip(index)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFlip(index);
+              }
+            }}
           >
             <div className="flashcard-inner relative w-full h-full text-center transition-transform duration-700 transform-style-preserve-3d">
               {/* Front Side */}
