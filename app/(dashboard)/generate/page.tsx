@@ -31,7 +31,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function GenerateFlashcardsPage(){
-  const { status } = useSession();
+  const { data: session, status } = useSession();
+  const isAdmin = session?.user?.role === 'Admin';
   const router = useRouter();
 
   // Core state and API logic is managed by this Hook
@@ -42,6 +43,8 @@ export default function GenerateFlashcardsPage(){
     setTitle,
     description,
     setDescription,
+    quantity,
+    setQuantity,
     flashcards,
     setFlashcards,
     isLoading,
@@ -241,6 +244,31 @@ export default function GenerateFlashcardsPage(){
                   </div>
                 </div>
               </div>
+
+              {/* Admin: Card Quantity Selector */}
+              {isAdmin && (
+                <div className="mt-6">
+                  <label htmlFor="quantityInput" className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-3">
+                    <SparklesIcon className="h-4 w-4" />
+                    <span>Card Quantity</span>
+                    <span className="text-xs font-normal text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">Admin</span>
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="number"
+                      id="quantityInput"
+                      min={1}
+                      max={50}
+                      value={quantity ?? ''}
+                      onChange={(e) => setQuantity(e.target.value ? Number(e.target.value) : undefined)}
+                      placeholder="Default (5-20)"
+                      disabled={anyActionInProgress}
+                      className="w-40 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-600"
+                    />
+                    <span className="text-xs text-gray-500">Leave empty for default range (5-20)</span>
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="mt-8 pt-6 border-t border-gray-200">

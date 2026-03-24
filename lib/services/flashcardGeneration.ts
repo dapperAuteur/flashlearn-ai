@@ -21,10 +21,15 @@ export interface GeneratedFlashcard {
 export async function generateFlashcardsFromAI(
   topic: string,
   requestId: string,
-  keyType?: ApiKeyType
+  keyType?: ApiKeyType,
+  quantity?: number
 ): Promise<GeneratedFlashcard[]> {
+  const quantityInstruction = quantity
+    ? `generate exactly ${quantity} flashcards`
+    : `generate a set of ${FLASHCARD_MIN} to ${FLASHCARD_MAX} flashcards`;
+
   const fullPrompt = `
-    Based on the following topic, generate a set of ${FLASHCARD_MIN} to ${FLASHCARD_MAX} flashcards.
+    Based on the following topic, ${quantityInstruction}.
     The topic is: "${topic}".
     IMPORTANT: Use only information from vetted, peer-reviewed, and trustworthy sources to generate the content for these flashcards.
     Please respond with ONLY a valid JSON array of objects. Each object should represent a flashcard and have two properties: "front" (the question or term) and "back" (the answer or definition).
