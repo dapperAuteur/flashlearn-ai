@@ -17,6 +17,7 @@ export const useFlashcardActions = () => {
     const [topic, setTopic] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [quantity, setQuantity] = useState<number | undefined>(undefined);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     
     const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +49,7 @@ export const useFlashcardActions = () => {
             const response = await fetch('/api/generate-flashcards', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ topic, title, description }),
+                body: JSON.stringify({ topic, title, description, ...(quantity !== undefined && { quantity }) }),
             });
             const data = await response.json();
             if (!response.ok) {
@@ -157,6 +158,7 @@ export const useFlashcardActions = () => {
         setTopic('');
         setTitle('');
         setDescription('');
+        setQuantity(undefined);
         setFlashcards([]);
         setApiError(null);
         setSaveSuccessMessage(null);
@@ -168,6 +170,7 @@ export const useFlashcardActions = () => {
         topic, setTopic,
         title, setTitle,
         description, setDescription,
+        quantity, setQuantity,
         flashcards, setFlashcards,
         isLoading, isSaving, isExporting,
         apiError,

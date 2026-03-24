@@ -9,6 +9,7 @@ import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 import dbConnect from "@/lib/db/dbConnect";
 import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering";
 import { generateFlashcardsFromAI } from "@/lib/services/flashcardGeneration";
+import { ADMIN_FLASHCARD_MIN, ADMIN_FLASHCARD_MAX } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
@@ -34,17 +35,32 @@ export async function POST(request: NextRequest) {
         const userId = session.user.id;
         await Logger.info(LogContext.AUTH, "User authenticated for flashcard generation.", { requestId, userId });
 
-        const { topic, title, description } = await request.json(); // Destructure title and description
-        // Corrected Logger.log call
+        const { topic, title, description, quantity } = await request.json();
         await Logger.info(LogContext.AI, "Flashcard generation request payload received.",{
             userId,
             requestId,
-            metadata: { topic, title, description }
+            metadata: { topic, title, description, quantity }
         });
 
         if (!topic || typeof topic !== 'string' || topic.trim() === '') {
             await Logger.warning(LogContext.AI, "Invalid topic provided.", { requestId, userId, metadata: { topic } });
             return NextResponse.json({ error: 'Topic is required' }, { status: 400 });
+        }
+
+        // Validate admin-only quantity parameter
+        let validatedQuantity: number | undefined;
+        if (quantity !== undefined && quantity !== null && quantity !== '') {
+            if (session.user.role !== 'Admin') {
+                await Logger.warning(LogContext.AUTH, "Non-admin attempted to use quantity parameter.", { requestId, userId });
+                return NextResponse.json({ error: 'Forbidden: quantity selection is admin-only' }, { status: 403 });
+            }
+            const parsed = Number(quantity);
+            if (!Number.isInteger(parsed) || parsed < ADMIN_FLASHCARD_MIN || parsed > ADMIN_FLASHCARD_MAX) {
+                return NextResponse.json({
+                    error: `Quantity must be an integer between ${ADMIN_FLASHCARD_MIN} and ${ADMIN_FLASHCARD_MAX}`
+                }, { status: 400 });
+            }
+            validatedQuantity = parsed;
         }
 
         const { limited, reason } = await checkRateLimit(userId);
@@ -54,46 +70,47 @@ export async function POST(request: NextRequest) {
         }
 
         // --- Re-implemented check for existing sets ---
-        const normalizedTopic = normalizeTopicForClustering(topic);
-        const existingSet = await FlashcardSetModel.findOne({
-          title: normalizedTopic,
-          isPublic: true,
-          // You could add other criteria here, like a minimum rating or usage count
-        });
+        // Skip cache when admin specifies a custom quantity (they want exact count)
+        if (!validatedQuantity) {
+          const normalizedTopic = normalizeTopicForClustering(topic);
+          const existingSet = await FlashcardSetModel.findOne({
+            title: normalizedTopic,
+            isPublic: true,
+          });
 
-        if (existingSet) {
-          await Logger.info(
-            LogContext.AI,
-            "Found and returning existing public flashcard set.",
-            { requestId, userId, metadata: { setId: existingSet._id, title: existingSet.title } }
-          );
+          if (existingSet) {
+            await Logger.info(
+              LogContext.AI,
+              "Found and returning existing public flashcard set.",
+              { requestId, userId, metadata: { setId: existingSet._id, title: existingSet.title } }
+            );
 
-          // Update usage count for the existing set
-          await FlashcardSetModel.findByIdAndUpdate(existingSet._id, { $inc: { usageCount: 1 } });
-          await AnalyticsLogger.trackEvent({
-            userId,
-            eventType: AnalyticsLogger.EventType.SHARED_FLASHCARDS_USED,
-            properties: {
+            await FlashcardSetModel.findByIdAndUpdate(existingSet._id, { $inc: { usageCount: 1 } });
+            await AnalyticsLogger.trackEvent({
+              userId,
+              eventType: AnalyticsLogger.EventType.SHARED_FLASHCARDS_USED,
+              properties: {
+                setId: existingSet._id.toString(),
+                topic: existingSet.title,
+                cardCount: existingSet.flashcards.length
+              }
+            });
+
+            return NextResponse.json({
+              flashcards: existingSet.flashcards,
               setId: existingSet._id.toString(),
-              topic: existingSet.title,
-              cardCount: existingSet.flashcards.length
-            }
-          });
-
-          return NextResponse.json({
-            flashcards: existingSet.flashcards,
-            setId: existingSet._id.toString(),
-            source: "shared",
-            rating: {
-              average: existingSet.ratings?.average || 0,
-              count: existingSet.ratings?.count || 0
-            }
-          });
+              source: "shared",
+              rating: {
+                average: existingSet.ratings?.average || 0,
+                count: existingSet.ratings?.count || 0
+              }
+            });
+          }
         }
         // --- End of re-implemented check ---
 
         await AnalyticsLogger.trackPromptSubmission(userId, topic);
-        const flashcards = await generateFlashcardsFromAI(topic, requestId);
+        const flashcards = await generateFlashcardsFromAI(topic, requestId, undefined, validatedQuantity);
         const durationMs = Date.now() - startTime;
 
         if (!flashcards || flashcards.length === 0) {
