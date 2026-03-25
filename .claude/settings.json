@@ -33,7 +33,8 @@
       "Bash(node -e \"const s = new \\(require\\(''@upstash/search''\\).Search\\)\\({ url: ''x'', token: ''x'' }\\); console.log\\(Object.getOwnPropertyNames\\(Object.getPrototypeOf\\(s\\)\\)\\)\")",
       "Bash(git status:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git rm:*)"
     ],
     "additionalDirectories": [
       "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/blog",
