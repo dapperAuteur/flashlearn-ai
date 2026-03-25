@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -type f -name *.prisma -o -name schema.prisma -o -name drizzle.config.ts -o -name .env*)",
+      "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/'\\(public\\)')",
+      "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/'\\(public\\)'/pricing/)",
+      "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/'\\(public\\)'/roadmap/)",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -path */node_modules -prune -o -type f -name middleware.ts -o -name *auth* -print)",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app -type f -name *route*)",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/'\\(public\\)'/docs -type f -name \"*.tsx\")",
+      "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/'\\(public\\)'/explore/)",
+      "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/'\\(public\\)'/versus/)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(ls \"/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\(teacher\\)/teacher/classrooms/\")",
+      "Bash(ls /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/u/[username])",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/users/[username]/activity)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/follows/[userId])",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/teams/[id]/members)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/teams/[id]/sets)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/teams/[id]/messages)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/teams/[id]/leaderboard)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(dashboard\\\\\\)/team/[id]/settings)",
+      "Bash(ls /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(dashboard\\\\\\)/team/)",
+      "Bash(ls /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(dashboard\\\\\\)/team/[id]/)",
+      "Bash(ls /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(dashboard\\\\\\)/team/create/)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/classrooms/[id]/sets)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/classrooms/[id]/analytics)",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/help/[slug])",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/help/[slug])",
+      "Bash(mkdir -p /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/admin/help/[id])",
+      "Bash(node -e \"const s = require\\(''''@upstash/search''''\\); console.log\\(Object.keys\\(s\\)\\)\")",
+      "Bash(node -e \"const s = new \\(require\\(''@upstash/search''\\).Search\\)\\({ url: ''x'', token: ''x'' }\\); console.log\\(Object.getOwnPropertyNames\\(Object.getPrototypeOf\\(s\\)\\)\\)\")",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/blog",
+      "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/teams/[id]/members",
+      "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/classrooms/[id]/sets",
+      "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/help/[slug]"
+    ]
+  }
+}
