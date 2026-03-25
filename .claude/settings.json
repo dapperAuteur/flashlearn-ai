@@ -40,7 +40,8 @@
       "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/blog",
       "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/teams/[id]/members",
       "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/classrooms/[id]/sets",
-      "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/help/[slug]"
+      "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/help/[slug]",
+      "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/api/users/[username]/activity"
     ]
   }
 }
