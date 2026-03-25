@@ -302,7 +302,7 @@ const phases: Phase[] = [
       {
         title: 'User Profiles',
         description: 'Public profiles with bio, achievements, and activity feeds.',
-        status: 'in-progress',
+        status: 'done',
         items: [
           'Custom usernames for leaderboard display',
           'Profile picture uploads via Cloudinary',
@@ -315,7 +315,7 @@ const phases: Phase[] = [
       {
         title: 'Teams & Classrooms',
         description: 'Study groups and teacher-led classrooms.',
-        status: 'in-progress',
+        status: 'done',
         items: [
           'Study teams with join codes and shared sets',
           'Team chat, leaderboards, and challenges',
@@ -328,7 +328,7 @@ const phases: Phase[] = [
       {
         title: 'Help Center & Knowledge Base',
         description: 'Searchable help docs and admin knowledge system.',
-        status: 'in-progress',
+        status: 'done',
         items: [
           'Public help documentation center',
           'Searchable help articles by category',
