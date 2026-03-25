@@ -16,9 +16,16 @@ const footerLinks = {
     { label: 'Versus Mode Guide', href: '/docs/api/versus-mode' },
     { label: 'Developer Portal', href: '/developer' },
   ],
+  Resources: [
+    { label: 'Blog', href: '/blog' },
+    { label: 'Help Center', href: '/help' },
+  ],
   Company: [
+    { label: 'About', href: '/about' },
+    { label: 'Contact', href: '/contact' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
     { label: 'Sign Up', href: '/auth/signup' },
-    { label: 'Sign In', href: '/auth/signin' },
   ],
 };
 
@@ -57,7 +64,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-gray-300 hover:text-white transition-colors"
+                      className="text-sm text-gray-300 hover:text-white transition-colors inline-flex items-center min-h-[44px]"
                     >
                       {link.label}
                     </Link>
@@ -99,16 +106,22 @@ export default function Footer() {
             <p className="text-xs text-gray-500">
               &copy; {year} FlashLearnAI.WitUS.Online. All rights reserved.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
+              <Link href="/privacy" className="text-xs text-gray-500 hover:text-gray-300 min-h-[44px] inline-flex items-center">
+                Privacy
+              </Link>
+              <Link href="/terms" className="text-xs text-gray-500 hover:text-gray-300 min-h-[44px] inline-flex items-center">
+                Terms
+              </Link>
               <a
                 href="/api/v1/openapi"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-gray-500 hover:text-gray-300"
+                className="text-xs text-gray-500 hover:text-gray-300 min-h-[44px] inline-flex items-center"
               >
                 OpenAPI Spec
               </a>
-              <Link href="/docs/api" className="text-xs text-gray-500 hover:text-gray-300">
+              <Link href="/docs/api" className="text-xs text-gray-500 hover:text-gray-300 min-h-[44px] inline-flex items-center">
                 API Reference
               </Link>
             </div>

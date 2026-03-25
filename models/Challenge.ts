@@ -30,8 +30,9 @@ export interface IChallenge extends Document {
   studyDirection: 'front-to-back' | 'back-to-front';
   cardCount: number;
   cardIds: string[];
-  scope: 'direct' | 'classroom' | 'public';
+  scope: 'direct' | 'classroom' | 'team' | 'public';
   classroomId?: mongoose.Types.ObjectId;
+  teamId?: mongoose.Types.ObjectId;
   status: 'pending' | 'active' | 'completed' | 'expired';
   expiresAt: Date;
   participants: IChallengeParticipant[];
@@ -101,10 +102,11 @@ const ChallengeSchema = new Schema<IChallenge>(
     cardIds: [{ type: String }],
     scope: {
       type: String,
-      enum: ['direct', 'classroom', 'public'],
+      enum: ['direct', 'classroom', 'team', 'public'],
       default: 'direct',
     },
     classroomId: { type: Schema.Types.ObjectId, ref: 'Classroom' },
+    teamId: { type: Schema.Types.ObjectId, ref: 'Team' },
     status: {
       type: String,
       enum: ['pending', 'active', 'completed', 'expired'],

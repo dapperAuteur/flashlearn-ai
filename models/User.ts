@@ -135,6 +135,41 @@ const UserSchema = new Schema<IUser>({
   pendingEmailExpires: {
     type: Date,
   },
+  // Social & profile
+  bio: {
+    type: String,
+    maxlength: [500, 'Bio must be at most 500 characters'],
+    trim: true,
+  },
+  studyInterests: [{
+    type: String,
+    trim: true,
+    maxlength: 30,
+  }],
+  isProfilePublic: {
+    type: Boolean,
+    default: true,
+  },
+  showStats: {
+    type: Boolean,
+    default: true,
+  },
+  showActivity: {
+    type: Boolean,
+    default: true,
+  },
+  followersCount: {
+    type: Number,
+    default: 0,
+  },
+  followingCount: {
+    type: Number,
+    default: 0,
+  },
+  onboardingCompleted: {
+    type: Boolean,
+    default: false,
+  },
   // Attribution / referral tracking
   signupSource: { type: String },
   utmSource: { type: String },

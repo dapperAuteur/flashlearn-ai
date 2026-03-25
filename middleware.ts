@@ -66,6 +66,14 @@ export async function middleware(request: NextRequest) {
     '/explore',
     '/results',
     '/versus/how-it-works',
+    '/blog',
+    '/about',
+    '/contact',
+    '/privacy',
+    '/terms',
+    '/u/',
+    '/teams/',
+    '/help',
     '/'
   ];
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
