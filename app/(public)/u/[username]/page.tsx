@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import PublicHeader from '@/components/layout/PublicHeader';
 import FollowButton from '@/components/social/FollowButton';
@@ -72,10 +73,13 @@ export default async function PublicProfilePage({ params }: Props) {
               {/* Avatar */}
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {user.profilePicture ? (
-                  <img
+                  <Image
                     src={user.profilePicture}
                     alt={`${user.name}'s profile picture`}
                     className="w-full h-full object-cover"
+                    width={96}
+                    height={96}
+                    unoptimized
                   />
                 ) : (
                   <span className="text-2xl sm:text-3xl font-bold text-white">

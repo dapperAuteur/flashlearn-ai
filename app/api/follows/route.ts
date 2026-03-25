@@ -1,4 +1,4 @@
-/* eslint-disable @typescript/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';

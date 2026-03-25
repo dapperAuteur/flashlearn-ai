@@ -1,4 +1,4 @@
-/* eslint-disable @typescript/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db/dbConnect';
 import { User } from '@/models/User';
