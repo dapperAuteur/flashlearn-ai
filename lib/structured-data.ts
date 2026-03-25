@@ -1,5 +1,131 @@
 export const BASE_URL = 'https://flashlearnai.witus.online';
 
+export function organizationSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'FlashLearnAI',
+    url: BASE_URL,
+    logo: `${BASE_URL}/icon-512.png`,
+    description: 'AI-powered flashcard creation and multiplayer study challenges',
+    parentOrganization: {
+      '@type': 'Organization',
+      name: 'WitUS.Online',
+      url: 'https://witus.online',
+    },
+  };
+}
+
+export function softwareApplicationSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'FlashLearn AI',
+    applicationCategory: 'EducationalApplication',
+    operatingSystem: 'Web',
+    url: BASE_URL,
+    description: 'AI-powered flashcard creation and multiplayer study challenges. Generate flashcards from text, PDFs, YouTube, audio, and images.',
+    offers: [
+      {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        description: 'Free tier with 3 AI-generated sets per month',
+      },
+      {
+        '@type': 'Offer',
+        price: '10.00',
+        priceCurrency: 'USD',
+        description: 'Monthly Pro with unlimited AI generation',
+      },
+      {
+        '@type': 'Offer',
+        price: '100.00',
+        priceCurrency: 'USD',
+        description: 'Lifetime Learner — one-time payment',
+      },
+    ],
+    provider: {
+      '@type': 'Organization',
+      name: 'FlashLearnAI',
+      url: BASE_URL,
+    },
+  };
+}
+
+export function faqPageSchema(items: { question: string; answer: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map(item => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+export function blogPostSchema({
+  title,
+  date,
+  author,
+  excerpt,
+  slug,
+}: {
+  title: string;
+  date: string;
+  author: string;
+  excerpt: string;
+  slug: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    datePublished: date,
+    author: {
+      '@type': 'Person',
+      name: author,
+    },
+    description: excerpt,
+    url: `${BASE_URL}/blog/${slug}`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'FlashLearnAI',
+      url: BASE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${BASE_URL}/icon-512.png`,
+      },
+    },
+  };
+}
+
+export function profilePageSchema({
+  name,
+  username,
+  bio,
+}: {
+  name: string;
+  username: string;
+  bio?: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    mainEntity: {
+      '@type': 'Person',
+      name,
+      identifier: username,
+      description: bio || `${name}'s profile on FlashLearn AI`,
+      url: `${BASE_URL}/u/${username}`,
+    },
+  };
+}
+
 export function versusEventSchema({
   topic,
   code,

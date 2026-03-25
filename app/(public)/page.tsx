@@ -367,6 +367,68 @@ const FeaturesShowcase = () => {
   );
 };
 
+// Social & Collaboration Section
+const SocialSection = () => (
+  <section className="py-20 bg-white" aria-labelledby="social-heading">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-16">
+        <div className="inline-flex items-center space-x-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <Users className="h-4 w-4" />
+          <span>Social &amp; Collaboration</span>
+        </div>
+        <h2 id="social-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Learn Better Together
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Build your learning community with profiles, teams, and classrooms. Study is more fun when it&apos;s social.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+          <div className="bg-blue-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
+            <Users className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Public Profiles</h3>
+          <p className="text-gray-600">
+            Showcase your learning journey. Share your stats, achievements, and flashcard sets with a personalized profile page.
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
+          <div className="bg-purple-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
+            <Target className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Study Teams</h3>
+          <p className="text-gray-600">
+            Create or join study groups. Share flashcard sets, chat with teammates, and compete on team leaderboards.
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-8 border border-green-100">
+          <div className="bg-green-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
+            <BookOpen className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Classrooms</h3>
+          <p className="text-gray-600">
+            Teachers can create classrooms, assign flashcard sets, track student progress, and run classroom-wide challenges.
+          </p>
+        </div>
+      </div>
+
+      <div className="text-center mt-12">
+        <Link
+          href="/auth/signup"
+          className="inline-flex items-center px-6 py-3 min-h-[44px] bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors"
+        >
+          Join the Community
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </div>
+    </div>
+  </section>
+);
+
 // Developer API Highlight Section
 const DeveloperAPISection = () => (
   <section className="py-20 bg-gray-900 text-white" aria-labelledby="dev-api-heading">
@@ -533,7 +595,8 @@ export default async function Home() {
         {!isAuthenticated && (
           <>
             <FeaturesShowcase />
-            <div className="bg-white pb-12 text-center">
+            <SocialSection />
+            <div className="bg-gray-50 pb-12 text-center">
               <Link href="/roadmap" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                 See everything we&apos;re building →
               </Link>

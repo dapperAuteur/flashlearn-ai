@@ -33,6 +33,15 @@ export interface IUser extends Document {
   pendingEmail?: string;
   pendingEmailToken?: string;
   pendingEmailExpires?: Date;
+  // Social & profile
+  bio?: string;
+  studyInterests?: string[];
+  isProfilePublic?: boolean;
+  showStats?: boolean;
+  showActivity?: boolean;
+  followersCount?: number;
+  followingCount?: number;
+  onboardingCompleted?: boolean;
   // Attribution / referral tracking
   signupSource?: string;
   utmSource?: string;
