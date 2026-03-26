@@ -270,6 +270,33 @@ export default function PricingPage() {
         </div>
       )}
 
+      {/* CashApp Fee-Free Payment Option */}
+      <section className="max-w-lg mx-auto mt-12" aria-labelledby="cashapp-heading">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 sm:p-6 text-center">
+          <h2 id="cashapp-heading" className="text-lg font-bold text-gray-900 mb-2">
+            Pay Fee-Free with Cash App
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Avoid processing fees &mdash; pay exactly <strong>$100 for Lifetime</strong> or <strong>$10/mo for Pro</strong>.
+          </p>
+          <div className="flex justify-center mb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/cashapp-qr.jpg"
+              alt="Scan to pay $centenarian on Cash App"
+              className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg shadow-sm"
+              width={192}
+              height={192}
+            />
+          </div>
+          <p className="text-base font-semibold text-green-800 mb-2">$centenarian</p>
+          <p className="text-xs text-gray-500 leading-relaxed max-w-sm mx-auto">
+            Send your payment and include your FlashLearnAI email in the note.
+            We&apos;ll activate your account within 24 hours.
+          </p>
+        </div>
+      </section>
+
       {/* API Pricing Section */}
       <section className="max-w-3xl mx-auto mt-16 sm:mt-20" aria-labelledby="api-pricing-heading">
         <div className="text-center mb-8">
