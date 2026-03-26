@@ -34,7 +34,11 @@
       "Bash(git status:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/roadmap/)",
+      "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/versus/)",
+      "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/explore/)",
+      "Bash(git branch:*)"
     ],
     "additionalDirectories": [
       "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/blog",
