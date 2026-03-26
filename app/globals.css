@@ -103,6 +103,18 @@ body {
   }
 }
 
+/* Safe area padding for mobile tab bar (iOS notch) */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Add bottom padding to main content when mobile tab bar is visible */
+@media (max-width: 767px) {
+  main {
+    padding-bottom: 4rem;
+  }
+}
+
 /* Global focus-visible styles for keyboard navigation */
 *:focus-visible {
   outline: 2px solid #3b82f6;
