@@ -397,8 +397,8 @@ const phases: Phase[] = [
       },
       {
         title: 'White-Label Starter App',
-        description: 'Full-featured study app schools and companies deploy as their own — coming soon.',
-        status: 'in-progress' as Status,
+        description: 'Full-featured study app schools and companies deploy as their own.',
+        status: 'done' as Status,
         items: [
           'Next.js app powered entirely by the Public API',
           'Single-file branding config (name, colors, logo, features)',
@@ -473,7 +473,7 @@ const phases: Phase[] = [
       {
         title: 'White-Label Starter App',
         description: 'Deployable study app for schools and companies — powered by the Public API.',
-        status: 'in-progress',
+        status: 'done',
         items: [
           'Full-mirror Next.js app using only the Public API',
           'Branding config: name, colors, logo, feature toggles',
