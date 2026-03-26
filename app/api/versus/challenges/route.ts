@@ -8,6 +8,7 @@ import { FlashcardSet } from '@/models/FlashcardSet';
 import { User } from '@/models/User';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 import { generateChallengeCode } from '@/lib/utils/challengeCode';
+import { createShortLink, toSwitchySlug } from '@/lib/switchy';
 
 const MAX_PARTICIPANTS: Record<string, number> = {
   direct: 10,
@@ -156,6 +157,23 @@ export async function POST(request: NextRequest) {
     }],
     maxParticipants: finalMax,
   });
+
+  // Fire-and-forget: generate a tracked short link for the challenge
+  const siteUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
+  createShortLink({
+    url: `${siteUrl}/versus/preview/${challengeCode}`,
+    slug: toSwitchySlug('v', challengeCode.toLowerCase()),
+    title: `FlashLearn Challenge: ${challenge.setName}`,
+    description: `Join this flashcard battle on ${challenge.setName}!`,
+    tags: ['versus', 'challenge'],
+  }).then(async (link) => {
+    if (link) {
+      await Challenge.updateOne(
+        { _id: challenge._id },
+        { shortLinkId: link.id, shortLinkUrl: link.short_url }
+      );
+    }
+  }).catch(() => { /* non-critical */ });
 
   return NextResponse.json({
     challenge,

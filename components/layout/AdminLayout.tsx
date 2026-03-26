@@ -29,6 +29,7 @@ import {
   LogOut,
   ArrowLeft,
   Share2,
+  Link2,
 } from "lucide-react";
 
 type AdminLayoutProps = {
@@ -81,6 +82,7 @@ const navGroups: NavGroup[] = [
     label: "Growth",
     items: [
       { label: "Shares & Referrals", href: "/admin/shares", icon: Share2 },
+      { label: "Short Links", href: "/admin/links", icon: Link2 },
     ],
   },
   {

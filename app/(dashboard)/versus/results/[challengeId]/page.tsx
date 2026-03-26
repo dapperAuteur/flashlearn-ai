@@ -40,6 +40,7 @@ interface Challenge {
   expiresAt: string;
   participants: Participant[];
   maxParticipants: number;
+  shortLinkUrl?: string;
 }
 
 interface CompositeScore {
@@ -200,6 +201,7 @@ export default function ResultsPage() {
           isOpen={showShareModal}
           challengeCode={challenge.challengeCode}
           challengeUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/versus/join/${challenge.challengeCode}`}
+          shortUrl={challenge.shortLinkUrl}
           onClose={() => setShowShareModal(false)}
         />
       </div>

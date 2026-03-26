@@ -6,6 +6,7 @@ import dbConnect from '@/lib/db/dbConnect';
 import { authOptions } from '@/lib/auth/auth';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { StudySession } from '@/models/StudySession';
+import { createShortLink, toSwitchySlug } from '@/lib/switchy';
 
 /**
  * POST /api/study/sessions/[id]/share
@@ -45,10 +46,29 @@ export async function POST(
     studySession.isShareable = !studySession.isShareable;
     await studySession.save();
 
+    // Fire-and-forget: generate a tracked short link when session becomes shareable
+    if (studySession.isShareable && !studySession.shortLinkId) {
+      const siteUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
+      createShortLink({
+        url: `${siteUrl}/results/${studySession.sessionId}`,
+        slug: toSwitchySlug('r', studySession.sessionId),
+        title: `FlashLearn Study Results${studySession.setName ? `: ${studySession.setName}` : ''}`,
+        description: 'Check out my study session results on FlashLearnAI!',
+        tags: ['results', 'study'],
+      }).then(async (link) => {
+        if (link) {
+          await StudySession.updateOne(
+            { _id: studySession._id },
+            { shortLinkId: link.id, shortLinkUrl: link.short_url }
+          );
+        }
+      }).catch(() => { /* non-critical */ });
+    }
+
     const host = request.headers.get('host') || 'localhost:3000';
     const forwardedProto = request.headers.get('x-forwarded-proto');
     const protocol = forwardedProto || (host.includes('localhost') ? 'http' : 'https');
-    const shareUrl = `${protocol}://${host}/results/${studySession.sessionId}`;
+    const shareUrl = studySession.shortLinkUrl || `${protocol}://${host}/results/${studySession.sessionId}`;
 
     await Logger.info(LogContext.STUDY, 'Session sharing toggled', {
       userId: session.user.id,

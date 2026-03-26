@@ -38,7 +38,8 @@
       "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/roadmap/)",
       "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/versus/)",
       "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/explore/)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app -path *admin* -name *.tsx)"
     ],
     "additionalDirectories": [
       "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/blog",

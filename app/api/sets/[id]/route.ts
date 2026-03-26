@@ -9,6 +9,7 @@ import { Profile } from '@/models/Profile';
 import { authOptions } from '@/lib/auth/auth';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
+import { createShortLink, toSwitchySlug } from '@/lib/switchy';
 
 // GET /api/sets/[id] - Fetch full set with flashcards
 export async function GET(
@@ -161,9 +162,28 @@ export async function PATCH(
       return NextResponse.json({ error: 'Set not found or access denied' }, { status: 404 });
     }
 
-    Logger.info(LogContext.FLASHCARD, 'Flashcard set updated', { 
-      setId, 
-      userId: session.user.id 
+    // Fire-and-forget: generate a tracked short link when set becomes public
+    if (updatedSet.isPublic && !updatedSet.shortLinkId) {
+      const siteUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
+      createShortLink({
+        url: `${siteUrl}/sets/${setId}`,
+        slug: toSwitchySlug('s', updatedSet.title || setId),
+        title: `FlashLearn: ${updatedSet.title}`,
+        description: updatedSet.description || `Study this flashcard set on FlashLearnAI`,
+        tags: ['set', 'flashcards'],
+      }).then(async (link) => {
+        if (link) {
+          await FlashcardSet.updateOne(
+            { _id: setId },
+            { shortLinkId: link.id, shortLinkUrl: link.short_url }
+          );
+        }
+      }).catch(() => { /* non-critical */ });
+    }
+
+    Logger.info(LogContext.FLASHCARD, 'Flashcard set updated', {
+      setId,
+      userId: session.user.id
     });
 
     return NextResponse.json(updatedSet);

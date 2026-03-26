@@ -24,6 +24,7 @@ interface CreatedChallenge {
   _id: string;
   challengeCode: string;
   setName: string;
+  shortLinkUrl?: string;
 }
 
 export default function CreateChallengePage() {
@@ -132,6 +133,7 @@ export default function CreateChallengePage() {
         _id: data.challenge._id,
         challengeCode: data.challenge.challengeCode,
         setName: data.challenge.setName,
+        shortLinkUrl: data.challenge.shortLinkUrl || undefined,
       });
       setShowShareModal(true);
     } catch {
@@ -537,6 +539,7 @@ export default function CreateChallengePage() {
           isOpen={showShareModal}
           challengeCode={createdChallenge.challengeCode}
           challengeUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/versus/join/${createdChallenge.challengeCode}`}
+          shortUrl={createdChallenge.shortLinkUrl}
           onClose={() => {
             setShowShareModal(false);
             router.push('/versus');
