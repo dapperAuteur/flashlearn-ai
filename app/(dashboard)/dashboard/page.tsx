@@ -14,6 +14,7 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import ReviewSchedule from '@/components/dashboard/ReviewSchedule';
+import DailyGoal from '@/components/dashboard/DailyGoal';
 import { getSubscriptionDisplay, shouldShowUpgradeCTA } from '@/lib/utils/subscription';
 
 interface StudyStats {
@@ -118,6 +119,9 @@ export default function DashboardPage() {
             : 'Start studying to build your streak.'}
         </p>
       </div>
+
+      {/* Daily Goal & Streak */}
+      <DailyGoal />
 
       {/* Review Schedule */}
       <ReviewSchedule />
