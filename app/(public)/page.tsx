@@ -508,10 +508,10 @@ const DeveloperAPISection = () => (
 
       {/* White-label teaser */}
       <div className="max-w-xl mx-auto mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 text-center">
-        <p className="text-sm font-medium text-purple-300">White-Label App — Available Now</p>
+        <p className="text-sm font-medium text-purple-300">White-Label Study App — From $499</p>
         <p className="text-xs text-gray-400 mt-1">
-          Deploy your own branded study app powered by the API. Custom name, colors, logo. Perfect for schools and edtech companies.{' '}
-          <a href="/docs/api/getting-started" className="underline text-purple-300 hover:text-white">Get started &rarr;</a>
+          Deploy your own branded flashcard platform. Your name, colors, domain. AI generation and spaced repetition included.{' '}
+          <a href="/pricing#api-pricing-heading" className="underline text-purple-300 hover:text-white">View plans &rarr;</a>
         </p>
       </div>
     </div>

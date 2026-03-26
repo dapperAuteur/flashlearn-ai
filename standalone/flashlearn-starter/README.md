@@ -4,6 +4,19 @@ A ready-to-deploy study app powered by the [FlashLearnAI.WitUS.Online](https://f
 
 **No database needed.** All data is stored and managed by the FlashLearnAI.WitUS.Online API.
 
+## License
+
+This is a **commercial product**. A valid license is required to deploy.
+
+| License | Price | Includes |
+|---------|-------|----------|
+| **Standard** | $499 one-time | 1 domain, branding editor, Vercel deploy, community support |
+| **School & Enterprise** | $999/year | Unlimited domains, priority support, continuous updates, Pro API tier |
+
+API usage is billed separately per your [API tier](https://flashlearnai.witus.online/pricing).
+
+**Purchase:** [Contact us](mailto:admin.flashlearnai@awews.com) or visit [flashlearnai.witus.online/pricing](https://flashlearnai.witus.online/pricing)
+
 ## Features
 
 - AI flashcard generation from any topic
@@ -14,17 +27,18 @@ A ready-to-deploy study app powered by the [FlashLearnAI.WitUS.Online](https://f
 - Usage tracking dashboard
 - **White-label branding** — customize name, colors, logo, and features
 - **Admin branding dashboard** at `/admin/branding`
+- **Admin SEO dashboard** at `/admin/seo`
 
 ## Quick Start
 
-### 1. Get an API Key
+### 1. Get Your API Key
 
-Sign up at [flashlearnai.witus.online/developer](https://flashlearnai.witus.online/developer) and create a Public API key (free).
+After purchasing your license, you'll receive access to this repository and a FlashLearnAI API key.
 
 ### 2. Clone and Configure
 
 ```bash
-git clone https://github.com/your-repo/flashlearn-starter.git
+git clone <your-private-repo-url>
 cd flashlearn-starter
 cp .env.example .env.local
 ```
@@ -71,9 +85,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 #### Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-repo/flashlearn-starter)
-
-Add `FLASHLEARN_API_KEY` as an environment variable in the Vercel dashboard.
+Add `FLASHLEARN_API_KEY` as an environment variable in the Vercel dashboard, then deploy.
 
 #### Other Hosts
 
@@ -86,23 +98,18 @@ npm start
 ## Project Structure
 
 ```
-branding.config.ts    ← Edit this to customize branding
-.env.local            ← Your API key goes here
-lib/api.ts            ← API client (talks to FlashLearnAI.WitUS.Online)
-lib/branding.ts       ← Branding helper functions
-components/           ← Reusable UI components
-  Navbar.tsx          ← Respects branding config
-  Footer.tsx          ← Shows "Powered by" badge
-  FlashcardDisplay.tsx← Card flip + answer buttons
-app/                  ← Next.js pages
-  generate/           ← AI flashcard generation
-  sets/               ← Set management
-  explore/            ← Browse public sets
-  study/              ← Spaced repetition sessions
-  evaluate/           ← AI answer grading
-  versus/             ← Competitive challenges
-  usage/              ← API usage dashboard
-  admin/branding/     ← Visual branding editor
+branding.config.ts    <- Edit this to customize branding
+seo.config.ts         <- SEO metadata for all pages
+.env.local            <- Your API key goes here
+lib/api.ts            <- API client (talks to FlashLearnAI.WitUS.Online)
+lib/branding.ts       <- Branding helper functions
+components/           <- Reusable UI components
+  Navbar.tsx          <- Respects branding config
+  Footer.tsx          <- Shows "Powered by" badge
+  FlashcardDisplay.tsx<- Card flip + answer buttons
+app/                  <- Next.js pages (21 routes)
+  admin/branding/     <- Visual branding editor
+  admin/seo/          <- SEO metadata editor
 ```
 
 ## API Pricing
@@ -120,9 +127,10 @@ app/                  ← Next.js pages
 - [Interactive API Reference](https://flashlearnai.witus.online/docs/api)
 - [Tutorials](https://flashlearnai.witus.online/docs/api/generation)
 
-## License
+## Support
 
-MIT — use it however you want. The "Powered by FlashLearnAI.WitUS.Online" badge is optional but appreciated.
+- **Standard license:** Community support via GitHub issues
+- **School & Enterprise:** Priority email support at admin.flashlearnai@awews.com
 
 ---
 

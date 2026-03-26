@@ -337,11 +337,42 @@ export default function PricingPage() {
           </Link>
         </div>
 
-        <div className="mt-6 p-4 bg-purple-50 rounded-xl border border-purple-100 text-center">
-          <p className="text-sm font-medium text-purple-900">White-Label App — Available Now</p>
-          <p className="text-xs text-purple-700 mt-1">
-            Deploy your own branded study app powered by the API. Custom name, colors, logo, and features. Perfect for schools and companies.{' '}
-            <a href="/docs/api/getting-started" className="underline font-medium">Get started &rarr;</a>
+        {/* White-Label Pricing */}
+        <div className="mt-8 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-200 p-6">
+          <h3 className="text-lg font-bold text-gray-900 text-center mb-2">White-Label Study App</h3>
+          <p className="text-sm text-gray-600 text-center mb-6 max-w-lg mx-auto">
+            Deploy your own branded flashcard platform. AI generation, spaced repetition, versus mode &mdash; your name, your colors, your domain.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
+            <div className="bg-white rounded-xl border border-gray-200 p-5 text-center">
+              <p className="text-sm font-semibold text-gray-900">Standard License</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">$499</p>
+              <p className="text-xs text-gray-500">one-time</p>
+              <ul className="text-xs text-gray-600 mt-3 space-y-1.5 text-left">
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />1 domain deployment</li>
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />Full branding &amp; SEO editors</li>
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />One-click Vercel deploy</li>
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />Private GitHub repo access</li>
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />Community support</li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-xl border-2 border-purple-300 p-5 text-center relative">
+              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-xs font-semibold px-3 py-0.5 rounded-full">Best Value</span>
+              <p className="text-sm font-semibold text-gray-900">School &amp; Enterprise</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">$999</p>
+              <p className="text-xs text-gray-500">/year</p>
+              <ul className="text-xs text-gray-600 mt-3 space-y-1.5 text-left">
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />Unlimited domains</li>
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />Priority support</li>
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />Continuous updates</li>
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />Pro API tier included</li>
+                <li className="flex items-start gap-1.5"><CheckIcon className="h-3.5 w-3.5 text-green-500 mt-0.5 flex-shrink-0" />Private GitHub repo access</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 text-center mt-4">
+            API usage billed separately.{' '}
+            <a href="mailto:admin.flashlearnai@awews.com" className="text-purple-600 hover:underline font-medium">Contact us to purchase &rarr;</a>
           </p>
         </div>
       </section>
@@ -375,7 +406,7 @@ export default function PricingPage() {
             },
             {
               q: 'What is the white-label app?',
-              a: 'It\'s a ready-to-deploy study app that uses the FlashLearnAI.WitUS.Online API. Schools and companies can customize the branding (name, colors, logo) and deploy it as their own. Available now.',
+              a: 'It\'s a ready-to-deploy study app powered by the FlashLearnAI API. Schools and companies customize the branding (name, colors, logo) and deploy as their own. Standard license is $499 (1 domain), School & Enterprise is $999/year (unlimited domains, priority support, updates).',
             },
           ].map((item) => (
             <details
