@@ -299,7 +299,7 @@ Go to **Settings** → **Subscription** to:
 ];
 
 // POST - Seed help articles (admin only, idempotent)
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== 'Admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
