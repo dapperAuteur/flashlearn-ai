@@ -15,7 +15,7 @@ const tiers = [
   {
     id: 'monthly',
     name: 'Monthly Pro',
-    price: '$10',
+    price: '$10.60',
     period: '/month',
     description: 'Everything you need to learn faster',
     icon: RocketLaunchIcon,
@@ -39,9 +39,9 @@ const tiers = [
   {
     id: 'lifetime',
     name: 'Lifetime Learner',
-    price: '$100',
+    price: '$103.29',
     period: 'one-time',
-    description: 'Best value — pay once, learn forever',
+    description: 'Best value — pay once, learn forever. Processing fees included.',
     icon: StarIcon,
     badge: 'Limited Time',
     features: [
@@ -335,8 +335,8 @@ export default function PricingPage() {
               a: 'Pay once and get access to all Pro features forever. No recurring charges.',
             },
             {
-              q: 'Is the $100 lifetime price permanent?',
-              a: 'This is a limited-time introductory price. We plan to increase it as we add more features.',
+              q: 'Is the $103.29 lifetime price permanent?',
+              a: 'This is a limited-time introductory price. We plan to increase it as we add more features. Want to pay exactly $100? Use Cash App (no processing fees).',
             },
             {
               q: 'Do I need an account to study?',
