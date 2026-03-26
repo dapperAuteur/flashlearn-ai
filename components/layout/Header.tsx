@@ -8,6 +8,7 @@ import { Menu, X, WifiOff, RefreshCw, Shield } from 'lucide-react';
 import { usePageActions } from '@/hooks/usePageActions';
 import { useNetworkSync } from '@/hooks/useNetworkSync';
 import UserMenu from '@/components/ui/UserMenu';
+import NotificationBell from '@/components/ui/NotificationBell';
 import { NavigationItem } from '@/types/navigation';
 
 const primaryNavigation: NavigationItem[] = [
@@ -141,6 +142,9 @@ export default function Header() {
                 )}
               </>
             )}
+
+            {/* Notification Bell */}
+            <NotificationBell />
 
             {/* Network Status */}
             {!isOnline && (
