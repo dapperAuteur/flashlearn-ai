@@ -163,8 +163,8 @@ export async function POST(request: NextRequest) {
   createShortLink({
     url: `${siteUrl}/versus/preview/${challengeCode}`,
     slug: toSwitchySlug('v', challengeCode.toLowerCase()),
-    title: `FlashLearn Challenge: ${(flashcardSet as any).title}`,
-    description: `Join this flashcard battle on ${(flashcardSet as any).title}!`,
+    title: `FlashLearn Challenge: ${challenge.setName}`,
+    description: `Join this flashcard battle on ${challenge.setName}!`,
     tags: ['versus', 'challenge'],
   }).then(async (link) => {
     if (link) {
