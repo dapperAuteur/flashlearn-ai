@@ -81,6 +81,8 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [seedingHelp, setSeedingHelp] = useState(false);
+  const [seedResult, setSeedResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -190,6 +192,42 @@ export default function AdminSettingsPage() {
       {error && (
         <div className="text-red-600 bg-red-50 p-3 rounded-lg mb-4 text-sm">{error}</div>
       )}
+
+      {/* System Actions */}
+      <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-3">System Actions</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <button
+            onClick={async () => {
+              setSeedingHelp(true);
+              setSeedResult(null);
+              try {
+                const res = await fetch('/api/admin/help/seed', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Seed failed');
+                setSeedResult(`${data.created} articles created, ${data.skipped} already existed`);
+              } catch (err) {
+                setSeedResult(`Error: ${(err as Error).message}`);
+              } finally {
+                setSeedingHelp(false);
+              }
+            }}
+            disabled={seedingHelp}
+            className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            aria-label="Seed default help center articles"
+          >
+            {seedingHelp ? 'Seeding...' : 'Seed Help Articles'}
+          </button>
+          <p className="text-xs text-gray-500">
+            Populate the help center with default articles. Safe to run multiple times (skips existing).
+          </p>
+        </div>
+        {seedResult && (
+          <p className={`mt-2 text-sm ${seedResult.startsWith('Error') ? 'text-red-600' : 'text-green-600'}`} role="status">
+            {seedResult}
+          </p>
+        )}
+      </div>
 
       <div className="space-y-4">
         {configCards.map(({ key, description, updatedAt, isNew }) => {
