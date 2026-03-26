@@ -15,6 +15,7 @@ interface ChallengeShareModalProps {
   onClose: () => void;
   challengeCode: string;
   challengeUrl: string;
+  shortUrl?: string;
   setName?: string;
 }
 
@@ -23,6 +24,7 @@ export default function ChallengeShareModal({
   onClose,
   challengeCode,
   challengeUrl,
+  shortUrl,
   setName,
 }: ChallengeShareModalProps) {
   const [codeCopied, setCodeCopied] = useState(false);
@@ -42,15 +44,16 @@ export default function ChallengeShareModal({
 
   if (!isOpen) return null;
 
-  // Use the public preview URL for all external shares
+  // Prefer short URL when available; fall back to preview URL
   const previewUrl = challengeUrl.replace('/versus/join/', '/versus/preview/');
-  const shareUrlWithUtm = buildShareUrl(previewUrl, 'copy', 'versus');
+  const effectiveUrl = shortUrl || previewUrl;
+  const shareUrlWithUtm = buildShareUrl(effectiveUrl, 'copy', 'versus');
   const shareText = setName
     ? `I challenged you to a flashcard battle on "${setName}"! Use code ${challengeCode} or join here:`
     : `I challenged you to a flashcard battle! Use code ${challengeCode} or join here:`;
 
   const twitterShareUrl = buildTwitterShareUrl(
-    buildShareUrl(previewUrl, 'twitter', 'versus'),
+    buildShareUrl(effectiveUrl, 'twitter', 'versus'),
     shareText,
     ['flashcards', 'studywithme', 'FlashLearnAI']
   );
@@ -60,7 +63,7 @@ export default function ChallengeShareModal({
       await navigator.share({
         title: 'FlashLearnAI.WitUS.Online Challenge',
         text: shareText,
-        url: buildShareUrl(previewUrl, 'native', 'versus'),
+        url: buildShareUrl(effectiveUrl, 'native', 'versus'),
       });
       track('share_generated', { type: 'versus', platform: 'native' });
     } catch {
@@ -195,7 +198,7 @@ export default function ChallengeShareModal({
             <input
               type="text"
               readOnly
-              value={previewUrl}
+              value={effectiveUrl}
               aria-label="Challenge share URL"
               className="flex-1 p-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-300 truncate"
             />

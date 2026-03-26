@@ -8,13 +8,14 @@ interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   shareUrl: string;
+  shortUrl?: string;
   title: string;
   heading?: string;
   shareText?: string;
   campaign?: 'versus' | 'results' | 'set';
 }
 
-export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, shareText, campaign = 'set' }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, shareUrl, shortUrl, title, heading, shareText, campaign = 'set' }: ShareModalProps) {
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
@@ -27,8 +28,11 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
     return null;
   }
 
+  // Prefer short URL when available for cleaner sharing; fall back to full URL
+  const effectiveUrl = shortUrl || shareUrl;
+
   const handleCopy = async () => {
-    const urlWithUtm = buildShareUrl(shareUrl, 'copy', campaign);
+    const urlWithUtm = buildShareUrl(effectiveUrl, 'copy', campaign);
     try {
       await navigator.clipboard.writeText(urlWithUtm);
       setIsCopied(true);
@@ -54,13 +58,13 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
   const resolvedShareText = shareText ?? 'Check out this flashcard set';
 
   const twitterUrl = buildTwitterShareUrl(
-    buildShareUrl(shareUrl, 'twitter', campaign),
+    buildShareUrl(effectiveUrl, 'twitter', campaign),
     resolvedShareText
   );
-  const facebookUrl = buildFacebookShareUrl(buildShareUrl(shareUrl, 'facebook', campaign));
+  const facebookUrl = buildFacebookShareUrl(buildShareUrl(effectiveUrl, 'facebook', campaign));
   const emailUrl = buildEmailShareUrl(
     `${resolvedShareText}: ${title}`,
-    `${resolvedShareText}\n\nStudy this set free on FlashLearnAI.WitUS.Online:\n${buildShareUrl(shareUrl, 'email', campaign)}\n\nCreate your own AI flashcards at https://flashlearnai.witus.online`
+    `${resolvedShareText}\n\nStudy this set free on FlashLearnAI.WitUS.Online:\n${buildShareUrl(effectiveUrl, 'email', campaign)}\n\nCreate your own AI flashcards at https://flashlearnai.witus.online`
   );
 
   return (
@@ -81,7 +85,7 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title, heading, 
           <input
             type="text"
             readOnly
-            value={shareUrl}
+            value={effectiveUrl}
             className="w-full p-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300"
           />
           <button
