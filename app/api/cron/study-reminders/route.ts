@@ -3,26 +3,26 @@ import clientPromise from '@/lib/db/mongodb';
 import { getReengagementTemplate } from '@/lib/email/templates/reengagement';
 import { sendEmail } from '@/lib/email/sendEmail';
 
-const BATCH_SIZE = 50;
-const CRON_SECRET = process.env.CRON_SECRET || process.env.UPSTASH_QSTASH_CURRENT_SIGNING_KEY;
+const BATCH_SIZE = 200;
 
 /**
  * GET /api/cron/study-reminders
  *
- * Daily cron endpoint that sends study reminder emails to users
- * who have enabled reminders and whose preferred time matches
- * the current hour (UTC).
+ * Daily cron endpoint (runs once at 13:00 UTC / 8am EST via Vercel Cron).
+ * Sends study reminder emails to all users with reminders enabled.
  *
- * Secured via CRON_SECRET header or Vercel Cron authorization.
- * Schedule: daily at the top of each hour via Vercel Cron or QStash.
+ * Vercel free tier allows 1 cron/day — this single daily run covers
+ * all reminder users. For per-hour scheduling, use QStash separately.
+ *
+ * Auth: Vercel Cron sets Authorization header automatically using CRON_SECRET.
+ * Generate CRON_SECRET with: openssl rand -hex 32
+ * Add it to Vercel env vars as CRON_SECRET.
  */
 export async function GET(request: NextRequest) {
-  // Verify cron authorization
   const authHeader = request.headers.get('authorization');
-  const isVercelCron = authHeader === `Bearer ${CRON_SECRET}`;
-  const isQStash = request.headers.get('upstash-signature');
+  const cronSecret = process.env.CRON_SECRET;
 
-  if (!isVercelCron && !isQStash) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -30,16 +30,10 @@ export async function GET(request: NextRequest) {
     const client = await clientPromise;
     const db = client.db();
 
-    // Current hour in UTC (e.g., "09", "14")
-    const currentHour = new Date().getUTCHours().toString().padStart(2, '0');
-
-    // Find users with reminders enabled whose preferred time matches current hour
-    // studyReminderTime is stored as "HH:MM" (e.g., "09:00")
     const users = await db
       .collection('users')
       .find({
         studyReminderEnabled: true,
-        studyReminderTime: { $regex: `^${currentHour}:` },
         email: { $exists: true, $ne: null },
       })
       .project({ _id: 1, name: 1, email: 1 })
@@ -47,7 +41,7 @@ export async function GET(request: NextRequest) {
       .toArray();
 
     if (users.length === 0) {
-      return NextResponse.json({ sent: 0, message: 'No users due for reminders this hour' });
+      return NextResponse.json({ sent: 0, message: 'No users with reminders enabled' });
     }
 
     let sent = 0;
