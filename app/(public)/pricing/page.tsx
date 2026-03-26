@@ -311,9 +311,10 @@ export default function PricingPage() {
         </div>
 
         <div className="mt-6 p-4 bg-purple-50 rounded-xl border border-purple-100 text-center">
-          <p className="text-sm font-medium text-purple-900">White-Label App — Coming Soon</p>
+          <p className="text-sm font-medium text-purple-900">White-Label App — Available Now</p>
           <p className="text-xs text-purple-700 mt-1">
-            Deploy your own branded study app powered by the API. Custom name, colors, logo, and features. Perfect for schools and companies.
+            Deploy your own branded study app powered by the API. Custom name, colors, logo, and features. Perfect for schools and companies.{' '}
+            <a href="/docs/api/getting-started" className="underline font-medium">Get started &rarr;</a>
           </p>
         </div>
       </section>
@@ -347,7 +348,7 @@ export default function PricingPage() {
             },
             {
               q: 'What is the white-label app?',
-              a: 'It\'s a ready-to-deploy study app that uses the FlashLearnAI.WitUS.Online API. Schools and companies can customize the branding (name, colors, logo) and deploy it as their own. Coming soon.',
+              a: 'It\'s a ready-to-deploy study app that uses the FlashLearnAI.WitUS.Online API. Schools and companies can customize the branding (name, colors, logo) and deploy it as their own. Available now.',
             },
           ].map((item) => (
             <details
