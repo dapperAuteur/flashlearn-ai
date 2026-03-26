@@ -79,6 +79,7 @@ export default function AdminRevenuePage() {
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lifetimeData, setLifetimeData] = useState<{ totalLifetime: number; remaining: number; cap: number } | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -104,6 +105,12 @@ export default function AdminRevenuePage() {
     };
 
     fetchRevenue();
+
+    // Fetch lifetime promo counter
+    fetch("/api/admin/analytics/lifetime")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setLifetimeData(d); })
+      .catch(() => {});
   }, [session, status, router]);
 
   if (loading || status === "loading") {
@@ -242,6 +249,31 @@ export default function AdminRevenuePage() {
           color="text-purple-600"
         />
       </div>
+
+      {/* Lifetime Promo Tracker */}
+      {lifetimeData && (
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6" role="region" aria-label="Lifetime promo tracker">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+            <div>
+              <h2 className="text-base font-semibold text-gray-800">Lifetime Promo Tracker</h2>
+              <p className="text-xs text-gray-500">$103.29 introductory price — first 100 users</p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-purple-600">{lifetimeData.totalLifetime} <span className="text-sm font-normal text-gray-500">/ {lifetimeData.cap}</span></p>
+              <p className="text-xs text-gray-500">{lifetimeData.remaining} spots remaining</p>
+            </div>
+          </div>
+          <div className="w-full bg-gray-100 rounded-full h-3" role="progressbar" aria-valuenow={lifetimeData.totalLifetime} aria-valuemin={0} aria-valuemax={lifetimeData.cap}>
+            <div
+              className={`h-3 rounded-full transition-all ${lifetimeData.remaining <= 10 ? 'bg-red-500' : lifetimeData.remaining <= 30 ? 'bg-amber-500' : 'bg-purple-500'}`}
+              style={{ width: `${Math.min(100, (lifetimeData.totalLifetime / lifetimeData.cap) * 100)}%` }}
+            />
+          </div>
+          {lifetimeData.remaining === 0 && (
+            <p className="mt-2 text-sm text-red-600 font-medium">Promo cap reached — time to switch to annual pricing.</p>
+          )}
+        </div>
+      )}
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

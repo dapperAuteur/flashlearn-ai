@@ -41,7 +41,7 @@ const tiers = [
     name: 'Lifetime Learner',
     price: '$103.29',
     period: 'one-time',
-    description: 'Best value — pay once, learn forever. Processing fees included.',
+    description: 'First 100 users — pay once, learn forever. Processing fees included.',
     icon: StarIcon,
     badge: 'Limited Time',
     features: [
@@ -363,7 +363,7 @@ export default function PricingPage() {
             },
             {
               q: 'Is the $103.29 lifetime price permanent?',
-              a: 'This is a limited-time introductory price. We plan to increase it as we add more features. Want to pay exactly $100? Use Cash App (no processing fees).',
+              a: 'This introductory price is available to the first 100 users. After that, we\'ll offer an annual plan at a similar price point. Want to pay exactly $100? Use Cash App (no processing fees).',
             },
             {
               q: 'Do I need an account to study?',
