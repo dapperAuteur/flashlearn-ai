@@ -15,6 +15,8 @@ import OfflineIndicator from '@/components/ui/OfflineIndicator';
 import { Toaster } from '@/components/ui/toaster';
 import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
 import FeedbackWidget from '@/components/ui/FeedbackWidget';
+import MobileTabBar from '@/components/layout/MobileTabBar';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -64,6 +66,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
     <>
       <AppInitializer />
       <Analytics />
+      <ThemeProvider>
       <AuthProvider>
         <AnnouncementBanner />
         <PowerSyncContext.Provider value={powerSyncDB}>
@@ -72,6 +75,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
               <StudySessionProvider>
                 {isPublicRouteByPath && <PublicHeader />}
                 {children}
+                <MobileTabBar />
                 <OfflineIndicator />
                 <FeedbackWidget />
                 <Toaster />
@@ -80,6 +84,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
           </NetworkSyncProvider>
         </PowerSyncContext.Provider>
       </AuthProvider>
+      </ThemeProvider>
     </>
   );
 }

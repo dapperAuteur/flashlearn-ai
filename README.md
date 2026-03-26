@@ -1,75 +1,108 @@
-# FlashLearn AI: Intelligent Flashcard Learning System
+# FlashLearnAI.WitUS.Online
 
-![FlashLearn AI Logo](https://via.placeholder.com/150x50?text=FlashLearn+AI)
+AI-powered flashcard platform with spaced repetition, versus mode, and offline-first architecture.
 
-## Project Overview
+**Live:** [flashlearnai.witus.online](https://flashlearnai.witus.online)
 
-FlashLearn AI is an advanced flashcard application designed to enhance learning through AI-powered features and adaptive study techniques. Built with Next.js, TypeScript, and MongoDB, this application supports multiple learning modes, offline capabilities, and intelligent content extraction.
+## Features
 
-### Key Features
+- **AI Generation** — Create flashcards from topics, PDFs, YouTube videos, audio files, and images (OCR)
+- **Spaced Repetition** — SM-2 algorithm schedules reviews at optimal intervals
+- **3 Study Modes** — Classic flip cards, multiple choice, type-your-answer with AI grading
+- **Versus Mode** — Head-to-head challenges with composite scoring (accuracy, speed, confidence, streaks) and ELO ratings
+- **Offline-First** — PowerSync + IndexedDB with automatic sync and conflict resolution
+- **Teams & Classrooms** — Study groups with join codes, shared sets, team chat, and teacher-led classrooms
+- **Public API** — 23 REST endpoints for building on top of FlashLearnAI
+- **White-Label App** — Branded study platform for schools and companies (sold separately)
+- **Marketing & Link Tracking** — Switchy.io short links with pixel attribution on all shared content
+- **Admin Dashboard** — Revenue analytics, user management, content moderation, promo campaigns, SEO tools
 
-- **Multiple Study Modes**: Progress through increasingly difficult recall levels - from true/false to free text entry
-- **AI-Generated Content**: Convert PDFs, websites, audio files, and YouTube videos into flashcards automatically
-- **Spaced Repetition**: Smart scheduling system prioritizes cards you need to review most
-- **Offline Support**: Study anywhere, even without internet connection
-- **Team Collaboration**: Paid users can share flashcards and study with teammates in real-time
-- **Custom Organization**: Tag, categorize, and organize flashcards for efficient study
-- **Performance Analytics**: Track your progress with detailed statistics and reports
+## Tech Stack
 
-## Current Status
-
-The project is currently in active development. Here's what's been completed:
-
-- ✅ Project setup with Next.js App Router architecture  
-- ✅ Authentication system (sign up, sign in)
-- ✅ MongoDB integration
-- ✅ Email verification with Mailgun
-- ✅ Dashboard layout with responsive sidebar
-- ✅ User profile management
-
-### Next Features (Roadmap)
-
-1. Flashcard CRUD operations and organization system
-2. Basic study interface with multiple difficulty modes
-3. Stripe subscription integration
-4. AI-powered content extraction
-5. Offline functionality
-6. Team collaboration features
-7. Real-time multiplayer study sessions
+- **Framework:** Next.js 15 (App Router), React 19, TypeScript
+- **Database:** MongoDB Atlas, Mongoose
+- **Auth:** NextAuth.js with JWT sessions
+- **Payments:** Stripe (subscriptions + metered billing)
+- **Email:** Mailgun, Resend
+- **AI:** Google Gemini
+- **Offline:** PowerSync (SQLite via wa-sqlite), IndexedDB
+- **Rate Limiting:** Upstash Redis
+- **Hosting:** Vercel
+- **Link Tracking:** Switchy.io
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18.0 or later
+- Node.js 18+
 - MongoDB database
-- Mailgun account (for email verification)
-- npm or yarn
+- Mailgun account
 
-### Installation
+### Setup
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/dapperAuteur/flashlearn-ai.git
-   cd flashlearn-ai
+```bash
+git clone https://github.com/dapperAuteur/flashlearn-ai.git
+cd flashlearn-ai
+cp .env.example .env.local  # Configure your environment variables
+npm install
+npm run dev
+```
 
-Set up Environment Variables:Create a file named .env.local in the root of the project and add the following variables. Do not commit this file to Git.# .env.local
-# MongoDB
-MONGODB_URI="your_mongodb_connection_string"
-# Upstash Redis for Rate Limiting
-# Get these from your Upstash Redis database dashboard
-UPSTASH_REDIS_REST_URL="your_upstash_redis_url"
-UPSTASH_REDIS_REST_TOKEN="your_upstash_redis_token"
-# NextAuth.js (for authentication)
-# Generate a secret: openssl rand -base64 32
-NEXTAUTH_SECRET="your_nextauth_secret"
-NEXTAUTH_URL="http://localhost:3000"
-# Google Gemini API
-GEMINI_API_KEY="your_gemini_api_key"
-# Stripe
-STRIPE_SECRET_KEY="your_stripe_secret_key"
-STRIPE_WEBHOOK_SECRET="your_stripe_webhook_secret"
-# This is the price ID from your Stripe dashboard for the Lifetime Learner tier
-STRIPE_LIFETIME_PRICE_ID="price_xxxxxxxxxxxxxx"
-Run the development server:npm run dev
-Open http://localhost:3000 with your browser to see the result.🤝 ContributingContributions are welcome! Please see CONTRIBUTING.md for guidelines on how to get started. Also, review our CODE_OF_CONDUCT.md and CODING_STYLE_GUIDE.md.
+Open [http://localhost:3000](http://localhost:3000).
+
+### Key Environment Variables
+
+```env
+MONGODB_URI=             # MongoDB connection string
+NEXTAUTH_SECRET=         # openssl rand -base64 32
+NEXTAUTH_URL=            # http://localhost:3000
+GEMINI_API_KEY=          # Google Gemini API key
+STRIPE_SECRET_KEY=       # Stripe secret key
+MAILGUN_API_KEY=         # Mailgun API key
+MAILGUN_DOMAIN=          # Your Mailgun domain
+SWITCHY_API_TOKEN=       # Switchy.io API token
+SWITCHY_DOMAIN=          # Custom short link domain
+CRON_SECRET=             # openssl rand -hex 32 (for Vercel Cron)
+```
+
+## Pricing
+
+| Plan | Price |
+|------|-------|
+| Free | $0 (limited AI generations) |
+| Monthly Pro | $10.60/month |
+| Lifetime Learner | $103.29 one-time (first 100 users) |
+
+### API Tiers
+
+| Tier | Price | Generations/mo |
+|------|-------|---------------|
+| Free | $0 | 100 |
+| Developer | $19/mo | 5,000 |
+| Pro | $49/mo | 25,000 |
+| Enterprise | Custom | Unlimited |
+
+### White-Label App
+
+| License | Price |
+|---------|-------|
+| Standard | $499 one-time (1 domain) |
+| School & Enterprise | $999/year (unlimited domains, priority support) |
+
+## Documentation
+
+- [API Getting Started](https://flashlearnai.witus.online/docs/api/getting-started)
+- [Interactive API Reference](https://flashlearnai.witus.online/docs/api)
+- [Roadmap](https://flashlearnai.witus.online/roadmap)
+- [Changelog](https://flashlearnai.witus.online/changelog)
+- [Help Center](https://flashlearnai.witus.online/help)
+
+## License
+
+Proprietary. All rights reserved.
+
+**White-Label Starter App** is sold under a commercial license. See [pricing](https://flashlearnai.witus.online/pricing).
+
+---
+
+A [WitUS.Online](https://WitUS.Online) product by B4C LLC.
