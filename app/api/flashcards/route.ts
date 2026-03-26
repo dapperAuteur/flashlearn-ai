@@ -7,6 +7,7 @@ import { FlashcardSet } from "@/models/FlashcardSet";
 import { z } from "zod";
 import { apiLogger, analytics } from "@/lib/logging/flashcard-logger";
 import mongoose, { Types } from "mongoose";
+import { createShortLink, toSwitchySlug } from '@/lib/switchy';
 
 // Define the expected shape of the incoming request body
 const saveSetSchema = z.object({
@@ -95,6 +96,25 @@ export async function POST(request: NextRequest) {
       },
       request
     );
+
+    // Fire-and-forget: generate a tracked short link when set is created as public
+    if (isPublic) {
+      const siteUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
+      createShortLink({
+        url: `${siteUrl}/sets/${savedSet._id}`,
+        slug: toSwitchySlug('s', title),
+        title: `FlashLearn: ${title}`,
+        description: description || `Study this flashcard set on FlashLearnAI`,
+        tags: ['set', 'flashcards'],
+      }).then(async (link) => {
+        if (link) {
+          await FlashcardSet.updateOne(
+            { _id: savedSet._id },
+            { shortLinkId: link.id, shortLinkUrl: link.short_url }
+          );
+        }
+      }).catch(() => { /* non-critical */ });
+    }
 
     apiLogger.info(`Successfully saved flashcard set for user.`, request, { userId, setId: savedSet._id });
 
