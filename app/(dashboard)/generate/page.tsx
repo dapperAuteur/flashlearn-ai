@@ -13,6 +13,7 @@ import { useContentImport } from '@/hooks/useContentImport';
 import { motion, AnimatePresence } from 'framer-motion';
 import FlashcardPreviewGrid from '@/components/flashcards/FlashcardPreviewGrid';
 import SaveControls from '@/components/flashcards/SaveControls';
+import UpgradeNudge from '@/components/ui/UpgradeNudge';
 import {
   SparklesIcon,
   CloudArrowUpIcon,
@@ -483,6 +484,28 @@ export default function GenerateFlashcardsPage(){
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Upgrade nudge when rate-limited or quota exceeded */}
+              {effectiveError && /rate.?limit|quota|limit.*reached|429|generation.*limit/i.test(effectiveError) && (
+                <div className="mt-4">
+                  <UpgradeNudge
+                    feature="AI generations"
+                    message="You've hit your free generation limit. Upgrade to Pro for unlimited AI-powered flashcard generation."
+                    variant="banner"
+                  />
+                </div>
+              )}
+
+              {/* Subtle nudge after successful generation for free users */}
+              {flashcards.length > 0 && session?.user?.subscriptionTier === 'Free' && !effectiveError && (
+                <div className="mt-4">
+                  <UpgradeNudge
+                    feature="AI generations"
+                    message="Enjoying AI flashcards? Upgrade to Pro for unlimited generations, PDF import, and more."
+                    variant="banner"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
