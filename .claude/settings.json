@@ -46,7 +46,9 @@
       "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -type f \\\\\\(-name *seed* -o -name *fixture* \\\\\\))",
       "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -type f -name *.md -path */docs/* ! -path */node_modules/* ! -path */.next/*)",
       "Bash(git -C /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai log --oneline --all)",
-      "Bash(ls /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/docs/api/)"
+      "Bash(ls /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/docs/api/)",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -type f \\\\\\(-name *email* -o -name *notification* \\\\\\) -path */lib/*)",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -name *.json -path *node_modules* -prune -o -name package.json -type f ! -path *node_modules*)"
     ],
     "additionalDirectories": [
       "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/blog",
