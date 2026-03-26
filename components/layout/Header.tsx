@@ -45,18 +45,18 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-xl font-bold text-blue-600">
-              FlashLearnAI.WitUS.Online
+            <Link href="/" className="text-lg lg:text-xl font-bold text-blue-600 whitespace-nowrap">
+              FlashLearnAI
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav aria-label="Main navigation" className="hidden md:flex space-x-8">
+          <nav aria-label="Main navigation" className="hidden lg:flex space-x-4 xl:space-x-6 flex-shrink min-w-0">
             {primaryNavigation.map((item) => (
               <Link
                 key={item.href}
@@ -87,7 +87,7 @@ export default function Header() {
           </nav>
 
           {/* Desktop Context Actions */}
-          <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
+          <div className="hidden lg:flex items-center space-x-1 xl:space-x-2 flex-shrink-0">
             {/* Secondary Actions */}
             {pageActions.secondary?.map((action, index) => {
               if (!action.desktop) return null;
@@ -167,7 +167,7 @@ export default function Header() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-4">
+          <div className="lg:hidden flex items-center space-x-2">
             {/* Mobile Network Status */}
             {!isOnline && (
               <span className="text-amber-500" role="status" aria-label="You are offline">
@@ -198,7 +198,7 @@ export default function Header() {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div id="mobile-menu" className="md:hidden border-t border-gray-200">
+          <div id="mobile-menu" className="lg:hidden border-t border-gray-200 dark:border-gray-700">
             <div className="pt-2 pb-3 space-y-1">
               {primaryNavigation.map((item) => (
                 <Link
