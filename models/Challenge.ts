@@ -37,6 +37,8 @@ export interface IChallenge extends Document {
   expiresAt: Date;
   participants: IChallengeParticipant[];
   maxParticipants: number;
+  shortLinkId?: string;
+  shortLinkUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -115,6 +117,8 @@ const ChallengeSchema = new Schema<IChallenge>(
     expiresAt: { type: Date, required: true },
     participants: [ParticipantSchema],
     maxParticipants: { type: Number, default: 2 },
+    shortLinkId: { type: String, default: null },
+    shortLinkUrl: { type: String, default: null },
   },
   { timestamps: true },
 );
