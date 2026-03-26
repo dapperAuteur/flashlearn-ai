@@ -120,13 +120,13 @@ export default function SEOAdminPage() {
                   <label htmlFor={`title-${index}`} className="block text-xs text-gray-500 mb-1">Page Title</label>
                   <input id={`title-${index}`} type="text" value={page.title}
                     onChange={e => updatePage(index, 'title', e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:ring-blue-500 focus:border-blue-500" />
                 </div>
                 <div>
                   <label htmlFor={`desc-${index}`} className="block text-xs text-gray-500 mb-1">Meta Description</label>
                   <textarea id={`desc-${index}`} value={page.description} rows={2}
                     onChange={e => updatePage(index, 'description', e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:ring-blue-500 focus:border-blue-500" />
                   <p className="text-xs text-gray-600 mt-1">{page.description.length}/160 characters</p>
                 </div>
                 <div>
@@ -134,14 +134,14 @@ export default function SEOAdminPage() {
                   <input id={`og-title-${index}`} type="text" value={page.ogTitle}
                     onChange={e => updatePage(index, 'ogTitle', e.target.value)}
                     placeholder="Defaults to page title"
-                    className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:ring-blue-500 focus:border-blue-500" />
                 </div>
                 <div>
                   <label htmlFor={`og-desc-${index}`} className="block text-xs text-gray-500 mb-1">OG Description (optional)</label>
                   <textarea id={`og-desc-${index}`} value={page.ogDescription} rows={2}
                     onChange={e => updatePage(index, 'ogDescription', e.target.value)}
                     placeholder="Defaults to meta description"
-                    className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:ring-blue-500 focus:border-blue-500" />
                 </div>
 
                 {/* Google Preview */}
