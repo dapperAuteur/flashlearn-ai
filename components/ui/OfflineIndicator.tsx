@@ -1,12 +1,13 @@
 'use client';
 
-import { WifiOff, Loader2 } from 'lucide-react';
+import { WifiOff, Loader2, AlertTriangle } from 'lucide-react';
 import { useNetworkSync } from '@/hooks/useNetworkSync';
+import Link from 'next/link';
 
 export default function OfflineIndicator() {
-  const { isOnline, isSyncing, pendingCount, syncedCount } = useNetworkSync();
+  const { isOnline, isSyncing, pendingCount, syncedCount, conflictCount } = useNetworkSync();
 
-  const showBar = !isOnline || (isSyncing && pendingCount > 0);
+  const showBar = !isOnline || (isSyncing && pendingCount > 0) || conflictCount > 0;
 
   return (
     <div
@@ -23,6 +24,21 @@ export default function OfflineIndicator() {
           <p className="text-sm font-medium">
             You&apos;re offline &mdash; progress saved locally
           </p>
+        </div>
+      ) : conflictCount > 0 ? (
+        <div className="bg-red-600 text-white px-4 py-3 shadow-lg">
+          <div className="flex items-center justify-center gap-3">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <p className="text-sm font-medium">
+              {conflictCount} sync conflict{conflictCount !== 1 ? 's' : ''} need{conflictCount === 1 ? 's' : ''} your review
+            </p>
+            <Link
+              href="/dashboard/conflicts"
+              className="text-sm font-semibold underline underline-offset-2 hover:text-red-100 transition-colors"
+            >
+              Review
+            </Link>
+          </div>
         </div>
       ) : isSyncing && pendingCount > 0 ? (
         <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-center shadow-lg">

@@ -8,7 +8,10 @@ import {
   getQueuedSessions,
   removeSessionFromQueue,
   getResults,
-  getStudyHistoryBySessionId
+  getStudyHistoryBySessionId,
+  saveConflict,
+  getConflictCount,
+  type SyncConflict,
 } from '@/lib/db/indexeddb';
 import { getPowerSync, isPowerSyncInitialized } from '@/lib/powersync/client';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -35,7 +38,8 @@ export type SyncEventType =
   | 'sync-start'
   | 'sync-progress'
   | 'sync-complete'
-  | 'sync-error';
+  | 'sync-error'
+  | 'conflict-detected';
 
 export interface SyncEventData {
   type: SyncEventType;
@@ -43,6 +47,7 @@ export interface SyncEventData {
   isSyncing: boolean;
   pendingCount: number;
   syncedCount: number;
+  conflictCount: number;
   error?: string;
   lastSyncedAt?: Date;
 }
@@ -60,6 +65,7 @@ export class OfflineSyncService {
   private listeners = new Set<SyncEventListener>();
   private _pendingCount = 0;
   private _syncedCount = 0;
+  private _conflictCount = 0;
   private _lastSyncedAt: Date | null = null;
   private _initialized = false;
 
@@ -126,6 +132,7 @@ export class OfflineSyncService {
       isSyncing: this.syncInProgress,
       pendingCount: this._pendingCount,
       syncedCount: this._syncedCount,
+      conflictCount: this._conflictCount,
       lastSyncedAt: this._lastSyncedAt ?? undefined,
       ...extra,
     };
@@ -197,6 +204,7 @@ export class OfflineSyncService {
     this.syncInProgress = true;
     this._syncedCount = 0;
     this._pendingCount = await this.getPendingCount();
+    this._conflictCount = await getConflictCount().catch(() => 0);
     Logger.log(LogContext.SYSTEM, 'Starting offline data sync');
     this.emit('sync-start');
 
@@ -368,7 +376,7 @@ export class OfflineSyncService {
 
   private async syncSetChange(change: any): Promise<void> {
     const { type, data } = change;
-    
+
     switch (type) {
       case 'create':
         await fetch('/api/sets', {
@@ -377,15 +385,39 @@ export class OfflineSyncService {
           body: JSON.stringify(data)
         });
         break;
-        
-      case 'update':
-        await fetch(`/api/sets/${data._id}`, {
+
+      case 'update': {
+        const res = await fetch(`/api/sets/${data._id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
+
+        // Detect conflict: if server returns 409, queue for resolution
+        if (res.status === 409) {
+          const serverResponse = await res.json().catch(() => ({}));
+          const conflict: SyncConflict = {
+            id: `conflict-set-${data._id}-${Date.now()}`,
+            entity: 'set',
+            entityId: data._id,
+            entityTitle: data.title || 'Untitled Set',
+            localData: data,
+            serverData: serverResponse.serverVersion || serverResponse,
+            localUpdatedAt: data.updatedAt || new Date().toISOString(),
+            serverUpdatedAt: serverResponse.serverVersion?.updatedAt || new Date().toISOString(),
+            detectedAt: new Date(),
+          };
+          await saveConflict(conflict);
+          this._conflictCount++;
+          Logger.warning(LogContext.SYSTEM, 'Sync conflict detected for set', { setId: data._id });
+          this.emit('conflict-detected');
+          return; // Don't throw — conflict is queued for user resolution
+        }
+
+        if (!res.ok) throw new Error(`Set update failed: ${res.status}`);
         break;
-        
+      }
+
       case 'delete':
         await fetch(`/api/sets/${data._id}`, {
           method: 'DELETE'
@@ -607,6 +639,17 @@ export class OfflineSyncService {
    */
   isSyncing(): boolean {
     return this.syncInProgress;
+  }
+
+  /**
+   * Get current conflict count from IndexedDB
+   */
+  async getConflictCount(): Promise<number> {
+    try {
+      return await getConflictCount();
+    } catch {
+      return 0;
+    }
   }
 
   // ============================================================================

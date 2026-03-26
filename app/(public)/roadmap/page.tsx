@@ -227,12 +227,12 @@ const phases: Phase[] = [
       {
         title: 'Conflict Resolution',
         description: 'Handle sync conflicts gracefully.',
-        status: 'planned',
+        status: 'done',
         items: [
           'Side-by-side diff view for conflicts',
-          'Keep Local / Keep Server / Merge options',
-          'Offline indicator UI (persistent banner)',
-          'Reconnection flash notification',
+          'Keep Local / Keep Server resolution options',
+          'Offline indicator with conflict badge and review link',
+          'Reconnection flash notification with conflict alerts',
         ],
       },
     ],
