@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
@@ -299,7 +299,7 @@ Go to **Settings** → **Subscription** to:
 ];
 
 // POST - Seed help articles (admin only, idempotent)
-export async function POST(_request: NextRequest) {
+export async function POST() {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== 'Admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
