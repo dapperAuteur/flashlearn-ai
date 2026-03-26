@@ -22,6 +22,8 @@ const docsNav = [
   { href: '/docs/api/generation', label: 'Flashcard Generation', description: 'Generate, batch, CRUD sets' },
   { href: '/docs/api/spaced-repetition', label: 'Spaced Repetition', description: 'SM-2 study sessions' },
   { href: '/docs/api/versus-mode', label: 'Versus Mode', description: 'Competitive challenges' },
+  { href: '/docs/api/link-tracking', label: 'Link Tracking', description: 'Short URLs & pixel attribution' },
+  { href: '/docs/api/offline-sync', label: 'Offline & Sync', description: 'Conflict resolution' },
 ];
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
