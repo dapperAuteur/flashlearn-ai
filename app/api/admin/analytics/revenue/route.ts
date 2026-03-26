@@ -25,19 +25,21 @@ export async function GET(request: NextRequest) {
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
     // -----------------------------------------------
-    // 1. MRR Calculation from active User subscriptions
+    // 1. MRR Calculation — only count Stripe-verified users
     // -----------------------------------------------
+    const stripeFilter = { stripeCustomerId: { $exists: true, $ne: null } };
+
     const [monthlyCount, annualCount] = await Promise.all([
-      User.countDocuments({ subscriptionTier: 'Monthly Pro' }),
-      User.countDocuments({ subscriptionTier: 'Annual Pro' }),
+      User.countDocuments({ subscriptionTier: 'Monthly Pro', ...stripeFilter }),
+      User.countDocuments({ subscriptionTier: 'Annual Pro', ...stripeFilter }),
     ]);
 
-    const monthlyMrrCents = monthlyCount * 999;        // $9.99 each
-    const annualMrrCents = annualCount * Math.round(9999 / 12); // $99.99 / 12 each
+    const monthlyMrrCents = monthlyCount * 1060;       // $10.60 each
+    const annualMrrCents = annualCount * Math.round(10329 / 12); // $103.29 / 12 each
     const totalMrrCents = monthlyMrrCents + annualMrrCents;
 
     // -----------------------------------------------
-    // 2. Active subscriptions by tier
+    // 2. Active subscriptions by tier (paying vs manual)
     // -----------------------------------------------
     const tierBreakdown = await db.collection('users').aggregate([
       {
@@ -47,7 +49,10 @@ export async function GET(request: NextRequest) {
       },
       {
         $group: {
-          _id: '$subscriptionTier',
+          _id: {
+            tier: '$subscriptionTier',
+            paying: { $cond: [{ $ifNull: ['$stripeCustomerId', false] }, true, false] },
+          },
           count: { $sum: 1 },
         },
       },
@@ -58,10 +63,21 @@ export async function GET(request: NextRequest) {
       'Annual Pro': 0,
       'Lifetime Learner': 0,
     };
+    const manualSubscriptions: Record<string, number> = {
+      'Monthly Pro': 0,
+      'Annual Pro': 0,
+      'Lifetime Learner': 0,
+    };
     let totalActiveSubscribers = 0;
+    let totalManualSubscribers = 0;
     for (const entry of tierBreakdown) {
-      activeSubscriptions[entry._id] = entry.count;
-      totalActiveSubscribers += entry.count;
+      if (entry._id.paying) {
+        activeSubscriptions[entry._id.tier] = entry.count;
+        totalActiveSubscribers += entry.count;
+      } else {
+        manualSubscriptions[entry._id.tier] = entry.count;
+        totalManualSubscribers += entry.count;
+      }
     }
 
     // -----------------------------------------------
@@ -177,6 +193,8 @@ export async function GET(request: NextRequest) {
       mrr: totalMrrCents / 100,
       activeSubscriptions,
       totalActiveSubscribers,
+      manualSubscriptions,
+      totalManualSubscribers,
       churnRate,
       recentTransactions,
       mrrTrend,
