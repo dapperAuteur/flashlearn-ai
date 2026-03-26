@@ -25,6 +25,8 @@ export interface IStudySession extends Document {
   studyDirection?: StudyDirection;
   studyMode?: 'classic' | 'multiple-choice' | 'type-answer';
   isShareable: boolean;
+  shortLinkId?: string;
+  shortLinkUrl?: string;
   durationSeconds: number;
 
   // Virtual properties
@@ -55,7 +57,9 @@ const StudySessionSchema: Schema = new Schema(
       enum: ['classic', 'multiple-choice', 'type-answer'],
       default: 'classic'
     },
-    isShareable: { type: Boolean, default: false }
+    isShareable: { type: Boolean, default: false },
+    shortLinkId: { type: String, default: null },
+    shortLinkUrl: { type: String, default: null }
   },
   { timestamps: true }
 );

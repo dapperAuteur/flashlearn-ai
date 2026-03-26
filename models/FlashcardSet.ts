@@ -38,6 +38,8 @@ export interface IFlashcardSet extends Document {
   tags?: string[];
   isFeatured?: boolean;
   featuredOrder?: number;
+  shortLinkId?: string;
+  shortLinkUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -99,6 +101,8 @@ const FlashcardSetSchema = new Schema<IFlashcardSet>({
     type: Number,
     default: 0,
   },
+  shortLinkId: { type: String, default: null },
+  shortLinkUrl: { type: String, default: null },
 }, { timestamps: true });
 
 FlashcardSetSchema.index({ isPublic: 1, createdAt: -1 });
