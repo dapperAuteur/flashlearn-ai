@@ -483,6 +483,18 @@ const phases: Phase[] = [
         ],
       },
       {
+        title: 'Marketing & Link Tracking',
+        description: 'Tracked short links with pixel attribution for all shared content.',
+        status: 'done',
+        items: [
+          'Switchy.io short links for all shared content (versus, sets, results)',
+          'Marketing pixel tracking (Facebook, GA, TikTok, Twitter)',
+          'Admin link analytics dashboard with backfill',
+          'UTM parameter passthrough on all share links',
+          'Short URLs in share modals with graceful fallback',
+        ],
+      },
+      {
         title: 'SEO & Marketing Tools',
         description: 'Admin tools for managing page metadata and search visibility.',
         status: 'done',
