@@ -39,7 +39,14 @@
       "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/versus/)",
       "Bash(ls -la /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/explore/)",
       "Bash(git branch:*)",
-      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app -path *admin* -name *.tsx)"
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app -path *admin* -name *.tsx)",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -name *.worker.ts -o -name *worker* -o -name *service-worker*)",
+      "Bash(git log:*)",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -type f \\\\\\(-name openapi* -o -name swagger* -o -name *spec* \\\\\\))",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -type f \\\\\\(-name *seed* -o -name *fixture* \\\\\\))",
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai -type f -name *.md -path */docs/* ! -path */node_modules/* ! -path */.next/*)",
+      "Bash(git -C /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai log --oneline --all)",
+      "Bash(ls /Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/\\\\\\(public\\\\\\)/docs/api/)"
     ],
     "additionalDirectories": [
       "/Users/bam/Code_NOiCloud/ai-builds/claude/flashlearn-ai/app/(public)/blog",

@@ -9,6 +9,7 @@ interface NetworkSyncState {
   isSyncing: boolean;
   pendingCount: number;
   syncedCount: number;
+  conflictCount: number;
   lastSyncedAt: Date | null;
   syncError: string | null;
   forceSync: () => Promise<void>;
@@ -25,6 +26,7 @@ export function NetworkSyncProvider({ children }: { children: ReactNode }) {
   const [syncedCount, setSyncedCount] = useState(0);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [conflictCount, setConflictCount] = useState(0);
   const { toast } = useToast();
 
   const prevOnlineRef = useRef(isOnline);
@@ -34,17 +36,19 @@ export function NetworkSyncProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const service = OfflineSyncService.getInstance();
 
-    // Get initial pending count
+    // Get initial pending and conflict counts
     service.getPendingCount().then(count => {
       setPendingCount(count);
       hadPendingRef.current = count > 0;
     });
+    service.getConflictCount().then(setConflictCount);
 
     const unsubscribe = service.subscribe((event: SyncEventData) => {
       setIsOnline(event.isOnline);
       setIsSyncing(event.isSyncing);
       setPendingCount(event.pendingCount);
       setSyncedCount(event.syncedCount);
+      setConflictCount(event.conflictCount);
       if (event.lastSyncedAt) setLastSyncedAt(event.lastSyncedAt);
 
       if (event.type === 'sync-start') {
@@ -58,6 +62,10 @@ export function NetworkSyncProvider({ children }: { children: ReactNode }) {
 
       if (event.type === 'sync-complete') {
         setSyncError(null);
+      }
+
+      if (event.type === 'conflict-detected') {
+        // Conflict count is already updated via event.conflictCount
       }
     });
 
@@ -133,6 +141,19 @@ export function NetworkSyncProvider({ children }: { children: ReactNode }) {
     }
   }, [syncError, toast]);
 
+  // Toast on conflict detection
+  const prevConflictRef = useRef(0);
+  useEffect(() => {
+    if (conflictCount > prevConflictRef.current) {
+      toast({
+        title: 'Sync conflict detected',
+        description: `${conflictCount} item${conflictCount !== 1 ? 's' : ''} need${conflictCount === 1 ? 's' : ''} your review.`,
+        variant: 'destructive',
+      });
+    }
+    prevConflictRef.current = conflictCount;
+  }, [conflictCount, toast]);
+
   const forceSync = useCallback(async () => {
     const service = OfflineSyncService.getInstance();
     await service.forceSync();
@@ -143,6 +164,7 @@ export function NetworkSyncProvider({ children }: { children: ReactNode }) {
     isSyncing,
     pendingCount,
     syncedCount,
+    conflictCount,
     lastSyncedAt,
     syncError,
     forceSync,

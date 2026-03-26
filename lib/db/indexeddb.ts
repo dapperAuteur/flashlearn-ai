@@ -3,13 +3,14 @@
 
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 const DB_NAME = 'FlashlearnAI';
-const DB_VERSION = 4; // Incremented for offline features
+const DB_VERSION = 5; // Incremented for conflict resolution
 const STUDY_RESULTS_STORE = 'studyResults';
 const SYNC_QUEUE_STORE = 'syncQueue';
 const OFFLINE_SETS_STORE = 'offlineSets';
 const CATEGORIES_STORE = 'categories';
 const STUDY_HISTORY_STORE = 'studyHistory';
 const PENDING_CHANGES_STORE = 'pendingChanges';
+const CONFLICT_QUEUE_STORE = 'conflictQueue';
 
 // Existing interfaces
 export interface CardResult {
@@ -81,6 +82,18 @@ export interface PendingChange {
   retryCount: number;
 }
 
+export interface SyncConflict {
+  id: string;
+  entity: 'set' | 'flashcard';
+  entityId: string;
+  entityTitle: string;
+  localData: Record<string, any>;
+  serverData: Record<string, any>;
+  localUpdatedAt: string;
+  serverUpdatedAt: string;
+  detectedAt: Date;
+}
+
 let db: IDBDatabase;
 
 function openDB(): Promise<IDBDatabase> {
@@ -139,6 +152,12 @@ function openDB(): Promise<IDBDatabase> {
 
       if (!dbInstance.objectStoreNames.contains(PENDING_CHANGES_STORE)) {
         dbInstance.createObjectStore(PENDING_CHANGES_STORE, {
+          keyPath: 'id',
+        });
+      }
+
+      if (!dbInstance.objectStoreNames.contains(CONFLICT_QUEUE_STORE)) {
+        dbInstance.createObjectStore(CONFLICT_QUEUE_STORE, {
           keyPath: 'id',
         });
       }
@@ -463,6 +482,76 @@ export async function removePendingChange(changeId: string): Promise<void> {
     request.onerror = () => {
       Logger.error(LogContext.SYSTEM, 'Error removing pending change', { error: request.error });
       reject('Could not remove pending change.');
+    };
+  });
+}
+
+// ============================================================================
+// CONFLICT QUEUE MANAGEMENT
+// ============================================================================
+
+export async function saveConflict(conflict: SyncConflict): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CONFLICT_QUEUE_STORE, 'readwrite');
+    const store = tx.objectStore(CONFLICT_QUEUE_STORE);
+    const request = store.put(conflict);
+
+    request.onsuccess = () => {
+      Logger.log(LogContext.SYSTEM, 'Conflict saved', { conflictId: conflict.id });
+      resolve();
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error saving conflict', { error: request.error });
+      reject('Could not save conflict.');
+    };
+  });
+}
+
+export async function getConflicts(): Promise<SyncConflict[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CONFLICT_QUEUE_STORE, 'readonly');
+    const store = tx.objectStore(CONFLICT_QUEUE_STORE);
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error getting conflicts', { error: request.error });
+      reject('Could not get conflicts.');
+    };
+  });
+}
+
+export async function getConflictCount(): Promise<number> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CONFLICT_QUEUE_STORE, 'readonly');
+    const store = tx.objectStore(CONFLICT_QUEUE_STORE);
+    const request = store.count();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error counting conflicts', { error: request.error });
+      reject('Could not count conflicts.');
+    };
+  });
+}
+
+export async function removeConflict(conflictId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CONFLICT_QUEUE_STORE, 'readwrite');
+    const store = tx.objectStore(CONFLICT_QUEUE_STORE);
+    const request = store.delete(conflictId);
+
+    request.onsuccess = () => {
+      Logger.log(LogContext.SYSTEM, 'Conflict resolved', { conflictId });
+      resolve();
+    };
+    request.onerror = () => {
+      Logger.error(LogContext.SYSTEM, 'Error removing conflict', { error: request.error });
+      reject('Could not remove conflict.');
     };
   });
 }
