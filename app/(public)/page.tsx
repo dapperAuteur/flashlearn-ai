@@ -508,9 +508,10 @@ const DeveloperAPISection = () => (
 
       {/* White-label teaser */}
       <div className="max-w-xl mx-auto mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 text-center">
-        <p className="text-sm font-medium text-purple-300">White-Label App — Coming Soon</p>
+        <p className="text-sm font-medium text-purple-300">White-Label App — Available Now</p>
         <p className="text-xs text-gray-400 mt-1">
-          Deploy your own branded study app powered by the API. Custom name, colors, logo. Perfect for schools and edtech companies.
+          Deploy your own branded study app powered by the API. Custom name, colors, logo. Perfect for schools and edtech companies.{' '}
+          <a href="/docs/api/getting-started" className="underline text-purple-300 hover:text-white">Get started &rarr;</a>
         </p>
       </div>
     </div>

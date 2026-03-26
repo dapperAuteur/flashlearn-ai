@@ -15,7 +15,7 @@ const tiers = [
   {
     id: 'monthly',
     name: 'Monthly Pro',
-    price: '$10',
+    price: '$10.60',
     period: '/month',
     description: 'Everything you need to learn faster',
     icon: RocketLaunchIcon,
@@ -39,9 +39,9 @@ const tiers = [
   {
     id: 'lifetime',
     name: 'Lifetime Learner',
-    price: '$100',
+    price: '$103.29',
     period: 'one-time',
-    description: 'Best value — pay once, learn forever',
+    description: 'First 100 users — pay once, learn forever. Processing fees included.',
     icon: StarIcon,
     badge: 'Limited Time',
     features: [
@@ -270,6 +270,33 @@ export default function PricingPage() {
         </div>
       )}
 
+      {/* CashApp Fee-Free Payment Option */}
+      <section className="max-w-lg mx-auto mt-12" aria-labelledby="cashapp-heading">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 sm:p-6 text-center">
+          <h2 id="cashapp-heading" className="text-lg font-bold text-gray-900 mb-2">
+            Pay Fee-Free with Cash App
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Avoid processing fees &mdash; pay exactly <strong>$100 for Lifetime</strong> or <strong>$10/mo for Pro</strong>.
+          </p>
+          <div className="flex justify-center mb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/cashapp-qr.jpg"
+              alt="Scan to pay $centenarian on Cash App"
+              className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg shadow-sm"
+              width={192}
+              height={192}
+            />
+          </div>
+          <p className="text-base font-semibold text-green-800 mb-2">$centenarian</p>
+          <p className="text-xs text-gray-500 leading-relaxed max-w-sm mx-auto">
+            Send your payment and include your FlashLearnAI email in the note.
+            We&apos;ll activate your account within 24 hours.
+          </p>
+        </div>
+      </section>
+
       {/* API Pricing Section */}
       <section className="max-w-3xl mx-auto mt-16 sm:mt-20" aria-labelledby="api-pricing-heading">
         <div className="text-center mb-8">
@@ -311,9 +338,10 @@ export default function PricingPage() {
         </div>
 
         <div className="mt-6 p-4 bg-purple-50 rounded-xl border border-purple-100 text-center">
-          <p className="text-sm font-medium text-purple-900">White-Label App — Coming Soon</p>
+          <p className="text-sm font-medium text-purple-900">White-Label App — Available Now</p>
           <p className="text-xs text-purple-700 mt-1">
-            Deploy your own branded study app powered by the API. Custom name, colors, logo, and features. Perfect for schools and companies.
+            Deploy your own branded study app powered by the API. Custom name, colors, logo, and features. Perfect for schools and companies.{' '}
+            <a href="/docs/api/getting-started" className="underline font-medium">Get started &rarr;</a>
           </p>
         </div>
       </section>
@@ -334,8 +362,8 @@ export default function PricingPage() {
               a: 'Pay once and get access to all Pro features forever. No recurring charges.',
             },
             {
-              q: 'Is the $100 lifetime price permanent?',
-              a: 'This is a limited-time introductory price. We plan to increase it as we add more features.',
+              q: 'Is the $103.29 lifetime price permanent?',
+              a: 'This introductory price is available to the first 100 users. After that, we\'ll offer an annual plan at a similar price point. Want to pay exactly $100? Use Cash App (no processing fees).',
             },
             {
               q: 'Do I need an account to study?',
@@ -347,7 +375,7 @@ export default function PricingPage() {
             },
             {
               q: 'What is the white-label app?',
-              a: 'It\'s a ready-to-deploy study app that uses the FlashLearnAI.WitUS.Online API. Schools and companies can customize the branding (name, colors, logo) and deploy it as their own. Coming soon.',
+              a: 'It\'s a ready-to-deploy study app that uses the FlashLearnAI.WitUS.Online API. Schools and companies can customize the branding (name, colors, logo) and deploy it as their own. Available now.',
             },
           ].map((item) => (
             <details
