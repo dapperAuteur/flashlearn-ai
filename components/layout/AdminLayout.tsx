@@ -75,6 +75,7 @@ const navGroups: NavGroup[] = [
     label: "Revenue",
     items: [
       { label: "Revenue", href: "/admin/revenue", icon: DollarSign },
+      { label: "CashApp", href: "/admin/cashapp", icon: DollarSign },
       { label: "Coupons", href: "/admin/coupons", icon: Ticket },
     ],
   },
