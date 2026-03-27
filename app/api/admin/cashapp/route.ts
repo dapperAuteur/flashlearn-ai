@@ -27,11 +27,10 @@ export async function GET() {
       .select('name email')
       .lean();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userMap = new Map<string, { name: string; email: string }>();
     for (const u of users) {
-      const user = u as any;
-      userMap.set(String(user._id), { name: user.name, email: user.email });
+      const record = u as unknown as { _id: { toString(): string }; name: string; email: string };
+      userMap.set(record._id.toString(), { name: record.name, email: record.email });
     }
 
     const enriched = payments.map((p) => ({
