@@ -79,7 +79,11 @@ export default function AdminRevenuePage() {
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lifetimeData, setLifetimeData] = useState<{ totalLifetime: number; remaining: number; cap: number } | null>(null);
+  const [lifetimeData, setLifetimeData] = useState<{
+    totalPaid: number; totalGifted: number; totalLifetime: number;
+    stripePaid: number; cashAppVerified: number;
+    remaining: number; cap: number; active: boolean;
+  } | null>(null);
 
   // Promo campaign state
   interface PromoCampaign {
@@ -317,22 +321,29 @@ export default function AdminRevenuePage() {
         <div className="bg-white shadow rounded-lg p-4 sm:p-6" role="region" aria-label="Lifetime promo tracker">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
             <div>
-              <h2 className="text-base font-semibold text-gray-800">Lifetime Promo Tracker</h2>
-              <p className="text-xs text-gray-500">$103.29 introductory price — first 100 users</p>
+              <h2 className="text-base font-semibold text-gray-800">Founder&apos;s Lifetime Tracker</h2>
+              <p className="text-xs text-gray-500">$103.29 introductory price — first {lifetimeData.cap} paid users</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-purple-600">{lifetimeData.totalLifetime} <span className="text-sm font-normal text-gray-500">/ {lifetimeData.cap}</span></p>
+              <p className="text-2xl font-bold text-purple-600">{lifetimeData.totalPaid || 0} <span className="text-sm font-normal text-gray-500">/ {lifetimeData.cap} paid</span></p>
               <p className="text-xs text-gray-500">{lifetimeData.remaining} spots remaining</p>
             </div>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-3" role="progressbar" aria-valuenow={lifetimeData.totalLifetime} aria-valuemin={0} aria-valuemax={lifetimeData.cap}>
+          <div className="w-full bg-gray-100 rounded-full h-3" role="progressbar" aria-valuenow={lifetimeData.totalPaid || 0} aria-valuemin={0} aria-valuemax={lifetimeData.cap}>
             <div
               className={`h-3 rounded-full transition-all ${lifetimeData.remaining <= 10 ? 'bg-red-500' : lifetimeData.remaining <= 30 ? 'bg-amber-500' : 'bg-purple-500'}`}
-              style={{ width: `${Math.min(100, (lifetimeData.totalLifetime / lifetimeData.cap) * 100)}%` }}
+              style={{ width: `${Math.min(100, ((lifetimeData.totalPaid || 0) / lifetimeData.cap) * 100)}%` }}
             />
           </div>
+          <div className="flex gap-4 mt-3 text-xs text-gray-500">
+            <span>Stripe: <strong className="text-gray-900">{lifetimeData.stripePaid || 0}</strong></span>
+            <span>CashApp: <strong className="text-gray-900">{lifetimeData.cashAppVerified || 0}</strong></span>
+            {(lifetimeData.totalGifted || 0) > 0 && (
+              <span>Manual/Gifted: <strong className="text-amber-600">{lifetimeData.totalGifted}</strong> (not counted)</span>
+            )}
+          </div>
           {lifetimeData.remaining === 0 && (
-            <p className="mt-2 text-sm text-red-600 font-medium">Promo cap reached — time to switch to annual pricing.</p>
+            <p className="mt-2 text-sm text-red-600 font-medium">Founder&apos;s cap reached — pricing page now shows annual plan.</p>
           )}
         </div>
       )}
