@@ -60,6 +60,30 @@ const tiers = [
     ctaStyle: 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700',
     popular: true,
   },
+  {
+    id: 'annual',
+    name: 'Annual Pro',
+    price: '$103.29',
+    period: '/year',
+    description: 'Best value — save vs monthly. All Pro features.',
+    icon: StarIcon,
+    badge: 'Save 19%',
+    features: [
+      'Everything in Monthly Pro',
+      'Unlimited AI-generated sets',
+      'Unlimited versus mode challenges',
+      'Advanced spaced repetition scheduling',
+      'Generate from PDF, YouTube, audio & images',
+      'All study modes (classic, multiple choice, typed)',
+      'Full analytics, streaks & achievements',
+      'Offline study support',
+      'Priority support',
+    ],
+    limitations: [],
+    cta: 'Start Annual',
+    ctaStyle: 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700',
+    popular: true,
+  },
 ];
 
 export default function PricingPage() {
@@ -67,6 +91,14 @@ export default function PricingPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [founders, setFounders] = useState<{ limit: number; count: number; remaining: number; active: boolean } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/pricing/founders')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setFounders(d); })
+      .catch(() => {});
+  }, []);
 
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
@@ -167,10 +199,20 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-        {tiers.map((tier) => {
+        {tiers
+          .filter((tier) => {
+            // When founders spots are gone, hide lifetime and show annual
+            if (founders && !founders.active) {
+              return tier.id !== 'lifetime';
+            }
+            // When founders spots remain, hide annual and show lifetime
+            return tier.id !== 'annual';
+          })
+          .map((tier) => {
           const isCurrentPlan =
             (tier.id === 'monthly' && currentTier === 'Monthly Pro') ||
-            (tier.id === 'lifetime' && currentTier === 'Lifetime Learner');
+            (tier.id === 'lifetime' && currentTier === 'Lifetime Learner') ||
+            (tier.id === 'annual' && currentTier === 'Annual Pro');
 
           return (
             <div
@@ -219,7 +261,23 @@ export default function PricingPage() {
                         : tier.period}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-6">{tier.description}</p>
+                <p className="text-sm text-gray-600 mb-3">{tier.description}</p>
+
+                {/* Founders counter on lifetime card */}
+                {tier.id === 'lifetime' && founders && founders.active && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                      <span>Founder&apos;s Price</span>
+                      <span>{founders.remaining} of {founders.limit} remaining</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${founders.remaining <= 10 ? 'bg-red-500' : founders.remaining <= 30 ? 'bg-amber-500' : 'bg-purple-500'}`}
+                        style={{ width: `${Math.min(100, (founders.count / founders.limit) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* CTA */}
                 <div className="mb-6">

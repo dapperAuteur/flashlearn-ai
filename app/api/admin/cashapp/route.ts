@@ -29,8 +29,8 @@ export async function GET() {
 
     const userMap = new Map<string, { name: string; email: string }>();
     for (const u of users) {
-      const record = u as unknown as { _id: { toString(): string }; name: string; email: string };
-      userMap.set(record._id.toString(), { name: record.name, email: record.email });
+      const obj = JSON.parse(JSON.stringify(u));
+      userMap.set(String(obj._id), { name: obj.name || '', email: obj.email || '' });
     }
 
     const enriched = payments.map((p) => ({
