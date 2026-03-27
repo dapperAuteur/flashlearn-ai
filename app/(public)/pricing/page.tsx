@@ -328,8 +328,10 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* CashApp Lifetime Payment */}
-      <CashAppSection isAuthenticated={isAuthenticated} />
+      {/* CashApp Lifetime Payment — hidden when founder spots are gone */}
+      {(!founders || founders.active) && (
+        <CashAppSection isAuthenticated={isAuthenticated} />
+      )}
 
       {/* API Pricing Section */}
       <section className="max-w-3xl mx-auto mt-16 sm:mt-20" aria-labelledby="api-pricing-heading">
