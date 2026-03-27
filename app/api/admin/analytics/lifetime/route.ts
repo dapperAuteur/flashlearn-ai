@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import clientPromise from "@/lib/db/mongodb";
 
 const secret = process.env.NEXTAUTH_SECRET;
+const FOUNDERS_CAP = 100;
 
 export async function GET(request: NextRequest) {
   const token = await getToken({ req: request, secret });
@@ -15,34 +16,62 @@ export async function GET(request: NextRequest) {
   try {
     const client = await clientPromise;
     const db = client.db();
-    const users = db.collection("users");
 
-    const [totalLifetime, lifetimeByMonth] = await Promise.all([
-      users.countDocuments({ subscriptionTier: "Lifetime Learner" }),
-      users
-        .aggregate([
-          { $match: { subscriptionTier: "Lifetime Learner" } },
-          {
-            $group: {
-              _id: {
-                year: { $year: "$subscriptionStartDate" },
-                month: { $month: "$subscriptionStartDate" },
+    const [stripePaid, cashAppVerified, totalLifetime, lifetimeByMonth] =
+      await Promise.all([
+        // Paid via Stripe (has stripeCustomerId)
+        db.collection("users").countDocuments({
+          subscriptionTier: "Lifetime Learner",
+          stripeCustomerId: { $exists: true, $ne: null },
+        }),
+        // Paid via CashApp (verified payments)
+        db
+          .collection("cashapppayments")
+          .countDocuments({ status: "verified" }),
+        // Total lifetime (all sources including manual/gifted)
+        db
+          .collection("users")
+          .countDocuments({ subscriptionTier: "Lifetime Learner" }),
+        // Monthly breakdown using createdAt as fallback
+        db
+          .collection("users")
+          .aggregate([
+            {
+              $match: {
+                subscriptionTier: "Lifetime Learner",
+                $or: [
+                  { stripeCustomerId: { $exists: true, $ne: null } },
+                ],
               },
-              count: { $sum: 1 },
             },
-          },
-          { $sort: { "_id.year": -1, "_id.month": -1 } },
-          { $limit: 12 },
-        ])
-        .toArray(),
-    ]);
+            {
+              $group: {
+                _id: {
+                  year: { $year: "$createdAt" },
+                  month: { $month: "$createdAt" },
+                },
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { "_id.year": -1, "_id.month": -1 } },
+            { $limit: 12 },
+          ])
+          .toArray(),
+      ]);
 
-    const remaining = Math.max(0, 100 - totalLifetime);
+    const totalPaid = stripePaid + cashAppVerified;
+    const totalGifted = Math.max(0, totalLifetime - totalPaid);
+    const remaining = Math.max(0, FOUNDERS_CAP - totalPaid);
 
     return NextResponse.json({
+      totalPaid,
+      totalGifted,
       totalLifetime,
+      stripePaid,
+      cashAppVerified,
       remaining,
-      cap: 100,
+      cap: FOUNDERS_CAP,
+      active: remaining > 0,
       byMonth: lifetimeByMonth.map((m) => ({
         month: `${m._id.year}-${String(m._id.month).padStart(2, "0")}`,
         count: m.count,
