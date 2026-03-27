@@ -165,6 +165,48 @@ export async function PATCH(request: NextRequest) {
         href: '/pricing',
       });
 
+      // Rejection email (fire-and-forget)
+      const rejectedUser = await User.findById(payment.userId).select('name email');
+      if (rejectedUser?.email) {
+        const baseUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
+        const firstName = (rejectedUser.name || 'there').split(' ')[0];
+        const reasonText = adminNotes
+          ? `<p style="color: #4b5563; font-size: 15px; line-height: 1.7; margin: 0 0 16px 0;"><strong>Reason:</strong> ${adminNotes}</p>`
+          : '';
+        sendEmail({
+          to: rejectedUser.email,
+          subject: 'CashApp payment update — action needed',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background-color: #4A7BF7; padding: 24px 32px; border-radius: 8px 8px 0 0; text-align: center;">
+                <p style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0;">FlashLearnAI.WitUS.Online</p>
+              </div>
+              <div style="background-color: #ffffff; padding: 32px; border: 1px solid #e5e7eb; border-top: none;">
+                <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 22px;">Hi ${firstName},</h2>
+                <p style="color: #4b5563; font-size: 15px; line-height: 1.7; margin: 0 0 16px 0;">
+                  We were unable to verify your Cash App payment of $${payment.amount}.
+                </p>
+                ${reasonText}
+                <p style="color: #4b5563; font-size: 15px; line-height: 1.7; margin: 0 0 24px 0;">
+                  Please check your Cash App transaction history and try again, or use card payment instead.
+                </p>
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="${baseUrl}/pricing" style="background-color: #4A7BF7; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 15px;">
+                    View Pricing
+                  </a>
+                </div>
+                <p style="color: #9ca3af; font-size: 13px; margin: 24px 0 0 0;">
+                  Need help? Reply to this email or contact support.
+                </p>
+              </div>
+              <div style="background-color: #f9fafb; padding: 16px 32px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none; text-align: center;">
+                <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; ${new Date().getFullYear()} FlashLearnAI.WitUS.Online. All rights reserved.</p>
+              </div>
+            </div>
+          `,
+        }).catch(() => { /* non-critical */ });
+      }
+
       Logger.info(LogContext.SYSTEM, `Admin rejected CashApp payment ${id}`, {
         adminId: session.user.id,
         userId: payment.userId.toString(),

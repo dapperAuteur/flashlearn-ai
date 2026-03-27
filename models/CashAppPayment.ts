@@ -4,6 +4,7 @@ export interface ICashAppPayment extends Document {
   userId: mongoose.Types.ObjectId;
   amount: number;
   cashAppName: string;
+  screenshotUrl?: string;
   status: 'pending' | 'verified' | 'rejected';
   adminNotes?: string;
   verifiedBy?: mongoose.Types.ObjectId;
@@ -17,6 +18,7 @@ const CashAppPaymentSchema = new Schema<ICashAppPayment>(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     amount: { type: Number, required: true, default: 100 },
     cashAppName: { type: String, required: true, trim: true },
+    screenshotUrl: { type: String },
     status: {
       type: String,
       required: true,
