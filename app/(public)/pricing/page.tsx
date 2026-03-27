@@ -91,7 +91,11 @@ export default function PricingPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [founders, setFounders] = useState<{ limit: number; count: number; remaining: number; active: boolean } | null>(null);
+  const [founders, setFounders] = useState<{
+    limit: number; count: number; remaining: number;
+    foundersActive: boolean; active: boolean;
+    promo: { name: string; cap: number | null; redemptions: number; remaining: number | null } | null;
+  } | null>(null);
 
   useEffect(() => {
     fetch('/api/pricing/founders')
@@ -263,19 +267,30 @@ export default function PricingPage() {
                 </div>
                 <p className="text-sm text-gray-600 mb-3">{tier.description}</p>
 
-                {/* Founders counter on lifetime card */}
+                {/* Founders counter or promo banner on lifetime card */}
                 {tier.id === 'lifetime' && founders && founders.active && (
                   <div className="mb-4">
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                      <span>Founder&apos;s Price</span>
-                      <span>{founders.remaining} of {founders.limit} remaining</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${founders.remaining <= 10 ? 'bg-red-500' : founders.remaining <= 30 ? 'bg-amber-500' : 'bg-purple-500'}`}
-                        style={{ width: `${Math.min(100, (founders.count / founders.limit) * 100)}%` }}
-                      />
-                    </div>
+                    {founders.promo ? (
+                      <div className="bg-purple-100 border border-purple-200 rounded-lg px-3 py-2 text-center">
+                        <p className="text-xs font-semibold text-purple-800">{founders.promo.name}</p>
+                        {founders.promo.remaining !== null && (
+                          <p className="text-[10px] text-purple-600 mt-0.5">{founders.promo.remaining} spots left</p>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                          <span>Founder&apos;s Price</span>
+                          <span>{founders.remaining} of {founders.limit} remaining</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${founders.remaining <= 10 ? 'bg-red-500' : founders.remaining <= 30 ? 'bg-amber-500' : 'bg-purple-500'}`}
+                            style={{ width: `${Math.min(100, (founders.count / founders.limit) * 100)}%` }}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
