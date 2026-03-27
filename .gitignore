@@ -44,3 +44,5 @@ mongo-data/
 
 docs/data-backup/
 .env*.local
+
+.claude/
