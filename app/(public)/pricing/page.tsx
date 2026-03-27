@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -270,32 +270,8 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* CashApp Fee-Free Payment Option */}
-      <section className="max-w-lg mx-auto mt-12" aria-labelledby="cashapp-heading">
-        <div className="bg-green-50 border border-green-200 rounded-xl p-5 sm:p-6 text-center">
-          <h2 id="cashapp-heading" className="text-lg font-bold text-gray-900 mb-2">
-            Pay Fee-Free with Cash App
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Avoid processing fees &mdash; pay exactly <strong>$100 for Lifetime</strong> or <strong>$10/mo for Pro</strong>.
-          </p>
-          <div className="flex justify-center mb-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/cashapp-qr.jpg"
-              alt="Scan to pay $centenarian on Cash App"
-              className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg shadow-sm"
-              width={192}
-              height={192}
-            />
-          </div>
-          <p className="text-base font-semibold text-green-800 mb-2">$centenarian</p>
-          <p className="text-xs text-gray-500 leading-relaxed max-w-sm mx-auto">
-            Send your payment and include your FlashLearnAI email in the note.
-            We&apos;ll activate your account within 24 hours.
-          </p>
-        </div>
-      </section>
+      {/* CashApp Lifetime Payment */}
+      <CashAppSection isAuthenticated={isAuthenticated} />
 
       {/* API Pricing Section */}
       <section className="max-w-3xl mx-auto mt-16 sm:mt-20" aria-labelledby="api-pricing-heading">
@@ -437,5 +413,114 @@ export default function PricingPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+function CashAppSection({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const [cashAppName, setCashAppName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [existingStatus, setExistingStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch('/api/cashapp')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (d?.payment?.status) setExistingStatus(d.payment.status);
+      })
+      .catch(() => {});
+  }, [isAuthenticated]);
+
+  const handleSubmit = async () => {
+    if (!cashAppName.trim()) {
+      setError('Please enter your Cash App name');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/cashapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cashAppName: cashAppName.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Failed to submit payment');
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <section className="max-w-lg mx-auto mt-12" aria-labelledby="cashapp-heading">
+      <div className="bg-green-50 border border-green-200 rounded-xl p-5 sm:p-6 text-center">
+        <h2 id="cashapp-heading" className="text-lg font-bold text-gray-900 mb-1">
+          Lifetime via Cash App
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Pay exactly <strong>$100</strong> for Lifetime &mdash; no processing fees.
+        </p>
+
+        <div className="flex justify-center mb-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/cashapp-qr.jpg"
+            alt="Scan to pay $centenarian on Cash App"
+            className="w-36 h-36 sm:w-44 sm:h-44 rounded-lg shadow-sm"
+            width={176}
+            height={176}
+          />
+        </div>
+        <p className="text-base font-semibold text-green-800 mb-4">$centenarian</p>
+
+        {submitted || existingStatus === 'pending' ? (
+          <div className="bg-green-100 border border-green-300 rounded-lg p-3" role="status">
+            <p className="text-sm font-medium text-green-800">Payment submitted!</p>
+            <p className="text-xs text-green-700 mt-1">We&apos;ll verify and activate your Lifetime membership within 24 hours.</p>
+          </div>
+        ) : existingStatus === 'verified' ? (
+          <div className="bg-green-100 border border-green-300 rounded-lg p-3" role="status">
+            <p className="text-sm font-medium text-green-800">You&apos;re a Lifetime member!</p>
+          </div>
+        ) : isAuthenticated ? (
+          <div className="max-w-xs mx-auto space-y-3">
+            <p className="text-xs text-gray-500">1. Send $100 to <strong>$centenarian</strong> on Cash App</p>
+            <p className="text-xs text-gray-500">2. Enter your Cash App name below</p>
+            <div>
+              <label htmlFor="cashapp-name" className="sr-only">Your Cash App name</label>
+              <input
+                id="cashapp-name"
+                type="text"
+                value={cashAppName}
+                onChange={(e) => setCashAppName(e.target.value)}
+                placeholder="Your Cash App name (e.g. $john)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 text-center focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+            {error && <p className="text-xs text-red-600" role="alert">{error}</p>}
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              {submitting ? 'Submitting...' : "I've Sent $100"}
+            </button>
+            <p className="text-[10px] text-gray-400">Cash App charges a 2.75% fee on their end.</p>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500">
+            <Link href="/auth/signup" className="text-green-700 underline font-medium">Sign up</Link> first, then come back to pay via Cash App.
+          </p>
+        )}
+      </div>
+    </section>
   );
 }
