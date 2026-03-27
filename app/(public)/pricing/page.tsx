@@ -565,7 +565,7 @@ function CashAppSection({ isAuthenticated }: { isAuthenticated: boolean }) {
           <div className="bg-green-100 border border-green-300 rounded-lg p-3" role="status">
             <p className="text-sm font-medium text-green-800">You&apos;re a Lifetime member!</p>
           </div>
-        ) : isAuthenticated ? (
+        ) : (
           <div className="max-w-xs mx-auto space-y-3">
             <p className="text-xs text-gray-500">1. Send $100 to <strong>$centenarian</strong> on Cash App</p>
             <p className="text-xs text-gray-500">2. Enter your Cash App name below</p>
@@ -581,19 +581,24 @@ function CashAppSection({ isAuthenticated }: { isAuthenticated: boolean }) {
               />
             </div>
             {error && <p className="text-xs text-red-600" role="alert">{error}</p>}
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-            >
-              {submitting ? 'Submitting...' : "I've Sent $100"}
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="w-full px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? 'Submitting...' : "I've Sent $100"}
+              </button>
+            ) : (
+              <Link
+                href="/auth/signup"
+                className="block w-full px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 text-center transition-colors"
+              >
+                Sign Up to Submit Payment
+              </Link>
+            )}
             <p className="text-[10px] text-gray-400">Cash App charges a 2.75% fee on their end.</p>
           </div>
-        ) : (
-          <p className="text-xs text-gray-500">
-            <Link href="/auth/signup" className="text-green-700 underline font-medium">Sign up</Link> first, then come back to pay via Cash App.
-          </p>
         )}
       </div>
     </section>
