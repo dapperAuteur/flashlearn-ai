@@ -46,3 +46,5 @@ docs/data-backup/
 .env*.local
 
 .claude/
+
+plans/
