@@ -3,8 +3,8 @@ import { Redis } from '@upstash/redis';
 import { type ApiKeyType, type ApiTier, type ApiRateLimitConfig } from '@/types/api';
 
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  url: (process.env.UPSTASH_REDIS_REST_URL || process.env.STORAGE_KV_REST_API_URL)!,
+  token: (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.STORAGE_KV_REST_API_TOKEN)!,
 });
 
 export type WebhookEvent =

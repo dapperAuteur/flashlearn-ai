@@ -2,22 +2,23 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { Logger, LogContext } from "@/lib/logging/logger";
 
-// Ensure environment variables are loaded
-if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+// Support both legacy UPSTASH_* and new Vercel Marketplace STORAGE_KV_* naming
+const redisUrl =
+  process.env.UPSTASH_REDIS_REST_URL ||
+  process.env.STORAGE_KV_REST_API_URL;
+const redisToken =
+  process.env.UPSTASH_REDIS_REST_TOKEN ||
+  process.env.STORAGE_KV_REST_API_TOKEN;
+
+if (!redisUrl || !redisToken) {
   const errorMessage = "Missing Upstash Redis environment variables for rate limiting.";
-  // Log the error on the server
   Logger.error(LogContext.SYSTEM, errorMessage);
-  // Throwing an error is appropriate here because rate limiting is a critical security feature.
-  // The application should not run without it.
   throw new Error(errorMessage);
 }
 
-// Create a new Redis client instance.
-// The `cache` variable is used to hold a singleton instance of the Redis client.
-// This prevents creating a new connection for every server request, which is inefficient.
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  url: redisUrl,
+  token: redisToken,
 });
 
 /**
