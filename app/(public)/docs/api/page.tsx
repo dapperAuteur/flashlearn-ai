@@ -17,7 +17,7 @@ export default function ApiDocsPage() {
           Interactive API Reference
         </h1>
         <p className="text-sm sm:text-base text-gray-500 mt-2">
-          Explore all 23 endpoints. Click any endpoint to see parameters, try it live, and view response schemas.
+          Explore all 27 endpoints. Click any endpoint to see parameters, try it live, and view response schemas.
         </p>
         <div className="flex flex-wrap gap-3 mt-4">
           <a

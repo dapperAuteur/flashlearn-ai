@@ -8,8 +8,10 @@ import { type ApiKeyType, type ApiTier, DEFAULT_PERMISSIONS, MAX_KEYS_PER_TYPE }
 
 const secret = process.env.NEXTAUTH_SECRET;
 
-const VALID_KEY_TYPES: ApiKeyType[] = ['admin', 'app', 'public', 'admin_public'];
-const ADMIN_ONLY_KEY_TYPES: ApiKeyType[] = ['admin', 'app', 'admin_public'];
+const VALID_KEY_TYPES: ApiKeyType[] = ['admin', 'app', 'public', 'admin_public', 'ecosystem'];
+// Ecosystem keys are issued for cross-product partners (Wanderlearn etc.) —
+// admin-mint only so we vet the relationship + DPA before turning them on.
+const ADMIN_ONLY_KEY_TYPES: ApiKeyType[] = ['admin', 'app', 'admin_public', 'ecosystem'];
 
 /**
  * GET /api/developer/keys

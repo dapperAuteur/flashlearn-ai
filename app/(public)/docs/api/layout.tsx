@@ -24,6 +24,8 @@ const docsNav = [
   { href: '/docs/api/versus-mode', label: 'Versus Mode', description: 'Competitive challenges' },
   { href: '/docs/api/link-tracking', label: 'Link Tracking', description: 'Short URLs & pixel attribution' },
   { href: '/docs/api/offline-sync', label: 'Offline & Sync', description: 'Conflict resolution' },
+  { href: '/docs/api/ecosystem', label: 'Ecosystem (Sessions + Mastery + COPPA)', description: 'Cross-product partner integration' },
+  { href: '/docs/api/webhooks', label: 'Outbound Webhooks', description: 'Signed delivery, retries, replay' },
 ];
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {

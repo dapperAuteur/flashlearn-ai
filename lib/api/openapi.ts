@@ -95,6 +95,24 @@ export const openApiSpec = {
           },
         },
       },
+      SessionCompletedPayload: {
+        type: 'object' as const,
+        description: 'Canonical session.completed payload — returned by POST /sessions/:id/results AND fired via webhook. Same body either way.',
+        required: ['type', 'sessionId', 'childId', 'completedAt', 'cards'],
+        properties: {
+          type: { type: 'string' as const, enum: ['session.completed'] },
+          sessionId: { type: 'string' as const, format: 'uuid' as const },
+          childId: { type: 'string' as const },
+          completedAt: { type: 'string' as const, format: 'date-time' as const },
+          cards: { type: 'array' as const, items: { type: 'object' as const, required: ['cardId', 'correctOnFirstAttempt', 'attempts', 'latencyMs'], properties: {
+            cardId: { type: 'string' as const },
+            standardCode: { type: 'string' as const, description: 'Primary standard code the card was tagged to' },
+            correctOnFirstAttempt: { type: 'boolean' as const },
+            attempts: { type: 'integer' as const, minimum: 1 },
+            latencyMs: { type: 'integer' as const, minimum: 0, description: 'Total ms across all attempts on this card' },
+          } } },
+        },
+      },
       UsageResponse: {
         type: 'object' as const,
         properties: {
@@ -553,6 +571,131 @@ export const openApiSpec = {
         responses: { '200': { description: 'Win/loss record, ELO rating, streaks, and composite score stats' } },
       },
     },
+    '/api/v1/sessions': {
+      post: {
+        operationId: 'createEcosystemSession',
+        summary: 'Schedule a child-scoped review deck',
+        description: 'Generates a deck tagged to the given curriculum standards, persists an EcosystemSession record, schedules next-day delivery in the consumer-supplied tz (default UTC), and returns the sessionId. Counts as 1 generation + 1 API call.',
+        tags: ['Ecosystem'],
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' as const,
+          required: ['childId', 'ageBand', 'standards', 'sourceContext'],
+          properties: {
+            childId: { type: 'string' as const, description: 'Consumer-issued opaque identifier. Scopes all session/mastery/delete data.' },
+            ageBand: { type: 'string' as const, enum: ['4-7', '8-12', '13-18'] },
+            standards: { type: 'array' as const, items: { type: 'object' as const, required: ['framework', 'code'], properties: {
+              framework: { type: 'string' as const, example: 'indiana-k' },
+              code: { type: 'string' as const, example: 'K.NS.1' },
+            } } },
+            sourceContext: { type: 'object' as const, required: ['consumer', 'completedAt'], properties: {
+              consumer: { type: 'string' as const, example: 'wanderlearn-stories' },
+              bookId: { type: 'string' as const },
+              hubId: { type: 'string' as const },
+              completedAt: { type: 'string' as const, format: 'date-time' as const },
+            } },
+            tz: { type: 'string' as const, description: 'IANA timezone for next-local-midnight scheduling. Defaults to UTC.', example: 'America/Indiana/Indianapolis' },
+          },
+        } } } },
+        responses: {
+          '201': { description: 'Session scheduled', content: { 'application/json': { schema: { type: 'object' as const, properties: {
+            data: { type: 'object' as const, properties: {
+              sessionId: { type: 'string' as const, format: 'uuid' as const },
+              scheduledFor: { type: 'string' as const, format: 'date-time' as const },
+              estimatedCardCount: { type: 'integer' as const },
+            } },
+          } } } } },
+          '400': { description: 'Invalid input (e.g. unknown standard code)' },
+          '401': { description: 'Missing or invalid API key' },
+          '403': { description: 'API key lacks sessions:write permission' },
+          '429': { description: 'Rate limit or monthly quota exceeded' },
+          '502': { description: 'AI generation failed' },
+        },
+      },
+    },
+    '/api/v1/sessions/{sessionId}/results': {
+      post: {
+        operationId: 'submitSessionResults',
+        summary: 'Submit attempts; receive canonical session.completed payload',
+        description: 'Persists CardAttempt rows (idempotent on (sessionId, cardId, attemptNumber)), recomputes MasteryRollup state, marks the session completed, and dispatches the session.completed webhook to every active subscribed endpoint. The response body is byte-equivalent to the webhook body so consumers can update UI synchronously.',
+        tags: ['Ecosystem'],
+        parameters: [{ name: 'sessionId', in: 'path' as const, required: true, schema: { type: 'string' as const, format: 'uuid' as const } }],
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' as const, required: ['cards'],
+          properties: {
+            cards: { type: 'array' as const, items: { type: 'object' as const, required: ['cardId', 'attempts'], properties: {
+              cardId: { type: 'string' as const, description: 'ObjectId hex of the card from the generated deck' },
+              attempts: { type: 'array' as const, items: { type: 'object' as const, required: ['isCorrect', 'latencyMs'], properties: {
+                isCorrect: { type: 'boolean' as const },
+                latencyMs: { type: 'integer' as const, minimum: 0 },
+                attemptedAt: { type: 'string' as const, format: 'date-time' as const },
+                confidenceRating: { type: 'integer' as const, minimum: 1, maximum: 5 },
+              } } },
+            } } },
+          },
+        } } } },
+        responses: {
+          '200': { description: 'Canonical session.completed payload (matches webhook body)', content: { 'application/json': { schema: { $ref: '#/components/schemas/SessionCompletedPayload' } } } },
+          '400': { description: 'Invalid input' },
+          '404': { description: 'Session not found for this API key' },
+        },
+      },
+    },
+    '/api/v1/mastery/{childId}': {
+      get: {
+        operationId: 'getMastery',
+        summary: 'Per-standard mastery rollup for a child',
+        description: 'Returns rolled-up state (exposed/practiced/demonstrated) per (framework, code) for a given childId. Returns 404 when the child has no rollup data — including after a cascade delete.',
+        tags: ['Ecosystem'],
+        parameters: [{ name: 'childId', in: 'path' as const, required: true, schema: { type: 'string' as const } }],
+        responses: {
+          '200': { description: 'Mastery rollup', content: { 'application/json': { schema: { type: 'object' as const, properties: {
+            data: { type: 'object' as const, properties: {
+              childId: { type: 'string' as const },
+              standards: { type: 'array' as const, items: { type: 'object' as const, properties: {
+                framework: { type: 'string' as const },
+                code: { type: 'string' as const },
+                state: { type: 'string' as const, enum: ['exposed', 'practiced', 'demonstrated'] },
+                firstAttemptCorrectRate: { type: 'number' as const, minimum: 0, maximum: 1 },
+                attemptCount: { type: 'integer' as const },
+                lastAttemptAt: { type: 'string' as const, format: 'date-time' as const, nullable: true },
+              } } },
+            } },
+          } } } } },
+          '404': { description: 'No mastery data for this child' },
+        },
+      },
+    },
+    '/api/v1/children/{childId}': {
+      delete: {
+        operationId: 'deleteChild',
+        summary: 'COPPA cascade delete — purge every artifact for this child',
+        description: 'Cancels pending QStash jobs, deletes WebhookDelivery / CardAttempt / MasteryRollup / FlashcardSet / EcosystemSession rows scoped to this (apiKey, child) tuple, and writes a CascadePurgeLog audit row. Idempotent: re-call after a prior purge returns 200 with purgedRecordCount: 0. Privacy rights are free — does not count against quota.',
+        tags: ['Ecosystem'],
+        parameters: [{ name: 'childId', in: 'path' as const, required: true, schema: { type: 'string' as const } }],
+        responses: {
+          '200': { description: 'Cascade complete', content: { 'application/json': { schema: { type: 'object' as const, properties: {
+            data: { type: 'object' as const, properties: {
+              deleted: { type: 'boolean' as const, enum: [true] },
+              purgedRecordCount: { type: 'integer' as const, minimum: 0 },
+            } },
+          } } } } },
+          '404': { description: 'No records exist for this child and no prior purge log' },
+        },
+      },
+    },
+  },
+  webhooks: {
+    'session.completed': {
+      post: {
+        operationId: 'sessionCompletedWebhook',
+        summary: 'Fired after a child completes a deck and the consumer POSTs results',
+        description: 'FlashLearn AI POSTs your registered URL with the canonical session.completed payload. Headers: X-FlashLearn-Signature (sha256=hex of HMAC-SHA256 over raw body), X-FlashLearn-Delivery (UUID, idempotent across retries), X-FlashLearn-Event, X-FlashLearn-Timestamp (unix seconds). Retries up to 7 times (1m / 5m / 30m / 2h / 6h / 16h between attempts ≈ 24h36m total). Endpoint must respond 2xx within 10 seconds and dedupe on X-FlashLearn-Delivery.',
+        requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/SessionCompletedPayload' } } } },
+        responses: {
+          '200': { description: 'Acknowledged' },
+          '4XX': { description: 'Triggers retry until exhausted, then dead-letter' },
+          '5XX': { description: 'Triggers retry until exhausted, then dead-letter' },
+        },
+      },
+    },
   },
   tags: [
     { name: 'Generate', description: 'AI-powered flashcard generation' },
@@ -561,5 +704,6 @@ export const openApiSpec = {
     { name: 'Study', description: 'Spaced repetition study sessions and analytics' },
     { name: 'Versus', description: 'Competitive challenge mode with scoring and leaderboards' },
     { name: 'Usage', description: 'API usage and billing' },
+    { name: 'Ecosystem', description: 'Cross-product partner endpoints — child-scoped sessions, mastery rollups, COPPA cascade delete' },
   ],
 };
