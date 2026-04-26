@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# but DO commit the canonical sample template — it's the onboarding doc.
+!.env.sample
+!.env.example
 
 # vercel
 .vercel
