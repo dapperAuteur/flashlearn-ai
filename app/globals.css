@@ -126,3 +126,23 @@ body {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Form control readability: browsers fall back to OS color-scheme for inputs,
+   which produces light-on-light text in dark-mode systems. Pin explicit colors
+   so every input/select/textarea is readable regardless of OS preference.
+   Tailwind utilities still win because @layer base has lower specificity. */
+@layer base {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]),
+  select,
+  textarea {
+    background-color: #ffffff;
+    color: #171717;
+    color-scheme: light;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #6b7280; /* gray-500: WCAG AA against white */
+    opacity: 1;
+  }
+}
