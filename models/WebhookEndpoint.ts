@@ -1,16 +1,17 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import { AUTO_DISABLE_THRESHOLD } from '@/lib/api/webhookConstants';
+
+export { AUTO_DISABLE_THRESHOLD };
 
 export type WebhookEventName = 'session.completed' | 'session.scheduled';
-
-// Auto-disable threshold: an endpoint that fails this many deliveries
-// in a row gets `active: false` so we stop wasting QStash credits and
-// the developer sees a clear signal in the dashboard.
-export const AUTO_DISABLE_THRESHOLD = 50;
 
 export interface IWebhookEndpoint extends Document {
   apiKeyId: Types.ObjectId;
   url: string;
-  secretHash: string;
+  // AES-256-GCM ciphertext of the plaintext signing secret. We must be able
+  // to recover the plaintext to sign outbound bodies (the consumer holds the
+  // same plaintext and verifies HMAC against it). See lib/crypto/webhookSecret.ts.
+  secretEncrypted: string;
   events: WebhookEventName[];
   description?: string;
   active: boolean;
@@ -38,7 +39,7 @@ const WebhookEndpointSchema = new Schema<IWebhookEndpoint>({
       message: 'Webhook URL must use https://',
     },
   },
-  secretHash: {
+  secretEncrypted: {
     type: String,
     required: true,
   },
