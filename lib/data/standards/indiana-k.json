@@ -1,0 +1,77 @@
+{
+  "framework": "indiana-k",
+  "ageBand": "4-7",
+  "source": "Indiana Academic Standards, Kindergarten (Indiana Department of Education).",
+  "standards": [
+    {
+      "code": "K.NS.1",
+      "title": "Count by ones and tens",
+      "description": "Count to at least 100 by ones and tens, and count on by one from any given number."
+    },
+    {
+      "code": "K.NS.2",
+      "title": "Write whole numbers 0–20",
+      "description": "Write whole numbers from 0 to 20 and recognize number words from zero to ten."
+    },
+    {
+      "code": "K.NS.3",
+      "title": "One-to-one correspondence",
+      "description": "Use one-to-one correspondence when counting objects to determine how many."
+    },
+    {
+      "code": "K.NS.4",
+      "title": "Compare quantities of two groups",
+      "description": "Determine whether the number of objects in one group is greater than, less than, or equal to the number of objects in another group, up to ten objects."
+    },
+    {
+      "code": "K.CA.1",
+      "title": "Addition and subtraction within 10",
+      "description": "Use objects, drawings, etc., to model and add/subtract within 10. Solve real-world problems involving addition and subtraction within 10."
+    },
+    {
+      "code": "K.CA.2",
+      "title": "Decompose numbers up to 10",
+      "description": "Decompose numbers less than or equal to 10 in more than one way (e.g., 5 = 2 + 3 and 5 = 4 + 1)."
+    },
+    {
+      "code": "K.G.1",
+      "title": "Identify and describe shapes",
+      "description": "Identify, describe, compare, and contrast plane and solid shapes (squares, circles, triangles, rectangles, hexagons, cubes, cones, cylinders, and spheres)."
+    },
+    {
+      "code": "K.RL.1",
+      "title": "Ask and answer questions about a story",
+      "description": "With prompting and support, ask and answer questions about main topics and key details in a story."
+    },
+    {
+      "code": "K.RL.2",
+      "title": "Retell a familiar story",
+      "description": "With prompting and support, retell familiar stories, poems, and nursery rhymes, including key details."
+    },
+    {
+      "code": "K.RL.3",
+      "title": "Identify characters, settings, and major events",
+      "description": "With prompting and support, identify characters, settings, and major events in a story."
+    },
+    {
+      "code": "K.RF.1",
+      "title": "Print concepts",
+      "description": "Demonstrate understanding of the organization and basic features of print, including letters, words, spacing, and sentences."
+    },
+    {
+      "code": "K.RF.2",
+      "title": "Phonological awareness",
+      "description": "Demonstrate understanding of spoken words, syllables, and sounds (phonemes)."
+    },
+    {
+      "code": "K.W.1",
+      "title": "Write opinion pieces",
+      "description": "With prompting and support, use a combination of drawing, dictating, and writing to compose opinion pieces about a topic or book."
+    },
+    {
+      "code": "K.SL.1",
+      "title": "Participate in conversations",
+      "description": "Participate in collaborative conversations about kindergarten-appropriate topics and texts with peers and adults."
+    }
+  ]
+}

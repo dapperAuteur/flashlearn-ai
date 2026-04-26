@@ -4,7 +4,7 @@ import { Document, Types } from 'mongoose';
 // API Key Types
 // ============================
 
-export type ApiKeyType = 'admin' | 'app' | 'public' | 'admin_public';
+export type ApiKeyType = 'admin' | 'app' | 'public' | 'admin_public' | 'ecosystem';
 
 export type ApiTier = 'Free' | 'Developer' | 'Pro' | 'Enterprise';
 
@@ -15,13 +15,18 @@ export const API_KEY_PREFIXES: Record<ApiKeyType, string> = {
   app: 'fl_app_',
   public: 'fl_pub_',
   admin_public: 'fl_adm_pub_',
+  ecosystem: 'fl_eco_',
 } as const;
 
+// kids:* covers the ecosystem session/mastery/child surface introduced for
+// cross-product consumers (e.g. Wanderlearn). Public keys do NOT get it by
+// default — it is opt-in at key creation. Admin/admin_public get it explicitly.
 export const DEFAULT_PERMISSIONS: Record<ApiKeyType, string[]> = {
-  admin: ['admin:*', 'generate', 'sets:*', 'study:*', 'users:*', 'analytics:*'],
+  admin: ['admin:*', 'generate', 'sets:*', 'study:*', 'users:*', 'analytics:*', 'kids:*'],
   app: ['generate', 'sets:read', 'sets:write', 'study:*', 'categories:read'],
   public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read', 'study:*', 'versus:*'],
-  admin_public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read', 'study:*', 'versus:*', 'admin:bypass_quota'],
+  admin_public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read', 'study:*', 'versus:*', 'kids:*', 'admin:bypass_quota'],
+  ecosystem: ['generate', 'kids:*'],
 } as const;
 
 export const GEMINI_KEY_ENV_MAP: Record<ApiKeyType, string> = {
@@ -29,6 +34,7 @@ export const GEMINI_KEY_ENV_MAP: Record<ApiKeyType, string> = {
   app: 'GEMINI_API_KEY_APP',
   public: 'GEMINI_API_KEY_PUBLIC',
   admin_public: 'GEMINI_API_KEY_ADMIN_PUBLIC',
+  ecosystem: 'GEMINI_API_KEY_ECOSYSTEM',
 } as const;
 
 // ============================
@@ -129,6 +135,12 @@ export const DEFAULT_RATE_LIMITS: Record<ApiKeyType, Record<ApiTier, ApiRateLimi
     Pro: { burstPerMinute: Infinity, monthlyGenerations: Infinity, monthlyApiCalls: Infinity },
     Enterprise: { burstPerMinute: Infinity, monthlyGenerations: Infinity, monthlyApiCalls: Infinity },
   },
+  ecosystem: {
+    Free: { burstPerMinute: 60, monthlyGenerations: 1000, monthlyApiCalls: 10000 },
+    Developer: { burstPerMinute: 120, monthlyGenerations: 10000, monthlyApiCalls: 100000 },
+    Pro: { burstPerMinute: 300, monthlyGenerations: 50000, monthlyApiCalls: 500000 },
+    Enterprise: { burstPerMinute: 600, monthlyGenerations: Infinity, monthlyApiCalls: Infinity },
+  },
 } as const;
 
 // ============================
@@ -140,6 +152,7 @@ export const MAX_KEYS_PER_TYPE: Record<ApiKeyType, number | Record<ApiTier, numb
   app: 10,
   public: { Free: 2, Developer: 5, Pro: 10, Enterprise: 25 },
   admin_public: 5,
+  ecosystem: { Free: 1, Developer: 3, Pro: 10, Enterprise: 25 },
 } as const;
 
 // ============================

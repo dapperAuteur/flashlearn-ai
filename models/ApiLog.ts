@@ -9,7 +9,7 @@ const ApiLogSchema = new Schema<IApiLog>({
   },
   keyType: {
     type: String,
-    enum: ['admin', 'app', 'public', 'admin_public'],
+    enum: ['admin', 'app', 'public', 'admin_public', 'ecosystem'],
     required: true,
   },
   endpoint: {

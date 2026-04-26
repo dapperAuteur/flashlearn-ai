@@ -8,7 +8,13 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "seed:standards": "tsx scripts/seedStandards.ts"
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "6.0.14"
+    }
   },
   "dependencies": {
     "@google/genai": "^0.10.0",
@@ -19,6 +25,7 @@
     "@powersync/react": "^1.8.1",
     "@powersync/web": "^1.27.0",
     "@radix-ui/react-toast": "^1.2.14",
+    "@upstash/qstash": "^2.10.1",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.35.4",
     "@upstash/search": "^0.1.5",
@@ -60,6 +67,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@types/bcrypt": "^5.0.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
     "@types/papaparse": "^5.3.16",
@@ -70,7 +78,9 @@
     "ignore-loader": "^0.1.2",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "mongodb-memory-server": "^11.0.1",
     "tailwindcss": "^4.1.13",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

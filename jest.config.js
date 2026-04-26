@@ -9,7 +9,7 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
   transformIgnorePatterns: [
-    'node_modules/(?!(@powersync)/)',
+    'node_modules/(?!(@powersync|bson)/)',
   ],
 };
 
