@@ -14,7 +14,7 @@ const ApiUsageSchema = new Schema<IApiUsage>({
   },
   keyType: {
     type: String,
-    enum: ['admin', 'app', 'public', 'admin_public'],
+    enum: ['admin', 'app', 'public', 'admin_public', 'ecosystem'],
     required: true,
   },
   periodStart: {

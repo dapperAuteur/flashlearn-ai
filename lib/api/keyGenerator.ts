@@ -1,12 +1,5 @@
 import { randomBytes, createHash } from 'crypto';
-import { type ApiKeyType } from '@/types/api';
-
-const KEY_PREFIXES: Record<ApiKeyType, string> = {
-  admin: 'fl_admin_',
-  app: 'fl_app_',
-  public: 'fl_pub_',
-  admin_public: 'fl_adm_pub_',
-};
+import { API_KEY_PREFIXES, type ApiKeyType } from '@/types/api';
 
 interface GeneratedKey {
   /** The full plaintext key (shown once to user, never stored) */
@@ -22,7 +15,7 @@ interface GeneratedKey {
  * Returns the plaintext key (shown once), its hash (stored), and a display prefix.
  */
 export function generateApiKey(keyType: ApiKeyType): GeneratedKey {
-  const prefix = KEY_PREFIXES[keyType];
+  const prefix = API_KEY_PREFIXES[keyType];
   const randomPart = randomBytes(32).toString('base64url');
   const plaintext = `${prefix}${randomPart}`;
   const keyHash = createHash('sha256').update(plaintext).digest('hex');

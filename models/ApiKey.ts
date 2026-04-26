@@ -16,7 +16,7 @@ const ApiKeySchema = new Schema<IApiKey>({
   },
   keyType: {
     type: String,
-    enum: ['admin', 'app', 'public', 'admin_public'],
+    enum: ['admin', 'app', 'public', 'admin_public', 'ecosystem'],
     required: [true, 'Key type is required.'],
   },
   keyPrefix: {
