@@ -3,11 +3,12 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Key, BarChart3, CreditCard, LayoutDashboard } from "lucide-react";
+import { Key, BarChart3, CreditCard, LayoutDashboard, Webhook } from "lucide-react";
 
 const devNavItems = [
   { label: "Overview", href: "/developer", icon: LayoutDashboard },
   { label: "API Keys", href: "/developer/keys", icon: Key },
+  { label: "Webhooks", href: "/developer/webhooks", icon: Webhook },
   { label: "Usage", href: "/developer/usage", icon: BarChart3 },
   { label: "Billing", href: "/developer/billing", icon: CreditCard },
 ];

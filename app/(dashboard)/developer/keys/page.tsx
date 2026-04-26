@@ -23,6 +23,7 @@ const KEY_TYPE_COLORS: Record<string, string> = {
   app: "bg-blue-100 text-blue-800",
   public: "bg-green-100 text-green-800",
   admin_public: "bg-purple-100 text-purple-800",
+  ecosystem: "bg-amber-100 text-amber-800",
 };
 
 export default function KeysPage() {
@@ -170,11 +171,13 @@ export default function KeysPage() {
                   value={newKeyType}
                   onChange={(e) => setNewKeyType(e.target.value)}
                   className="text-sm border rounded-lg px-3 py-2"
+                  aria-label="API key type"
                 >
                   <option value="public">Public</option>
                   <option value="admin">Admin</option>
                   <option value="app">App</option>
                   <option value="admin_public">Admin Public</option>
+                  <option value="ecosystem">Ecosystem (cross-product partner)</option>
                 </select>
               )}
               <button
