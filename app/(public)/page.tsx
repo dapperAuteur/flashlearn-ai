@@ -442,7 +442,7 @@ const DeveloperAPISection = () => (
           Build with the FlashLearn API
         </h2>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-          The first flashcard platform with a public API. Generate cards, run spaced repetition, and create competitive quizzes — all via REST.
+          The first flashcard platform with a public API. Generate cards, run spaced repetition, ship competitive quizzes, and now power consumer-facing learning products end to end with the new Ecosystem API and signed webhooks.
         </p>
       </div>
 
@@ -503,7 +503,7 @@ const DeveloperAPISection = () => (
       </div>
 
       <p className="text-center text-sm text-gray-500 mt-6">
-        23 endpoints. Free tier: 100 generations/month. No credit card required.
+        27 endpoints, including signed outbound webhooks. Free tier: 100 generations/month. No credit card required.
       </p>
 
       {/* White-label teaser */}

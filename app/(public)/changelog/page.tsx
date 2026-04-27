@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { CheckCircle, Zap, WifiOff, Link2, Code, Megaphone } from 'lucide-react';
+import { CheckCircle, Zap, WifiOff, Link2, Code, Megaphone, Webhook } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Changelog',
@@ -20,6 +20,26 @@ interface Release {
 }
 
 const releases: Release[] = [
+  {
+    version: '1.6.0',
+    date: '2026-04-26',
+    title: 'Ecosystem API & Signed Webhooks',
+    icon: Webhook,
+    iconColor: 'text-cyan-600',
+    items: [
+      'New Ecosystem API for cross-product partners — POST /sessions, POST /sessions/:id/results, GET /mastery/:childId, DELETE /children/:childId',
+      'New ecosystem key type (fl_eco_) with kids:* permission group; admin-issued, separate rate-limit tier',
+      'Curriculum standards library — Indiana K kindergarten standards seeded; sessions validated against framework + code',
+      'Per-standard mastery rollups (exposed → practiced → demonstrated) with sticky promotion at ≥80% over last 5 first-attempts',
+      'COPPA cascade-delete — DELETE /children/:childId purges sessions, attempts, rollups, decks, deliveries; idempotent re-delete returns 200 with count 0',
+      'Signed outbound session.completed webhooks — HMAC-SHA256, X-FlashLearn-Signature/Delivery/Event/Timestamp headers, 7-attempt exponential backoff over ~24h, dead-letter, auto-disable after 50 consecutive failures',
+      'AES-256-GCM encryption-at-rest for per-endpoint signing secrets',
+      'Self-service /developer/webhooks dashboard — register, rotate secrets, view delivery history, manual replay',
+      'Public docs: /docs/api/ecosystem and /docs/api/webhooks',
+      'OpenAPI spec extended with 4 new paths and the session.completed webhook block',
+      'Powers Wanderlearn Stories (ages 4-7, Indiana Kindergarten) as its spaced-repetition + comprehension backend',
+    ],
+  },
   {
     version: '1.5.0',
     date: '2026-03-25',
