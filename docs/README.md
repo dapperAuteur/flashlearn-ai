@@ -11,7 +11,9 @@ FlashLearn AI is a full-featured, AI-powered flashcard platform for students, te
 - **Spaced Repetition (SM-2)** — Scientifically-proven algorithm for optimal retention scheduling
 - **Versus Mode** — Competitive async challenges with composite scoring (accuracy, speed, confidence, streak)
 - **Offline-First** — Full PWA with PowerSync, IndexedDB, and service worker for offline study
-- **Public API** — 23 REST endpoints for generation, sets, study, and versus (Free/Developer/Pro/Enterprise tiers)
+- **Public API** — 27 REST endpoints for generation, sets, study, versus, and ecosystem (Free/Developer/Pro/Enterprise tiers)
+- **Ecosystem API for Cross-Product Partners** — Drop-in spaced-repetition + comprehension backend with child-scoped sessions, per-standard mastery rollups, COPPA cascade-delete, and signed outbound webhooks. Powers Wanderlearn Stories.
+- **Signed Outbound Webhooks** — HMAC-SHA256 callbacks with 7-attempt exponential backoff, dead-letter, AES-256-GCM secret encryption, and self-service replay
 - **White-Label Starter App** — Deployable study app powered by the Public API with custom branding
 - **Admin Dashboard** — User management, analytics, content moderation, campaigns, API key management, SEO tools
 - **Admin Card Quantity Selector** — Admins can choose exact card count (1-50) during AI generation
@@ -31,6 +33,7 @@ FlashLearn AI is a full-featured, AI-powered flashcard platform for students, te
 - **Email:** Mailgun / Nodemailer / Resend
 - **Media:** Cloudinary (image hosting)
 - **Analytics:** Vercel Analytics, Chart.js
+- **Background Jobs:** Upstash QStash (delayed delivery + webhook retries)
 - **Deployment:** Vercel
 
 ## Getting Started
@@ -42,11 +45,13 @@ FlashLearn AI is a full-featured, AI-powered flashcard platform for students, te
    npm install
    ```
 
-2. Copy `.env.example` to `.env.local` and fill in your API keys:
-   - `GEMINI_API_KEY` — Google Gemini API key
+2. Copy [`.env.sample`](../.env.sample) to `.env.local` and fill in real values. The sample is the canonical annotated reference. Required minimums for local dev:
    - `MONGODB_URI` — MongoDB connection string
-   - `NEXTAUTH_SECRET` — NextAuth secret
-   - `STRIPE_SECRET_KEY` — Stripe API key
+   - `NEXTAUTH_SECRET` — NextAuth secret (`openssl rand -base64 32`)
+   - `GEMINI_API_KEY_PUBLIC` — Google Gemini API key (one per key type for cost isolation)
+   - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — for rate limiting
+
+   For ecosystem outbound webhooks add: `WEBHOOK_ENCRYPTION_KEY` (`openssl rand -hex 32`), `UPSTASH_QSTASH_TOKEN`, `UPSTASH_QSTASH_CURRENT_SIGNING_KEY`, `UPSTASH_QSTASH_NEXT_SIGNING_KEY`.
 
 3. Run the development server:
    ```bash

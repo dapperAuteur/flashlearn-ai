@@ -30,6 +30,23 @@ export default function GettingStartedPage() {
         Generate AI-powered flashcards with a single API call. Free tier included, no credit card required.
       </p>
 
+      <aside
+        aria-label="Cross-product partner notice"
+        className="mb-8 rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-900"
+      >
+        <strong className="font-semibold">Building a consumer-facing learning product?</strong>{' '}
+        If you need child-scoped scheduled sessions, per-standard mastery rollups, COPPA cascade-delete, and signed
+        outbound webhooks, see the{' '}
+        <Link href="/docs/api/ecosystem" className="font-medium underline hover:text-cyan-700">
+          Ecosystem API
+        </Link>{' '}
+        and{' '}
+        <Link href="/docs/api/webhooks" className="font-medium underline hover:text-cyan-700">
+          Webhooks
+        </Link>{' '}
+        guides. Ecosystem keys (<code className="font-mono">fl_eco_</code>) are admin-issued — contact us to request one.
+      </aside>
+
       {/* Step 1 */}
       <section aria-labelledby="step-1">
         <h2 id="step-1" className="text-xl font-semibold text-gray-900 mt-10 mb-4 flex items-center gap-3">
