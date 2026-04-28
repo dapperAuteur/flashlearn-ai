@@ -6,20 +6,20 @@ FlashLearn AI is a full-featured, AI-powered flashcard platform for students, te
 
 ## Key Features
 
-- **AI-Powered Generation** — Create flashcards from text prompts, PDFs, YouTube transcripts, audio, and images using Gemini 2.5 Flash
-- **Multiple Study Modes** — Classic flip, multiple choice, type-your-answer, and confidence rating
-- **Spaced Repetition (SM-2)** — Scientifically-proven algorithm for optimal retention scheduling
-- **Versus Mode** — Competitive async challenges with composite scoring (accuracy, speed, confidence, streak)
-- **Offline-First** — Full PWA with PowerSync, IndexedDB, and service worker for offline study
-- **Public API** — 27 REST endpoints for generation, sets, study, versus, and ecosystem (Free/Developer/Pro/Enterprise tiers)
-- **Ecosystem API for Cross-Product Partners** — Drop-in spaced-repetition + comprehension backend with child-scoped sessions, per-standard mastery rollups, COPPA cascade-delete, and signed outbound webhooks. Powers Wanderlearn Stories.
-- **Signed Outbound Webhooks** — HMAC-SHA256 callbacks with 7-attempt exponential backoff, dead-letter, AES-256-GCM secret encryption, and self-service replay
-- **White-Label Starter App** — Deployable study app powered by the Public API with custom branding
-- **Admin Dashboard** — User management, analytics, content moderation, campaigns, API key management, SEO tools
-- **Admin Card Quantity Selector** — Admins can choose exact card count (1-50) during AI generation
-- **Progress Analytics** — Accuracy rates, streaks, charts, problem card identification
-- **Achievements & Gamification** — Badges, streaks, and progress tracking
-- **Sharing & Discovery** — Public set pages, shareable results, community explore page
+- **AI-Powered Generation.** Create flashcards from text prompts, PDFs, YouTube transcripts, audio, and images using Gemini 2.5 Flash.
+- **Multiple Study Modes.** Classic flip, multiple choice, type-your-answer, and confidence rating.
+- **Spaced Repetition (SM-2).** Scientifically-proven algorithm for optimal retention scheduling.
+- **Versus Mode.** Competitive async challenges with composite scoring (accuracy, speed, confidence, streak).
+- **Offline-First.** Full PWA with PowerSync, IndexedDB, and service worker for offline study.
+- **Public API.** 27 REST endpoints for generation, sets, study, versus, and ecosystem (Free / Developer / Pro / Enterprise tiers).
+- **Ecosystem API for cross-product partners.** Spaced-repetition and comprehension backend with learner-scoped sessions, per-standard mastery rollups, cascade-delete, and signed outbound webhooks. Powers Wanderlearn and BVC classes.
+- **Signed outbound webhooks.** HMAC-SHA256 callbacks with 7-attempt exponential backoff, dead-letter, AES-256-GCM secret encryption, and self-service replay.
+- **White-label starter app.** Deployable study app powered by the Public API with custom branding.
+- **Admin dashboard.** User management, analytics, content moderation, campaigns, API key management, SEO tools.
+- **Admin card quantity selector.** Admins can choose exact card count (1-50) during AI generation.
+- **Progress analytics.** Accuracy rates, streaks, charts, problem card identification.
+- **Achievements & gamification.** Badges, streaks, and progress tracking.
+- **Sharing & discovery.** Public set pages, shareable results, community explore page.
 
 ## Technology Stack
 
@@ -46,10 +46,10 @@ FlashLearn AI is a full-featured, AI-powered flashcard platform for students, te
    ```
 
 2. Copy [`.env.sample`](../.env.sample) to `.env.local` and fill in real values. The sample is the canonical annotated reference. Required minimums for local dev:
-   - `MONGODB_URI` — MongoDB connection string
-   - `NEXTAUTH_SECRET` — NextAuth secret (`openssl rand -base64 32`)
-   - `GEMINI_API_KEY_PUBLIC` — Google Gemini API key (one per key type for cost isolation)
-   - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — for rate limiting
+   - `MONGODB_URI`. MongoDB connection string.
+   - `NEXTAUTH_SECRET`. NextAuth secret (`openssl rand -base64 32`).
+   - `GEMINI_API_KEY_PUBLIC`. Google Gemini API key. One per key type for cost isolation.
+   - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`. For rate limiting.
 
    For ecosystem outbound webhooks add: `WEBHOOK_ENCRYPTION_KEY` (`openssl rand -hex 32`), `UPSTASH_QSTASH_TOKEN`, `UPSTASH_QSTASH_CURRENT_SIGNING_KEY`, `UPSTASH_QSTASH_NEXT_SIGNING_KEY`.
 

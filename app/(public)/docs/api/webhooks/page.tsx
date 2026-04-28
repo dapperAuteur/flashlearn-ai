@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Outbound Webhooks — Signed Delivery & Retries',
+  title: 'Outbound Webhooks: Signed Delivery & Retries',
   description: 'How FlashLearn AI signs and delivers session.completed webhooks, the retry schedule, and how to verify HMAC signatures on your endpoint.',
   openGraph: {
     title: 'FlashLearn AI Webhooks Reference',
@@ -28,12 +28,12 @@ export default function WebhooksDocsPage() {
 
       <section aria-labelledby="when" className="mb-10">
         <h2 id="when" className="text-xl font-semibold text-gray-900 mt-8 mb-4">What you receive</h2>
-        <p className="text-gray-700">Today the only event is <code className="bg-gray-100 px-1 rounded text-xs">session.completed</code>, fired after a child finishes a deck created via the <Link href="/docs/api/ecosystem" className="text-blue-600 hover:underline">Ecosystem API</Link>. The body matches the response of <code className="bg-gray-100 px-1 rounded text-xs">POST /sessions/:id/results</code> exactly — so the webhook is your audit / source-of-truth confirmation, not new information.</p>
+        <p className="text-gray-700">Today the only event is <code className="bg-gray-100 px-1 rounded text-xs">session.completed</code>, fired after a child finishes a deck created via the <Link href="/docs/api/ecosystem" className="text-blue-600 hover:underline">Ecosystem API</Link>. The body matches the response of <code className="bg-gray-100 px-1 rounded text-xs">POST /sessions/:id/results</code> exactly. The webhook is your audit / source-of-truth confirmation, not new information.</p>
       </section>
 
       <section aria-labelledby="register" className="mb-10">
         <h2 id="register" className="text-xl font-semibold text-gray-900 mt-8 mb-4">Register an endpoint</h2>
-        <p className="text-gray-700">Visit <Link href="/developer/webhooks" className="text-blue-600 hover:underline">/developer/webhooks</Link>, click <strong>New Endpoint</strong>, paste your https URL, and we&apos;ll generate a signing secret. <strong>Save the plaintext secret immediately</strong> — it&apos;s shown once. You can rotate it any time from the same dashboard, but the new secret takes effect immediately so update your verification key first.</p>
+        <p className="text-gray-700">Visit <Link href="/developer/webhooks" className="text-blue-600 hover:underline">/developer/webhooks</Link>, click <strong>New Endpoint</strong>, paste your https URL, and we&apos;ll generate a signing secret. <strong>Save the plaintext secret immediately.</strong> It&apos;s shown once. You can rotate it any time from the same dashboard, but the new secret takes effect immediately so update your verification key first.</p>
         <p className="text-gray-600 text-sm mt-2">Up to 5 endpoints per API key. Set the URL on a sub-route you can isolate (e.g. <code className="bg-gray-100 px-1 rounded text-xs">/api/flashlearn/webhook</code>) so you don&apos;t mix it with anything else.</p>
       </section>
 
@@ -68,8 +68,8 @@ export default function WebhooksDocsPage() {
             </thead>
             <tbody className="text-gray-600">
               <tr className="border-b"><td className="py-2 pr-4 font-mono text-xs">Content-Type: application/json</td><td className="py-2">Fixed.</td></tr>
-              <tr className="border-b"><td className="py-2 pr-4 font-mono text-xs">X-FlashLearn-Signature</td><td className="py-2"><code className="bg-gray-100 px-1 rounded text-xs">sha256=&lt;hex&gt;</code> — HMAC-SHA256 of the raw request body using your signing secret.</td></tr>
-              <tr className="border-b"><td className="py-2 pr-4 font-mono text-xs">X-FlashLearn-Delivery</td><td className="py-2">UUID. Same value across retries — dedupe on this.</td></tr>
+              <tr className="border-b"><td className="py-2 pr-4 font-mono text-xs">X-FlashLearn-Signature</td><td className="py-2"><code className="bg-gray-100 px-1 rounded text-xs">sha256=&lt;hex&gt;</code>. HMAC-SHA256 of the raw request body using your signing secret.</td></tr>
+              <tr className="border-b"><td className="py-2 pr-4 font-mono text-xs">X-FlashLearn-Delivery</td><td className="py-2">UUID. Same value across retries. Dedupe on this.</td></tr>
               <tr className="border-b"><td className="py-2 pr-4 font-mono text-xs">X-FlashLearn-Event</td><td className="py-2">e.g. <code className="bg-gray-100 px-1 rounded text-xs">session.completed</code></td></tr>
               <tr className="border-b"><td className="py-2 pr-4 font-mono text-xs">X-FlashLearn-Timestamp</td><td className="py-2">Unix seconds at signing time. Use for replay protection (recommend rejecting requests &gt; 5 min old).</td></tr>
               <tr><td className="py-2 pr-4 font-mono text-xs">User-Agent: FlashLearn-Webhooks/2.0</td><td className="py-2">Distinguishes new dispatcher from legacy milestone hooks (1.0).</td></tr>
@@ -96,13 +96,13 @@ export async function POST(req) {
     return new Response('invalid signature', { status: 401 });
   }
 
-  // Replay protection — reject anything older than 5 minutes
+  // Replay protection: reject anything older than 5 minutes
   const ts = parseInt(req.headers.get('x-flashlearn-timestamp') || '0', 10);
   if (Math.abs(Date.now() / 1000 - ts) > 300) {
     return new Response('stale signature', { status: 401 });
   }
 
-  // Idempotency — record deliveryId; skip if already processed
+  // Idempotency: record deliveryId, skip if already processed
   const deliveryId = req.headers.get('x-flashlearn-delivery');
   if (await alreadyProcessed(deliveryId)) {
     return new Response('ok (dedup)', { status: 200 });
@@ -135,13 +135,13 @@ export async function POST(req) {
         <ul className="list-disc pl-6 text-gray-700 space-y-1">
           <li>Respond with <strong>2xx</strong> within <strong>10 seconds</strong>. Anything else is treated as failure.</li>
           <li>Be <strong>idempotent</strong> on <code className="bg-gray-100 px-1 rounded text-xs">X-FlashLearn-Delivery</code>. We may retry the exact same payload up to 7 times.</li>
-          <li>Don&apos;t do heavy work synchronously — accept the payload, queue it, return 200. Long handlers cause spurious retries.</li>
+          <li>Don&apos;t do heavy work synchronously. Accept the payload, queue it, return 200. Long handlers cause spurious retries.</li>
         </ul>
       </section>
 
       <section aria-labelledby="rotate" className="mb-10">
         <h2 id="rotate" className="text-xl font-semibold text-gray-900 mt-8 mb-4">Rotating the secret</h2>
-        <p className="text-gray-700">From <Link href="/developer/webhooks" className="text-blue-600 hover:underline">/developer/webhooks</Link>, click the rotate icon next to your endpoint. We generate a new secret atomically and show it once. <strong>The new secret takes effect immediately</strong> — there is no overlap window. Update your verification key in the same deploy you click rotate, or signatures will mismatch on the very next event.</p>
+        <p className="text-gray-700">From <Link href="/developer/webhooks" className="text-blue-600 hover:underline">/developer/webhooks</Link>, click the rotate icon next to your endpoint. We generate a new secret atomically and show it once. <strong>The new secret takes effect immediately.</strong> There is no overlap window. Update your verification key in the same deploy you click rotate, or signatures will mismatch on the very next event.</p>
         <p className="text-gray-600 text-sm mt-2">For zero-downtime rotation, register a second endpoint with the new secret first, drain in parallel, then delete the old endpoint.</p>
       </section>
 
