@@ -412,11 +412,11 @@ const phases: Phase[] = [
         description: 'Drop FlashLearn AI in as the spaced-repetition + comprehension backend for any consumer-facing learning product. Built for COPPA/GDPR-K compliance and curriculum-tagged sessions.',
         status: 'done' as Status,
         items: [
-          'POST /sessions — child-scoped scheduled review decks (tz-aware)',
-          'POST /sessions/:id/results — submit attempts, receive canonical webhook payload synchronously',
-          'GET /mastery/:childId — per-standard rollup (exposed/practiced/demonstrated)',
-          'DELETE /children/:childId — COPPA cascade across every collection, idempotent',
-          'Curriculum standards library — Indiana K seeded; CSV upload for more frameworks',
+          'POST /sessions: learner-scoped scheduled review decks (tz-aware)',
+          'POST /sessions/:id/results: submit attempts, receive canonical webhook payload synchronously',
+          'GET /mastery/:childId: per-standard rollup (exposed / practiced / demonstrated)',
+          'DELETE /children/:childId: cascade across every collection, idempotent',
+          'Curriculum standards library: Indiana K seeded, CSV upload for more frameworks',
           'Ecosystem key type (fl_eco_) with kids:* permission group',
           'In production: powering Wanderlearn Stories (ages 4-7, Indiana Kindergarten)',
         ],
@@ -500,14 +500,14 @@ const phases: Phase[] = [
       },
       {
         title: 'White-Label Starter App',
-        description: 'Deployable study app for schools and companies — powered by the Public API.',
+        description: 'Deployable study app for schools and companies, powered by the Public API.',
         status: 'done',
         items: [
           'Full-mirror Next.js app using only the Public API',
           'Branding config: name, colors, logo, feature toggles',
           'Admin dashboard for branding & SEO management',
           'One-click Vercel deploy for schools',
-          'Open source — customize and extend freely',
+          'Open source. Customize and extend freely.',
         ],
       },
       {

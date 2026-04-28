@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Ecosystem API — Sessions, Mastery & COPPA Delete',
+  title: 'Ecosystem API: Sessions, Mastery & Cascade Delete',
   description: 'Build cross-product learning experiences with FlashLearn AI. Schedule child-scoped sessions, track per-standard mastery, dispatch signed webhooks, and honor COPPA delete requests. Indiana K and other curriculum frameworks supported.',
   openGraph: {
     title: 'FlashLearn AI Ecosystem API',
@@ -26,7 +26,7 @@ export default function EcosystemDocsPage() {
         Drop FlashLearn AI in as the spaced-repetition + comprehension-measurement backend for any consumer-facing learning product.
       </p>
       <p className="text-sm text-gray-500 mb-8">
-        Built for cross-product partners (children&apos;s apps, classroom tools, curriculum platforms) that need scheduled review sessions, per-standard mastery tracking, and a real COPPA delete pathway. Used in production by <a href="https://stories.wanderlearn.witus.online" className="text-blue-600 hover:underline" rel="noopener">Wanderlearn Stories</a>.
+        Built for cross-product partners (consumer learning apps, classroom tools, curriculum platforms) that need scheduled review sessions, per-standard mastery tracking, and a real cascade-delete pathway. Used in production by <a href="https://wanderlearn.witus.online" className="text-blue-600 hover:underline" rel="noopener">Wanderlearn</a> (high school immersive 360-degree learning) and Better Vice Club classes (BAM&apos;s vice-engagement curriculum delivered via Centenarian Academy LMS).
       </p>
 
       <section aria-labelledby="when" className="mb-10">
@@ -58,7 +58,7 @@ export default function EcosystemDocsPage() {
           <li><strong>FL-AI generates a deck</strong> tagged to the standards you provided, persists it, and schedules next-day delivery in the timezone you specified.</li>
           <li><strong>The next day, your app serves the deck</strong> (you fetch it client-side using the sessionId).</li>
           <li><strong>The child plays.</strong> Your UI captures attempts.</li>
-          <li><strong>You POST attempts to <code className="bg-gray-100 px-1 rounded text-xs">/sessions/:id/results</code>.</strong> The response is the canonical <code className="bg-gray-100 px-1 rounded text-xs">session.completed</code> payload — same shape that&apos;ll fire via webhook. Your UI updates immediately on this response.</li>
+          <li><strong>You POST attempts to <code className="bg-gray-100 px-1 rounded text-xs">/sessions/:id/results</code>.</strong> The response is the canonical <code className="bg-gray-100 px-1 rounded text-xs">session.completed</code> payload, the same shape that fires via webhook. Your UI updates immediately on this response.</li>
           <li><strong>FL-AI dispatches the signed webhook</strong> to your registered URL as the audit confirmation.</li>
           <li><strong>You GET <code className="bg-gray-100 px-1 rounded text-xs">/mastery/:childId</code></strong> any time to render the parent dashboard.</li>
           <li><strong>If the parent invokes their delete right, you DELETE <code className="bg-gray-100 px-1 rounded text-xs">/children/:childId</code>.</strong> Cascades across every collection.</li>
@@ -103,7 +103,7 @@ export default function EcosystemDocsPage() {
     },
     "tz": "America/Indiana/Indianapolis"
   }'`} />
-        <p className="text-gray-600 mt-3 text-sm">Response (201) returns <code className="bg-gray-100 px-1 rounded text-xs">{`{ sessionId, scheduledFor, estimatedCardCount }`}</code>. The <code className="bg-gray-100 px-1 rounded text-xs">tz</code> is optional but strongly recommended — otherwise scheduledFor falls to UTC, which fires too early for non-UTC families.</p>
+        <p className="text-gray-600 mt-3 text-sm">Response (201) returns <code className="bg-gray-100 px-1 rounded text-xs">{`{ sessionId, scheduledFor, estimatedCardCount }`}</code>. The <code className="bg-gray-100 px-1 rounded text-xs">tz</code> is optional but strongly recommended. Otherwise scheduledFor falls to UTC, which fires too early for non-UTC families.</p>
         <p className="text-gray-600 mt-2 text-sm"><strong>Counts as 1 generation + 1 API call.</strong> Unknown standards return <code className="bg-gray-100 px-1 rounded text-xs">400 INVALID_INPUT</code> with details.</p>
       </section>
 
@@ -122,7 +122,7 @@ export default function EcosystemDocsPage() {
       }
     ]
   }'`} />
-        <p className="text-gray-600 mt-3 text-sm">Response (200) is the canonical <code className="bg-gray-100 px-1 rounded text-xs">session.completed</code> payload — exactly the body that will arrive via webhook. Update your UI on this response; treat the webhook as audit.</p>
+        <p className="text-gray-600 mt-3 text-sm">Response (200) is the canonical <code className="bg-gray-100 px-1 rounded text-xs">session.completed</code> payload. Exactly the body that will arrive via webhook. Update your UI on this response. Treat the webhook as audit.</p>
         <p className="text-gray-600 mt-2 text-sm">Idempotent on <code className="bg-gray-100 px-1 rounded text-xs">(sessionId, cardId, attemptNumber)</code>. Retrying the POST after a network blip is safe.</p>
       </section>
 
@@ -131,7 +131,7 @@ export default function EcosystemDocsPage() {
         <Code lang="bash" code={`curl https://flashlearnai.witus.online/api/v1/mastery/child-001 \\
   -H "Authorization: Bearer fl_eco_YOUR_KEY"`} />
         <p className="text-gray-600 mt-3 text-sm">Returns <code className="bg-gray-100 px-1 rounded text-xs">{`{ childId, standards: [{ framework, code, state, firstAttemptCorrectRate, attemptCount, lastAttemptAt }] }`}</code>.</p>
-        <p className="text-gray-600 mt-2 text-sm">State is one of: <code className="bg-gray-100 px-1 rounded text-xs">exposed</code> (session created), <code className="bg-gray-100 px-1 rounded text-xs">practiced</code> (at least one attempt), <code className="bg-gray-100 px-1 rounded text-xs">demonstrated</code> (≥80% correct over the last 5 first-attempts; sticky once reached). Returns 404 when the child has no rollup data — including after a cascade delete.</p>
+        <p className="text-gray-600 mt-2 text-sm">State is one of: <code className="bg-gray-100 px-1 rounded text-xs">exposed</code> (session created), <code className="bg-gray-100 px-1 rounded text-xs">practiced</code> (at least one attempt), <code className="bg-gray-100 px-1 rounded text-xs">demonstrated</code> (≥80% correct over the last 5 first-attempts, sticky once reached). Returns 404 when the child has no rollup data, including after a cascade delete.</p>
       </section>
 
       <section aria-labelledby="delete" className="mb-10">
@@ -145,13 +145,13 @@ export default function EcosystemDocsPage() {
           <li>First call with no data → <strong>404</strong>.</li>
           <li>Re-call after a prior purge → <strong>200</strong> with <code className="bg-gray-100 px-1 rounded text-xs">purgedRecordCount: 0</code>.</li>
         </ul>
-        <p className="text-gray-600 mt-2 text-sm">Subsequent <code className="bg-gray-100 px-1 rounded text-xs">GET /mastery/:childId</code> returns 404. Privacy rights are free — DELETE never counts against quota.</p>
+        <p className="text-gray-600 mt-2 text-sm">Subsequent <code className="bg-gray-100 px-1 rounded text-xs">GET /mastery/:childId</code> returns 404. Privacy rights are free. DELETE never counts against quota.</p>
       </section>
 
       <section aria-labelledby="standards" className="mb-10">
         <h2 id="standards" className="text-xl font-semibold text-gray-900 mt-8 mb-4">Curriculum frameworks supported</h2>
         <ul className="list-disc pl-6 text-gray-700 space-y-1">
-          <li><code className="bg-gray-100 px-1 rounded text-xs">indiana-k</code> — Indiana Academic Standards, Kindergarten (math + ELA, 14 codes)</li>
+          <li><code className="bg-gray-100 px-1 rounded text-xs">indiana-k</code>: Indiana Academic Standards, Kindergarten (math + ELA, 14 codes)</li>
         </ul>
         <p className="text-gray-600 text-sm mt-2">Need another framework (Common Core, NGSS, state K-12, IB)? Email <a href="mailto:admin.flashlearnai@awews.com" className="text-blue-600 hover:underline">admin.flashlearnai@awews.com</a> with a CSV of <code className="bg-gray-100 px-1 rounded text-xs">code,title,description,ageBand</code> and we&apos;ll seed it.</p>
       </section>

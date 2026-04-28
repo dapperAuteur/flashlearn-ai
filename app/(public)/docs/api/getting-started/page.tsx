@@ -44,7 +44,7 @@ export default function GettingStartedPage() {
         <Link href="/docs/api/webhooks" className="font-medium underline hover:text-cyan-700">
           Webhooks
         </Link>{' '}
-        guides. Ecosystem keys (<code className="font-mono">fl_eco_</code>) are admin-issued — contact us to request one.
+        guides. Ecosystem keys (<code className="font-mono">fl_eco_</code>) are admin-issued. Contact us to request one.
       </aside>
 
       {/* Step 1 */}
@@ -61,7 +61,7 @@ export default function GettingStartedPage() {
           and click <strong>New Key</strong>.
         </p>
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-          Copy your key immediately — it starts with <code className="font-mono bg-amber-100 px-1 rounded">fl_pub_</code> and is shown only once.
+          Copy your key immediately. It starts with <code className="font-mono bg-amber-100 px-1 rounded">fl_pub_</code> and is shown only once.
         </p>
       </section>
 

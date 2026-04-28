@@ -436,7 +436,7 @@ const DeveloperAPISection = () => (
       <div className="text-center mb-12">
         <div className="inline-flex items-center space-x-2 bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
           <Code className="h-4 w-4" />
-          <span>Public API — Free Tier Available</span>
+          <span>Public API: Free Tier Available</span>
         </div>
         <h2 id="dev-api-heading" className="text-3xl md:text-4xl font-bold mb-4">
           Build with the FlashLearn API
@@ -508,7 +508,7 @@ const DeveloperAPISection = () => (
 
       {/* White-label teaser */}
       <div className="max-w-xl mx-auto mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 text-center">
-        <p className="text-sm font-medium text-purple-300">White-Label Study App — From $499</p>
+        <p className="text-sm font-medium text-purple-300">White-Label Study App. From $499.</p>
         <p className="text-xs text-gray-400 mt-1">
           Deploy your own branded flashcard platform. Your name, colors, domain. AI generation and spaced repetition included.{' '}
           <a href="/pricing#api-pricing-heading" className="underline text-purple-300 hover:text-white">View plans &rarr;</a>
