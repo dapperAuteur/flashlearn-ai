@@ -48,26 +48,11 @@ FDAC enrollment runs as cohorts. Versus Mode formalizes the competitive review m
 
 The confidence-calibration component is the whole point of FDAC. A practitioner who confidently misreads a wearable export, or confidently quotes a study they've misunderstood, propagates bad decisions into client programming. Drilling with confidence ratings builds the habit of "I know what I know, I flag what I don't."
 
-### Example: building an FDAC study script
+### What a typical FDAC study session looks like
 
-```python
-import requests
+Type a topic ("Training load: ACWR, session RPE, internal vs external load measurement"). FlashLearn AI generates a deck pairing each metric with its calculation, predictive limits, and the application contexts where it actually works in seconds. The analytics dashboard tracks per-card mastery and surfaces your weakest 5 concepts before each cohort meeting so you arrive prepared to discuss the harder material rather than the basics.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate this week's training-load metrics deck
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'Training load: ACWR, session RPE, internal vs external load measurement',
-}).json()['data']
-
-# Track which concepts need more drilling
-analytics = requests.get(f'{BASE}/study/analytics/{deck["setId"]}', headers=headers).json()['data']
-weak = sorted(analytics['cardPerformance'], key=lambda c: c['easinessFactor'])[:5]
-for card in weak:
-    print(f"Drill more: {card['front'][:80]}...")
-```
+For sport-science software platforms, wearable companies, and collegiate strength-coach networks that want to embed FlashLearn into their existing tools, the developer integration path is documented at [/docs/api](https://flashlearnai.witus.online/docs/api).
 
 ### Pricing
 

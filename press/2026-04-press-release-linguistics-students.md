@@ -12,6 +12,8 @@
 
 Linguistics is one of the most flashcard-friendly fields in the humanities. The discipline runs on terminology. Phonetics has the IPA chart. Phonology has phonotactic rules. Morphology has affix typologies. Syntax has X-bar theory and tree structures. Historical linguistics has sound-change correspondences across language families. Without spaced repetition, undergrads forget the IPA chart between classes. With it, the chart sticks.
 
+> [QUOTE: 1-2 sentence statement from BAM as founder.]
+
 ### Linguistics-specific use cases
 
 **IPA chart memorization.** Generate decks for consonant articulation (place + manner + voice), vowel placement (height + backness + roundedness), and diacritic functions. Each card front shows an IPA symbol; the back gives the articulatory description. AI-validated typed answers handle the formatting variations linguistics students actually use ("voiceless bilabial stop" / "voiceless bilabial plosive" both accepted).

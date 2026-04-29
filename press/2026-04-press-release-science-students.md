@@ -12,6 +12,8 @@
 
 Science classes share a problem: heavy memorization burden on top of conceptual understanding. Anatomy demands hundreds of structure names. Inorganic chemistry demands the periodic table plus reaction patterns. Physics demands formula recall fluency before you can apply anything. Without spaced repetition, students cram before exams and forget within weeks. With it, the foundational knowledge stays accessible for the next course in the sequence.
 
+> [QUOTE: 1-2 sentence statement from BAM as founder.]
+
 ### Science-specific use cases
 
 **Anatomy & physiology.** Generate cards for skeletal system landmarks, muscle origins and insertions, cardiac cycle phases, nephron anatomy, neuron components. Each card pairs structure with function.
@@ -44,28 +46,11 @@ Science answers have specific edge cases the AI handles:
 
 AP and IB exam prep classes often have a cohort sitting the same exam in May. Versus Mode turns weekly review into a competitive challenge: generate cards from this week's chapter, share a challenge code, see the leaderboard sort on accuracy plus speed plus confidence.
 
-### Example: building a chemistry study tool
+### What a typical science study session looks like
 
-```python
-import requests
+Type a topic ("Organic reactions: SN1 vs SN2 mechanisms with examples"). FlashLearn AI generates 10-20 cards in seconds. Each morning, log in to see which cards across every science subject are due for review based on your prior performance. The SM-2 algorithm flags your hardest cards as "easiness factor below 2.0" so you can identify exactly which reaction mechanisms or anatomy structures need extra drilling before the exam.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate this week's reaction-types deck
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'Organic reactions: SN1 vs SN2 mechanisms with examples',
-}).json()['data']
-
-# Check what's due across all of organic chemistry
-due = requests.get(f'{BASE}/study/due-cards', headers=headers).json()['data']
-
-# Spaced repetition analytics for the set
-analytics = requests.get(f'{BASE}/study/analytics/{deck["setId"]}', headers=headers).json()['data']
-weak_cards = [c for c in analytics['cardPerformance'] if c['easinessFactor'] < 2.0]
-print(f"Cards needing extra work: {len(weak_cards)}")
-```
+For AP teachers, IB coordinators, science-prep companies, or biology / chemistry / physics professors who want to embed FlashLearn into their classroom tools, the developer integration path is documented at [/docs/api](https://flashlearnai.witus.online/docs/api).
 
 ### Pricing
 

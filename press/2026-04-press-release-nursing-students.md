@@ -12,6 +12,8 @@
 
 Nursing programs share a brutal problem: students need to recall thousands of clinical facts under pressure. The NCLEX-RN test plan covers 8 client-needs categories. Drug interactions matter on day one of clinicals. Vital sign ranges have to be recalled in seconds, not minutes. Spaced repetition is the only memorization method shown to actually transfer to long-term retention at this scale.
 
+> [QUOTE: 1-2 sentence statement from BAM as founder.]
+
 ### Nursing-specific use cases
 
 **Drug knowledge.** Generate cards for any drug class:
@@ -48,30 +50,11 @@ Nursing cohorts often have study groups for clinical days. Versus Mode turns rev
 
 Confidence calibration matters in nursing. The 20% confidence weight in Versus Mode scoring penalizes "confidently wrong" answers, which is the single most dangerous pattern for new nurses on the floor. Drilling with confidence calibration teaches students to flag what they don't know rather than guess.
 
-### Example: building an NCLEX-prep study tool
+### What a typical NCLEX study session looks like
 
-```python
-import requests
+Type a topic ("Cardiac dysrhythmias and nursing interventions"). FlashLearn AI generates a deck targeted to that NCLEX content area in seconds. Each morning, log in to see which cards are due for review based on your prior performance. As you study, the SM-2 algorithm tracks which cards you struggle with and surfaces them more often. Before exam day, the analytics dashboard shows your weakest 5 cards across every set so you know exactly what to drill in the final week.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate cards for a specific NCLEX content area
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'NCLEX: Cardiac dysrhythmias and nursing interventions',
-}).json()['data']
-
-# Check what's due for review today
-due = requests.get(f'{BASE}/study/due-cards', headers=headers).json()['data']
-print(f"NCLEX cards due: {due['totalDue']}")
-
-# Identify weak spots before exam
-analytics = requests.get(f'{BASE}/study/analytics/{deck["setId"]}', headers=headers).json()['data']
-weak = sorted(analytics['cardPerformance'], key=lambda c: c['easinessFactor'])[:5]
-for card in weak:
-    print(f"Review needed: {card['front'][:60]}... (EF: {card['easinessFactor']:.1f})")
-```
+For nursing programs, NCLEX prep companies, or clinical instructors that want to embed FlashLearn into their existing tools, see [Helper Orgs: NASM and other certification prep](https://flashlearnai.witus.online/docs/api) for the developer integration path.
 
 ### Pricing
 

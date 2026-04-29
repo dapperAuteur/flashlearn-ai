@@ -48,28 +48,11 @@ CNC candidates often hold CPT or CES too. Study groups can drill the cross-crede
 
 The confidence-calibration component is professionally relevant. A nutrition coach who confidently misstates a vitamin function or a behavior-change construct can mislead a client into a worse outcome. Drilling with confidence ratings builds the habit of flagging uncertainty.
 
-### Example: building a CNC study script
+### What a typical CNC study session looks like
 
-```python
-import requests
+Type a topic ("NASM CNC: fat-soluble vitamins (A, D, E, K) functions, sources, deficiency signs"). FlashLearn AI generates a deck pairing each vitamin with its function, food sources, deficiency signs, and toxicity thresholds in seconds. Type your answer like "cobalamin, methyl group transfer for DNA synthesis" and FlashLearn's AI grading recognizes it as equivalent to "Vitamin B12 (cobalamin), methyl donor for DNA synthesis and red blood cell formation" — credit for understanding, not for memorizing exact wording.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate this week's micronutrient deck
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'NASM CNC: fat-soluble vitamins (A, D, E, K) functions, sources, deficiency signs',
-}).json()['data']
-
-# Validate a typed answer with similarity-aware grading
-result = requests.post(f'{BASE}/study/evaluate-answer', headers=headers, json={
-    'userAnswer': 'cobalamin, methyl group transfer for DNA synthesis',
-    'correctAnswer': 'Vitamin B12 (cobalamin), methyl donor for DNA synthesis and red blood cell formation',
-    'question': 'What is vitamin B12 and what does it do?',
-}).json()['data']
-print(f"Correct: {result['isCorrect']}, Similarity: {result['similarity']}")
-```
+For CNC-credentialed coaches who help others prep and study-helper organizations that want to embed FlashLearn into their CNC study programs, see the dedicated [helper-orgs version](2026-04-press-release-nasm-cnc-helper-orgs.md) of this release with developer integration code.
 
 ### Pricing
 
