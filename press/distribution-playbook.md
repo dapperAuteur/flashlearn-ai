@@ -316,6 +316,68 @@ For each release: target publications, secondary channels, outreach approach. "C
 
 ---
 
+## Switchy.io tracking workflow
+
+Every URL in every release has a Switchy short link generated for it. Use the short link when sending so we can attribute clicks per release per channel.
+
+### Where the short links live
+
+One JSON sidecar per release at [`press/short-links/{release-name}.json`](short-links/). Each entry maps the original URL to its Switchy short URL:
+
+```json
+{
+  "https://flashlearnai.witus.online/docs/api/ecosystem": {
+    "shortUrl": "https://i.witus.online/p-ecosystem-api-launch-flashlearnai-docs-api-ecosys",
+    "slug": "p-ecosystem-api-launch-flashlearnai-docs-api-ecosys",
+    "createdAt": "2026-04-29T01:04:19.178Z"
+  }
+}
+```
+
+The slug pattern `p-{release}-{destination}` makes the Switchy dashboard scannable. You can tell at a glance which release drove a click and which destination it pointed at.
+
+### Send-time substitution
+
+When sending a release through any channel:
+
+1. Open the release file (e.g. [2026-04-ecosystem-api-launch.md](2026-04-ecosystem-api-launch.md)).
+2. Open its sidecar (e.g. [press/short-links/2026-04-ecosystem-api-launch.json](short-links/2026-04-ecosystem-api-launch.json)).
+3. For every `https://` URL in the body, look up the `shortUrl` and substitute it. `mailto:` links stay raw — Switchy can't shorten them.
+4. Append a channel-specific UTM `source` so per-channel attribution lands in both Switchy and the destination's analytics:
+
+| Channel | UTM suffix to append |
+|---|---|
+| Hacker News | `?utm_source=hn` |
+| Product Hunt | `?utm_source=ph` |
+| Reddit (specify subreddit) | `?utm_source=reddit-rprogramming` |
+| dev.to | `?utm_source=devto` |
+| Cold email to publication | `?utm_source=email-techcrunch` (replace with publication slug) |
+| LinkedIn post | `?utm_source=linkedin` |
+| Twitter/X thread | `?utm_source=twitter` |
+| Newsletter | `?utm_source=newsletter-tldr` (replace with newsletter slug) |
+| Direct partner outreach | `?utm_source=partner-{name}` |
+
+Switchy passes UTMs through to the destination, so both the Switchy dashboard AND the destination's GA see which channel drove the click. The same short link works for every channel; the UTM separates them.
+
+Optional second UTM: `&utm_campaign=press-2026-04` for cross-release rollups.
+
+### Re-running the generator
+
+`npm run press:short-links`
+
+Idempotent. Reads `.env.local` for `SWITCHY_API_TOKEN` + `SWITCHY_DOMAIN` + `SWITCHY_PIXEL_IDS`. Walks every `press/2026-04-*.md`. For each URL not already in the sidecar, creates a new short link and appends to the sidecar. Existing entries are never overwritten.
+
+Run after:
+- Editing a press release (new URLs need short links)
+- Adding a new release file
+- Wanting to verify all links still resolve (Switchy returns 200 on the create call if the slug already exists, which the script handles)
+
+### Pixel attribution
+
+`SWITCHY_PIXEL_IDS` in `.env.local` controls which marketing pixels fire when someone clicks any short link (Facebook, GA4, TikTok, Twitter). Already configured. No action needed unless you want to add or remove a pixel for the press-release campaign specifically — in that case, create a separate Switchy account or filter on tag `press` in the existing dashboard.
+
+---
+
 ## Repurposing matrix
 
 Each release is the source. Adapt to channel.
