@@ -183,7 +183,10 @@ async function processRelease(filename: string): Promise<{ created: number; skip
     }
   }
 
-  if (created > 0 || skipped > 0 || failed > 0) {
+  // Only rewrite the sidecar if we actually added a new link. Writing on
+  // every run (even when all URLs were skipped) churns the generatedAt
+  // timestamp and produces noisy diffs without any real content change.
+  if (created > 0) {
     await writeSidecar(filename, sidecar);
   }
 
