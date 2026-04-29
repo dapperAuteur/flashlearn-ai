@@ -48,26 +48,11 @@ ECS specialization students often hold other practitioner credentials (CPT, CES,
 
 The confidence-calibration component matters in cannabinoid practice more than most domains. The cannabis literature has gaps, contradictions, and active research fronts. A practitioner who confidently misstates a finding can propagate bad guidance to clients in ways that harm their experience or their results. Drilling with confidence ratings builds the habit of "this is established, this is provisional, this we don't know yet."
 
-### Example: building an ECS study script
+### What a typical ECS study session looks like
 
-```python
-import requests
+Type a topic ("CB1 receptor: distribution in CNS regions, signaling pathway, behavioral effects of activation and antagonism"). FlashLearn AI generates a deck pairing each receptor or signaling concept with its mechanism, anatomy, and clinical relevance in seconds. The analytics dashboard surfaces the concepts the cohort is collectively struggling with so the instructor can address them in the next session and individual students can target them in solo review.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate this week's receptor-function deck
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'CB1 receptor: distribution in CNS regions, signaling pathway, behavioral effects of activation and antagonism',
-}).json()['data']
-
-# Surface concepts the cohort is collectively struggling with
-analytics = requests.get(f'{BASE}/study/analytics/{deck["setId"]}', headers=headers).json()['data']
-weak = sorted(analytics['cardPerformance'], key=lambda c: c['easinessFactor'])[:5]
-for card in weak:
-    print(f"Cohort drill priority: {card['front'][:80]}...")
-```
+For health-practitioner training programs and cannabinoid-research organizations that want to embed FlashLearn into their existing curriculum tools, the developer integration path is documented at [/docs/api](https://flashlearnai.witus.online/docs/api).
 
 ### Pricing
 

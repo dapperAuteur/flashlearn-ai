@@ -12,6 +12,8 @@
 
 Law school is the canonical use case for spaced repetition. The body of doctrine that 1Ls have to recall by exam time runs into hundreds of cases per course. Black-letter rules need to surface during issue spotting in seconds, not minutes. Bar prep compresses three years of doctrine into eight weeks of intensive review. Without spaced repetition, students cram with commercial outlines and forget within months. With it, the doctrine sticks for the bar and beyond.
 
+> [QUOTE: 1-2 sentence statement from BAM as founder.]
+
 ### Law-specific use cases
 
 **Case briefs.** Generate cards for assigned reading with the case name on one side and the holding plus reasoning on the other.
@@ -46,30 +48,11 @@ Law school study groups have a strong tradition of competitive review. Versus Mo
 
 The confidence-calibration component matters in legal practice. Lawyers who confidently misstate doctrine create malpractice exposure. Drilling with confidence calibration teaches students to flag uncertainty rather than guess.
 
-### Example: building a bar prep study script
+### What a typical bar prep session looks like
 
-```python
-import requests
+Type a topic ("MBE Evidence: Hearsay exceptions under FRE 803 and 804"). FlashLearn AI generates a deck of 10-20 cards covering the relevant rules and worked examples in seconds. Each morning, the Due Cards view shows which cards from any subject are scheduled for review that day based on your prior performance. As bar prep progresses, the analytics dashboard surfaces your weakest 10 cards across every MBE subject so you can target them in the final two weeks before exam day.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate this week's MBE topic deck
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'MBE Evidence: Hearsay exceptions under FRE 803 and 804',
-}).json()['data']
-
-# Check what's due for review across all bar-prep sets
-due = requests.get(f'{BASE}/study/due-cards', headers=headers).json()['data']
-print(f"Bar cards due today: {due['totalDue']}")
-
-# Identify weakest topic areas before the bar
-analytics = requests.get(f'{BASE}/study/analytics/{deck["setId"]}', headers=headers).json()['data']
-weak = sorted(analytics['cardPerformance'], key=lambda c: c['easinessFactor'])[:10]
-for card in weak:
-    print(f"Drill more: {card['front'][:80]}...")
-```
+For bar prep companies and law school academic support offices that want to embed FlashLearn into their existing study platforms, the developer integration path is documented at [/docs/api](https://flashlearnai.witus.online/docs/api).
 
 ### Pricing
 

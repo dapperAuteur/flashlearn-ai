@@ -48,25 +48,11 @@ CES candidates often have CPT-holder colleagues sitting the exam together. Versu
 
 Confidence calibration matters in corrective exercise. A trainer who confidently programs the wrong stretch for an overactive muscle can worsen a compensation pattern. Drilling with confidence ratings teaches you to flag what you don't know rather than guess.
 
-### Example: building a CES study script
+### What a typical CES study session looks like
 
-```python
-import requests
+Type a topic ("NASM CES: lower extremity compensation patterns and corrective programming"). FlashLearn AI generates a deck of compensation patterns paired with the corrective programming sequence in seconds. The analytics dashboard tracks per-card mastery so you can see which compensation patterns and corrective interventions you've cemented and which still need more drilling before exam day.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate this week's compensation-pattern deck
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'NASM CES: lower extremity compensation patterns and corrective programming',
-}).json()['data']
-
-# Track per-card mastery for exam-day prep
-analytics = requests.get(f'{BASE}/study/analytics/{deck["setId"]}', headers=headers).json()['data']
-mastered = [c for c in analytics['cardPerformance'] if c['easinessFactor'] > 2.5]
-print(f"Mastered: {len(mastered)} / {len(analytics['cardPerformance'])} cards")
-```
+For CES-credentialed coaches who help others prep and study-helper organizations that want to embed FlashLearn into their CES study programs, see the dedicated [helper-orgs version](2026-04-press-release-nasm-ces-helper-orgs.md) of this release with developer integration code.
 
 ### Pricing
 

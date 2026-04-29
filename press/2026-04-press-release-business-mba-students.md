@@ -12,6 +12,8 @@
 
 Business school combines case-method discussion with a hidden mountain of memorization. You can't run a Porter analysis if you can't recall the five forces. You can't sit a finance exam if you can't recall WACC or NPV mechanics. You can't pass a managerial accounting course if you don't have the standard cost variance formulas at your fingertips. Spaced repetition makes all of this stick across the two years of the MBA and through to recruiting interviews.
 
+> [QUOTE: 1-2 sentence statement from BAM as founder.]
+
 ### MBA-specific use cases
 
 **Strategy frameworks.** Generate cards for the standard frameworks every consulting interview tests on: Porter's Five Forces, BCG growth-share matrix, SWOT, value chain, Ansoff matrix, McKinsey 7S.
@@ -48,32 +50,11 @@ MBA learning teams typically have 5-6 students sitting the same exams and preppi
 
 The confidence-calibration component is interview-relevant. Consulting and banking interviews reward candidates who flag uncertainty over candidates who confidently misstate. Drilling with confidence calibration is interview prep disguised as exam prep.
 
-### Example: building a finance study script
+### What a typical MBA study session looks like
 
-```python
-import requests
+Type a topic ("Corporate finance: WACC calculation, capital structure, and cost of equity"). FlashLearn AI generates a deck of 10-20 cards in seconds. Each morning, the Due Cards view shows which cards across every MBA-core subject are scheduled for review based on your prior performance. Type your answer to a question like "What is CAPM?" — FlashLearn's AI grading recognizes "risk free rate plus beta times market risk premium" as equivalent to "rf + beta * (rm - rf)" and gives credit for the underlying understanding, not just the literal formula notation. Before recruiting interviews, the analytics dashboard surfaces your weakest cards so you know exactly what to drill.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate this week's corp finance deck
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'Corporate finance: WACC calculation, capital structure, and cost of equity',
-}).json()['data']
-
-# Check what's due across all of the MBA core
-due = requests.get(f'{BASE}/study/due-cards', headers=headers).json()['data']
-print(f"Cards due today: {due['totalDue']}")
-
-# Validate a typed answer
-result = requests.post(f'{BASE}/study/evaluate-answer', headers=headers, json={
-    'userAnswer': 'risk free rate plus beta times market risk premium',
-    'correctAnswer': 'CAPM: rf + beta * (rm - rf)',
-    'question': 'What is the formula for cost of equity under CAPM?',
-}).json()['data']
-print(f"Correct: {result['isCorrect']}, Similarity: {result['similarity']}")
-```
+For MBA programs, executive education providers, or recruiting prep companies that want to embed FlashLearn into their existing study platforms, the developer integration path is documented at [/docs/api](https://flashlearnai.witus.online/docs/api).
 
 ### Pricing
 

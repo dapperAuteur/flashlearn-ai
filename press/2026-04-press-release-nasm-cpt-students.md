@@ -48,30 +48,11 @@ NASM CPT prep is often a solo grind. Add a study partner or two and Versus Mode 
 
 The confidence-calibration component matters for personal trainers in the field. A trainer who confidently misstates a kinetic-chain dysfunction creates injury risk for the client. Drilling with confidence calibration teaches you to flag uncertainty rather than guess. That's good test prep and better professional habit.
 
-### Example: building a CPT study script
+### What a typical CPT study session looks like
 
-```python
-import requests
+Type a topic ("NASM OPT model: complete phase characteristics for all 5 phases"). FlashLearn AI generates a deck in seconds. Each morning, the Due Cards view shows which cards across every CPT chapter are scheduled for review based on your prior performance. As exam day approaches, the analytics dashboard surfaces your weakest 5 cards so you can target them in the final week.
 
-API_KEY = 'fl_pub_your_key'
-BASE = 'https://flashlearnai.witus.online/api/v1'
-headers = {'Authorization': f'Bearer {API_KEY}', 'Content-Type': 'application/json'}
-
-# Generate this week's OPT-model deck
-deck = requests.post(f'{BASE}/generate', headers=headers, json={
-    'topic': 'NASM OPT model: complete phase characteristics for all 5 phases',
-}).json()['data']
-
-# Check what's due across all CPT prep sets
-due = requests.get(f'{BASE}/study/due-cards', headers=headers).json()['data']
-print(f"NASM cards due today: {due['totalDue']}")
-
-# Identify weak spots before exam day
-analytics = requests.get(f'{BASE}/study/analytics/{deck["setId"]}', headers=headers).json()['data']
-weak = sorted(analytics['cardPerformance'], key=lambda c: c['easinessFactor'])[:5]
-for card in weak:
-    print(f"Drill more: {card['front'][:80]}...")
-```
+For NASM-credentialed coaches who help others prep for the CPT (like Joe Drake) and other study-helper organizations that want to embed FlashLearn into their study programs, see the dedicated [helper-orgs version](2026-04-press-release-nasm-cpt-helper-orgs.md) of this release with developer integration code.
 
 ### Pricing
 
