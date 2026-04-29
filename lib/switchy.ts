@@ -144,9 +144,9 @@ export async function updateShortLink(params: UpdateParams): Promise<boolean> {
 
 /**
  * Slugifies text for use as a Switchy link id with a content-type prefix.
- * Prefixes: v- (versus), s- (sets), r- (results)
+ * Prefixes: v- (versus), s- (sets), r- (results), p- (press release)
  */
-export function toSwitchySlug(prefix: 'v' | 's' | 'r', text: string): string {
+export function toSwitchySlug(prefix: 'v' | 's' | 'r' | 'p', text: string): string {
   const slug = text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
