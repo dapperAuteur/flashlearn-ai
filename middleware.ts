@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { edgeLogger, EdgeLogContext } from '@/lib/logging/edge-logger';
+import { isReconProbe } from '@/lib/security/reconProbes';
 
 const secret = process.env.NEXTAUTH_SECRET;
 
@@ -14,12 +15,18 @@ function getClientIp(request: NextRequest): string {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Short-circuit recon probes before any auth / DB / logging work runs.
+  if (isReconProbe(pathname)) {
+    return new Response(null, { status: 404 });
+  }
+
   if (!secret) {
     console.error("[CRITICAL] Missing NEXTAUTH_SECRET in middleware.");
     return new Response("Internal Server Error", { status: 500 });
   }
 
-  const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: secret });
 
   // --- Suspended User Check ---
