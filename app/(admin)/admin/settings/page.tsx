@@ -44,7 +44,7 @@ const DEFAULT_CONFIGS = [
   },
   {
     key: "ANNOUNCEMENT_BANNER",
-    description: "Site-wide announcement banner. Set active to true to display.",
+    description: "Site-wide announcement banner. Set active to true to display. Optional expiresAt (ISO 8601, e.g. \"2026-06-01T06:59:00Z\") auto-hides the banner after that time without a manual flip.",
     defaultValue: {
       active: false,
       bannerId: "v1",
@@ -52,6 +52,7 @@ const DEFAULT_CONFIGS = [
       message: "",
       linkText: "",
       linkUrl: "",
+      expiresAt: "",
     },
   },
   {
