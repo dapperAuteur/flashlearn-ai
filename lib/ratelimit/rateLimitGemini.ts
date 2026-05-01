@@ -2,7 +2,7 @@ import { User } from "@/models/User";
 import { AppConfig } from "@/models/AppConfig";
 import { Logger, LogContext } from "@/lib/logging/logger";
 import { AppError } from "@/lib/errors/AppError";
-import { getFinalsPromo } from "@/lib/promo/finals";
+import { getActivePromotion } from "@/lib/promo/promotions";
 
 const AI_GENERATION_WINDOW_DAYS = 30;
 
@@ -74,8 +74,8 @@ export async function checkRateLimit(userId: string): Promise<{ limited: boolean
     }
 
     const tierLimit = limits[user.subscriptionTier as keyof typeof limits] ?? limits.Free;
-    const promo = getFinalsPromo();
-    const effectiveLimit = promo.active ? Math.max(tierLimit, promo.flatLimit) : tierLimit;
+    const promo = await getActivePromotion();
+    const effectiveLimit = promo ? Math.max(tierLimit, promo.flatLimit) : tierLimit;
     const { aiGenerationCount, lastAiGenerationDate } = user;
 
     if (lastAiGenerationDate) {
@@ -86,7 +86,7 @@ export async function checkRateLimit(userId: string): Promise<{ limited: boolean
         if (lastAiGenerationDate > windowStart) {
             if (aiGenerationCount >= effectiveLimit) {
                 const reason = `User has reached their AI generation limit of ${effectiveLimit} per ${AI_GENERATION_WINDOW_DAYS} days for the ${user.subscriptionTier} tier.`;
-                Logger.warning(LogContext.AI, reason, { userId, tier: user.subscriptionTier, tierLimit, effectiveLimit, promoActive: promo.active, count: aiGenerationCount });
+                Logger.warning(LogContext.AI, reason, { userId, tier: user.subscriptionTier, tierLimit, effectiveLimit, promoActive: !!promo, promoSlug: promo?.slug, count: aiGenerationCount });
                 return { limited: true, reason };
             }
         } else {

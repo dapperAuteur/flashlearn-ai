@@ -11,8 +11,8 @@ import {
   FireIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { getFinalsPromo } from '@/lib/promo/finals';
-import FinalsPromoBanner from '@/components/ui/FinalsPromoBanner';
+import ActivePromoBanner from '@/components/ui/ActivePromoBanner';
+import type { ActivePromotion } from '@/lib/promo/promotions';
 
 const tiers = [
   {
@@ -113,7 +113,14 @@ export default function PricingPage() {
   const canceled = searchParams.get('canceled');
   const currentTier = (session?.user as { subscriptionTier?: string })?.subscriptionTier || 'Free';
   const isAuthenticated = status === 'authenticated';
-  const finalsPromo = getFinalsPromo();
+  const [activePromo, setActivePromo] = useState<ActivePromotion | null>(null);
+
+  useEffect(() => {
+    fetch('/api/promo/active')
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => setActivePromo(data.promotion ?? null))
+      .catch(() => setActivePromo(null));
+  }, []);
 
   const handleCheckout = async (plan: string) => {
     if (!isAuthenticated) {
@@ -197,7 +204,7 @@ export default function PricingPage() {
 
       {/* Finals Season Promo Callout (auto-hides after endsAt) */}
       <div className="max-w-3xl mx-auto mb-8">
-        <FinalsPromoBanner variant="inline" />
+        <ActivePromoBanner variant="inline" />
       </div>
 
       {/* Free Account Summary */}
@@ -207,9 +214,9 @@ export default function PricingPage() {
         <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-700">
           <span>
             &#10003; 3 AI-generated sets per 30 days
-            {finalsPromo.active && (
+            {activePromo && activePromo.pricingTierBadge && (
               <span className="ml-1 inline-flex items-center bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                20 through May 31
+                {activePromo.pricingTierBadge}
               </span>
             )}
           </span>
@@ -354,9 +361,9 @@ export default function PricingPage() {
                                 <InformationCircleIcon className="h-4 w-4" aria-hidden="true" />
                               </span>
                             )}
-                            {isAiCapLine && finalsPromo.active && (
+                            {isAiCapLine && activePromo && activePromo.pricingTierBadge && (
                               <span className="ml-2 inline-flex items-center bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                                20 through May 31
+                                {activePromo.pricingTierBadge}
                               </span>
                             )}
                           </span>
