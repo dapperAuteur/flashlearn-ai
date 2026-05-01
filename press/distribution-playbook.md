@@ -33,6 +33,7 @@ Covers all 12 currently shipped 2026-04 releases plus the 5 fitness-cert release
 | [2026-04-finals-season-promo.md](2026-04-finals-season-promo.md) | Student press, edu Twitter, all student verticals | Drafted, ready (send on or before May 1) |
 | [../plans/social-media/2026-05-finals-promo-social.md](../plans/social-media/2026-05-finals-promo-social.md) | Internal social calendar (X / LinkedIn / Instagram) for the finals window | Drafted, ready |
 | [../plans/social-media/2026-04-college-cert-invite-social.md](../plans/social-media/2026-04-college-cert-invite-social.md) | Internal social calendar (LinkedIn / Facebook) inviting college and cert instructors + students to study groups. 13+ only. K-12 deferred to fall. | Drafted, ready (paired with PR A: study group + age gate) |
+| [../plans/social-media/2026-05-flashlearnai-intro-finals-promo.md](../plans/social-media/2026-05-flashlearnai-intro-finals-promo.md) | Cold-audience intro to FlashLearnAI + finals promo close. For X / LinkedIn / Facebook / Instagram. Run in parallel with the other two May calendars; intro is the lede so the same scroller hears about the product before the promo. | Drafted, ready |
 
 ---
 
