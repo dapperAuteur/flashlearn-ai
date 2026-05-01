@@ -12,6 +12,11 @@ import {
   XCircleIcon,
   ClockIcon,
   TrophyIcon,
+  BoltIcon,
+  BookOpenIcon,
+  TrophyIcon as ChallengeIcon,
+  SparklesIcon,
+  ShareIcon,
 } from "@heroicons/react/24/outline";
 
 interface StudentInfo {
@@ -38,6 +43,63 @@ interface RawLeaderboardRow {
   rating: number;
   wins: number;
   totalChallenges?: number;
+}
+
+type ActivityType = 'study_session' | 'achievement_earned' | 'set_created' | 'set_shared' | 'challenge_completed' | 'team_joined' | 'follow';
+
+interface ActivityFeedEntry {
+  _id: string;
+  type: ActivityType;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  userId: string;
+  userName: string;
+  profilePicture: string | null;
+}
+
+const CLASSROOM_ACTIVITY_ICON: Record<ActivityType, React.ElementType> = {
+  study_session: BookOpenIcon,
+  achievement_earned: SparklesIcon,
+  set_created: SparklesIcon,
+  set_shared: ShareIcon,
+  challenge_completed: ChallengeIcon,
+  team_joined: UserGroupIcon,
+  follow: UserGroupIcon,
+};
+
+function relativeTime(iso: string, now: number = Date.now()): string {
+  const ms = now - new Date(iso).getTime();
+  const sec = Math.round(ms / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.round(hr / 24);
+  if (day < 30) return `${day}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+function activityCopy(e: ActivityFeedEntry): string {
+  const m = e.metadata as Record<string, string | number | undefined>;
+  switch (e.type) {
+    case 'study_session':
+      return 'completed a study session';
+    case 'achievement_earned':
+      return `earned the "${m.name ?? 'an'}" achievement`;
+    case 'set_created':
+      return `created the set "${m.title ?? 'a flashcard set'}"`;
+    case 'set_shared':
+      return 'shared a flashcard set';
+    case 'challenge_completed':
+      return 'completed a Versus challenge';
+    case 'team_joined':
+      return 'joined a study group';
+    case 'follow':
+      return 'followed someone';
+    default:
+      return 'did something';
+  }
 }
 
 interface ClassroomDetail {
@@ -73,6 +135,8 @@ export default function ClassroomDetailPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
   const [leaderboardScope, setLeaderboardScope] = useState<LeaderboardScope>("classroom");
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [activityFeed, setActivityFeed] = useState<ActivityFeedEntry[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,6 +191,15 @@ export default function ClassroomDetailPage() {
       .catch(() => setLeaderboard([]))
       .finally(() => setLeaderboardLoading(false));
   }, [classroomId, leaderboardScope]);
+
+  useEffect(() => {
+    setActivityLoading(true);
+    fetch(`/api/classrooms/${classroomId}/activity?_t=${Date.now()}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => setActivityFeed(data.feed || []))
+      .catch(() => setActivityFeed([]))
+      .finally(() => setActivityLoading(false));
+  }, [classroomId]);
 
   const copyCode = () => {
     if (classroom) {
@@ -308,6 +381,44 @@ export default function ClassroomDetailPage() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
+
+      {/* Activity feed */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+          <BoltIcon className="h-5 w-5 text-blue-500" />
+          <h2 className="text-base font-semibold text-gray-900">Activity</h2>
+        </div>
+        {activityLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto" />
+            <p className="mt-3 text-gray-500 text-sm">Loading activity...</p>
+          </div>
+        ) : activityFeed.length === 0 ? (
+          <div className="p-6 text-center text-sm text-gray-500">
+            No recent activity from this classroom yet. Students appear here when they complete sessions, share sets, or finish challenges.
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-100" role="list" aria-label="Recent classroom activity">
+            {activityFeed.map((entry) => {
+              const Icon = CLASSROOM_ACTIVITY_ICON[entry.type] || BoltIcon;
+              return (
+                <li key={entry._id} className="flex items-start gap-3 py-3 px-4 sm:px-6">
+                  <div className="flex-shrink-0 h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center">
+                    <Icon className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-medium text-gray-900">{entry.userName}</span>{' '}
+                      {activityCopy(entry)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">{relativeTime(entry.createdAt)}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
 
