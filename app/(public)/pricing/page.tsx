@@ -10,6 +10,7 @@ import {
   StarIcon,
   FireIcon,
 } from '@heroicons/react/24/outline';
+import { getFinalsPromo } from '@/lib/promo/finals';
 
 const tiers = [
   {
@@ -20,14 +21,14 @@ const tiers = [
     description: 'Everything you need to learn faster',
     icon: RocketLaunchIcon,
     features: [
-      'Unlimited AI-generated sets',
+      '5 AI-generated sets per 30 days',
+      'Unlimited CSV imports',
       'Unlimited versus mode challenges',
       'Advanced spaced repetition scheduling',
       'Generate from PDF, YouTube, audio & images',
       'All study modes (classic, multiple choice, typed)',
       'AI-validated answers',
       'Full analytics & progress tracking',
-      'CSV import',
       'Offline study support',
       'Priority support',
     ],
@@ -41,12 +42,13 @@ const tiers = [
     name: 'Lifetime Learner',
     price: '$103.29',
     period: 'one-time',
-    description: 'First 100 users — pay once, learn forever. Processing fees included.',
+    description: 'First 100 users. Pay once, learn forever. Processing fees included.',
     icon: StarIcon,
     badge: 'Limited Time',
     features: [
       'Everything in Monthly Pro, forever',
-      'Unlimited AI-generated sets',
+      '10 AI-generated sets per 30 days',
+      'Unlimited CSV imports',
       'Unlimited versus mode challenges',
       'Advanced spaced repetition scheduling',
       'Generate from PDF, YouTube, audio & images',
@@ -65,12 +67,13 @@ const tiers = [
     name: 'Annual Pro',
     price: '$103.29',
     period: '/year',
-    description: 'Best value — save vs monthly. All Pro features.',
+    description: 'Best value vs monthly. All Pro features.',
     icon: StarIcon,
     badge: 'Save 19%',
     features: [
       'Everything in Monthly Pro',
-      'Unlimited AI-generated sets',
+      '10 AI-generated sets per 30 days',
+      'Unlimited CSV imports',
       'Unlimited versus mode challenges',
       'Advanced spaced repetition scheduling',
       'Generate from PDF, YouTube, audio & images',
@@ -108,6 +111,7 @@ export default function PricingPage() {
   const canceled = searchParams.get('canceled');
   const currentTier = (session?.user as { subscriptionTier?: string })?.subscriptionTier || 'Free';
   const isAuthenticated = status === 'authenticated';
+  const finalsPromo = getFinalsPromo();
 
   const handleCheckout = async (plan: string) => {
     if (!isAuthenticated) {
@@ -189,12 +193,29 @@ export default function PricingPage() {
         </p>
       </div>
 
+      {/* Finals Season Promo Callout */}
+      {finalsPromo.active && (
+        <div
+          className="max-w-3xl mx-auto mb-8 p-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl text-center shadow-md"
+          role="region"
+          aria-label="Finals season promo"
+        >
+          <p className="text-sm sm:text-base font-semibold">
+            Finals Season Boost: every plan gets 20 AI-generated sets per 30 days through May 31.
+          </p>
+          <p className="text-xs sm:text-sm text-purple-100 mt-1">
+            Plus unlimited CSV imports on every tier. Caps revert June 1.
+          </p>
+        </div>
+      )}
+
       {/* Free Account Summary */}
       <div className="max-w-3xl mx-auto mb-12 p-6 bg-gray-50 rounded-xl border border-gray-200 text-center">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Account</h3>
-        <p className="text-sm text-gray-600 mb-4">Get started with basic features — no credit card required</p>
+        <p className="text-sm text-gray-600 mb-4">Get started with basic features. No credit card required.</p>
         <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-700">
-          <span>&#10003; 3 AI-generated sets/month</span>
+          <span>&#10003; {finalsPromo.active ? '20' : '3'} AI-generated sets per 30 days{finalsPromo.active ? ' (finals boost)' : ''}</span>
+          <span>&#10003; Unlimited CSV imports</span>
           <span>&#10003; Classic study mode</span>
           <span>&#10003; Join versus challenges</span>
           <span>&#10003; Basic progress tracking</span>

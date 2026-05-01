@@ -5,6 +5,8 @@ import { Logger, LogContext } from '@/lib/logging/logger';
 import { AnalyticsLogger } from '@/lib/logging/logger';
 import { authOptions } from '@/lib/auth/auth';
 
+// CSV imports are exempt from the AI-generation cap by tier policy.
+// Do not call checkRateLimit / incrementGenerationCount here.
 export async function POST(request: NextRequest) {
   const requestId = await Logger.info(
     LogContext.FLASHCARD,

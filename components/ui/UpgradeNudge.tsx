@@ -26,7 +26,7 @@ export default function UpgradeNudge({
     onClose?.();
   };
 
-  const defaultMessage = `Upgrade to Pro for unlimited ${feature}.`;
+  const defaultMessage = `Upgrade to Pro for a higher monthly cap on ${feature}.`;
   const displayMessage = message || defaultMessage;
 
   if (variant === 'modal') {

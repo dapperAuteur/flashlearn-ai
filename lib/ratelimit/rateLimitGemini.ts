@@ -2,6 +2,7 @@ import { User } from "@/models/User";
 import { AppConfig } from "@/models/AppConfig";
 import { Logger, LogContext } from "@/lib/logging/logger";
 import { AppError } from "@/lib/errors/AppError";
+import { getFinalsPromo } from "@/lib/promo/finals";
 
 const AI_GENERATION_WINDOW_DAYS = 30;
 
@@ -35,10 +36,10 @@ async function getRateLimitConfig(): Promise<Record<string, number>> {
   Logger.warning(LogContext.SYSTEM, "RATE_LIMITS not found in DB or invalid. Using default fallback values.");
   return {
     Admin: Infinity,
-    'Lifetime Learner': Infinity,
-    'Annual Pro': Infinity,
-    'Monthly Pro': Infinity,
-    Free: 1,
+    'Lifetime Learner': 10,
+    'Annual Pro': 10,
+    'Monthly Pro': 5,
+    Free: 3,
   };
 }
 
@@ -72,7 +73,9 @@ export async function checkRateLimit(userId: string): Promise<{ limited: boolean
         return { limited: false };
     }
 
-    const limit = limits[user.subscriptionTier as keyof typeof limits] ?? limits.Free;
+    const tierLimit = limits[user.subscriptionTier as keyof typeof limits] ?? limits.Free;
+    const promo = getFinalsPromo();
+    const effectiveLimit = promo.active ? Math.max(tierLimit, promo.flatLimit) : tierLimit;
     const { aiGenerationCount, lastAiGenerationDate } = user;
 
     if (lastAiGenerationDate) {
@@ -81,9 +84,9 @@ export async function checkRateLimit(userId: string): Promise<{ limited: boolean
 
         // If the last generation was within the current window, check the count.
         if (lastAiGenerationDate > windowStart) {
-            if (aiGenerationCount >= limit) {
-                const reason = `User has reached their AI generation limit of ${limit} per ${AI_GENERATION_WINDOW_DAYS} days for the ${user.subscriptionTier} tier.`;
-                Logger.warning(LogContext.AI, reason, { userId, tier: user.subscriptionTier, limit, count: aiGenerationCount });
+            if (aiGenerationCount >= effectiveLimit) {
+                const reason = `User has reached their AI generation limit of ${effectiveLimit} per ${AI_GENERATION_WINDOW_DAYS} days for the ${user.subscriptionTier} tier.`;
+                Logger.warning(LogContext.AI, reason, { userId, tier: user.subscriptionTier, tierLimit, effectiveLimit, promoActive: promo.active, count: aiGenerationCount });
                 return { limited: true, reason };
             }
         } else {
