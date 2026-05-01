@@ -50,4 +50,7 @@ docs/data-backup/
 
 .claude/
 
-plans/
+plans/*
+!plans/social-media/
+plans/social-media/**
+!plans/social-media/*.md
