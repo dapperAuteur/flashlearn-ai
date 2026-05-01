@@ -11,6 +11,16 @@ export async function GET() {
       return NextResponse.json({ active: false });
     }
 
+    // Optional expiresAt: ISO 8601 string. If set and in the past, suppress the banner
+    // server-side so admins don't have to manually flip active:false on a deadline.
+    const value = config.value as { expiresAt?: string };
+    if (value.expiresAt) {
+      const expiresAtMs = new Date(value.expiresAt).getTime();
+      if (!Number.isNaN(expiresAtMs) && expiresAtMs <= Date.now()) {
+        return NextResponse.json({ active: false });
+      }
+    }
+
     return NextResponse.json(config.value);
   } catch {
     return NextResponse.json({ active: false });

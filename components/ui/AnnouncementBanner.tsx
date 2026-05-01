@@ -11,6 +11,7 @@ interface BannerData {
   message: string;
   linkText?: string;
   linkUrl?: string;
+  expiresAt?: string;
 }
 
 const typeStyles: Record<string, string> = {
@@ -33,6 +34,13 @@ export default function AnnouncementBanner() {
       .then((res) => res.json())
       .then((data: BannerData) => {
         if (!data.active || !data.message) return;
+
+        // Defense in depth: server already suppresses expired banners, but a stale
+        // edge cache could serve an active=true response past the cutoff.
+        if (data.expiresAt) {
+          const expiresAtMs = new Date(data.expiresAt).getTime();
+          if (!Number.isNaN(expiresAtMs) && expiresAtMs <= Date.now()) return;
+        }
 
         const dismissKey = `banner_dismissed_${data.bannerId}`;
         if (localStorage.getItem(dismissKey) === 'true') {

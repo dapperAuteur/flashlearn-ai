@@ -44,7 +44,7 @@ const DEFAULT_CONFIGS = [
   },
   {
     key: "ANNOUNCEMENT_BANNER",
-    description: "Site-wide announcement banner. Set active to true to display.",
+    description: "Site-wide announcement banner. Set active to true to display. Optional expiresAt (ISO 8601, e.g. \"2026-06-01T06:59:00Z\") auto-hides the banner after that time without a manual flip.",
     defaultValue: {
       active: false,
       bannerId: "v1",
@@ -52,6 +52,7 @@ const DEFAULT_CONFIGS = [
       message: "",
       linkText: "",
       linkUrl: "",
+      expiresAt: "",
     },
   },
   {
@@ -146,6 +147,19 @@ export default function AdminSettingsPage() {
         const data = await res.json();
         alert(data.error || "Failed to save");
         return;
+      }
+
+      // Sync local state with the persisted doc so the "Not saved yet" badge
+      // and the "Updated <date>" stamp refresh without a page reload.
+      const data = await res.json();
+      if (data?.config) {
+        setConfigs((prev) => {
+          const idx = prev.findIndex((c) => c.key === key);
+          if (idx === -1) return [...prev, data.config];
+          const next = [...prev];
+          next[idx] = data.config;
+          return next;
+        });
       }
 
       setSaved(key);
