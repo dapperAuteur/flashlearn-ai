@@ -5,6 +5,8 @@
 
 Covers all 12 currently shipped 2026-04 releases plus the 5 fitness-cert releases queued in Phase 2.5.
 
+> **Launching a promo (finals-style cap boost)?** Promos are now configured via [/admin/promotions](https://flashlearnai.witus.online/admin/promotions). No code change required. Full runbook: [docs/guides/admin-launch-a-promo-guide.md](../docs/guides/admin-launch-a-promo-guide.md). For promos worth coverage, draft a press release + social calendar using the finals-promo files below as templates and add them to the index.
+
 ---
 
 ## Master release index

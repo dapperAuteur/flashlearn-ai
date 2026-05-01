@@ -2,9 +2,11 @@
 
 ## Overview
 
-A "promotion" temporarily raises every plan's AI generation cap to a flat number for a fixed window. The first one shipped was the Finals Season Boost (April 30 → May 31, 2026, lifting all tiers to 20 sets per 30 days). This guide documents the current one-off process for launching subsequent promos.
+A "promotion" temporarily raises every plan's AI generation cap to a flat number for a fixed window. The first one shipped was the Finals Season Boost (April 30 → May 31, 2026, lifting all tiers to 20 sets per 30 days).
 
-The current implementation is hardcoded code per promo. A generic promo system that would let marketing schedule promos via `/admin/settings` without engineering involvement is parked at [plans/future/03-generic-promo-system.md](../../plans/future/03-generic-promo-system.md). Until that ships, follow this runbook.
+Promos are now configured through the [/admin/promotions](https://flashlearnai.witus.online/admin/promotions) page. **No code changes required.** The rate limiter, the public banner, and the per-tier pricing pill all read from the active `Promotion` document via `/api/promo/active`.
+
+This guide covers the new admin-UI flow. The earlier hardcoded approach (env vars + code edits) is retired; the docs below replace the prior runbook.
 
 ## When to launch a promo
 
@@ -19,163 +21,125 @@ Don't launch promos faster than once per quarter unless there's a specific reaso
 
 ## Pre-flight decisions
 
-Before touching code, lock in:
+Before opening the admin form, lock in:
 
 | Decision | Notes |
 |---|---|
-| Promo slug | Short, machine-friendly (e.g., `finals-2026`, `back-to-school-2026`) |
-| Start date | Optional. Most promos can start on deploy. If you want a future-dated start, code needs an extra `startsAt` check. |
-| End date | Required. ISO 8601 UTC. `2026-06-01T06:59:00Z` was the finals cutoff (= May 31 11:59 PT). |
-| Flat limit | The cap every tier floors to during the promo. Finals used 20. Should usually be at least 2x the highest paid tier. |
-| Should tier defaults change? | If yes, update `RATE_LIMITS` separately at promo end (see step 7). |
-| Banner copy | Short, mobile-first. No em dashes. No AI-cliché vocabulary. |
-| Pricing pill copy | Short tag next to the AI-cap line on each tier card. Finals used "20 through May 31". |
+| Slug | Short, machine-friendly, lowercase. e.g. `finals-2026`, `back-to-school-2026`. Used as the unique key. Cannot be changed after creation. |
+| Name | Human-readable. "Finals Season Boost", "Back-to-School Boost". |
+| Flat limit | The cap every tier floors to during the promo. Should usually be at least 2x the highest paid tier (10). Finals used 20. |
+| Starts at | UTC datetime. Future-dated is fine; the promo activates automatically when the start time passes. |
+| Ends at | UTC datetime. Required. The promo deactivates server-side at this time. |
+| Banner message | Short, mobile-first sentence shown on landing + every page (when banner enabled). 240 char max. No em dashes, no AI-cliché vocabulary. |
+| Banner link / label | Where the banner CTA goes. Defaults to `/pricing` and "See plans". |
+| Pricing-page callout | Slightly longer copy under the inline banner on /pricing. 240 char max. |
+| Pricing-tier badge | Short tag shown next to the AI-cap line on each tier card. e.g. "20 through May 31". 60 char max. |
 
-Run all copy through the brand-voice check before coding: no em dashes, no `robust / leverage / comprehensive / seamless / delve / navigate / journey / unlock`.
+Run all copy through the brand-voice check before pasting it in: no em dashes, no `robust / leverage / comprehensive / seamless / delve / navigate / journey / unlock`.
 
-## Engineering steps
+## The flow
 
-### 1. Branch off main
+### 1. Sign in as Admin
 
-```bash
-git checkout main && git pull --ff-only
-git checkout -b feat/<promo-slug>-promo
-```
+You need a user with `role: 'Admin'` on production. Your usual admin account.
 
-### 2. Create or rename the promo helper
+### 2. Open /admin/promotions
 
-The finals helper lives at [lib/promo/finals.ts](../../lib/promo/finals.ts). Either:
+[https://flashlearnai.witus.online/admin/promotions](https://flashlearnai.witus.online/admin/promotions)
 
-**Option A: Rename and reuse** (if the previous promo has fully ended and you don't want both at once): rename the file and the exported function to match the new slug.
+The top of the page has the create form. Below it is the list of all existing promos with their state (upcoming / active / ended / disabled).
 
-**Option B: Add alongside** (if both promos could overlap): create `lib/promo/<slug>.ts` mirroring the `finals.ts` shape. The rate limiter then needs to consider both. Cleaner long-term to consolidate when adding the second one.
+### 3. Fill out the form
 
-The helper exports `getActivePromo()` returning `{ active, endsAt, flatLimit }`. Source the cutoff from a per-promo env var with a hardcoded fallback constant (so a missing env doesn't break date math).
+Each field maps directly to the schema captured in pre-flight. The form is plain HTML inputs:
 
-### 3. Wire into the rate limiter
+- Slug (text, lowercase + numbers + hyphens only)
+- Name (text)
+- Flat limit (number)
+- Active (checkbox; leave checked unless you want the kill switch off at creation)
+- Starts at / Ends at (datetime-local pickers, treated as UTC)
+- Banner message + link + label
+- Pricing callout + tier badge
 
-[lib/ratelimit/rateLimitGemini.ts](../../lib/ratelimit/rateLimitGemini.ts) currently has:
+Below the banner-message field, the form shows a brand-voice hint reminding you to avoid em dashes and AI-cliché vocabulary. Save when ready.
 
-```ts
-const promo = getFinalsPromo();
-const effectiveLimit = promo.active ? Math.max(tierLimit, promo.flatLimit) : tierLimit;
-```
+### 4. Verification (under 5 minutes)
 
-If you renamed (Option A), update the import. If you added alongside (Option B), pick the highest active flat limit:
+- Open the promo's row in the list. Status should show `active` if you set start time in the past, `upcoming` if in the future.
+- Visit [/](https://flashlearnai.witus.online/) (landing) and [/pricing](https://flashlearnai.witus.online/pricing). The hero strip and inline pricing banner should render with your message + days-left countdown.
+- Per-tier cards should show your `pricingTierBadge` next to the AI-cap line.
+- Sign in as a Free-tier test account and confirm the rate limiter respects the higher flat limit. Generate up to (flat-limit + 1) flashcard sets; the (flat-limit + 1)th should 429.
 
-```ts
-const active = [getFinalsPromo(), getBackToSchoolPromo()].filter((p) => p.active);
-const flatLimit = active.length ? Math.max(...active.map((p) => p.flatLimit)) : 0;
-const effectiveLimit = flatLimit > 0 ? Math.max(tierLimit, flatLimit) : tierLimit;
-```
+### 5. Press + social (optional but recommended for big promos)
 
-### 4. Update the banner + pricing UI
+For finals-scale promos worth coverage, drop matching artifacts into `press/`:
 
-[components/ui/FinalsPromoBanner.tsx](../../components/ui/FinalsPromoBanner.tsx) and the inline blocks in [app/(public)/pricing/page.tsx](../../app/(public)/pricing/page.tsx) and [app/(public)/page.tsx](../../app/(public)/page.tsx) all read from `getFinalsPromo()`. Either rename them to a generic name or fork. For per-tier pricing pills, update the regex/match in pricing/page.tsx that conditionally renders the badge.
+- A press release (model: [press/2026-04-finals-season-promo.md](../../press/2026-04-finals-season-promo.md))
+- A social calendar covering the window (model: [press/2026-05-finals-promo-social.md](../../press/2026-05-finals-promo-social.md))
+- Update [press/distribution-playbook.md](../../press/distribution-playbook.md) with the new entries
 
-### 5. Tests
-
-Cover the new helper:
-- env var override
-- hardcoded fallback when env unset
-- unparseable env falls back
-- inactive after cutoff
-- inactive at exactly the cutoff (strict less-than)
-
-Cover the rate limiter:
-- non-promo behavior unchanged
-- effective limit lifts to flat limit during promo
-- limit reverts after cutoff
-
-[__tests__/lib/promo/finals.test.ts](../../__tests__/lib/promo/finals.test.ts) is the template.
-
-### 6. Press + social
-
-Drop matching artifacts into `press/`:
-
-- A press release (model on [press/2026-04-finals-season-promo.md](../../press/2026-04-finals-season-promo.md))
-- A social calendar covering the window (model on [press/2026-05-finals-promo-social.md](../../press/2026-05-finals-promo-social.md))
-- Update [press/distribution-playbook.md](../../press/distribution-playbook.md)
-
-### 7. Commit + push, wait for merge
-
-Branch → commit → push → stop. Don't merge yourself. See [CLAUDE.md](../../CLAUDE.md) §"Branch hygiene".
-
-## Operational steps (after merge, before promo goes live)
-
-### 8. Set the promo end env var on Vercel
-
-Vercel dashboard → flashlearnai-ai project → Settings → Environment Variables. Add:
-
-- **Name:** `<PROMO_SLUG>_PROMO_END_UTC` (e.g., `BACK_TO_SCHOOL_PROMO_END_UTC`)
-- **Value:** the ISO 8601 cutoff
-- **Environments:** Production AND Preview
-
-Trigger a redeploy.
-
-### 9. Update RATE_LIMITS in /admin/settings (only if tier defaults are changing)
-
-Most promos lift the floor without changing tier defaults. If this promo also resets tier defaults (the way finals did), update `RATE_LIMITS` in [/admin/settings](https://flashlearnai.witus.online/admin/settings) per the schema. The PUT handler auto-clears the rate-limit cache.
-
-### 10. Enable the announcement banner in /admin/settings
-
-Update the banner config row to `active: true` with the promo copy. Schema:
-
-```json
-{
-  "active": true,
-  "bannerId": "<promo-slug>",
-  "type": "promo",
-  "message": "<short, mobile-first promo line>",
-  "linkText": "See plans",
-  "linkUrl": "/pricing"
-}
-```
-
-Changing `bannerId` from the previous promo's ID re-prompts users who dismissed the previous banner.
-
-### 11. Smoke test
-
-- Sign in as a free-tier test user. Confirm the inline FinalsPromoBanner renders on `/` and `/pricing`.
-- Confirm the global AnnouncementBanner renders in the dashboard.
-- Generate up to (flat-limit + 1) flashcard sets. The (flat-limit + 1)th should be blocked with a 429.
-- Verify the days-left countdown on the inline banner is correct.
+For smaller promos (e.g., a one-week boost paired with a single product update), skip the press release and post directly on the existing channels.
 
 ## At promo end
 
-### 12. Manual cleanup checklist (the day after the cutoff)
+The system handles the cutover automatically:
 
-- The inline banner auto-hides via `getActivePromo().active === false`. No action required.
-- The global AnnouncementBanner has no `endDate` field today. Manually flip `active: false` in [/admin/settings](https://flashlearnai.witus.online/admin/settings).
-- If `RATE_LIMITS` was changed for the promo, decide whether to keep the new defaults or revert to the prior values via [/admin/settings](https://flashlearnai.witus.online/admin/settings).
-- Delete or update the env var `<PROMO_SLUG>_PROMO_END_UTC` if it's no longer needed.
+- `/api/promo/active` stops returning the promo once `endsAt` passes
+- The hero + inline banners hide on next page load
+- The pricing tier badge disappears
+- The rate limiter falls back to the standard tier defaults
 
-### 13. Support readiness
+**One thing the system does NOT auto-handle:**
 
-If tier defaults dropped at promo end, paid users with promo-era counts above the new tier cap will be locked out until their `lastAiGenerationDate` slides past 30 days. See the playbook at `plans/user-tasks/04-promo-end-counter-resets.md` (gitignored, BAM-only) for the manual reset procedure.
+If users generated above their normal-tier cap during the promo, they'll be temporarily locked out post-promo until their 30-day rolling window slides past the oldest qualifying generation. See [plans/user-tasks/04-promo-end-counter-resets.md](../../plans/user-tasks/04-promo-end-counter-resets.md) (gitignored BAM-only operator notes) for the manual reset procedure to apply when a paid user reports being locked.
+
+### Optional: post-promo cleanup
+
+- If the promo had an associated AnnouncementBanner config in [/admin/settings](https://flashlearnai.witus.online/admin/settings), set `expiresAt` to your end date so the banner auto-hides without manual intervention next time.
+- Mark the Promotion `active: false` if you want it filtered out of any future "all promos" queries (optional; ended promos sort to the bottom regardless).
 
 ## Rollback
 
-If a launched promo needs to end early:
+To end an active promo early:
 
-- Vercel: change the env var to a past date (e.g., `2020-01-01T00:00:00Z`) and redeploy.
-- Banner: flip `active: false` in `/admin/settings`.
-- Code: no change needed; the helpers respect the env var.
+- Open `/admin/promotions`
+- Click "Disable" on the row (toggles `active` to false)
+- Or click "Edit" and shorten the `endsAt` to a past time
+
+The cap reverts on the next request after the cache invalidates (5-minute TTL on the in-process promo cache). To force immediate effect:
+
+- The PATCH endpoint already calls `clearPromotionsCache()`, so the next request from any process should pick up the new state. If a stale function instance is still serving, redeploying the Vercel project flushes all instances.
 
 If a promo causes a billing or limit-bypass incident:
 
-- First: change the env var to a past date and redeploy. Cap reverts immediately.
-- Second: review usage data for the affected window in `/admin/users` or via mongosh.
-- Third: open an incident review and decide whether the next promo design needs different guardrails.
+1. Disable via the admin UI (above)
+2. Review usage data via `/admin/users` or mongosh
+3. If specific users abused the higher cap, manually adjust their `aiGenerationCount` per the playbook in [plans/user-tasks/04-promo-end-counter-resets.md](../../plans/user-tasks/04-promo-end-counter-resets.md)
+4. Open an incident review and decide whether the next promo design needs different guardrails (e.g. a per-user cap on top of the flat-limit floor)
 
-## Future improvements
+## Multi-promo behavior
 
-The full generic-promo-system design is at [plans/future/03-generic-promo-system.md](../../plans/future/03-generic-promo-system.md). When triggered (next promo planned, marketing wants A/B testing, schedule promos in advance), 1-2 days of focused engineering replaces this runbook with a `/admin/promotions` UI.
+Multiple promos can exist in the database simultaneously. The rate limiter picks the active one with the highest `flatLimit` via `Math.max`. Useful patterns:
+
+- Schedule a back-to-school promo today with `startsAt` in August. It sits as `upcoming` until then, no traffic impact.
+- Run a small evergreen promo (e.g., flat 8 for everyone) and seasonally overlap a bigger one (flat 20). The bigger wins while active; the small one resumes when the bigger ends.
+- Use the `active` toggle as a kill switch independent of dates: let a promo's date window stay correct in the record while temporarily disabling it.
+
+## Initial seed
+
+The Finals Season Boost was migrated from the old hardcoded `lib/promo/finals.ts` via the one-time `npm run seed:finals-promo` script. That script is idempotent and safe to re-run; it upserts on slug `finals-2026`. After the first run there's no need to run it again unless the doc gets accidentally deleted.
+
+## Schema reference
+
+Full Promotion schema lives at [models/Promotion.ts](../../models/Promotion.ts). Public projection (what `/api/promo/active` returns) lives at [lib/promo/promotions.ts](../../lib/promo/promotions.ts) as the `ActivePromotion` interface.
 
 ## Related
 
-- [plans/future/03-generic-promo-system.md](../../plans/future/03-generic-promo-system.md)
-- [lib/promo/finals.ts](../../lib/promo/finals.ts): current one-off implementation
-- [lib/ratelimit/rateLimitGemini.ts](../../lib/ratelimit/rateLimitGemini.ts)
-- [components/ui/FinalsPromoBanner.tsx](../../components/ui/FinalsPromoBanner.tsx)
+- [models/Promotion.ts](../../models/Promotion.ts)
+- [lib/promo/promotions.ts](../../lib/promo/promotions.ts)
+- [app/api/admin/promotions/route.ts](../../app/api/admin/promotions/route.ts) (GET list / POST create)
+- [app/api/admin/promotions/[slug]/route.ts](../../app/api/admin/promotions/[slug]/route.ts) (PATCH / DELETE)
+- [app/api/promo/active/route.ts](../../app/api/promo/active/route.ts) (public read)
+- [components/ui/ActivePromoBanner.tsx](../../components/ui/ActivePromoBanner.tsx)
+- [scripts/seedFinalsPromo.ts](../../scripts/seedFinalsPromo.ts) (idempotent seed)
 - [press/distribution-playbook.md](../../press/distribution-playbook.md)
