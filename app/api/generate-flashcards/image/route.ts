@@ -5,6 +5,11 @@ import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLi
 import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
+import {
+  buildSourcePrompt,
+  sanitizeUserInstructions,
+  MAX_USER_INSTRUCTIONS_LENGTH,
+} from '@/lib/services/buildGenerationPrompt';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB per image
 const MAX_IMAGES = 5;
@@ -28,6 +33,14 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
+    const rawPrompt = formData.get('prompt');
+    if (typeof rawPrompt === 'string' && rawPrompt.trim().length > MAX_USER_INSTRUCTIONS_LENGTH) {
+      return NextResponse.json(
+        { error: `Instructions must be ${MAX_USER_INSTRUCTIONS_LENGTH} characters or fewer.` },
+        { status: 400 },
+      );
+    }
+    const userInstructions = sanitizeUserInstructions(rawPrompt);
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: 'No images provided' }, { status: 400 });
@@ -58,19 +71,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const prompt = `
-You are an expert educator creating flashcards from image content.
-
-Look at the provided image(s) carefully. They may contain:
-- Textbook pages, lecture slides, or handwritten notes
-- Diagrams, charts, or tables
-- Whiteboard content or screenshots
-
-Extract the key educational content and generate ${FLASHCARD_MIN} to ${FLASHCARD_MAX} high-quality flashcards covering the main concepts, definitions, facts, and relationships shown.
-
-IMPORTANT: Respond with ONLY a valid JSON array. Each object must have "front" (question) and "back" (answer) properties.
-Example: [{"front": "What is...?", "back": "It is..."}]
-`;
+    const prompt = buildSourcePrompt({
+      sourceKind: 'image',
+      userInstructions,
+      min: FLASHCARD_MIN,
+      max: FLASHCARD_MAX,
+    });
 
     const result = await MODEL.generateContent([prompt, ...imageParts]);
     const responseText = result.response.text();

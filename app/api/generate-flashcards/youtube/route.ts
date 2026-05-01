@@ -6,6 +6,11 @@ import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
 import { YoutubeTranscript } from 'youtube-transcript';
+import {
+  buildSourcePrompt,
+  sanitizeUserInstructions,
+  MAX_USER_INSTRUCTIONS_LENGTH,
+} from '@/lib/services/buildGenerationPrompt';
 
 const MAX_TRANSCRIPT_LENGTH = 50000;
 
@@ -37,11 +42,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { url } = await request.json();
+    const { url, prompt: rawPrompt } = await request.json();
 
     if (!url || typeof url !== 'string') {
       return NextResponse.json({ error: 'YouTube URL is required' }, { status: 400 });
     }
+
+    if (typeof rawPrompt === 'string' && rawPrompt.trim().length > MAX_USER_INSTRUCTIONS_LENGTH) {
+      return NextResponse.json(
+        { error: `Instructions must be ${MAX_USER_INSTRUCTIONS_LENGTH} characters or fewer.` },
+        { status: 400 },
+      );
+    }
+    const userInstructions = sanitizeUserInstructions(rawPrompt);
 
     const videoId = extractVideoId(url.trim());
     if (!videoId) {
@@ -71,20 +84,13 @@ export async function POST(request: NextRequest) {
       transcript = transcript.substring(0, MAX_TRANSCRIPT_LENGTH);
     }
 
-    const prompt = `
-You are an expert educator creating flashcards from a YouTube video transcript.
-
-Based on the following transcript, generate ${FLASHCARD_MIN} to ${FLASHCARD_MAX} high-quality flashcards.
-Focus on the key concepts, facts, definitions, and important points discussed in the video.
-
-TRANSCRIPT:
-"""
-${transcript}
-"""
-
-IMPORTANT: Respond with ONLY a valid JSON array. Each object must have "front" (question) and "back" (answer) properties.
-Example: [{"front": "What is...?", "back": "It is..."}]
-`;
+    const prompt = buildSourcePrompt({
+      sourceKind: 'youtube',
+      body: transcript,
+      userInstructions,
+      min: FLASHCARD_MIN,
+      max: FLASHCARD_MAX,
+    });
 
     const result = await MODEL.generateContent(prompt);
     const responseText = result.response.text();

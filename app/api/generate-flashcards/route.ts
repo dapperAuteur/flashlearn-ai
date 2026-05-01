@@ -10,6 +10,10 @@ import dbConnect from "@/lib/db/dbConnect";
 import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering";
 import { generateFlashcardsFromAI } from "@/lib/services/flashcardGeneration";
 import { ADMIN_FLASHCARD_MIN, ADMIN_FLASHCARD_MAX } from "@/lib/constants";
+import {
+  sanitizeUserInstructions,
+  MAX_USER_INSTRUCTIONS_LENGTH,
+} from "@/lib/services/buildGenerationPrompt";
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
@@ -35,17 +39,25 @@ export async function POST(request: NextRequest) {
         const userId = session.user.id;
         await Logger.info(LogContext.AUTH, "User authenticated for flashcard generation.", { requestId, userId });
 
-        const { topic, title, description, quantity } = await request.json();
+        const { topic, title, description, quantity, instructions: rawInstructions } = await request.json();
         await Logger.info(LogContext.AI, "Flashcard generation request payload received.",{
             userId,
             requestId,
-            metadata: { topic, title, description, quantity }
+            metadata: { topic, title, description, quantity, hasInstructions: typeof rawInstructions === 'string' && rawInstructions.trim().length > 0 }
         });
 
         if (!topic || typeof topic !== 'string' || topic.trim() === '') {
             await Logger.warning(LogContext.AI, "Invalid topic provided.", { requestId, userId, metadata: { topic } });
             return NextResponse.json({ error: 'Topic is required' }, { status: 400 });
         }
+
+        if (typeof rawInstructions === 'string' && rawInstructions.trim().length > MAX_USER_INSTRUCTIONS_LENGTH) {
+            return NextResponse.json(
+                { error: `Instructions must be ${MAX_USER_INSTRUCTIONS_LENGTH} characters or fewer.` },
+                { status: 400 },
+            );
+        }
+        const userInstructions = sanitizeUserInstructions(rawInstructions);
 
         // Validate admin-only quantity parameter
         let validatedQuantity: number | undefined;
@@ -110,7 +122,7 @@ export async function POST(request: NextRequest) {
         // --- End of re-implemented check ---
 
         await AnalyticsLogger.trackPromptSubmission(userId, topic);
-        const flashcards = await generateFlashcardsFromAI(topic, requestId, undefined, validatedQuantity);
+        const flashcards = await generateFlashcardsFromAI(topic, requestId, undefined, validatedQuantity, userInstructions);
         const durationMs = Date.now() - startTime;
 
         if (!flashcards || flashcards.length === 0) {

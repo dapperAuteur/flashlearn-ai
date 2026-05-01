@@ -5,6 +5,11 @@ import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLi
 import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
+import {
+  buildSourcePrompt,
+  sanitizeUserInstructions,
+  MAX_USER_INSTRUCTIONS_LENGTH,
+} from '@/lib/services/buildGenerationPrompt';
 
 const MAX_AUDIO_SIZE = 25 * 1024 * 1024; // 25MB
 const ALLOWED_TYPES = [
@@ -36,6 +41,14 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const rawPrompt = formData.get('prompt');
+    if (typeof rawPrompt === 'string' && rawPrompt.trim().length > MAX_USER_INSTRUCTIONS_LENGTH) {
+      return NextResponse.json(
+        { error: `Instructions must be ${MAX_USER_INSTRUCTIONS_LENGTH} characters or fewer.` },
+        { status: 400 },
+      );
+    }
+    const userInstructions = sanitizeUserInstructions(rawPrompt);
 
     if (!file) {
       return NextResponse.json({ error: 'No audio file provided' }, { status: 400 });
@@ -64,16 +77,12 @@ export async function POST(request: NextRequest) {
       mimeType = 'audio/mp4';
     }
 
-    const prompt = `
-You are an expert educator creating flashcards from audio content.
-
-Listen to this audio recording carefully. It may be a lecture, podcast, voice note, or educational recording.
-
-Generate ${FLASHCARD_MIN} to ${FLASHCARD_MAX} high-quality flashcards covering the key concepts, facts, definitions, and important points discussed.
-
-IMPORTANT: Respond with ONLY a valid JSON array. Each object must have "front" (question) and "back" (answer) properties.
-Example: [{"front": "What is...?", "back": "It is..."}]
-`;
+    const prompt = buildSourcePrompt({
+      sourceKind: 'audio',
+      userInstructions,
+      min: FLASHCARD_MIN,
+      max: FLASHCARD_MAX,
+    });
 
     const result = await MODEL.generateContent([
       prompt,

@@ -6,6 +6,11 @@ import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
 import { PDFParse } from 'pdf-parse';
+import {
+  buildSourcePrompt,
+  sanitizeUserInstructions,
+  MAX_USER_INSTRUCTIONS_LENGTH,
+} from '@/lib/services/buildGenerationPrompt';
 
 const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20MB
 const MAX_TEXT_LENGTH = 50000; // chars to send to Gemini
@@ -28,6 +33,14 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const rawPrompt = formData.get('prompt');
+    if (typeof rawPrompt === 'string' && rawPrompt.trim().length > MAX_USER_INSTRUCTIONS_LENGTH) {
+      return NextResponse.json(
+        { error: `Instructions must be ${MAX_USER_INSTRUCTIONS_LENGTH} characters or fewer.` },
+        { status: 400 },
+      );
+    }
+    const userInstructions = sanitizeUserInstructions(rawPrompt);
 
     if (!file) {
       return NextResponse.json({ error: 'No PDF file provided' }, { status: 400 });
@@ -60,20 +73,13 @@ export async function POST(request: NextRequest) {
       text = text.substring(0, MAX_TEXT_LENGTH);
     }
 
-    const prompt = `
-You are an expert educator creating flashcards from document content.
-
-Based on the following text extracted from a PDF, generate ${FLASHCARD_MIN} to ${FLASHCARD_MAX} high-quality flashcards.
-Focus on the key concepts, definitions, facts, and important relationships in the content.
-
-TEXT:
-"""
-${text}
-"""
-
-IMPORTANT: Respond with ONLY a valid JSON array. Each object must have "front" (question) and "back" (answer) properties.
-Example: [{"front": "What is...?", "back": "It is..."}]
-`;
+    const prompt = buildSourcePrompt({
+      sourceKind: 'pdf',
+      body: text,
+      userInstructions,
+      min: FLASHCARD_MIN,
+      max: FLASHCARD_MAX,
+    });
 
     const result = await MODEL.generateContent(prompt);
     const responseText = result.response.text();

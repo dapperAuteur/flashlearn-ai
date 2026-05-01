@@ -7,6 +7,7 @@ export type ContentSource = 'pdf' | 'image' | 'youtube' | 'audio' | null;
 export const useContentImport = (
   setFlashcards: React.Dispatch<React.SetStateAction<Flashcard[]>>,
   setTopicAndTitle: (topic: string) => void,
+  instructions?: string,
 ) => {
   const [activeSource, setActiveSource] = useState<ContentSource>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -16,6 +17,9 @@ export const useContentImport = (
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
+
+  const trimmedInstructions = instructions?.trim();
+  const userPrompt = trimmedInstructions && trimmedInstructions.length > 0 ? trimmedInstructions : undefined;
 
   const resetImport = useCallback(() => {
     setActiveSource(null);
@@ -35,6 +39,7 @@ export const useContentImport = (
       try {
         const formData = new FormData();
         formData.append('file', file);
+        if (userPrompt) formData.append('prompt', userPrompt);
 
         const res = await fetch('/api/generate-flashcards/pdf', {
           method: 'POST',
@@ -58,7 +63,7 @@ export const useContentImport = (
         if (pdfInputRef.current) pdfInputRef.current.value = '';
       }
     },
-    [setFlashcards, setTopicAndTitle],
+    [setFlashcards, setTopicAndTitle, userPrompt],
   );
 
   const handleImageUpload = useCallback(
@@ -73,6 +78,7 @@ export const useContentImport = (
       try {
         const formData = new FormData();
         Array.from(files).forEach((file) => formData.append('files', file));
+        if (userPrompt) formData.append('prompt', userPrompt);
 
         const res = await fetch('/api/generate-flashcards/image', {
           method: 'POST',
@@ -95,7 +101,7 @@ export const useContentImport = (
         if (imageInputRef.current) imageInputRef.current.value = '';
       }
     },
-    [setFlashcards, setTopicAndTitle],
+    [setFlashcards, setTopicAndTitle, userPrompt],
   );
 
   const handleYoutubeSubmit = useCallback(async () => {
@@ -112,7 +118,10 @@ export const useContentImport = (
       const res = await fetch('/api/generate-flashcards/youtube', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: youtubeUrl.trim() }),
+        body: JSON.stringify({
+          url: youtubeUrl.trim(),
+          ...(userPrompt && { prompt: userPrompt }),
+        }),
       });
 
       const data = await res.json();
@@ -130,7 +139,7 @@ export const useContentImport = (
     } finally {
       setIsProcessing(false);
     }
-  }, [youtubeUrl, setFlashcards, setTopicAndTitle]);
+  }, [youtubeUrl, setFlashcards, setTopicAndTitle, userPrompt]);
 
   const handleAudioUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,6 +153,7 @@ export const useContentImport = (
       try {
         const formData = new FormData();
         formData.append('file', file);
+        if (userPrompt) formData.append('prompt', userPrompt);
 
         const res = await fetch('/api/generate-flashcards/audio', {
           method: 'POST',
@@ -167,7 +177,7 @@ export const useContentImport = (
         if (audioInputRef.current) audioInputRef.current.value = '';
       }
     },
-    [setFlashcards, setTopicAndTitle],
+    [setFlashcards, setTopicAndTitle, userPrompt],
   );
 
   const triggerPdfUpload = useCallback(() => {
