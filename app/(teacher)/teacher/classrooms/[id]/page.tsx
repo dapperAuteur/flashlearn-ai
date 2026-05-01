@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   UserGroupIcon,
@@ -10,12 +11,33 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
+  TrophyIcon,
 } from "@heroicons/react/24/outline";
 
 interface StudentInfo {
   _id: string;
   name: string;
   email: string;
+}
+
+type LeaderboardScope = "classroom" | "global";
+
+interface LeaderboardRow {
+  rank: number;
+  userId: string;
+  userName: string;
+  rating: number;
+  wins: number;
+  totalChallenges: number;
+}
+
+interface RawLeaderboardRow {
+  rank?: number;
+  userId: string | { _id: string };
+  userName: string;
+  rating: number;
+  wins: number;
+  totalChallenges?: number;
 }
 
 interface ClassroomDetail {
@@ -42,11 +64,15 @@ interface AssignmentEntry {
 export default function ClassroomDetailPage() {
   const params = useParams();
   const classroomId = params.id as string;
+  const { data: session } = useSession();
 
   const [classroom, setClassroom] = useState<ClassroomDetail | null>(null);
   const [assignments, setAssignments] = useState<AssignmentEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
+  const [leaderboardScope, setLeaderboardScope] = useState<LeaderboardScope>("classroom");
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +102,31 @@ export default function ClassroomDetailPage() {
     };
     fetchData();
   }, [classroomId]);
+
+  useEffect(() => {
+    setLeaderboardLoading(true);
+    const url =
+      leaderboardScope === "classroom"
+        ? `/api/versus/leaderboard?type=classroom&classroomId=${classroomId}&limit=50&_t=${Date.now()}`
+        : `/api/versus/leaderboard?type=global&limit=20&_t=${Date.now()}`;
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        const rows = (data.leaderboard || []) as RawLeaderboardRow[];
+        setLeaderboard(
+          rows.map((r, idx) => ({
+            rank: r.rank ?? idx + 1,
+            userId: typeof r.userId === "string" ? r.userId : r.userId?._id ?? "",
+            userName: r.userName,
+            rating: r.rating,
+            wins: r.wins,
+            totalChallenges: r.totalChallenges ?? 0,
+          })),
+        );
+      })
+      .catch(() => setLeaderboard([]))
+      .finally(() => setLeaderboardLoading(false));
+  }, [classroomId, leaderboardScope]);
 
   const copyCode = () => {
     if (classroom) {
@@ -140,6 +191,123 @@ export default function ClassroomDetailPage() {
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      {/* Leaderboard */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            <TrophyIcon className="h-5 w-5 text-amber-500" />
+            Leaderboard
+          </h2>
+          <div
+            role="tablist"
+            aria-label="Leaderboard scope"
+            className="inline-flex rounded-lg bg-gray-100 p-1"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={leaderboardScope === "classroom"}
+              onClick={() => setLeaderboardScope("classroom")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                leaderboardScope === "classroom"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              This classroom
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={leaderboardScope === "global"}
+              onClick={() => setLeaderboardScope("global")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                leaderboardScope === "global"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Everyone
+            </button>
+          </div>
+        </div>
+        {leaderboardLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto" />
+            <p className="mt-3 text-gray-500 text-sm">Loading leaderboard...</p>
+          </div>
+        ) : leaderboard.length === 0 ? (
+          <div className="p-6 text-center text-sm text-gray-500">
+            {leaderboardScope === "classroom"
+              ? "No leaderboard data yet for this classroom. Students appear here once they have a Versus rating."
+              : "No global leaderboard data yet."}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table
+              className="w-full text-sm"
+              role="table"
+              aria-label={leaderboardScope === "classroom" ? "Classroom leaderboard" : "Global leaderboard"}
+            >
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Rank
+                  </th>
+                  <th className="text-left py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Name
+                  </th>
+                  <th className="text-right py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Rating
+                  </th>
+                  <th className="text-right py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
+                    Wins
+                  </th>
+                  <th className="text-right py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
+                    Challenges
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {leaderboard.map((entry) => {
+                  const isMe = entry.userId === session?.user?.id;
+                  return (
+                    <tr key={entry.userId} className={isMe ? "bg-blue-50" : "hover:bg-gray-50"}>
+                      <td className="py-3 px-4 font-medium text-gray-900">
+                        {entry.rank <= 3 ? (
+                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                            {entry.rank}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500">#{entry.rank}</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-gray-900">
+                        {entry.userName}
+                        {isMe && (
+                          <span className="ml-2 text-xs font-medium text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
+                            You
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right font-semibold text-gray-900">
+                        {entry.rating}
+                      </td>
+                      <td className="py-3 px-4 text-right text-gray-600 hidden sm:table-cell">
+                        {entry.wins}
+                      </td>
+                      <td className="py-3 px-4 text-right text-gray-600 hidden sm:table-cell">
+                        {entry.totalChallenges}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
