@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { edgeLogger, EdgeLogContext } from '@/lib/logging/edge-logger';
 import { isReconProbe } from '@/lib/security/reconProbes';
+import { checkReconProbeRateLimit } from '@/lib/ratelimit/reconProbeLimit';
 
 const secret = process.env.NEXTAUTH_SECRET;
 
@@ -18,7 +19,19 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Short-circuit recon probes before any auth / DB / logging work runs.
+  // Apply per-IP rate limiting first so a single bot can't generate unbounded
+  // 404 invocations; once an IP exceeds the cap (50 req / 5 min) it gets a 429
+  // with Retry-After. If Redis is unavailable the limiter fails open and the
+  // 404 path still returns.
   if (isReconProbe(pathname)) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
+    const { limited, retryAfterSeconds } = await checkReconProbeRateLimit(ip);
+    if (limited) {
+      return new Response(null, {
+        status: 429,
+        headers: retryAfterSeconds ? { 'Retry-After': String(retryAfterSeconds) } : undefined,
+      });
+    }
     return new Response(null, { status: 404 });
   }
 
