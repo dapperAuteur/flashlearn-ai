@@ -22,7 +22,7 @@ This is the THIRD social calendar in the May campaign:
 | Week 4 (May 18-24) | Mon, Wed, Fri | Tue, Thu | Sat | Wed reel |
 | Week 5 (May 25-31, urgency push) | Daily | Tue, Thu | Wed, Sat | Daily story |
 
-Total ≈ 22 X posts, 8 LinkedIn posts, 9 Facebook posts, 9 Instagram posts.
+Total ≈ 22 X posts, 8 LinkedIn posts, 9 Facebook posts, 9 Instagram posts. Plus the share-with-someone-you-know referral bank below: ~12 extra posts that can be inserted into any week's slot when a referral angle fits.
 
 ---
 
@@ -197,12 +197,91 @@ Stories countdown sticker tied to 2026-06-01 06:59 UTC. Posts every 6 hours thro
 
 ---
 
+### Share-with-someone-you-know posts (referral angle, also cold audience)
+
+These posts assume the reader has never heard of FlashLearnAI either. The ask is twofold: (1) here's what it is in one sentence, (2) if you're not the audience, forward it to a student or teacher you know who is. Lead with the intro, end with a "send this to them" CTA. Sprinkle one of these into each week alongside the direct posts above so the same scroller might see both an "for you" and a "for someone you know" angle.
+
+**[X] Post R.1: For the friend studying for finals**
+Quick intro: FlashLearnAI builds flashcards from any study material (PDF, lecture audio, photo of notes, YouTube link). The AI does the cards, spaced repetition decides what to study when.
+
+Know a student in finals season? Send them this. Free plan, 20 sets per 30 days through May 31. flashlearnai.witus.online
+
+**[X] Post R.2: For the teacher in your life**
+FlashLearnAI is a study tool. Upload a chapter, lecture recording, or photo of slides; the AI gives you back a flashcard deck. Teachers can also build a study group with a 6-digit join code and share one deck across the class.
+
+Got a teacher in your life? Forward this. Free to try. [link]
+
+**[X] Post R.3: The "send this to your group chat" post**
+You don't have to be a student for this to be useful: FlashLearnAI turns any source material into flashcards. PDFs, lectures, notes, anything.
+
+If you've got a study group, classmate, or kid prepping for finals, drop the link. Free plan works. 20 sets per 30 days through May 31. flashlearnai.witus.online
+
+**[X] Post R.4: For tutors + coaches**
+FlashLearnAI builds flashcards from material you upload (PDF, audio, image, YouTube, text). Tutors: you can build one deck and share it with all your students through a study group with a 6-digit join code.
+
+Know a tutor or coach? Send this their way. Free to start. [link]
+
+**[LinkedIn] Post R.A: For the colleague whose kid is in college**
+Short intro for anyone who hasn't seen this: FlashLearnAI is a study tool that takes any source material (textbook PDFs, lecture recordings, photos of class notes, YouTube videos) and builds flashcards from it. Spaced repetition then schedules what gets reviewed when.
+
+If you've got a high schooler, college student, grad student, or cert candidate in your life, this is worth forwarding. Through May 31 the Free plan gives 20 AI-generated sets per 30 days; after that it drops to 3. Free plan, no credit card to start.
+
+flashlearnai.witus.online
+
+The bigger ask: if you know an instructor or tutor who builds materials for their students, share this with them too. They can spin up a study group with a 6-digit join code and share one deck across the whole class.
+
+**[LinkedIn] Post R.B: For the manager whose team is upskilling**
+Quick FlashLearnAI intro for anyone seeing the brand for the first time: it's a flashcard tool that takes whatever source material you have (PDFs, recordings, slides, notes) and turns it into a study deck. Spaced repetition handles the review schedule.
+
+If you've got someone on your team in NASM CPT prep, USMLE, MBE, PMP, AWS certs, or anything where the source material is dense and the test is far away, send them the link. Through May 31 every plan (Free included) gets 20 generated sets per 30 days. After May 31 the cap reverts.
+
+[link]
+
+**[Facebook] Post R.C: For parents reading this in their feed**
+Brand new study tool worth knowing about: FlashLearnAI takes any source material (a chapter PDF, a lecture recording, a photo of class notes) and builds flashcards from it. The AI does the cards. Spaced repetition decides what to study each day.
+
+You probably aren't the user. The student in your life is. Send them this link.
+
+Through May 31 the Free plan gets 20 sets per 30 days. After May 31 it drops to 3. Free to sign up.
+
+flashlearnai.witus.online
+
+**[Facebook] Post R.D: For the family group**
+Quick share for the family chat: FlashLearnAI is a free study tool. Drop a textbook chapter, lecture audio, or photo of notes; the AI builds you a flashcard deck. Spaced repetition runs the review.
+
+If your kid, niece, nephew, sibling, or partner is studying for finals or a cert exam, forward this to them. Through May 31 every plan gets 20 sets per 30 days. After May 31 the Free cap drops to 3.
+
+flashlearnai.witus.online
+
+**[Facebook] Post R.E: For teachers reading this**
+For any teacher, tutor, or instructor scrolling: FlashLearnAI builds flashcards from your materials (PDF, audio, image, YouTube, text) and lets you spin up a study group with a 6-digit join code so your students study from the same deck.
+
+If you know a teacher who'd use this, tag them or forward the link. Free plan covers a class or two. flashlearnai.witus.online
+
+**[Instagram] Post R.F: Carousel "Send this to..."**
+Slide 1: "Never heard of FlashLearnAI? Quick intro."
+Slide 2: "Drop a PDF, lecture audio, or photo of notes. The AI builds the flashcards."
+Slide 3: "Spaced repetition decides what you study when."
+Slide 4: "Free plan. 20 sets per 30 days through May 31. After May 31 it drops to 3."
+Slide 5: "Send this carousel to: a student in finals, a teacher building decks, a tutor with a class, anyone studying for a cert."
+Slide 6: "flashlearnai.witus.online"
+
+**[Instagram] Post R.G: Reel "Tag someone"**
+15-second screen recording of the generate flow. Caption:
+"FlashLearnAI in 15 seconds: drop a PDF, get a flashcard deck. Tag a student or a teacher who needs this. Free plan, 20 sets per 30 days through May 31. flashlearnai.witus.online"
+
+**[X] Post R.H (Week 5 urgency variant): "Send it before May 31"**
+3 days left on the FlashLearnAI Finals Boost. Free plan gets 20 sets per 30 days; on June 1 it drops to 3. If you know a student or teacher who hasn't tried this, today is the day to send it. Quick intro: it builds flashcards from any source material you upload. [link]
+
+---
+
 ## Targeting notes
 
 - **X/Twitter:** new-user discovery via algorithmic push. Hook in the first sentence MUST work without context. Hashtags optional; if used, mix #studytips #premed #studygram #premedlife type tags with #ai #edtech.
 - **LinkedIn:** professional / continuing-ed audience. Focus on cert candidates (NASM CPT, CES, CNC, USMLE), grad students, MBA, mid-career upskilling. Hashtags: #continuingeducation #studytools #ai.
 - **Facebook:** parents, study-group friends, alumni. Heavier on the "tell someone you know" framing.
 - **Instagram:** visual proof. Carousel + reel formats; the "before / after" pattern (PDF input → finished card stack output) is the strongest.
+- **Referral posts (R.x):** still cold audience. The reader has never heard of FlashLearnAI either. Lead with the intro, then ask them to forward to a student or teacher they know. Do not assume the reader has used the product.
 - **Avoid:** any K-12 audience filter or hashtag. Anything implying minors are the target. The age gate exists; the K-12 readiness work is queued for fall.
 
 ## Visual asset suggestions
@@ -210,6 +289,7 @@ Stories countdown sticker tied to 2026-06-01 06:59 UTC. Posts every 6 hours thro
 - A 3-slide carousel showing input → AI extraction → finished card. Reusable across IG and LinkedIn carousel.
 - A 15-second screen recording of the generate flow. Reusable as Reel and Tweet video.
 - A static "What is FlashLearnAI?" graphic with the 5 input types as icons. Reusable as quote-tweet asset and FB share image.
+- A "Send this to a student or teacher you know" graphic for the referral posts. Same intro copy; different CTA at the bottom.
 
 ## Brand-voice checklist (run before each batch)
 
@@ -219,10 +299,11 @@ Stories countdown sticker tied to 2026-06-01 06:59 UTC. Posts every 6 hours thro
 - [ ] Promo claim ("20 sets per 30 days through May 31") consistent across posts.
 - [ ] CTA links resolve. Use short links from `press/short-links/` once generated.
 - [ ] No K-12 framing. "Students" should context-cue college / cert / adult-ed.
+- [ ] Referral posts (R.x) lead with the intro, then ask the reader to forward. They do not assume the reader has used the product.
 
 ## Operational notes
 
 - This is the cold-audience companion to the existing two May calendars. Run them in parallel rather than sequentially.
-- For each batch, mix one intro post + one use-case post + one promo post within a week so the same scroller might see multiple angles.
+- For each batch, mix one intro post + one use-case post + one promo post + one referral post within a week so the same scroller might see multiple angles.
 - Generate short links via `npm run press:short-links` (will need a small update to point at this file's slug if BAM wants tracked URLs).
 - Schedule via Buffer / Hypefury / native. Replace `[link]` with the appropriate short URL at scheduling time.
