@@ -42,6 +42,9 @@ export interface IUser extends Document {
   followersCount?: number;
   followingCount?: number;
   onboardingCompleted?: boolean;
+  // Age-gate self-attestation
+  ageAttested?: boolean;
+  ageAttestedAt?: Date;
   // Attribution / referral tracking
   signupSource?: string;
   utmSource?: string;

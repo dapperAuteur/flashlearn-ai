@@ -17,6 +17,7 @@ import {
   User,
   ArrowLeft,
   Settings,
+  Mail,
 } from 'lucide-react';
 import TeamChat from '@/components/teams/TeamChat';
 
@@ -54,7 +55,10 @@ interface Team {
   tags?: string[];
   members: TeamMember[];
   currentUserRole: 'owner' | 'admin' | 'member';
+  emailInvitesUsed?: number;
 }
+
+const MAX_EMAIL_INVITES = 3;
 
 type TabId = 'overview' | 'sets' | 'members' | 'leaderboard' | 'chat';
 
@@ -85,6 +89,9 @@ export default function TeamDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [roleChanging, setRoleChanging] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteFeedback, setInviteFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
   const fetchTeam = useCallback(async () => {
     try {
@@ -138,6 +145,35 @@ export default function TeamDashboardPage() {
     }
   };
 
+  const handleSendInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setInviteSending(true);
+    setInviteFeedback(null);
+    try {
+      const res = await fetch(`/api/teams/${teamId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: inviteEmail.trim().toLowerCase() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setInviteFeedback({ kind: 'error', message: data.error || 'Could not send invite.' });
+        return;
+      }
+      setInviteFeedback({
+        kind: 'success',
+        message: `Invite sent. ${data.remainingInvites} email invite${data.remainingInvites === 1 ? '' : 's'} left for this group.`,
+      });
+      setInviteEmail('');
+      await fetchTeam();
+    } catch {
+      setInviteFeedback({ kind: 'error', message: 'Network error. Please try again.' });
+    } finally {
+      setInviteSending(false);
+    }
+  };
+
   const handleRoleChange = async (userId: string, newRole: 'admin' | 'member') => {
     setRoleChanging(userId);
     try {
@@ -161,7 +197,7 @@ export default function TeamDashboardPage() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto" />
-          <p className="mt-3 text-gray-600">Loading team...</p>
+          <p className="mt-3 text-gray-600">Loading study group...</p>
         </div>
       </div>
     );
@@ -171,13 +207,13 @@ export default function TeamDashboardPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-sm text-red-600">{error || 'Team not found.'}</p>
+          <p className="text-sm text-red-600">{error || 'Study group not found.'}</p>
           <Link
             href="/team"
             className="mt-4 inline-flex items-center min-h-[44px] text-sm text-blue-600 hover:text-blue-800"
           >
             <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
-            Back to Teams
+            Back to Study Groups
           </Link>
         </div>
       </div>
@@ -194,16 +230,16 @@ export default function TeamDashboardPage() {
           <Link
             href="/team"
             className="inline-flex items-center min-h-[44px] text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            aria-label="Back to My Teams"
+            aria-label="Back to My Study Groups"
           >
             <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
-            Back to Teams
+            Back to Study Groups
           </Link>
           {isAdmin && (
             <Link
               href={`/team/${teamId}/settings`}
               className="inline-flex items-center min-h-[44px] text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label="Team settings"
+              aria-label="Study group settings"
             >
               <Settings className="h-4 w-4 mr-1" aria-hidden="true" />
               Settings
@@ -271,6 +307,54 @@ export default function TeamDashboardPage() {
               {copied && <span className="text-xs text-green-600">Copied!</span>}
             </div>
           </div>
+
+          {/* Email invite (admin only) */}
+          {isAdmin && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Mail className="h-4 w-4 text-gray-500" aria-hidden="true" />
+                  <span>Invite by email</span>
+                </div>
+                <span className="text-xs text-gray-500" aria-live="polite">
+                  {Math.max(0, MAX_EMAIL_INVITES - (team.emailInvitesUsed ?? 0))} of {MAX_EMAIL_INVITES} left
+                </span>
+              </div>
+              <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row gap-2">
+                <label htmlFor="invite-email" className="sr-only">Email address to invite</label>
+                <input
+                  id="invite-email"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="friend@example.com"
+                  className="flex-1 min-h-[44px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                  disabled={inviteSending || (team.emailInvitesUsed ?? 0) >= MAX_EMAIL_INVITES}
+                  aria-describedby="invite-help"
+                />
+                <button
+                  type="submit"
+                  disabled={inviteSending || !inviteEmail.trim() || (team.emailInvitesUsed ?? 0) >= MAX_EMAIL_INVITES}
+                  className="min-h-[44px] px-4 py-2 text-sm font-medium rounded-lg text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {inviteSending ? 'Sending...' : 'Send invite'}
+                </button>
+              </form>
+              <p id="invite-help" className="mt-2 text-xs text-gray-500">
+                {(team.emailInvitesUsed ?? 0) >= MAX_EMAIL_INVITES
+                  ? `You've used all ${MAX_EMAIL_INVITES} email invites for this group. Share the join code instead.`
+                  : `Email invite includes the 6-digit join code. Recipients must be 13 or older and need a FlashLearnAI account to join.`}
+              </p>
+              {inviteFeedback && (
+                <p
+                  className={`mt-2 text-xs ${inviteFeedback.kind === 'success' ? 'text-green-700' : 'text-red-600'}`}
+                  role={inviteFeedback.kind === 'error' ? 'alert' : 'status'}
+                >
+                  {inviteFeedback.message}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Tabs */}

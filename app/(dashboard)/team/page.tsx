@@ -96,10 +96,10 @@ export default function TeamsPage() {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <Users className="h-7 w-7 text-blue-600" aria-hidden="true" />
-            <h1 className="text-2xl font-bold text-gray-900">My Teams</h1>
+            <h1 className="text-2xl font-bold text-gray-900">My Study Groups</h1>
           </div>
           <p className="text-sm text-gray-600">
-            Create, join, and manage your study teams.
+            Create, join, and manage study groups. Share flashcard sets, study together, and invite up to 3 members per group by email.
           </p>
         </div>
 
@@ -108,19 +108,19 @@ export default function TeamsPage() {
           <Link
             href="/team/create"
             className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            aria-label="Create a new team"
+            aria-label="Create a new study group"
           >
             <Plus className="-ml-1 mr-2 h-4 w-4" aria-hidden="true" />
-            Create Team
+            Create Study Group
           </Link>
           <button
             type="button"
             onClick={() => setShowJoinForm(!showJoinForm)}
             className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] text-sm font-medium rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
-            aria-label="Join an existing team with a code"
+            aria-label="Join an existing study group with a code"
           >
             <LogIn className="-ml-1 mr-2 h-4 w-4" aria-hidden="true" />
-            Join Team
+            Join with Code
           </button>
         </div>
 
@@ -128,7 +128,7 @@ export default function TeamsPage() {
         {showJoinForm && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold text-gray-900">Join a Team</h2>
+              <h2 className="text-base font-semibold text-gray-900">Join a Study Group</h2>
               <button
                 type="button"
                 onClick={() => {
@@ -151,7 +151,7 @@ export default function TeamsPage() {
                 type="text"
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
-                placeholder="Enter team join code"
+                placeholder="Enter 6-digit join code"
                 className="flex-1 min-h-[44px] px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 aria-describedby={joinError ? 'join-error' : undefined}
                 required
@@ -179,20 +179,20 @@ export default function TeamsPage() {
           </div>
         )}
 
-        {/* Teams Grid */}
+        {/* Study Groups Grid */}
         {teams.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" aria-hidden="true" />
-            <h3 className="text-sm font-medium text-gray-900">No teams yet</h3>
+            <h3 className="text-sm font-medium text-gray-900">No study groups yet</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Get started by creating your first team or joining one with a code.
+              Get started by creating your first study group or joining one with a 6-digit code.
             </p>
           </div>
         ) : (
           <div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
             role="list"
-            aria-label="Your teams"
+            aria-label="Your study groups"
           >
             {teams.map((team) => (
               <TeamCard key={team._id} team={team} />

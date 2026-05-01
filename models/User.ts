@@ -170,6 +170,14 @@ const UserSchema = new Schema<IUser>({
     type: Boolean,
     default: false,
   },
+  // Age-gate self-attestation. Required for new accounts; existing accounts are grandfathered.
+  ageAttested: {
+    type: Boolean,
+    default: false,
+  },
+  ageAttestedAt: {
+    type: Date,
+  },
   // Attribution / referral tracking
   signupSource: { type: String },
   utmSource: { type: String },
