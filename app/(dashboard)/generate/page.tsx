@@ -242,6 +242,15 @@ export default function GenerateFlashcardsPage(){
                   <p id="instructionsHelp" className="text-xs text-gray-500 mt-1">
                     Steers PDF, YouTube, audio, image, and text generations. Up to 500 characters.
                   </p>
+                  <div
+                    role="note"
+                    className="mt-2 flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg p-2 text-xs text-blue-900"
+                  >
+                    <CheckCircleIcon className="h-4 w-4 flex-shrink-0 mt-0.5 text-blue-600" aria-hidden="true" />
+                    <span>
+                      Same one-set cost. Combine instructions with any input (PDF, YouTube, audio, image, or text) and it still counts as 1 generation against your monthly cap. CSV imports are always unlimited.
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

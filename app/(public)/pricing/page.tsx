@@ -9,6 +9,7 @@ import {
   RocketLaunchIcon,
   StarIcon,
   FireIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { getFinalsPromo } from '@/lib/promo/finals';
 import FinalsPromoBanner from '@/components/ui/FinalsPromoBanner';
@@ -342,6 +343,17 @@ export default function PricingPage() {
                           <CheckIcon className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
                           <span className="text-sm text-gray-700">
                             {feature}
+                            {isAiCapLine && (
+                              <span
+                                role="img"
+                                aria-label="Each generation counts as one set whether or not you attach a prompt. Text combined with media still counts as one set."
+                                title="Each generation counts as 1 set whether or not you attach a prompt. Text + media counts as 1."
+                                className="ml-1 inline-flex items-center text-gray-400 hover:text-gray-600 cursor-help"
+                                tabIndex={0}
+                              >
+                                <InformationCircleIcon className="h-4 w-4" aria-hidden="true" />
+                              </span>
+                            )}
                             {isAiCapLine && finalsPromo.active && (
                               <span className="ml-2 inline-flex items-center bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
                                 20 through May 31
@@ -463,6 +475,10 @@ export default function PricingPage() {
         </h2>
         <div className="space-y-4">
           {[
+            {
+              q: 'Does adding instructions count as extra generations?',
+              a: 'No. Every AI generation counts as 1 set against your 30-day cap, whether or not you attach a prompt. A PDF on its own = 1 set. The same PDF with a 500-character instruction = 1 set. Text combined with any media (PDF, YouTube, audio, image) still counts as 1 set. CSV imports are unlimited and never counted.',
+            },
             {
               q: 'Can I cancel my monthly subscription?',
               a: 'Yes! You can cancel anytime from your billing portal. You\'ll keep access until the end of your billing period.',
