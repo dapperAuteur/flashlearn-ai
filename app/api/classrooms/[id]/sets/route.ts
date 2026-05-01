@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Classroom } from '@/models/Classroom';
 import { FlashcardSet } from '@/models/FlashcardSet';
+import { createActivityEvent } from '@/lib/services/activityService';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -95,6 +96,14 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     classroom.sharedSets.push(setId);
     await classroom.save();
+
+    createActivityEvent(session.user.id, 'set_shared', {
+      setId,
+      classroomId: id,
+      scope: 'classroom',
+    }).catch(() => {
+      // fire-and-forget
+    });
 
     return NextResponse.json({ success: true, sharedSetsCount: classroom.sharedSets.length });
   } catch (error) {

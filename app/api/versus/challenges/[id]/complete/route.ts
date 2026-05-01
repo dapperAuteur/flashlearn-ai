@@ -8,6 +8,7 @@ import { CardResult } from '@/models/CardResult';
 import { VersusStats } from '@/models/VersusStats';
 import { StudySession } from '@/models/StudySession';
 import { calculateCompositeScore, CardAnswer } from '@/lib/algorithms/compositeScore';
+import { createActivityEvent } from '@/lib/services/activityService';
 
 export async function POST(
   request: NextRequest,
@@ -132,6 +133,17 @@ export async function POST(
           await stats.save();
         }
       }
+
+      // Fire activity event per participant for the team / classroom feeds.
+      const result: 'win' | 'loss' | 'draw' = isDraw ? 'draw' : isWinner ? 'win' : 'loss';
+      createActivityEvent(p.userId.toString(), 'challenge_completed', {
+        challengeId: id,
+        result,
+        rank: p.rank,
+        compositeScore: p.compositeScore || 0,
+      }).catch(() => {
+        // fire-and-forget
+      });
     }
   }
 
