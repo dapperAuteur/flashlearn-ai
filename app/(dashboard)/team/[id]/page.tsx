@@ -18,6 +18,10 @@ import {
   ArrowLeft,
   Settings,
   Mail,
+  Activity,
+  Sparkles,
+  Award,
+  Swords,
 } from 'lucide-react';
 import TeamChat from '@/components/teams/TeamChat';
 
@@ -107,15 +111,71 @@ interface Team {
 
 const MAX_EMAIL_INVITES = 3;
 
-type TabId = 'overview' | 'sets' | 'members' | 'leaderboard' | 'chat';
+type TabId = 'overview' | 'sets' | 'members' | 'leaderboard' | 'activity' | 'chat';
 
 const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'sets', label: 'Sets', icon: BookOpen },
   { id: 'members', label: 'Members', icon: Users },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+  { id: 'activity', label: 'Activity', icon: Activity },
   { id: 'chat', label: 'Chat', icon: MessageCircle },
 ];
+
+interface ActivityFeedEntry {
+  _id: string;
+  type: 'study_session' | 'achievement_earned' | 'set_created' | 'set_shared' | 'challenge_completed' | 'team_joined' | 'follow';
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  userId: string;
+  userName: string;
+  profilePicture: string | null;
+}
+
+const ACTIVITY_ICON: Record<ActivityFeedEntry['type'], React.ElementType> = {
+  study_session: BookOpen,
+  achievement_earned: Award,
+  set_created: Sparkles,
+  set_shared: BookOpen,
+  challenge_completed: Swords,
+  team_joined: Users,
+  follow: User,
+};
+
+function relativeTime(iso: string, now: number = Date.now()): string {
+  const ms = now - new Date(iso).getTime();
+  const sec = Math.round(ms / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.round(hr / 24);
+  if (day < 30) return `${day}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+function activityCopy(e: ActivityFeedEntry): string {
+  const m = e.metadata as Record<string, string | number | undefined>;
+  switch (e.type) {
+    case 'study_session':
+      return 'completed a study session';
+    case 'achievement_earned':
+      return `earned the "${m.name ?? 'an'}" achievement`;
+    case 'set_created':
+      return `created the set "${m.title ?? 'a flashcard set'}"`;
+    case 'set_shared':
+      return `shared a flashcard set`;
+    case 'challenge_completed':
+      return `completed a Versus challenge`;
+    case 'team_joined':
+      return `joined the group`;
+    case 'follow':
+      return `followed someone`;
+    default:
+      return 'did something';
+  }
+}
 
 const roleBadge: Record<string, { label: string; classes: string; icon: React.ElementType }> = {
   owner: { label: 'Owner', classes: 'bg-amber-100 text-amber-800', icon: Crown },
@@ -134,6 +194,8 @@ export default function TeamDashboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardScope, setLeaderboardScope] = useState<LeaderboardScope>('group');
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [activityFeed, setActivityFeed] = useState<ActivityFeedEntry[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -193,6 +255,15 @@ export default function TeamDashboardPage() {
         })
         .catch(() => setLeaderboard([]))
         .finally(() => setLeaderboardLoading(false));
+    }
+
+    if (activeTab === 'activity') {
+      setActivityLoading(true);
+      fetch(`/api/teams/${teamId}/activity?_t=${Date.now()}`)
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((data) => setActivityFeed(data.feed || []))
+        .catch(() => setActivityFeed([]))
+        .finally(() => setActivityLoading(false));
     }
   }, [activeTab, team, teamId, leaderboardScope]);
 
@@ -721,6 +792,55 @@ export default function TeamDashboardPage() {
                         </tbody>
                       </table>
                     </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Activity */}
+            <div
+              role="tabpanel"
+              id="panel-activity"
+              aria-labelledby="tab-activity"
+              hidden={activeTab !== 'activity'}
+            >
+              {activeTab === 'activity' && (
+                <>
+                  {activityLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto" />
+                      <p className="mt-3 text-gray-500 text-sm">Loading activity...</p>
+                    </div>
+                  ) : activityFeed.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Activity className="h-10 w-10 text-gray-300 mx-auto mb-3" aria-hidden="true" />
+                      <p className="text-sm text-gray-500">No recent activity from this group yet.</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Members appear here when they share sets, complete study sessions, or earn achievements.
+                      </p>
+                    </div>
+                  ) : (
+                    <ul className="divide-y divide-gray-100" role="list" aria-label="Recent activity">
+                      {activityFeed.map((entry) => {
+                        const Icon = ACTIVITY_ICON[entry.type] || Activity;
+                        return (
+                          <li key={entry._id} className="flex items-start gap-3 py-3">
+                            <div className="flex-shrink-0 h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center">
+                              <Icon className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium text-gray-900">{entry.userName}</span>{' '}
+                                {activityCopy(entry)}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {relativeTime(entry.createdAt)}
+                              </p>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   )}
                 </>
               )}
