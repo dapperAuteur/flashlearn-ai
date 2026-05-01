@@ -490,7 +490,7 @@ export default function GenerateFlashcardsPage(){
                 <div className="mt-4">
                   <UpgradeNudge
                     feature="AI generations"
-                    message="You've hit your free generation limit. Upgrade to Pro for unlimited AI-powered flashcard generation."
+                    message="You've hit your generation limit for this 30-day cycle. Upgrade for a higher monthly cap, or import unlimited sets via CSV."
                     variant="banner"
                   />
                 </div>
@@ -501,7 +501,7 @@ export default function GenerateFlashcardsPage(){
                 <div className="mt-4">
                   <UpgradeNudge
                     feature="AI generations"
-                    message="Enjoying AI flashcards? Upgrade to Pro for unlimited generations, PDF import, and more."
+                    message="Enjoying AI flashcards? Pro plans give you 5 to 10 sets per 30 days plus unlimited CSV imports."
                     variant="banner"
                   />
                 </div>

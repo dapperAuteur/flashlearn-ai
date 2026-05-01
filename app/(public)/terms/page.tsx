@@ -42,10 +42,15 @@ export default function TermsPage() {
 
             <h2>3. Subscription Plans</h2>
             <ul>
-              <li><strong>Free:</strong> Limited AI generation (3 sets/month), basic study features</li>
-              <li><strong>Monthly Pro ($10/month):</strong> Unlimited AI generation, all study modes, offline support, priority support</li>
-              <li><strong>Lifetime Learner ($100 one-time):</strong> All Pro features, forever</li>
+              <li><strong>Free:</strong> 3 AI-generated sets per rolling 30 days, unlimited CSV imports, basic study features</li>
+              <li><strong>Monthly Pro ($10/month):</strong> 5 AI-generated sets per rolling 30 days, unlimited CSV imports, all study modes, offline support, priority support</li>
+              <li><strong>Annual Pro / Lifetime Learner:</strong> 10 AI-generated sets per rolling 30 days, unlimited CSV imports, all Pro features</li>
             </ul>
+            <p className="text-sm">
+              AI generation limits apply to text, PDF, YouTube, audio, and image inputs combined. CSV imports do not count against the limit.
+              From time to time we may run promotional periods (such as a finals-season boost) that temporarily raise these limits. Promotional caps are
+              announced in-app and revert on the published end date.
+            </p>
             <p>
               Subscriptions are billed through Stripe. Monthly subscriptions auto-renew unless cancelled.
               You may cancel at any time; access continues until the end of the billing period. Refunds
