@@ -45,18 +45,18 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 overflow-x-hidden">
+    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-lg lg:text-xl font-bold text-blue-600 whitespace-nowrap">
+            <Link href="/" className="text-lg xl:text-xl font-bold text-blue-600 whitespace-nowrap">
               FlashLearnAI
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav aria-label="Main navigation" className="hidden lg:flex space-x-4 xl:space-x-6 flex-shrink min-w-0">
+          <nav aria-label="Main navigation" className="hidden xl:flex space-x-4 2xl:space-x-6 flex-shrink min-w-0">
             {primaryNavigation.map((item) => (
               <Link
                 key={item.href}
@@ -87,12 +87,12 @@ export default function Header() {
           </nav>
 
           {/* Desktop Context Actions */}
-          <div className="hidden lg:flex items-center space-x-1 xl:space-x-2 flex-shrink-0">
+          <div className="hidden xl:flex items-center space-x-1 2xl:space-x-2 flex-shrink-0">
             {/* Secondary Actions */}
             {pageActions.secondary?.map((action, index) => {
               if (!action.desktop) return null;
               
-              const baseClassName = `inline-flex items-center px-2 lg:px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+              const baseClassName = `inline-flex items-center px-2 xl:px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                 action.variant === 'primary'
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : action.variant === 'secondary'
@@ -106,8 +106,8 @@ export default function Header() {
                   href={action.href}
                   className={baseClassName}
                 >
-                  {action.icon && <action.icon className="w-4 h-4 lg:mr-2" />}
-                  <span className="hidden lg:inline">{action.label}</span>
+                  {action.icon && <action.icon className="w-4 h-4 xl:mr-2" />}
+                  <span className="hidden xl:inline">{action.label}</span>
                 </Link>
               ) : (
                 <button
@@ -115,8 +115,8 @@ export default function Header() {
                   onClick={action.onClick}
                   className={baseClassName}
                 >
-                  {action.icon && <action.icon className="w-4 h-4 lg:mr-2" />}
-                  <span className="hidden lg:inline">{action.label}</span>
+                  {action.icon && <action.icon className="w-4 h-4 xl:mr-2" />}
+                  <span className="hidden xl:inline">{action.label}</span>
                 </button>
               );
             })}
@@ -127,18 +127,18 @@ export default function Header() {
                 {pageActions.primary.href ? (
                   <Link
                     href={pageActions.primary.href}
-                    className="inline-flex items-center px-3 lg:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    className="inline-flex items-center px-3 xl:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
                   >
-                    {pageActions.primary.icon && <pageActions.primary.icon className="w-4 h-4 lg:mr-2" />}
-                    <span className="hidden lg:inline">{pageActions.primary.label}</span>
+                    {pageActions.primary.icon && <pageActions.primary.icon className="w-4 h-4 xl:mr-2" />}
+                    <span className="hidden xl:inline">{pageActions.primary.label}</span>
                   </Link>
                 ) : (
                   <button
                     onClick={pageActions.primary.onClick}
-                    className="inline-flex items-center px-3 lg:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    className="inline-flex items-center px-3 xl:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
                   >
-                    {pageActions.primary.icon && <pageActions.primary.icon className="w-4 h-4 lg:mr-2" />}
-                    <span className="hidden lg:inline">{pageActions.primary.label}</span>
+                    {pageActions.primary.icon && <pageActions.primary.icon className="w-4 h-4 xl:mr-2" />}
+                    <span className="hidden xl:inline">{pageActions.primary.label}</span>
                   </button>
                 )}
               </>
@@ -167,7 +167,7 @@ export default function Header() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center space-x-2">
+          <div className="xl:hidden flex items-center space-x-2">
             {/* Mobile Network Status */}
             {!isOnline && (
               <span className="text-amber-500" role="status" aria-label="You are offline">
@@ -198,7 +198,7 @@ export default function Header() {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div id="mobile-menu" className="lg:hidden border-t border-gray-200 dark:border-gray-700">
+          <div id="mobile-menu" className="xl:hidden border-t border-gray-200 dark:border-gray-700">
             <div className="pt-2 pb-3 space-y-1">
               {primaryNavigation.map((item) => (
                 <Link

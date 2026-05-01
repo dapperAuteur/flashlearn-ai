@@ -72,7 +72,7 @@ export default function UserMenu({user}: UserMenuProps) {
       </button>
       
       {isOpen && (
-        <div role="menu" aria-label="User menu" className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <div role="menu" aria-label="User menu" className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
           <div className="py-1 px-4 border-b border-gray-100">
             <p className="text-sm font-medium text-gray-900">{user.name}</p>
             <p className="text-sm font-medium text-gray-600">{user.email}</p>
