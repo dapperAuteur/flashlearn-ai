@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import crypto from 'crypto';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Team } from '@/models/Team';
+import { generateUniqueJoinCode } from '@/lib/teams/joinCode';
 import { createActivityEvent } from '@/lib/services/activityService';
 
 // GET - List teams the current user belongs to
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     await dbConnect();
 
-    const joinCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+    const joinCode = await generateUniqueJoinCode();
 
     const team = await Team.create({
       name: name.trim(),

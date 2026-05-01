@@ -1,5 +1,6 @@
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
+import { getStudyGroupInviteEmailTemplate } from './templates/studyGroupInvite';
 
 // Initialize Mailgun
 const mailgun = new Mailgun(formData);
@@ -60,6 +61,36 @@ export async function sendVerificationEmail(
     return { success: true, messageId: response.id };
   } catch (error) {
     console.error('Error sending verification email:', error);
+    return { success: false, error };
+  }
+}
+
+// Function to send a study group invite email.
+// Includes the 6-digit join code prominently and a deep link to the join page.
+export async function sendStudyGroupInviteEmail(
+  email: string,
+  inviterName: string,
+  groupName: string,
+  joinCode: string,
+) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const joinUrl = `${baseUrl}/team?join=${encodeURIComponent(joinCode)}`;
+
+  try {
+    const html = getStudyGroupInviteEmailTemplate({ inviterName, groupName, joinCode, joinUrl });
+    const text = `${inviterName} invited you to the study group "${groupName}" on FlashLearnAI.\n\nYour join code: ${joinCode}\n\nJoin here: ${joinUrl}\n\nYou must be 13 or older to use FlashLearnAI. If you don't have an account yet, you'll be asked to sign up.`;
+
+    const response = await mg.messages.create(process.env.MAILGUN_DOMAIN as string, {
+      from: process.env.EMAIL_FROM as string,
+      to: email,
+      subject: `${inviterName} invited you to the "${groupName}" study group`,
+      text,
+      html,
+    });
+
+    return { success: true, messageId: response.id };
+  } catch (error) {
+    console.error('Error sending study group invite email:', error);
     return { success: false, error };
   }
 }

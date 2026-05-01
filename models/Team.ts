@@ -16,10 +16,13 @@ export interface ITeam extends Document {
   joinCode: string;
   isPublic: boolean;
   maxMembers: number;
+  emailInvitesUsed: number;
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const MAX_EMAIL_INVITES_PER_TEAM = 3;
 
 const TeamMemberSchema = new Schema(
   {
@@ -75,6 +78,11 @@ const TeamSchema = new Schema<ITeam>(
     maxMembers: {
       type: Number,
       default: 20,
+    },
+    emailInvitesUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     tags: [{
       type: String,

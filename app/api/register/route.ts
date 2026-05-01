@@ -27,6 +27,10 @@ const userSchema = z.object({
     .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
     .regex(/[0-9]/, { message: "Password must contain at least one number" })
     .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" }),
+  // Required: user has self-attested they are 13 or older.
+  ageAttested: z.literal(true, {
+    errorMap: () => ({ message: "You must confirm you are 13 or older to create an account." }),
+  }),
   // Optional attribution fields
   utmSource: z.string().max(100).optional(),
   utmMedium: z.string().max(100).optional(),
@@ -131,6 +135,8 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
       profiles: [],
       subscriptionTier: 'Free',
+      ageAttested: true,
+      ageAttestedAt: new Date(),
     };
     if (username) userDoc.username = username;
     if (utmSource) userDoc.utmSource = utmSource;

@@ -98,8 +98,16 @@ export default function PrivacyPage() {
 
             <h2>9. Children&apos;s Privacy</h2>
             <p>
-              FlashLearn AI is designed for users of all ages. For users under 13, we recommend parental
-              supervision. Parents can link student accounts to monitor activity through the Parent role feature.
+              <strong>FlashLearn AI is for users 13 and older.</strong> We do not knowingly collect data
+              from children under 13. Signup begins with an age self-attestation step; selecting &quot;under
+              13&quot; closes the signup flow before any name, email, or other information is collected
+              or saved. If you believe a child under 13 has created an account, contact us at the
+              address below and we will delete the account and any associated data.
+            </p>
+            <p>
+              A privacy-safe version with school-authorized access for users under 13 is in development
+              and will launch separately with the additional consent and data-handling protections that
+              COPPA, FERPA, and applicable state laws require.
             </p>
 
             <h2>10. Changes to This Policy</h2>

@@ -36,6 +36,10 @@ const signUpSchema = z.object({
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
+type AgeGateState = 'attest_pending' | 'attest_yes' | 'attest_no';
+const AGE_GATE_NO_TTL_MS = 24 * 60 * 60 * 1000;
+const AGE_GATE_NO_KEY = 'flai_attest_no_until';
+
 export default function SignUpForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,8 +47,29 @@ export default function SignUpForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
+  const [ageGate, setAgeGate] = useState<AgeGateState>('attest_pending');
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Honor a recent "no" answer for 24h so the gate does not re-prompt every page load.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const until = window.localStorage.getItem(AGE_GATE_NO_KEY);
+    if (until && Number(until) > Date.now()) {
+      setAgeGate('attest_no');
+    }
+  }, []);
+
+  const handleAgeAttest = (isThirteenOrOver: boolean) => {
+    if (isThirteenOrOver) {
+      setAgeGate('attest_yes');
+      return;
+    }
+    setAgeGate('attest_no');
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(AGE_GATE_NO_KEY, String(Date.now() + AGE_GATE_NO_TTL_MS));
+    }
+  };
 
   // Capture UTM params from the URL (may be passed through from shared links)
   const utmSource = searchParams.get('utm_source') ?? undefined;
@@ -100,6 +125,7 @@ export default function SignUpForm() {
           name: data.name,
           email: data.email,
           password: data.password,
+          ageAttested: true,
           ...(data.username ? { username: data.username } : {}),
           ...(storedUtmSource ? { utmSource: storedUtmSource } : {}),
           ...(storedUtmMedium ? { utmMedium: storedUtmMedium } : {}),
@@ -136,19 +162,76 @@ export default function SignUpForm() {
     }
   };
 
+  if (ageGate === 'attest_pending') {
+    return (
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold">Quick check first</h1>
+          <p className="mt-3 text-gray-700">FlashLearn AI is built for learners 13 and older. Are you 13 or older?</p>
+          <p className="mt-2 text-xs text-gray-500">
+            We ask before collecting your name or email. Selecting &quot;No&quot; closes signup and saves nothing.
+          </p>
+        </div>
+        <div
+          role="group"
+          aria-label="Age verification"
+          className="flex flex-col gap-3"
+        >
+          <button
+            type="button"
+            onClick={() => handleAgeAttest(true)}
+            className="w-full px-4 py-3 text-base font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Yes, I&apos;m 13 or older
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAgeAttest(false)}
+            className="w-full px-4 py-3 text-base font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+          >
+            No, I&apos;m under 13
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (ageGate === 'attest_no') {
+    return (
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold">Thanks for checking</h1>
+        <p className="text-gray-700">
+          FlashLearn AI is not built for kids under 13 yet. We are not collecting or saving any of your information.
+          Please come back when you are 13.
+        </p>
+        <p className="text-sm text-gray-500">
+          A privacy-safe version for younger students is in the works for the fall.
+        </p>
+        <div>
+          <Link href="/" className="font-medium text-blue-600 hover:text-blue-500">
+            Back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
       <div className="text-center">
         <h1 className="text-2xl sm:text-3xl font-bold">Create an Account</h1>
         <p className="mt-2 text-gray-600">Join FlashLearnAI.WitUS.Online today</p>
+        <p className="mt-1 text-xs text-gray-500" role="note">
+          You confirmed you&apos;re 13 or older.
+        </p>
       </div>
-      
+
       {error && (
         <div className="p-3 text-sm text-red-600 bg-red-100 rounded-md">
           {error}
         </div>
       )}
-      
+
       <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">

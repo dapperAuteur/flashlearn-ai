@@ -36,8 +36,10 @@ export default function TermsPage() {
             <h2>2. Accounts</h2>
             <p>
               You must provide accurate information when creating an account. You are responsible for
-              maintaining the security of your password and account. You must be at least 13 years old
-              to use the Service; users under 13 require parental consent and supervision.
+              maintaining the security of your password and account. <strong>You must be at least 13 years old
+              to use the Service.</strong> We do not knowingly collect data from children under 13.
+              Signup includes an age self-attestation step; selecting &quot;under 13&quot; closes the signup
+              flow without saving any information. A privacy-safe version for younger students is in development.
             </p>
 
             <h2>3. Subscription Plans</h2>
