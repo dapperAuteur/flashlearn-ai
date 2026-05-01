@@ -28,6 +28,8 @@ Covers all 12 currently shipped 2026-04 releases plus the 5 fitness-cert release
 | `2026-04-press-release-nasm-cnc-students.md` | NASM CNC candidates | Phase 2.5 queued |
 | `2026-04-press-release-fitness-data-analytics.md` | FDAC students at fdac.witus.online | Phase 2.5 queued |
 | `2026-04-press-release-endocannabinoid-system.md` | ECS specialization students | Phase 2.5 queued |
+| [2026-04-finals-season-promo.md](2026-04-finals-season-promo.md) | Student press, edu Twitter, all student verticals | Drafted, ready (send on or before May 1) |
+| [2026-05-finals-promo-social.md](2026-05-finals-promo-social.md) | Internal social calendar (X / LinkedIn / Instagram) for the finals window | Drafted, ready |
 
 ---
 
