@@ -44,6 +44,8 @@ export default function GenerateFlashcardsPage(){
     setTitle,
     description,
     setDescription,
+    instructions,
+    setInstructions,
     quantity,
     setQuantity,
     flashcards,
@@ -91,7 +93,7 @@ export default function GenerateFlashcardsPage(){
     triggerImageUpload,
     triggerAudioUpload,
     resetImport,
-  } = useContentImport(setFlashcards, setTopicAndTitle);
+  } = useContentImport(setFlashcards, setTopicAndTitle, instructions);
 
   const [isPublic, setIsPublic] = useState(false);
   const [flippedCardIndices, setFlippedCardIndices] = useState<Set<number>>(new Set());
@@ -210,6 +212,36 @@ export default function GenerateFlashcardsPage(){
                     disabled={anyActionInProgress}
                     rows={6}
                   />
+                </div>
+
+                <div>
+                  <label htmlFor="instructionsInput" className="flex items-center justify-between text-sm font-medium text-gray-700 mb-3">
+                    <span className="flex items-center space-x-2">
+                      <SparklesIcon className="h-4 w-4" />
+                      <span>Optional instructions for the AI</span>
+                    </span>
+                    <span
+                      className={`text-xs ${instructions.length > 500 ? 'text-red-600' : 'text-gray-400'}`}
+                      aria-live="polite"
+                    >
+                      {instructions.length} / 500
+                    </span>
+                  </label>
+                  <textarea
+                    id="instructionsInput"
+                    aria-label="Optional instructions for the AI flashcard generator"
+                    aria-describedby="instructionsHelp"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none text-gray-600 disabled:bg-gray-50"
+                    placeholder="e.g., undergraduate level, definitions only, skip examples"
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    disabled={anyActionInProgress}
+                    maxLength={500}
+                    rows={2}
+                  />
+                  <p id="instructionsHelp" className="text-xs text-gray-500 mt-1">
+                    Steers PDF, YouTube, audio, image, and text generations. Up to 500 characters.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
