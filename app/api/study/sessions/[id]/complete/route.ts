@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/db/mongodb';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { authOptions } from '@/lib/auth/auth';
+import { createActivityEvent } from '@/lib/services/activityService';
 
 export async function POST(
   request: NextRequest,
@@ -60,14 +61,25 @@ export async function POST(
     await Logger.info(LogContext.STUDY, "Study session completed", {
       requestId,
       userId: session.user.id,
-      metadata: { 
-        sessionId, 
-        accuracy, 
+      metadata: {
+        sessionId,
+        accuracy,
         durationSeconds,
         cardsCompleted: updatedSession?.completedCards
       }
     });
-    
+
+    // Fire-and-forget activity event for the team / classroom feeds.
+    createActivityEvent(session.user.id, 'study_session', {
+      sessionId,
+      accuracy: Math.round(accuracy),
+      durationSeconds,
+      totalCards: updatedSession?.totalCards,
+      completedCards: updatedSession?.completedCards,
+    }).catch((err) => {
+      Logger.warning(LogContext.SYSTEM, 'Failed to record study_session activity event', { requestId, error: err });
+    });
+
     // Return session summary
     return NextResponse.json({
       sessionId,

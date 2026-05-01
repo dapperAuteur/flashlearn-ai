@@ -8,6 +8,7 @@ import { z } from "zod";
 import { apiLogger, analytics } from "@/lib/logging/flashcard-logger";
 import mongoose, { Types } from "mongoose";
 import { createShortLink, toSwitchySlug } from '@/lib/switchy';
+import { createActivityEvent } from '@/lib/services/activityService';
 
 // Define the expected shape of the incoming request body
 const saveSetSchema = z.object({
@@ -85,6 +86,16 @@ export async function POST(request: NextRequest) {
     });
 
     const savedSet = await newSet.save();
+
+    createActivityEvent(userId, 'set_created', {
+      setId: savedSet._id.toString(),
+      title: savedSet.title,
+      cardCount: flashcards.length,
+      source: 'CSV',
+      isPublic,
+    }).catch(() => {
+      // fire-and-forget; activity event failure must not block save
+    });
 
     await analytics.trackSetSaved(
       userId,

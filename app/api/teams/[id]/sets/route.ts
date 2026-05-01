@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Team } from '@/models/Team';
 import { FlashcardSet } from '@/models/FlashcardSet';
+import { createActivityEvent } from '@/lib/services/activityService';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -98,6 +99,14 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     team.sharedSets.push(setId);
     await team.save();
+
+    createActivityEvent(session.user.id, 'set_shared', {
+      setId,
+      teamId: id,
+      scope: 'team',
+    }).catch(() => {
+      // fire-and-forget; don't block sharing on activity write failure
+    });
 
     return NextResponse.json({ success: true, sharedSetsCount: team.sharedSets.length });
   } catch (error) {

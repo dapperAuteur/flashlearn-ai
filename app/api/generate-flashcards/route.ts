@@ -10,6 +10,7 @@ import dbConnect from "@/lib/db/dbConnect";
 import { normalizeTopicForClustering } from "@/lib/utils/normalizeTopicForClustering";
 import { generateFlashcardsFromAI } from "@/lib/services/flashcardGeneration";
 import { ADMIN_FLASHCARD_MIN, ADMIN_FLASHCARD_MAX } from "@/lib/constants";
+import { createActivityEvent } from "@/lib/services/activityService";
 import {
   sanitizeUserInstructions,
   MAX_USER_INSTRUCTIONS_LENGTH,
@@ -172,6 +173,16 @@ export async function POST(request: NextRequest) {
             "Successfully created new flashcard set.",
             { requestId, userId, metadata: { setId: newSet._id, title: newSet.title, cardCount: newSet.flashcards.length } }
         );
+
+        createActivityEvent(userId, 'set_created', {
+            setId: newSet._id.toString(),
+            title: newSet.title,
+            cardCount: newSet.flashcards.length,
+            source: 'Prompt',
+            isPublic: true,
+        }).catch((err) => {
+            Logger.warning(LogContext.SYSTEM, 'Failed to record set_created activity event', { requestId, error: err });
+        });
 
         return NextResponse.json({
             flashcards: newSet.flashcards,
