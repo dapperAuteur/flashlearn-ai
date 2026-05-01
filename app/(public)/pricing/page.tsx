@@ -11,6 +11,7 @@ import {
   FireIcon,
 } from '@heroicons/react/24/outline';
 import { getFinalsPromo } from '@/lib/promo/finals';
+import FinalsPromoBanner from '@/components/ui/FinalsPromoBanner';
 
 const tiers = [
   {
@@ -193,28 +194,24 @@ export default function PricingPage() {
         </p>
       </div>
 
-      {/* Finals Season Promo Callout */}
-      {finalsPromo.active && (
-        <div
-          className="max-w-3xl mx-auto mb-8 p-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl text-center shadow-md"
-          role="region"
-          aria-label="Finals season promo"
-        >
-          <p className="text-sm sm:text-base font-semibold">
-            Finals Season Boost: every plan gets 20 AI-generated sets per 30 days through May 31.
-          </p>
-          <p className="text-xs sm:text-sm text-purple-100 mt-1">
-            Plus unlimited CSV imports on every tier. Caps revert June 1.
-          </p>
-        </div>
-      )}
+      {/* Finals Season Promo Callout (auto-hides after endsAt) */}
+      <div className="max-w-3xl mx-auto mb-8">
+        <FinalsPromoBanner variant="inline" />
+      </div>
 
       {/* Free Account Summary */}
       <div className="max-w-3xl mx-auto mb-12 p-6 bg-gray-50 rounded-xl border border-gray-200 text-center">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Account</h3>
         <p className="text-sm text-gray-600 mb-4">Get started with basic features. No credit card required.</p>
         <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-700">
-          <span>&#10003; {finalsPromo.active ? '20' : '3'} AI-generated sets per 30 days{finalsPromo.active ? ' (finals boost)' : ''}</span>
+          <span>
+            &#10003; 3 AI-generated sets per 30 days
+            {finalsPromo.active && (
+              <span className="ml-1 inline-flex items-center bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                20 through May 31
+              </span>
+            )}
+          </span>
           <span>&#10003; Unlimited CSV imports</span>
           <span>&#10003; Classic study mode</span>
           <span>&#10003; Join versus challenges</span>
@@ -338,12 +335,22 @@ export default function PricingPage() {
                     What&apos;s included
                   </p>
                   <ul className="space-y-2.5">
-                    {tier.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2">
-                        <CheckIcon className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">{feature}</span>
-                      </li>
-                    ))}
+                    {tier.features.map((feature) => {
+                      const isAiCapLine = /AI-generated sets per 30 days/i.test(feature);
+                      return (
+                        <li key={feature} className="flex items-start gap-2">
+                          <CheckIcon className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm text-gray-700">
+                            {feature}
+                            {isAiCapLine && finalsPromo.active && (
+                              <span className="ml-2 inline-flex items-center bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                                20 through May 31
+                              </span>
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               </div>
