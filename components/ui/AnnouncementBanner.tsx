@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { X, ExternalLink } from 'lucide-react';
 
@@ -25,6 +25,31 @@ export default function AnnouncementBanner() {
   const [banner, setBanner] = useState<BannerData | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const pathname = usePathname();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync banner height into a CSS variable so sticky page headers can offset
+  // their top: by exactly the banner's rendered height. Resets to 0px when the
+  // banner is dismissed, hidden, or navigates to an admin route.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const visible = !!banner && !dismissed && !pathname?.startsWith('/admin');
+    if (!visible) {
+      document.documentElement.style.setProperty('--banner-h', '0px');
+      return;
+    }
+    const el = containerRef.current;
+    if (!el) return;
+    const apply = () => {
+      document.documentElement.style.setProperty('--banner-h', `${el.offsetHeight}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.setProperty('--banner-h', '0px');
+    };
+  }, [banner, dismissed, pathname]);
 
   useEffect(() => {
     // Don't show on admin pages
@@ -62,7 +87,8 @@ export default function AnnouncementBanner() {
 
   return (
     <div
-      className={`relative ${typeStyles[banner.type] || typeStyles.info}`}
+      ref={containerRef}
+      className={`sticky top-0 z-[60] ${typeStyles[banner.type] || typeStyles.info}`}
       role="alert"
     >
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-3 text-sm">
