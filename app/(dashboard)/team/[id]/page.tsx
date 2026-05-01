@@ -40,9 +40,56 @@ interface LeaderboardEntry {
   rank: number;
   userId: string;
   userName: string;
-  score: number;
-  sessionsCompleted: number;
-  averageAccuracy: number;
+  rating: number;
+  wins: number;
+  studySessions?: number;
+  totalChallenges?: number;
+}
+
+type LeaderboardScope = 'group' | 'global';
+
+// Shape returned by /api/teams/[id]/leaderboard
+interface RawTeamRow {
+  userId: string;
+  name?: string;
+  username?: string;
+  rating: number;
+  wins: number;
+  studySessions: number;
+}
+
+// Shape returned by /api/versus/leaderboard?type=global
+interface RawGlobalRow {
+  rank: number;
+  userId: string;
+  userName: string;
+  rating: number;
+  wins: number;
+  totalChallenges: number;
+}
+
+function normalizeTeamRows(rows: RawTeamRow[]): LeaderboardEntry[] {
+  return [...rows]
+    .sort((a, b) => b.rating - a.rating)
+    .map((r, idx) => ({
+      rank: idx + 1,
+      userId: r.userId,
+      userName: r.username || r.name || 'Member',
+      rating: r.rating,
+      wins: r.wins,
+      studySessions: r.studySessions,
+    }));
+}
+
+function normalizeGlobalRows(rows: RawGlobalRow[]): LeaderboardEntry[] {
+  return rows.map((r) => ({
+    rank: r.rank,
+    userId: typeof r.userId === 'string' ? r.userId : String(r.userId),
+    userName: r.userName,
+    rating: r.rating,
+    wins: r.wins,
+    totalChallenges: r.totalChallenges,
+  }));
 }
 
 interface Team {
@@ -79,12 +126,14 @@ const roleBadge: Record<string, { label: string; classes: string; icon: React.El
 export default function TeamDashboardPage() {
   const params = useParams();
   const teamId = params.id as string;
-  const { status } = useSession();
+  const { data: session, status } = useSession();
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [team, setTeam] = useState<Team | null>(null);
   const [sets, setSets] = useState<FlashcardSet[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardScope, setLeaderboardScope] = useState<LeaderboardScope>('group');
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -127,12 +176,25 @@ export default function TeamDashboardPage() {
     }
 
     if (activeTab === 'leaderboard') {
-      fetch(`/api/teams/${teamId}/leaderboard?_t=${Date.now()}`)
+      setLeaderboardLoading(true);
+      const url =
+        leaderboardScope === 'group'
+          ? `/api/teams/${teamId}/leaderboard?_t=${Date.now()}`
+          : `/api/versus/leaderboard?type=global&limit=20&_t=${Date.now()}`;
+      fetch(url)
         .then((res) => (res.ok ? res.json() : Promise.reject()))
-        .then((data) => setLeaderboard(data.leaderboard || []))
-        .catch(() => setLeaderboard([]));
+        .then((data) => {
+          const rows = data.leaderboard || [];
+          setLeaderboard(
+            leaderboardScope === 'group'
+              ? normalizeTeamRows(rows as RawTeamRow[])
+              : normalizeGlobalRows(rows as RawGlobalRow[]),
+          );
+        })
+        .catch(() => setLeaderboard([]))
+        .finally(() => setLeaderboardLoading(false));
     }
-  }, [activeTab, team, teamId]);
+  }, [activeTab, team, teamId, leaderboardScope]);
 
   const copyJoinCode = async () => {
     if (!team) return;
@@ -538,17 +600,66 @@ export default function TeamDashboardPage() {
             >
               {activeTab === 'leaderboard' && (
                 <>
-                  {leaderboard.length === 0 ? (
+                  {/* Scope toggle */}
+                  <div
+                    role="tablist"
+                    aria-label="Leaderboard scope"
+                    className="inline-flex rounded-lg bg-gray-100 p-1 mb-4"
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={leaderboardScope === 'group'}
+                      onClick={() => setLeaderboardScope('group')}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                        leaderboardScope === 'group'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      This group
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={leaderboardScope === 'global'}
+                      onClick={() => setLeaderboardScope('global')}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                        leaderboardScope === 'global'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Everyone
+                    </button>
+                  </div>
+
+                  {leaderboardLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto" />
+                      <p className="mt-3 text-gray-500 text-sm">Loading leaderboard...</p>
+                    </div>
+                  ) : leaderboard.length === 0 ? (
                     <div className="text-center py-8">
                       <Trophy className="h-10 w-10 text-gray-300 mx-auto mb-3" aria-hidden="true" />
-                      <p className="text-sm text-gray-500">No leaderboard data yet.</p>
+                      <p className="text-sm text-gray-500">
+                        {leaderboardScope === 'group'
+                          ? 'No leaderboard data yet for this group.'
+                          : 'No global leaderboard data yet.'}
+                      </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        Start studying to appear on the leaderboard.
+                        {leaderboardScope === 'group'
+                          ? 'Members appear here once they have a Versus rating. Play a Versus challenge to get started.'
+                          : 'Play Versus challenges to populate the global leaderboard.'}
                       </p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm" role="table" aria-label="Team leaderboard">
+                      <table
+                        className="w-full text-sm"
+                        role="table"
+                        aria-label={leaderboardScope === 'group' ? 'Group leaderboard' : 'Global leaderboard'}
+                      >
                         <thead>
                           <tr className="border-b border-gray-200">
                             <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -558,40 +669,55 @@ export default function TeamDashboardPage() {
                               Name
                             </th>
                             <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                              Score
+                              Rating
                             </th>
                             <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
-                              Sessions
+                              Wins
                             </th>
                             <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
-                              Accuracy
+                              {leaderboardScope === 'group' ? 'Sessions' : 'Challenges'}
                             </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {leaderboard.map((entry) => (
-                            <tr key={entry.userId} className="hover:bg-gray-50">
-                              <td className="py-3 px-3 font-medium text-gray-900">
-                                {entry.rank <= 3 ? (
-                                  <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
-                                    {entry.rank}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-500">#{entry.rank}</span>
-                                )}
-                              </td>
-                              <td className="py-3 px-3 text-gray-900">{entry.userName}</td>
-                              <td className="py-3 px-3 text-right font-semibold text-gray-900">
-                                {entry.score}
-                              </td>
-                              <td className="py-3 px-3 text-right text-gray-600 hidden sm:table-cell">
-                                {entry.sessionsCompleted}
-                              </td>
-                              <td className="py-3 px-3 text-right text-gray-600 hidden sm:table-cell">
-                                {entry.averageAccuracy}%
-                              </td>
-                            </tr>
-                          ))}
+                          {leaderboard.map((entry) => {
+                            const isMe = entry.userId === session?.user?.id;
+                            return (
+                              <tr
+                                key={entry.userId}
+                                className={isMe ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}
+                              >
+                                <td className="py-3 px-3 font-medium text-gray-900">
+                                  {entry.rank <= 3 ? (
+                                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                                      {entry.rank}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-500">#{entry.rank}</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-3 text-gray-900">
+                                  {entry.userName}
+                                  {isMe && (
+                                    <span className="ml-2 text-xs font-medium text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
+                                      You
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-3 text-right font-semibold text-gray-900">
+                                  {entry.rating}
+                                </td>
+                                <td className="py-3 px-3 text-right text-gray-600 hidden sm:table-cell">
+                                  {entry.wins}
+                                </td>
+                                <td className="py-3 px-3 text-right text-gray-600 hidden sm:table-cell">
+                                  {leaderboardScope === 'group'
+                                    ? entry.studySessions ?? 0
+                                    : entry.totalChallenges ?? 0}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
