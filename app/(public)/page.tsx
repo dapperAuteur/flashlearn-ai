@@ -23,7 +23,7 @@ import {
   Trophy,
 } from "lucide-react";
 import Footer from "@/components/layout/Footer";
-import FinalsPromoBanner from "@/components/ui/FinalsPromoBanner";
+import ActivePromoBanner from "@/components/ui/ActivePromoBanner";
 
 // Modern Hero Section with Conditional Content
 const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; session?: any }) => {
@@ -592,7 +592,7 @@ export default async function Home() {
       </div>
     }>
       <div className="min-h-screen">
-        <FinalsPromoBanner variant="hero" />
+        <ActivePromoBanner variant="hero" />
         <ModernHero isAuthenticated={isAuthenticated} session={session} />
         <BenefitsSection isAuthenticated={isAuthenticated} />
         {!isAuthenticated && (
