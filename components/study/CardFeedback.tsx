@@ -42,14 +42,14 @@ export default function CardFeedback() {
       animate="visible"
       aria-live="assertive"
       role="status"
-      className={`w-full h-80 rounded-lg flex flex-col items-center justify-center text-white p-6 shadow-lg ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`}
+      className={`w-full flex-1 min-h-0 rounded-lg flex flex-col items-center justify-center text-white p-6 shadow-lg ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`}
     >
       {isCorrect ? (
-        <CheckCircleIcon className="h-16 w-16 mb-4" />
+        <CheckCircleIcon className="h-12 w-12 sm:h-16 sm:w-16 mb-4" />
       ) : (
-        <XCircleIcon className="h-16 w-16 mb-4" />
+        <XCircleIcon className="h-12 w-12 sm:h-16 sm:w-16 mb-4" />
       )}
-      <p className="text-3xl font-bold mb-6">{message}</p>
+      <p className="text-2xl sm:text-3xl font-bold mb-6">{message}</p>
       <button
         onClick={showNextCard}
         className="px-8 py-3 bg-white text-lg font-semibold rounded-md shadow-md text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900"

@@ -24,12 +24,12 @@ export default function ConfidenceScale({ onRatingSelect, disabled = false }: Co
   };
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-      <h3 className="text-sm font-semibold text-blue-900 mb-3" id="confidence-scale-label">
-        Rate your confidence before seeing the answer:
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3">
+      <h3 className="text-xs font-semibold text-blue-900 mb-1" id="confidence-scale-label">
+        Rate your confidence:
       </h3>
 
-      <div className="space-y-2" role="radiogroup" aria-label="Confidence rating" aria-labelledby="confidence-scale-label">
+      <div className="flex gap-1 sm:gap-2" role="radiogroup" aria-label="Confidence rating" aria-labelledby="confidence-scale-label">
         {CONFIDENCE_SCALE.map(({ value, label, color }) => (
           <button
             key={value}
@@ -38,27 +38,19 @@ export default function ConfidenceScale({ onRatingSelect, disabled = false }: Co
             role="radio"
             aria-checked={selectedRating === value}
             aria-label={`${value} out of 5: ${label}`}
-            className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+            className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border-2 text-xs font-medium transition-all ${
               selectedRating === value
                 ? 'ring-2 ring-blue-500 transform scale-[1.02]'
                 : disabled
                 ? 'opacity-50 cursor-not-allowed'
-                : 'hover:transform hover:scale-[1.01]'
+                : 'hover:transform hover:scale-[1.05]'
             } ${color}`}
           >
-            <span className="font-medium">{value}. {label}</span>
-            {selectedRating === value && (
-              <span className="text-blue-600 font-bold" aria-hidden="true">✓</span>
-            )}
+            <span className="text-base font-bold leading-none">{value}</span>
+            <span className="hidden sm:inline text-[10px] mt-0.5 leading-tight">{label}</span>
           </button>
         ))}
       </div>
-
-      {selectedRating && (
-        <p className="text-xs text-blue-700 mt-3 font-medium">
-          ✓ Confidence recorded. Card interactions now unlocked.
-        </p>
-      )}
     </div>
   );
 }
