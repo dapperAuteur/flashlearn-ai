@@ -15,8 +15,8 @@ export default function StudyPage() {
   }, [setId, isReviewMode]);
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800 dark:text-gray-700">
+    <div className="flex-1 min-h-0 flex flex-col container mx-auto max-w-5xl px-2 sm:px-6 lg:px-8">
+      <h1 className="text-sm sm:text-base font-semibold mb-1 text-gray-800 dark:text-gray-700">
         {isReviewMode ? 'Review Session' : 'Study Session'}
       </h1>
       <StudySessionManager preSelectedSetId={setId} isReviewMode={isReviewMode} />

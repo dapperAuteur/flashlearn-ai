@@ -93,28 +93,28 @@ export default function StudyCard({
   }, [isFlipped, hasCompletedConfidence, handleResult, onPrevious, onEndSession, handleFlip]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6" role="region" aria-label="Study flashcard">
+    <div className="flex-1 min-h-0 flex flex-col gap-2" role="region" aria-label="Study flashcard">
       {/* Instructions Header */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-2 sm:p-3 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <div className="bg-blue-100 p-1.5 sm:p-2 rounded-lg shrink-0">
               {canFlip ? (
-                <CursorArrowRaysIcon className="h-5 w-5 text-blue-600" />
+                <CursorArrowRaysIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               ) : (
-                <LockClosedIcon className="h-5 w-5 text-amber-600" />
+                <LockClosedIcon className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
               )}
             </div>
-            <div>
-              <p className="font-medium text-gray-900">
+            <div className="min-w-0">
+              <p className="font-medium text-sm sm:text-base text-gray-900 truncate">
                 {!canFlip ? 'Rate your confidence first' : 'Click card to reveal answer'}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="hidden sm:block text-sm text-gray-600">
                 {!canFlip ? 'Choose how confident you feel about this card' : 'Then mark if you got it right or wrong'}
               </p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+          <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg shrink-0">
             <CommandLineIcon className="h-4 w-4" />
             <span>Space • ← → • ↑ • Esc</span>
           </div>
@@ -141,7 +141,7 @@ export default function StudyCard({
 
       {/* Main Flashcard */}
       <div
-        className={`relative h-96 ${canFlip ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+        className={`relative flex-1 min-h-[200px] ${canFlip ? 'cursor-pointer' : 'cursor-not-allowed'}`}
         onClick={handleFlip}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -155,7 +155,7 @@ export default function StudyCard({
       >
         {/* Front of card */}
         <div className={`absolute inset-0 transition-opacity duration-300 ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} aria-hidden={isFlipped}>
-          <div className="w-full h-full bg-gradient-to-br from-white to-blue-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8 flex flex-col justify-center relative overflow-hidden">
+          <div className="w-full h-full bg-gradient-to-br from-white to-blue-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-4 sm:p-8 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-200/30 to-pink-200/30 rounded-full blur-2xl" />
             <div className="relative z-10 overflow-auto">
@@ -192,7 +192,7 @@ export default function StudyCard({
 
         {/* Back of card */}
         <div className={`absolute inset-0 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} aria-hidden={!isFlipped} aria-live="polite">
-          <div className="w-full h-full bg-gradient-to-br from-white to-green-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8 flex flex-col justify-center relative overflow-hidden">
+          <div className="w-full h-full bg-gradient-to-br from-white to-green-50/50 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-4 sm:p-8 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-28 h-28 bg-gradient-to-br from-green-200/30 to-emerald-200/30 rounded-full blur-3xl" />
             <div className="absolute bottom-0 right-0 w-20 h-20 bg-gradient-to-tr from-teal-200/30 to-cyan-200/30 rounded-full blur-2xl" />
             <div className="relative z-10 overflow-auto">
@@ -233,26 +233,26 @@ export default function StudyCard({
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-6 shadow-lg">
-              <div className="text-center mb-4">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-3 sm:p-4 shadow-lg">
+              <div className="hidden sm:block text-center mb-3">
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">How did you do?</h3>
                 <p className="text-gray-600">Be honest with yourself for better learning</p>
               </div>
-              
-              <div className="flex space-x-4 justify-center">
-                <motion.button 
+
+              <div className="flex space-x-2 sm:space-x-4 justify-center">
+                <motion.button
                   onClick={() => handleResult(false)}
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg transition-all duration-300"
+                  className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <HandThumbDownIcon className="h-5 w-5 mr-2" />
                   Got it Wrong
                 </motion.button>
-                
-                <motion.button 
+
+                <motion.button
                   onClick={() => handleResult(true)}
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-lg transition-all duration-300"
+                  className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-lg transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -260,9 +260,9 @@ export default function StudyCard({
                   Got it Right
                 </motion.button>
               </div>
-              
+
               {/* Keyboard shortcuts reminder */}
-              <div className="mt-4 text-center">
+              <div className="hidden sm:block mt-3 text-center">
                 <p className="text-sm text-gray-600">
                   Quick keys: <kbd className="bg-gray-100 px-2 py-1 rounded text-xs">←</kbd> Wrong • <kbd className="bg-gray-100 px-2 py-1 rounded text-xs">→</kbd> Right
                 </p>

@@ -147,8 +147,8 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
     // Session end — last card result recorded, waiting for completeSession to finish
     if (lastCardResult && currentIndex === flashcards.length - 1) {
       return (
-        <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-          <div className="flex flex-col items-center justify-center py-16 text-white">
+        <div className="flex-1 min-h-0 flex flex-col bg-gray-800 rounded-lg shadow-lg p-3 sm:p-4">
+          <div className="flex-1 flex flex-col items-center justify-center text-white">
             <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
             <p className="text-gray-400 mb-6">Saving your results...</p>
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -160,8 +160,7 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
     // Feedback screen between cards
     if (lastCardResult) {
       return (
-        <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-          <div className="mb-4 h-5"></div>
+        <div className="flex-1 min-h-0 flex flex-col bg-gray-800 rounded-lg shadow-lg p-3 sm:p-4">
           <CardFeedback />
         </div>
       );
@@ -178,43 +177,45 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
       const modeLabel = studyMode === 'multiple-choice' ? 'Multiple Choice' : 'Classic';
 
       return (
-        <div ref={cardContainerRef} tabIndex={-1} className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 outline-none" aria-label={`Studying ${flashcardSetName || 'Study Set'}, card ${currentIndex + 1} of ${flashcards.length}`}>
-          <h3 className="font-bold text-lg truncate text-white mb-2" title={flashcardSetName || 'Study Set'}>
-            {flashcardSetName || 'Study Set'}
-          </h3>
-          <div className="mb-4 flex flex-wrap justify-between items-center gap-2 text-gray-300" aria-live="polite">
-            <span>Card {currentIndex + 1} of {flashcards.length}</span>
-            <span className="text-xs bg-gray-700 px-2 py-1 rounded-full">{modeLabel}</span>
-            <span>Time: {formatTime(elapsedTime)}</span>
-            <button onClick={resetSession} className="text-sm text-blue-400 hover:text-blue-300">
-              End Session
+        <div ref={cardContainerRef} tabIndex={-1} className="flex-1 min-h-0 flex flex-col bg-gray-800 rounded-lg shadow-lg p-3 sm:p-4 outline-none" aria-label={`Studying ${flashcardSetName || 'Study Set'}, card ${currentIndex + 1} of ${flashcards.length}`}>
+          <div className="flex items-center justify-between gap-2 text-sm text-gray-300 mb-2" aria-live="polite">
+            <h3 className="flex-1 min-w-0 truncate font-semibold text-white" title={flashcardSetName || 'Study Set'}>
+              {flashcardSetName || 'Study Set'}
+            </h3>
+            <span className="whitespace-nowrap">{currentIndex + 1}/{flashcards.length}</span>
+            <span className="hidden sm:inline text-xs bg-gray-700 px-2 py-0.5 rounded-full">{modeLabel}</span>
+            <span className="whitespace-nowrap tabular-nums">{formatTime(elapsedTime)}</span>
+            <button onClick={resetSession} className="text-blue-400 hover:text-blue-300 whitespace-nowrap">
+              End
             </button>
           </div>
 
-          {studyMode === 'multiple-choice' ? (
-            <MultipleChoiceCard
-              flashcard={cardToShow}
-              distractors={multipleChoiceData[String(currentCard._id)] || []}
-              onResult={recordCardResult}
-              onConfidenceSelect={recordConfidence}
-              onEndSession={resetSession}
-              isConfidenceRequired={isConfidenceRequired}
-              hasCompletedConfidence={hasCompletedConfidence}
-            />
-          ) : (
-            <StudyCard
-              flashcard={cardToShow}
-              isFlipped={isFlipped}
-              onFlip={() => setIsFlipped(!isFlipped)}
-              onResult={recordCardResult}
-              onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
-              onEndSession={resetSession}
-              isConfidenceRequired={isConfidenceRequired}
-              hasCompletedConfidence={hasCompletedConfidence}
-              onConfidenceSelect={recordConfidence}
-              canFlip={!isConfidenceRequired || hasCompletedConfidence}
-            />
-          )}
+          <div className="flex-1 min-h-0 flex flex-col">
+            {studyMode === 'multiple-choice' ? (
+              <MultipleChoiceCard
+                flashcard={cardToShow}
+                distractors={multipleChoiceData[String(currentCard._id)] || []}
+                onResult={recordCardResult}
+                onConfidenceSelect={recordConfidence}
+                onEndSession={resetSession}
+                isConfidenceRequired={isConfidenceRequired}
+                hasCompletedConfidence={hasCompletedConfidence}
+              />
+            ) : (
+              <StudyCard
+                flashcard={cardToShow}
+                isFlipped={isFlipped}
+                onFlip={() => setIsFlipped(!isFlipped)}
+                onResult={recordCardResult}
+                onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
+                onEndSession={resetSession}
+                isConfidenceRequired={isConfidenceRequired}
+                hasCompletedConfidence={hasCompletedConfidence}
+                onConfidenceSelect={recordConfidence}
+                canFlip={!isConfidenceRequired || hasCompletedConfidence}
+              />
+            )}
+          </div>
         </div>
       );
     }

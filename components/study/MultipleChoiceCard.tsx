@@ -173,23 +173,23 @@ export default function MultipleChoiceCard({
   const labels = ['A', 'B', 'C', 'D'];
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="flex-1 min-h-0 flex flex-col gap-2">
       {/* Instructions */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-purple-100 p-2 rounded-lg">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-2 sm:p-3 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <div className="bg-purple-100 p-1.5 sm:p-2 rounded-lg shrink-0">
               {hasCompletedConfidence ? (
-                <CursorArrowRaysIcon className="h-5 w-5 text-purple-600" />
+                <CursorArrowRaysIcon className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
               ) : (
-                <LockClosedIcon className="h-5 w-5 text-amber-600" />
+                <LockClosedIcon className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
               )}
             </div>
-            <div>
-              <p className="font-medium text-gray-900">
+            <div className="min-w-0">
+              <p className="font-medium text-sm sm:text-base text-gray-900 truncate">
                 {!hasCompletedConfidence ? 'Rate your confidence first' : 'Select the correct answer'}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="hidden sm:block text-sm text-gray-600">
                 {!hasCompletedConfidence
                   ? 'How confident are you about this card?'
                   : 'Choose from the options below'}
@@ -199,10 +199,10 @@ export default function MultipleChoiceCard({
           {!isAnswered && hasCompletedConfidence && !hintUsed && (
             <button
               onClick={handleHint}
-              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 transition-colors"
+              className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 transition-colors shrink-0"
             >
-              <LightBulbIcon className="h-4 w-4 mr-1.5" />
-              Hint
+              <LightBulbIcon className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Hint</span>
             </button>
           )}
         </div>
@@ -214,20 +214,20 @@ export default function MultipleChoiceCard({
       )}
 
       {/* Question Card */}
-      <div className="bg-gradient-to-br from-white to-purple-50/50 rounded-2xl shadow-xl border border-white/20 p-6 sm:p-8">
+      <div className="flex-1 min-h-0 overflow-auto bg-gradient-to-br from-white to-purple-50/50 rounded-2xl shadow-xl border border-white/20 p-3 sm:p-6">
         <div className="text-center mb-2">
-          <span className="inline-flex items-center bg-purple-100/50 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+          <span className="inline-flex items-center bg-purple-100/50 text-purple-800 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-medium">
             Multiple Choice
           </span>
         </div>
         <div
-          className="text-center text-lg sm:text-xl prose prose-slate max-w-none leading-relaxed text-gray-800 mt-4"
+          className="text-center text-base sm:text-xl prose prose-slate max-w-none leading-relaxed text-gray-800 mt-2 sm:mt-4"
           dangerouslySetInnerHTML={{ __html: flashcard.front }}
         />
       </div>
 
       {/* Answer Choices */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Answer choices">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3" role="radiogroup" aria-label="Answer choices">
         {choices.map((choice, idx) => {
           const isEliminated = eliminatedChoices.has(choice);
           const isSelected = selectedAnswer === choice;
@@ -245,7 +245,7 @@ export default function MultipleChoiceCard({
               aria-checked={isSelected}
               aria-label={`Option ${labels[idx]}: ${choice}`}
               tabIndex={focusedIndex === idx ? 0 : -1}
-              className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+              className={`relative p-2 sm:p-3 rounded-xl border-2 text-left transition-all ${
                 isEliminated
                   ? 'border-gray-200 bg-gray-100 opacity-40 cursor-not-allowed'
                   : showCorrect
@@ -261,9 +261,9 @@ export default function MultipleChoiceCard({
               whileHover={!isAnswered && hasCompletedConfidence && !isEliminated ? { scale: 1.02 } : {}}
               whileTap={!isAnswered && hasCompletedConfidence && !isEliminated ? { scale: 0.98 } : {}}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2 sm:gap-3">
                 <span
-                  className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                  className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold ${
                     showCorrect
                       ? 'bg-green-500 text-white'
                       : showWrong
@@ -272,14 +272,14 @@ export default function MultipleChoiceCard({
                   }`}
                 >
                   {showCorrect ? (
-                    <CheckCircleIcon className="h-5 w-5" />
+                    <CheckCircleIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : showWrong ? (
-                    <XCircleIcon className="h-5 w-5" />
+                    <XCircleIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
                     labels[idx]
                   )}
                 </span>
-                <span className="text-sm sm:text-base text-gray-800 pt-1">{choice}</span>
+                <span className="text-xs sm:text-base text-gray-800 pt-0.5 sm:pt-1">{choice}</span>
               </div>
             </motion.button>
           );
