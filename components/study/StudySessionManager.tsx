@@ -51,7 +51,6 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
   const router = useRouter();
 
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
   const [newAchievements, setNewAchievements] = useState<Array<{ type: string; title: string; description: string; icon: string }>>([]);
   const cardContainerRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +62,6 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
   }, [preSelectedSetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    setIsFlipped(false);
     // Move focus to the card container when a new card appears
     if (cardContainerRef.current) {
       cardContainerRef.current.focus();
@@ -204,8 +202,6 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
             ) : (
               <StudyCard
                 flashcard={cardToShow}
-                isFlipped={isFlipped}
-                onFlip={() => setIsFlipped(!isFlipped)}
                 onResult={recordCardResult}
                 onPrevious={() => Logger.log(LogContext.STUDY, "Previous card action not implemented.")}
                 onEndSession={resetSession}

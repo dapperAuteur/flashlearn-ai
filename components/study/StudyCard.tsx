@@ -17,9 +17,7 @@ import {
 
 interface StudyCardProps {
   flashcard: Flashcard;
-  isFlipped: boolean;
   canFlip: boolean;
-  onFlip: () => void;
   onResult: (isCorrect: boolean, timeSeconds: number) => void;
   onConfidenceSelect: (rating: number) => void;
   onPrevious: () => void;
@@ -30,9 +28,7 @@ interface StudyCardProps {
 
 export default function StudyCard({
   flashcard,
-  isFlipped,
   canFlip,
-  onFlip,
   onResult,
   onConfidenceSelect,
   onPrevious,
@@ -41,6 +37,7 @@ export default function StudyCard({
   hasCompletedConfidence
 }: StudyCardProps) {
   const [startTime, setStartTime] = useState<number>(Date.now());
+  const [isFlipped, setIsFlipped] = useState(false);
   const cardId = String(flashcard._id);
 
   useEffect(() => {
@@ -55,9 +52,9 @@ export default function StudyCard({
 
   const handleFlip = useCallback(() => {
     if (canFlip) {
-      onFlip();
+      setIsFlipped(f => !f);
     }
-  }, [canFlip, onFlip]);
+  }, [canFlip]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
