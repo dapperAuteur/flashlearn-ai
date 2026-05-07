@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db/dbConnect';
 import { Team } from '@/models/Team';
 import { generateUniqueJoinCode } from '@/lib/teams/joinCode';
 import { createActivityEvent } from '@/lib/services/activityService';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 // GET - List teams the current user belongs to
 export async function GET() {
@@ -86,6 +87,19 @@ export async function POST(request: NextRequest) {
       teamName: team.name,
       action: 'created',
     });
+
+    // 4g: PUBLIC GROUPS ONLY. Private/invite-only teams are not broadcast.
+    if (team.isPublic) {
+      const subjectFragment =
+        Array.isArray(team.tags) && team.tags.length > 0
+          ? ` Focused on ${team.tags.slice(0, 3).join(', ')}.`
+          : '';
+      fireOutboxDrafts({
+        triggerUserId: session.user.id,
+        externalRefBase: `study-group-${team._id}`,
+        caption: `New study group on FlashLearn: "${team.name}".${subjectFragment} Open to learners.`,
+      });
+    }
 
     return NextResponse.json({ team }, { status: 201 });
   } catch (error) {
