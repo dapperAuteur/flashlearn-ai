@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Classroom } from '@/models/Classroom';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 function generateJoinCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -65,6 +66,23 @@ export async function POST(request: NextRequest) {
       schoolId: schoolId || undefined,
       joinCode: generateJoinCode(),
       students: [],
+    });
+
+    // 4h: PUBLIC CLASSROOMS ONLY. The Classroom schema does NOT yet expose an
+    // isPublic flag (nor subject / gradeLevel / startDate that the recipe
+    // caption asks for), so this guard is always true today and the trigger
+    // never fires. Intentional: classrooms hold student PII and must NOT be
+    // auto-broadcast until BAM adds an explicit isPublic field and a
+    // teacher-facing "make discoverable" toggle. See merge user-task.
+    const classroomIsPublic = (classroom as unknown as { isPublic?: boolean }).isPublic === true;
+    if (!classroomIsPublic) {
+      return NextResponse.json({ classroom }, { status: 201 });
+    }
+
+    fireOutboxDrafts({
+      triggerUserId: session.user.id,
+      externalRefBase: `classroom-group-${classroom._id}`,
+      caption: `New classroom on FlashLearn: "${classroom.name}". Open to learners.`,
     });
 
     return NextResponse.json({ classroom }, { status: 201 });
