@@ -9,6 +9,8 @@ import { VersusStats } from '@/models/VersusStats';
 import { StudySession } from '@/models/StudySession';
 import { calculateCompositeScore, CardAnswer } from '@/lib/algorithms/compositeScore';
 import { createActivityEvent } from '@/lib/services/activityService';
+import { User } from '@/models/User';
+import { fireOutboxDrafts, anonymizedHandle, hashUserId } from '@/lib/outbox-trigger';
 
 export async function POST(
   request: NextRequest,
@@ -148,6 +150,44 @@ export async function POST(
   }
 
   await challenge.save();
+
+  // 4d: BAM's challenge accepted + completed by another user.
+  // Outer gate: only fire when the creator is BAM (PRODUCT_OWNER_USER_ID).
+  // Acceptor identity is anonymized — never email or full name.
+  const ownerId = process.env.PRODUCT_OWNER_USER_ID;
+  if (
+    ownerId &&
+    challenge.creatorId.toString() === ownerId &&
+    participant.userId.toString() !== ownerId
+  ) {
+    const creatorParticipant = challenge.participants.find(
+      (p: any) => p.userId.toString() === ownerId,
+    );
+    const creatorScore = creatorParticipant?.compositeScore ?? 0;
+    const acceptorScore = participant.compositeScore ?? 0;
+    const acceptorWon = acceptorScore >= creatorScore;
+
+    const acceptingUser = await User.findById(participant.userId)
+      .select('username email')
+      .lean<{ username?: string | null; email?: string }>();
+    const handle = anonymizedHandle({
+      handle: acceptingUser?.username ?? null,
+      email: acceptingUser?.email ?? '',
+    });
+
+    const siteUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
+    const challengeUrl = `${siteUrl}/versus/preview/${challenge.challengeCode}`;
+    const caption = acceptorWon
+      ? `${handle} beat my "${challenge.setName}" challenge with ${Math.round(acceptorScore)} — congrats. Try beating me: ${challengeUrl}`
+      : `${handle} took on my "${challenge.setName}" challenge — scored ${Math.round(acceptorScore)}. Crown's still mine. Try yours: ${challengeUrl}`;
+
+    fireOutboxDrafts({
+      triggerUserId: ownerId,
+      externalRefBase: `challenge-completed-${challenge._id}-${hashUserId(participant.userId.toString())}`,
+      caption,
+      platforms: ['twitter', 'bluesky'],
+    });
+  }
 
   // Mark study session as completed
   await StudySession.findOneAndUpdate(
