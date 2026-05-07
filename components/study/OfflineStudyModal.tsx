@@ -12,7 +12,6 @@ interface Props {
 }
 
 export default function OfflineStudyModal({ setId, onClose, onComplete }: Props) {
-  const [isFlipped, setIsFlipped] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
   const {
     sessionId,
@@ -32,7 +31,6 @@ export default function OfflineStudyModal({ setId, onClose, onComplete }: Props)
   const handleResult = async (isCorrect: boolean) => {
     const timeSeconds = (Date.now() - startTime) / 1000;
     await recordCardResult(isCorrect, timeSeconds, currentConfidenceRating || undefined);
-    setIsFlipped(false);
     setStartTime(Date.now());
     showNextCard();
   };
@@ -77,9 +75,7 @@ export default function OfflineStudyModal({ setId, onClose, onComplete }: Props)
           {sessionId && currentIndex < flashcards.length ? (
             <StudyCard
               flashcard={flashcards[currentIndex]}
-              isFlipped={isFlipped}
-              canFlip={!isFlipped}
-              onFlip={() => setIsFlipped(true)}
+              canFlip={!isConfidenceRequired || hasCompletedConfidence}
               onResult={handleResult}
               onConfidenceSelect={recordConfidence}
               onPrevious={() => {}}
