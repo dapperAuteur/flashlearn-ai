@@ -5,6 +5,7 @@ import clientPromise from '@/lib/db/mongodb';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { authOptions } from '@/lib/auth/auth';
 import { createActivityEvent } from '@/lib/services/activityService';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 export async function POST(
   request: NextRequest,
@@ -78,6 +79,16 @@ export async function POST(
       completedCards: updatedSession?.completedCards,
     }).catch((err) => {
       Logger.warning(LogContext.SYSTEM, 'Failed to record study_session activity event', { requestId, error: err });
+    });
+
+    const durationMin = Math.max(1, Math.round(durationSeconds / 60));
+    const accuracyPct = Math.round(accuracy);
+    const cardCount = updatedSession?.completedCards ?? updatedSession?.totalCards ?? 0;
+    const deckTitle = updatedSession?.setName ?? 'a study set';
+    fireOutboxDrafts({
+      triggerUserId: session.user.id,
+      externalRefBase: `study-session-${sessionId}`,
+      caption: `Just drilled ${cardCount} cards on "${deckTitle}" — ${accuracyPct}% recall after ${durationMin} minute${durationMin === 1 ? '' : 's'}.`,
     });
 
     // Return session summary

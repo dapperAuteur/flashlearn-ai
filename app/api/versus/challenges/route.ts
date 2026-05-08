@@ -9,6 +9,7 @@ import { User } from '@/models/User';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 import { generateChallengeCode } from '@/lib/utils/challengeCode';
 import { createShortLink, toSwitchySlug } from '@/lib/switchy';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 const MAX_PARTICIPANTS: Record<string, number> = {
   direct: 10,
@@ -174,6 +175,18 @@ export async function POST(request: NextRequest) {
       );
     }
   }).catch(() => { /* non-critical */ });
+
+  // 4c: public challenges only. creatorScore is null at creation (challenge has
+  // no plays yet); recipe explicitly says "adapt the caption to what's
+  // populated."
+  if (scope === 'public') {
+    const siteUrlForOutbox = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
+    fireOutboxDrafts({
+      triggerUserId: session.user.id,
+      externalRefBase: `challenge-created-${challenge._id}`,
+      caption: `New flashcard challenge: "${challenge.setName}" — ${challenge.cardCount} cards. Take it on: ${siteUrlForOutbox}/versus/join/${challengeCode}`,
+    });
+  }
 
   return NextResponse.json({
     challenge,

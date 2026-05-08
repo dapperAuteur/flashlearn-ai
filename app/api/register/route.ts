@@ -10,6 +10,7 @@ import { logAuthEvent } from "@/lib/logging/authLogger";
 import { AuthEventType } from "@/models/AuthLog";
 import { sendVerificationEmail } from "@/lib/email/mailgun";
 import { Logger, LogContext } from "@/lib/logging/logger";
+import { fireSignupTrigger } from "@/lib/outbox-trigger";
 
 // Validation schema for user registration
 const userSchema = z.object({
@@ -164,7 +165,19 @@ export async function POST(request: NextRequest) {
 
     // Send verification email
     await sendVerificationEmail(email, name, verificationToken);
-    
+
+    // 4f: cross-cutting signup trigger. /api/register only handles credentials
+    // signups (always tier="Free"); paid-tier upgrades go through a separate
+    // Stripe webhook path and should fire from there.
+    await fireSignupTrigger({
+      newUser: {
+        id: userId,
+        handle: username ?? null,
+        email,
+      },
+      tier: 'free',
+    });
+
     return NextResponse.json(
       { 
         message: "User created successfully. Please check your email to verify your account.",

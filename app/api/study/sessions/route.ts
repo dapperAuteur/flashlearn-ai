@@ -16,6 +16,7 @@ import { StudyDirection, StudySession } from '@/models/StudySession';
 import { CardResult } from '@/models/CardResult';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 import { calculateSM2 } from '@/lib/algorithms/sm2';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 interface CardResult {
   cardId: string;
@@ -110,6 +111,9 @@ export async function POST(request: NextRequest) {
     const { setId, results } = body;
     const setIdAsObjectId = new mongoose.Types.ObjectId(setId);
     const isPaidUser = await isUserPaid(userId);
+    // Captured during transaction; fired AFTER commit so we never broadcast a
+    // milestone for a transaction that rolled back.
+    const milestonesToFire: Array<{ cardId: string; newIntervalDays: number; front: string }> = [];
     // **FIX: Start the session from Mongoose, not the native client**
     const mongoSession = await mongoose.startSession();
     try {
@@ -166,6 +170,7 @@ export async function POST(request: NextRequest) {
                 cardPerf.totalTimeStudied += result.timeSeconds;
                 if (result.isCorrect) cardPerf.correctCount++; else cardPerf.incorrectCount++;
                 // Update SM-2 spaced repetition data
+                const previousIntervalDays = cardPerf.mlData?.interval ?? 0;
                 const updatedSM2 = calculateSM2(
                   cardPerf.mlData,
                   result.isCorrect,
@@ -176,6 +181,14 @@ export async function POST(request: NextRequest) {
                 cardPerf.mlData.interval = updatedSM2.interval;
                 cardPerf.mlData.repetitions = updatedSM2.repetitions;
                 cardPerf.mlData.nextReviewDate = updatedSM2.nextReviewDate;
+                // Recall milestone (4b1): only on first crossover into long-term memory.
+                if (updatedSM2.interval > 30 && previousIntervalDays <= 30) {
+                  milestonesToFire.push({
+                    cardId: result.cardId,
+                    newIntervalDays: updatedSM2.interval,
+                    front: '', // populated after syncCardContentMap is built below
+                  });
+                }
                 // Update per-mode SM-2 and accuracy
                 const sessionMode = body.sessionMeta?.studyMode || 'classic';
                 const sessionDirection = body.sessionMeta?.studyDirection || 'front-to-back';
@@ -229,6 +242,10 @@ export async function POST(request: NextRequest) {
                 }
               }
             } catch { /* ignore */ }
+            // Backfill milestone card content now that the lookup is built.
+            for (const m of milestonesToFire) {
+              m.front = syncCardContentMap[m.cardId]?.front ?? '';
+            }
             const sessionData: any = {
               sessionId: body.sessionId || `${setId}_${Date.now()}`,
               userId: new mongoose.Types.ObjectId(userId),
@@ -279,6 +296,19 @@ export async function POST(request: NextRequest) {
         });
 
         await Logger.info(LogContext.STUDY, `Successfully synced study session for set ${setId}.`, { userId, metadata: { setId, resultsCount: results.length, isPaidUser  } });
+
+        // 4b1: fire recall-milestone drafts AFTER the transaction commits so a
+        // rollback can never broadcast a milestone that didn't actually persist.
+        for (const m of milestonesToFire) {
+          if (!m.front) continue; // skip if card content lookup missed
+          fireOutboxDrafts({
+            triggerUserId: userId,
+            externalRefBase: `recall-milestone-${m.cardId}-${m.newIntervalDays}`,
+            caption: `Just locked in "${m.front}" → long-term memory (${m.newIntervalDays} days). One more card down.`,
+            platforms: ['twitter', 'bluesky'],
+          });
+        }
+
         return NextResponse.json(responseData, { status: 200 });
 
     } catch (error) {

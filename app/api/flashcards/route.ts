@@ -9,6 +9,7 @@ import { apiLogger, analytics } from "@/lib/logging/flashcard-logger";
 import mongoose, { Types } from "mongoose";
 import { createShortLink, toSwitchySlug } from '@/lib/switchy';
 import { createActivityEvent } from '@/lib/services/activityService';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 // Define the expected shape of the incoming request body
 const saveSetSchema = z.object({
@@ -125,6 +126,17 @@ export async function POST(request: NextRequest) {
           );
         }
       }).catch(() => { /* non-critical */ });
+
+      // 4e: public flashcard set created. Only fires on creation-as-public
+      // here; a set that flips private->public via PATCH is NOT covered by
+      // this route. Recipe asks for the state-transition variant too —
+      // flagged for follow-up.
+      const setUrl = `${siteUrl}/sets/${savedSet._id}`;
+      fireOutboxDrafts({
+        triggerUserId: userId,
+        externalRefBase: `public-set-${savedSet._id}`,
+        caption: `New public deck on FlashLearn: "${title}" — ${flashcards.length} cards. Free to study or remix. ${setUrl}`,
+      });
     }
 
     apiLogger.info(`Successfully saved flashcard set for user.`, request, { userId, setId: savedSet._id });
