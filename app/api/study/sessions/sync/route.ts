@@ -12,6 +12,7 @@ import { User } from '@/models/User';
 import { Profile } from '@/models/Profile';
 import { calculateSM2 } from '@/lib/algorithms/sm2';
 import { Logger, LogContext, LogLevel } from '@/lib/logging/logger';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 interface SyncCardResult {
   cardId: string;
@@ -75,6 +76,10 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
 
+    // 4b1: collected during the SM-2 loop below; fired after analytics.save()
+    // so a write failure doesn't broadcast a milestone that didn't persist.
+    const milestonesToFire: Array<{ cardId: string; newIntervalDays: number; front: string }> = [];
+
     Logger.log({
       context: LogContext.STUDY,
       level: LogLevel.INFO,
@@ -135,11 +140,13 @@ export async function POST(request: NextRequest) {
 
     // ---- 2. Save card results (with card content for review) ----
     let savedResultsCount = 0;
+    // Hoisted so both the card-results block and the milestone trigger (4b1)
+    // below can reach the front/back content without a second FlashcardSet read.
+    const flashcardContentMap: Record<string, { front: string; back: string }> = {};
     if (results.length > 0) {
       await CardResultModel.deleteMany({ sessionId });
 
       // Look up flashcard content so results are self-contained
-      const flashcardContentMap: Record<string, { front: string; back: string }> = {};
       try {
         const set = await FlashcardSet.findById(setId).select('flashcards').lean() as any;
         if (set?.flashcards) {
@@ -280,6 +287,7 @@ export async function POST(request: NextRequest) {
         else cardPerf.incorrectCount++;
 
         // Update SM-2 spaced repetition
+        const previousIntervalDays = cardPerf.mlData?.interval ?? 0;
         const updatedSM2 = calculateSM2(
           cardPerf.mlData,
           result.isCorrect,
@@ -290,6 +298,14 @@ export async function POST(request: NextRequest) {
         cardPerf.mlData.interval = updatedSM2.interval;
         cardPerf.mlData.repetitions = updatedSM2.repetitions;
         cardPerf.mlData.nextReviewDate = updatedSM2.nextReviewDate;
+        // 4b1: first crossover into long-term memory (>30 days).
+        if (updatedSM2.interval > 30 && previousIntervalDays <= 30) {
+          milestonesToFire.push({
+            cardId: result.cardId,
+            newIntervalDays: updatedSM2.interval,
+            front: flashcardContentMap[result.cardId]?.front ?? '',
+          });
+        }
 
         // Update per-mode SM-2 and accuracy
         const sessionMode = studyMode || 'classic';
@@ -335,6 +351,17 @@ export async function POST(request: NextRequest) {
         userId,
         metadata: { sessionId, setId }
       });
+
+      // 4b1: fire recall-milestone drafts AFTER analytics persists.
+      for (const m of milestonesToFire) {
+        if (!m.front) continue;
+        fireOutboxDrafts({
+          triggerUserId: userId,
+          externalRefBase: `recall-milestone-${m.cardId}-${m.newIntervalDays}`,
+          caption: `Just locked in "${m.front}" → long-term memory (${m.newIntervalDays} days). One more card down.`,
+          platforms: ['twitter', 'bluesky'],
+        });
+      }
     } catch (analyticsError) {
       // Analytics failure should not block session sync
       Logger.log({
@@ -344,6 +371,22 @@ export async function POST(request: NextRequest) {
         metadata: { error: analyticsError instanceof Error ? analyticsError.message : analyticsError }
       });
     }
+
+    // 4a: study session completed. Fires here (the active offline-first sync
+    // path that lib/services/syncService.ts hits) — earlier wiring on the
+    // legacy /[id]/complete route never gets called from the review-list flow.
+    const totalAnswered = (correctCount ?? 0) + (incorrectCount ?? 0);
+    const accuracyPct = totalAnswered > 0
+      ? Math.round(((correctCount ?? 0) / totalAnswered) * 100)
+      : 0;
+    const durationMin = Math.max(1, Math.round((durationSeconds ?? 0) / 60));
+    const cardCount = totalCards ?? results.length;
+    const deckTitle = setName ?? 'a study set';
+    fireOutboxDrafts({
+      triggerUserId: userId,
+      externalRefBase: `study-session-${sessionId}`,
+      caption: `Just drilled ${cardCount} cards on "${deckTitle}" — ${accuracyPct}% recall after ${durationMin} minute${durationMin === 1 ? '' : 's'}.`,
+    });
 
     return NextResponse.json({
       success: true,
