@@ -14,6 +14,7 @@ import {
 import { syncSession } from '@/lib/services/syncService';
 import { shuffleArray } from '@/lib/utils/arrayUtils';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
+import { clientCheckpoint } from '@/lib/diag';
 import { PowerSyncFlashcard, PowerSyncFlashcardSet } from '@/lib/powersync/schema';
 import { getPowerSync } from '@/lib/powersync/client';
 import { generateMongoId } from '@/lib/powersync/helpers';
@@ -263,16 +264,28 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
   }, [authSession, studyMode, isConfidenceRequired]);
 
   const completeSession = useCallback(async () => {
+    // [DIAG checkpoint — scaffolding] confirm completeSession actually ran.
+    clientCheckpoint('complete:enter', {
+      hasSessionId: Boolean(sessionId),
+      hasStartTime: Boolean(sessionStartTime),
+    }, sessionId ?? undefined);
+
     if (!sessionId || !sessionStartTime) {
+      clientCheckpoint('complete:early-return-missing-session');
       Logger.warning(LogContext.STUDY, "Cannot complete session - missing sessionId or startTime");
       return;
     }
 
     try {
       Logger.log(LogContext.STUDY, "Starting session completion", { sessionId });
-      
+
       const freshResults = await getResults(sessionId);
-      
+
+      // [DIAG checkpoint — scaffolding]
+      clientCheckpoint('complete:results-fetched', {
+        resultCount: freshResults.length,
+      }, sessionId);
+
       if (freshResults.length === 0) {
         Logger.warning(LogContext.STUDY, "No results found in IndexedDB", { sessionId });
       }
@@ -305,13 +318,26 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       await queueSessionForSync(sessionId);
       Logger.log(LogContext.STUDY, "Session queued for sync", { sessionId });
 
-      if (authSession?.user?.id && navigator.onLine) {
+      // [DIAG checkpoint — scaffolding] capture gate inputs explicitly so we
+      // know which boolean (or both) blocked the immediate sync POST.
+      const gateAuthUserIdPresent = Boolean(authSession?.user?.id);
+      const gateNavigatorOnline = typeof navigator !== 'undefined' && navigator.onLine;
+      const gateWillSync = gateAuthUserIdPresent && gateNavigatorOnline;
+      clientCheckpoint('complete:gate', {
+        authUserIdPresent: gateAuthUserIdPresent,
+        navigatorOnline: gateNavigatorOnline,
+        willSync: gateWillSync,
+      }, sessionId);
+
+      if (gateWillSync) {
         setIsSyncing(true);
         setSyncError(null);
-        
+
         try {
+          clientCheckpoint('complete:sync:start', undefined, sessionId);
           const syncSuccess = await syncSession(sessionId);
-          
+          clientCheckpoint('complete:sync:end', { syncSuccess }, sessionId);
+
           if (syncSuccess) {
             Logger.log(LogContext.STUDY, "Session synced to server immediately", { sessionId });
           } else {
@@ -319,6 +345,9 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
             setSyncError("Results saved locally. Will sync when connection improves.");
           }
         } catch (error) {
+          clientCheckpoint('complete:sync:throw', {
+            message: error instanceof Error ? error.message.slice(0, 200) : String(error).slice(0, 200),
+          }, sessionId);
           Logger.error(LogContext.STUDY, "Sync error during completion", { error });
           setSyncError("Results saved locally. Will sync later.");
         } finally {
@@ -328,11 +357,15 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
 
       setIsComplete(true);
       Logger.log(LogContext.STUDY, "Session completed, results ready to display inline", { sessionId });
-      
+      clientCheckpoint('complete:done', undefined, sessionId);
+
     } catch (error) {
-      Logger.error(LogContext.STUDY, "Error completing session", { 
+      clientCheckpoint('complete:thrown', {
+        message: error instanceof Error ? error.message.slice(0, 200) : String(error).slice(0, 200),
+      }, sessionId ?? undefined);
+      Logger.error(LogContext.STUDY, "Error completing session", {
         error: error instanceof Error ? error.message : 'Unknown error',
-        sessionId 
+        sessionId
       });
       setError("Failed to save results. Please try again.");
       setIsComplete(false);
