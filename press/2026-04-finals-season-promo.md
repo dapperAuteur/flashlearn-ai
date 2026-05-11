@@ -8,11 +8,11 @@
 
 ---
 
-**[City, State], April 30, 2026.** FlashLearnAI.WitUS.Online today announced a Finals Season Boost that raises every plan's AI flashcard cap to 20 sets per 30 days through May 31, 2026 (11:59 PM Pacific). The boost applies to Free, Monthly Pro, Annual Pro, and Lifetime Learner accounts the same way: one shared cap, no upgrade required during the window. CSV imports remain unlimited on every plan.
+**[Indianapolis, IN], April 30, 2026.** FlashLearnAI.WitUS.Online today announced a Finals Season Boost that raises every plan's AI flashcard cap to 20 sets per 30 days through May 31, 2026 (11:59 PM Pacific). The boost applies to Free, Monthly Pro, Annual Pro, and Lifetime Learner accounts the same way: one shared cap, no upgrade required during the window. CSV imports remain unlimited on every plan.
 
-The same release ships an optional instructions field on every file upload. Students can now paste a PDF, audio recording, image, or YouTube link and add a one-paragraph prompt that steers the model. "Undergraduate level, definitions only, skip examples" produces a different deck than "graduate clinical-board prep, include differential diagnoses." The file plus the instructions still count as one generation against the cap.
+The same release ships an optional instructions field on every file upload. Students can now upload a PDF, audio recording, image, or YouTube link and add a one-paragraph prompt that steers the model. "Undergraduate level, definitions only, skip examples" produces a different deck than "graduate clinical-board prep, include differential diagnoses." The file plus the instructions still count as one generation against the cap.
 
-> [QUOTE: 1-2 sentences from BAM on why finals deserve more headroom and how steerable prompts change the study experience.]
+"It's the end of the semester and you feel like you've got one shot to make a passing grade happen. I've been there. I want every student to have the best shot at passing and retaining their information. The flashcards you create now are yours, whether it's a FREE plan or not. Leart Wit US."
 
 ### What changed today
 
@@ -35,7 +35,7 @@ The same flow works across every input type:
 
 ### How the cap math works
 
-All five AI inputs (text, PDF, YouTube, audio, image) count against one shared per-30-day counter. CSV does not count. A generation with a prompt counts the same as a generation without one. The promo replaces the per-tier ceiling for the duration of the window; it does not stack.
+All five AI inputs (text, PDF, YouTube, audio, image) count against one shared per-30-day counter. CSV does not count. A generation with a prompt counts the same as a generation without one. The promo replaces the per-tier ceiling for the duration of the window; it doesn't stack.
 
 A student on Monthly Pro who generates 12 PDF sets, 4 audio sets, and 2 YouTube sets between now and May 31 has used 18 of their 20 promo allotment. They keep going until 20. After May 31 the cap reverts to 5; the same student starts a fresh rolling 30-day window per the standard cycle reset rules.
 
@@ -52,12 +52,12 @@ Standard plans, unchanged from previous releases:
 | Annual Pro | $103.29 / yr | 10 / 30d | 20 / 30d | Unlimited |
 | Lifetime Learner | $103.29 one-time (first 100) | 10 / 30d | 20 / 30d | Unlimited |
 
-Cash App Lifetime payment ($100, no processing fee) remains available for the first 100 founder spots.
+CashApp Lifetime payment ($100, no processing fee) remains available for the first 100 founder spots.
 
 ### Getting started
 
 1. Sign in or sign up at [flashlearnai.witus.online](https://flashlearnai.witus.online).
-2. Go to [/generate](https://flashlearnai.witus.online/generate).
+2. Go to [ flashlearnai.witus.online/generate](https://flashlearnai.witus.online/generate).
 3. Pick an input (text, PDF, YouTube, audio, or image). Add an optional instruction in the new field below the topic input. Up to 500 characters.
 4. Generate. Repeat until you've taken your final.
 
