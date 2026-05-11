@@ -104,6 +104,42 @@ export function blogPostSchema({
   };
 }
 
+export function pressReleaseSchema({
+  title,
+  date,
+  author,
+  excerpt,
+  slug,
+}: {
+  title: string;
+  date: string;
+  author: string;
+  excerpt: string;
+  slug: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: title,
+    datePublished: date,
+    author: {
+      '@type': 'Person',
+      name: author,
+    },
+    description: excerpt,
+    url: `${BASE_URL}/press/${slug}`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'FlashLearnAI',
+      url: BASE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${BASE_URL}/icon-512.png`,
+      },
+    },
+  };
+}
+
 export function profilePageSchema({
   name,
   username,

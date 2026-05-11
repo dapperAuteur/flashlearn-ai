@@ -10,6 +10,7 @@ const publicLinks = [
   { label: 'Explore', href: '/explore' },
   { label: 'Generate', href: '/generate' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Press', href: '/press' },
   { label: 'Developers', href: '/docs/api/getting-started' },
 ];
 

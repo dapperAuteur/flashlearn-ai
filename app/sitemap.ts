@@ -42,6 +42,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Blog directory may not exist in build
   }
 
+  // Press releases from markdown files (only press/live/, not draft siblings in press/)
+  const pressDir = path.join(process.cwd(), 'press/live');
+  let pressRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const pressFiles = fs.readdirSync(pressDir).filter(f => f.endsWith('.md'));
+    pressRoutes = [
+      {
+        url: `${BASE_URL}/press`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      },
+      ...pressFiles.map(file => ({
+        url: `${BASE_URL}/press/${file.replace('.md', '')}`,
+        lastModified: fs.statSync(path.join(pressDir, file)).mtime,
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+      })),
+    ];
+  } catch {
+    // Press directory may not exist in build
+  }
+
   // Dynamic routes from database
   let publicSetRoutes: MetadataRoute.Sitemap = [];
   let profileRoutes: MetadataRoute.Sitemap = [];
@@ -77,5 +100,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Database may not be available during build
   }
 
-  return [...staticRoutes, ...blogRoutes, ...publicSetRoutes, ...profileRoutes];
+  return [...staticRoutes, ...blogRoutes, ...pressRoutes, ...publicSetRoutes, ...profileRoutes];
 }
