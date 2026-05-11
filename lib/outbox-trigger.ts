@@ -2,8 +2,6 @@ import { after } from "next/server";
 import { createHash } from "node:crypto";
 import { sendToOutbox, type OutboxPlatform } from "./sender-outbox";
 
-const OWNER_USER_ID = process.env.PRODUCT_OWNER_USER_ID;
-
 const PRODUCT_NAME = "FlashLearn AI";
 
 /**
@@ -26,7 +24,7 @@ export function fireOutboxDrafts(args: {
   asDraft?: boolean;
 }) {
   if (process.env.OUTBOX_TRIGGER_ENABLED !== "true") return;
-  if (args.triggerUserId !== OWNER_USER_ID) return;
+  if (args.triggerUserId !== process.env.PRODUCT_OWNER_USER_ID) return;
 
   const platforms = args.platforms ?? (["twitter", "bluesky", "linkedin"] as const);
   const placeholderTime =
