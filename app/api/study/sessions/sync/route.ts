@@ -353,21 +353,6 @@ export async function POST(request: NextRequest) {
       });
 
       // 4b1: fire recall-milestone drafts AFTER analytics persists.
-      // [DIAGNOSTIC — scaffolding, strip after we find the cause.]
-      if (milestonesToFire.length > 0) {
-        Logger.log({
-          context: LogContext.STUDY,
-          level: LogLevel.INFO,
-          message: '[outbox-4b1] firing milestones',
-          userId,
-          metadata: {
-            sessionId,
-            count: milestonesToFire.length,
-            cardIds: milestonesToFire.map((m) => m.cardId),
-            withFrontCount: milestonesToFire.filter((m) => Boolean(m.front)).length,
-          },
-        });
-      }
       for (const m of milestonesToFire) {
         if (!m.front) continue;
         fireOutboxDrafts({
@@ -397,14 +382,6 @@ export async function POST(request: NextRequest) {
     const durationMin = Math.max(1, Math.round((durationSeconds ?? 0) / 60));
     const cardCount = totalCards ?? results.length;
     const deckTitle = setName ?? 'a study set';
-    // [DIAGNOSTIC — scaffolding, strip after we find the cause.]
-    Logger.log({
-      context: LogContext.STUDY,
-      level: LogLevel.INFO,
-      message: '[outbox-4a] about to fire',
-      userId,
-      metadata: { sessionId, cardCount, accuracyPct, durationMin, hasSetName: Boolean(setName) },
-    });
     fireOutboxDrafts({
       triggerUserId: userId,
       externalRefBase: `study-session-${sessionId}`,
