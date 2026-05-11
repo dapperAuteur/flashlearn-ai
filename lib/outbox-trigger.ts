@@ -2,8 +2,6 @@ import { after } from "next/server";
 import { createHash } from "node:crypto";
 import { sendToOutbox, type OutboxPlatform } from "./sender-outbox";
 
-const OWNER_USER_ID = process.env.PRODUCT_OWNER_USER_ID;
-
 const PRODUCT_NAME = "FlashLearn AI";
 
 /**
@@ -25,8 +23,23 @@ export function fireOutboxDrafts(args: {
   scheduledAt?: Date;
   asDraft?: boolean;
 }) {
+  // [DIAGNOSTIC — scaffolding, strip after we find the cause.] No full user
+  // ids, no captions, no secrets: only booleans + lengths + a last-4 char hint.
+  const triggerEnabledRaw = process.env.OUTBOX_TRIGGER_ENABLED ?? "unset";
+  const ownerId = process.env.PRODUCT_OWNER_USER_ID;
+  const triggerUserIdLast4 = args.triggerUserId.slice(-4);
+  console.info("[outbox-trigger] entry", {
+    externalRefBase: args.externalRefBase,
+    triggerEnabledRaw,
+    triggerEnabledOk: triggerEnabledRaw === "true",
+    ownerConfigured: Boolean(ownerId),
+    userIdMatch: Boolean(ownerId) && args.triggerUserId === ownerId,
+    userIdLen: args.triggerUserId.length,
+    triggerUserIdLast4,
+  });
+
   if (process.env.OUTBOX_TRIGGER_ENABLED !== "true") return;
-  if (args.triggerUserId !== OWNER_USER_ID) return;
+  if (args.triggerUserId !== process.env.PRODUCT_OWNER_USER_ID) return;
 
   const platforms = args.platforms ?? (["twitter", "bluesky", "linkedin"] as const);
   const placeholderTime =
@@ -34,6 +47,15 @@ export function fireOutboxDrafts(args: {
   const asDraft = args.asDraft ?? true;
 
   after(async () => {
+    // [DIAGNOSTIC — scaffolding, strip after we find the cause.] Confirms the
+    // after() callback actually executed on this function instance.
+    console.info("[outbox-trigger] after fired", {
+      externalRefBase: args.externalRefBase,
+      platformsCount: platforms.length,
+      ingestUrlConfigured: Boolean(process.env.OUTBOX_INGEST_URL),
+      sourceSlugConfigured: Boolean(process.env.OUTBOX_SOURCE_SLUG),
+      hmacConfigured: Boolean(process.env.OUTBOX_INGEST_SECRET),
+    });
     for (const platform of platforms) {
       const result = await sendToOutbox({
         outboxUrl: process.env.OUTBOX_INGEST_URL!,
@@ -54,6 +76,15 @@ export function fireOutboxDrafts(args: {
           platform,
           external_ref_base: args.externalRefBase,
           http_status: result.status,
+        });
+      } else {
+        // [DIAGNOSTIC — scaffolding, strip after we find the cause.]
+        console.info("[outbox-trigger] posted", {
+          source: process.env.OUTBOX_SOURCE_SLUG,
+          platform,
+          external_ref_base: args.externalRefBase,
+          http_status: result.status,
+          recordStatus: result.recordStatus,
         });
       }
     }
