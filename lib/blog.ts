@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { remark } from 'remark';
+import remarkGfm from 'remark-gfm';
 import html from 'remark-html';
 
 const blogDirectory = path.join(process.cwd(), 'blog');
@@ -80,7 +81,10 @@ export async function getPostBySlug(slug: string): Promise<BlogPostWithHtml | nu
 
   const stats = fs.statSync(filePath);
 
-  const processedContent = await remark().use(html).process(content);
+  const processedContent = await remark()
+    .use(remarkGfm)
+    .use(html)
+    .process(content);
   const contentHtml = processedContent.toString();
 
   return {
