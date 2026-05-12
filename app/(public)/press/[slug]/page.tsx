@@ -79,12 +79,21 @@ export default async function PressReleasePage({ params }: Props) {
           </header>
 
           <div
-            className="prose prose-lg prose-blue max-w-none
-              prose-headings:text-gray-900 prose-p:text-gray-700
-              prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-              prose-code:bg-gray-100 prose-code:rounded prose-code:px-1
-              prose-pre:bg-gray-900 prose-pre:text-gray-100
-              prose-img:rounded-lg"
+            className="max-w-none text-gray-900 leading-relaxed
+              [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-10 [&_h2]:mb-4
+              [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-8 [&_h3]:mb-3
+              [&_p]:mb-4 [&_p]:text-gray-800
+              [&_a]:text-blue-600 [&_a:hover]:underline [&_a]:break-words
+              [&_strong]:font-semibold [&_strong]:text-gray-900
+              [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-1
+              [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-1
+              [&_li]:text-gray-800
+              [&_hr]:my-8 [&_hr]:border-gray-200
+              [&_table]:w-full [&_table]:my-6 [&_table]:border-collapse [&_table]:text-sm
+              [&_th]:border [&_th]:border-gray-300 [&_th]:bg-gray-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold
+              [&_td]:border [&_td]:border-gray-200 [&_td]:px-3 [&_td]:py-2
+              [&_code]:bg-gray-100 [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-sm
+              [&_blockquote]:border-l-4 [&_blockquote]:border-blue-200 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-700 [&_blockquote]:my-4"
             dangerouslySetInnerHTML={{ __html: release.contentHtml }}
           />
 
