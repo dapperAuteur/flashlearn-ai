@@ -185,7 +185,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
     //   }
     // }
     
-    const hasDue = (dueCounts.get(selectedListId) ?? 0) > 0;
+    const hasDue = (dueCounts.get(selectedListId) ?? reviewCardIds.length) > 0;
     const cardIds = hasDue && studyScope === 'due' && reviewCardIds.length > 0 ? reviewCardIds : undefined;
     await startSession(selectedListId, studyDirection, cardIds);
   };
@@ -768,8 +768,10 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg p-6 sm:p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-4">Ready to Start!</h2>
 
-            {/* Scope toggle — only shown when this set has due cards */}
-            {(dueCounts.get(selectedListId) ?? 0) > 0 && (
+            {/* Scope toggle — trust either the global dueCounts map or the
+                per-set reviewCardIds fetch so a race between them still shows
+                the choice when this set has due cards. */}
+            {(dueCounts.get(selectedListId) ?? reviewCardIds.length) > 0 && (
               <div
                 role="group"
                 aria-label="Choose which cards to study"
@@ -786,7 +788,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                   )}
                 >
                   <ClockIcon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                  Practice {dueCounts.get(selectedListId)} due card{(dueCounts.get(selectedListId) ?? 0) !== 1 ? 's' : ''}
+                  Practice {dueCounts.get(selectedListId) ?? reviewCardIds.length} due card{(dueCounts.get(selectedListId) ?? reviewCardIds.length) !== 1 ? 's' : ''}
                 </button>
                 <button
                   onClick={() => setStudyScope('all')}
@@ -805,7 +807,7 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
             )}
 
             <p className="text-blue-100 mb-6">
-              {studyScope === 'due' && (dueCounts.get(selectedListId) ?? 0) > 0
+              {studyScope === 'due' && (dueCounts.get(selectedListId) ?? reviewCardIds.length) > 0
                 ? <>You&apos;re about to review {reviewCardIds.length || dueCounts.get(selectedListId)} due card{((reviewCardIds.length || dueCounts.get(selectedListId)) ?? 0) !== 1 ? 's' : ''}</>
                 : <>You&apos;re about to study {selectedSet?.card_count} flashcard{(selectedSet?.card_count ?? 0) !== 1 ? 's' : ''}</>}
               {studyMode !== 'classic' && <span className="block text-sm mt-1">Mode: {studyMode === 'multiple-choice' ? 'Multiple Choice' : 'Type Answer'}</span>}
