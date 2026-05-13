@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ sets: [], totalDue: 0 });
   }
 
-  const now = new Date();
+  // End-of-today cutoff matches the dashboard's /schedule endpoint so a card
+  // surfaced as "due today" there is also reviewable in the study setup screen.
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
 
   // Build match stage
   const matchStage: Record<string, unknown> = { profile: profileId };
@@ -44,9 +47,9 @@ export async function GET(request: NextRequest) {
     const dueCards = (doc.cardPerformance || []).filter(
       (cp: { mlData?: { nextReviewDate?: Date }; modePerformance?: Array<{ mlData?: { nextReviewDate?: Date } }> }) => {
         // Due if aggregate SM-2 says so
-        if (cp.mlData?.nextReviewDate && new Date(cp.mlData.nextReviewDate) <= now) return true;
-        // Also due if any per-mode SM-2 is past due
-        if (cp.modePerformance?.some((mp) => mp.mlData?.nextReviewDate && new Date(mp.mlData.nextReviewDate) <= now)) return true;
+        if (cp.mlData?.nextReviewDate && new Date(cp.mlData.nextReviewDate) <= endOfToday) return true;
+        // Also due if any per-mode SM-2 is due by end of today
+        if (cp.modePerformance?.some((mp) => mp.mlData?.nextReviewDate && new Date(mp.mlData.nextReviewDate) <= endOfToday)) return true;
         return false;
       },
     );
