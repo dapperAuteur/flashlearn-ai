@@ -3,18 +3,27 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
-import { 
-  Brain, 
-  TrendingUp, 
-  Clock, 
-  Sparkles, 
-  BookOpen, 
-  Play, 
-  ArrowRight, 
+import {
+  Brain,
+  TrendingUp,
+  Clock,
+  Sparkles,
+  BookOpen,
+  Play,
+  ArrowRight,
   CheckCircle,
   Users,
-  Target
+  Target,
+  WifiOff,
+  MessageSquare,
+  Globe,
+  Swords,
+  Code,
+  Zap,
+  Trophy,
 } from "lucide-react";
+import Footer from "@/components/layout/Footer";
+import ActivePromoBanner from "@/components/ui/ActivePromoBanner";
 
 // Modern Hero Section with Conditional Content
 const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; session?: any }) => {
@@ -45,7 +54,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
             </p>
 
             {/* Quick Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               <Link href="/flashcards" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Play className="h-6 w-6 text-white" />
@@ -54,16 +63,16 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                 <p className="text-sm text-gray-600 mb-3">Review 8 cards due for optimal retention</p>
                 <div className="text-blue-600 text-sm font-medium group-hover:text-blue-700">Start session →</div>
               </Link>
-              
+
               <Link href="/generate" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-purple-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Sparkles className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Create Cards</h3>
-                <p className="text-sm text-gray-600 mb-3">Generate from PDF, text, or YouTube</p>
+                <p className="text-sm text-gray-600 mb-3">Generate from PDF or text</p>
                 <div className="text-purple-600 text-sm font-medium group-hover:text-purple-700">Generate now →</div>
               </Link>
-              
+
               <Link href="/dashboard" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-green-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-6 w-6 text-white" />
@@ -71,6 +80,15 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                 <h3 className="font-semibold text-gray-900 mb-2">View Progress</h3>
                 <p className="text-sm text-gray-600 mb-3">87% average accuracy this week</p>
                 <div className="text-green-600 text-sm font-medium group-hover:text-green-700">See details →</div>
+              </Link>
+
+              <Link href="/versus" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-orange-200 transition-all duration-300">
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Swords className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Versus Mode</h3>
+                <p className="text-sm text-gray-600 mb-3">Challenge others and climb the leaderboard</p>
+                <div className="text-orange-600 text-sm font-medium group-hover:text-orange-700">Play now →</div>
               </Link>
             </div>
             
@@ -136,12 +154,12 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                 <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-teal-500 rounded-full border-2 border-white" />
                 <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full border-2 border-white" />
               </div>
-              <span>2,000+ active learners</span>
+              <span>Active Learners</span>
             </div>
             <div className="w-px h-4 bg-gray-300" />
-            <span>4.9/5 average rating</span>
+            <span>Create Flashcards</span>
             <div className="w-px h-4 bg-gray-300" />
-            <span>40% better retention rate</span>
+            <span>Increase Retention Rate</span>
           </div>
         </div>
       </div>
@@ -163,7 +181,7 @@ const BenefitsSection = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
     {
       icon: Sparkles,
       title: "Instant AI Generation",
-      description: "Upload any PDF, paste YouTube links, or share text. New flashcards appear in seconds, not hours.",
+      description: "Upload any PDF or share text. New flashcards appear in seconds, not hours.",
       color: "purple" as ColorVariant
     },
     {
@@ -253,7 +271,7 @@ const FeaturesShowcase = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">AI Content Generation</h3>
-                <p className="text-gray-700">Upload PDFs, YouTube videos, or any text. Our AI creates perfectly formatted flashcards in seconds.</p>
+                <p className="text-gray-700">Upload PDFs or any text. Our AI creates perfectly formatted flashcards in seconds.</p>
               </div>
             </div>
             
@@ -279,11 +297,41 @@ const FeaturesShowcase = () => {
             
             <div className="flex items-start space-x-4">
               <div className="bg-orange-100 rounded-lg p-2 flex-shrink-0">
-                <Users className="h-5 w-5 text-orange-600" />
+                <WifiOff className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Team Collaboration</h3>
-                <p className="text-gray-700">Share flashcard sets with study groups and track team progress together.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Offline Study Mode</h3>
+                <p className="text-gray-700">Study anywhere, even without internet. Your progress syncs automatically when you reconnect.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-teal-100 rounded-lg p-2 flex-shrink-0">
+                <Globe className="h-5 w-5 text-teal-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Explore Community Sets</h3>
+                <p className="text-gray-700">Browse curated and community-created flashcard sets. Study any public set without an account.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-rose-100 rounded-lg p-2 flex-shrink-0">
+                <MessageSquare className="h-5 w-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">In-App Feedback</h3>
+                <p className="text-gray-700">Report bugs, request features, or share praise directly within the app. We listen and respond.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-amber-100 rounded-lg p-2 flex-shrink-0">
+                <Swords className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Versus Mode</h3>
+                <p className="text-gray-700">Challenge friends and classmates to head-to-head flashcard battles. Compete on accuracy, speed, and confidence to climb the leaderboard.</p>
               </div>
             </div>
           </div>
@@ -307,7 +355,7 @@ const FeaturesShowcase = () => {
                   <Sparkles className="h-5 w-5 text-purple-600" />
                   <span className="font-medium text-gray-900">Spanish Vocabulary</span>
                 </div>
-                <p className="text-gray-600 text-sm">12 cards • Generated from YouTube video</p>
+                <p className="text-gray-600 text-sm">12 cards • Generated from PDF</p>
                 <div className="mt-3 bg-green-50 rounded-lg p-2">
                   <p className="text-xs text-green-800">Mastered: 8/12 cards</p>
                 </div>
@@ -319,6 +367,157 @@ const FeaturesShowcase = () => {
     </div>
   );
 };
+
+// Social & Collaboration Section
+const SocialSection = () => (
+  <section className="py-20 bg-white" aria-labelledby="social-heading">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-16">
+        <div className="inline-flex items-center space-x-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <Users className="h-4 w-4" />
+          <span>Social &amp; Collaboration</span>
+        </div>
+        <h2 id="social-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Learn Better Together
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Build your learning community with profiles, teams, and classrooms. Study is more fun when it&apos;s social.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+          <div className="bg-blue-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
+            <Users className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Public Profiles</h3>
+          <p className="text-gray-600">
+            Showcase your learning journey. Share your stats, achievements, and flashcard sets with a personalized profile page.
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
+          <div className="bg-purple-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
+            <Target className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Study Teams</h3>
+          <p className="text-gray-600">
+            Create or join study groups. Share flashcard sets, chat with teammates, and compete on team leaderboards.
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-8 border border-green-100">
+          <div className="bg-green-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
+            <BookOpen className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Classrooms</h3>
+          <p className="text-gray-600">
+            Teachers can create classrooms, assign flashcard sets, track student progress, and run classroom-wide challenges.
+          </p>
+        </div>
+      </div>
+
+      <div className="text-center mt-12">
+        <Link
+          href="/auth/signup"
+          className="inline-flex items-center px-6 py-3 min-h-[44px] bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors"
+        >
+          Join the Community
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </div>
+    </div>
+  </section>
+);
+
+// Developer API Highlight Section
+const DeveloperAPISection = () => (
+  <section className="py-20 bg-gray-900 text-white" aria-labelledby="dev-api-heading">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-12">
+        <div className="inline-flex items-center space-x-2 bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <Code className="h-4 w-4" />
+          <span>Public API: Free Tier Available</span>
+        </div>
+        <h2 id="dev-api-heading" className="text-3xl md:text-4xl font-bold mb-4">
+          Build with the FlashLearn API
+        </h2>
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          The first flashcard platform with a public API. Generate cards, run spaced repetition, ship competitive quizzes, and now power consumer-facing learning products end to end with the new Ecosystem API and signed webhooks.
+        </p>
+      </div>
+
+      {/* Code sample */}
+      <div className="max-w-2xl mx-auto mb-12">
+        <pre className="bg-gray-800 rounded-xl p-5 overflow-x-auto text-sm leading-relaxed" role="region" aria-label="API code example">
+          <code className="text-gray-300">
+{`curl -X POST https://flashlearnai.witus.online/api/v1/generate \\
+  -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"topic": "Machine Learning Basics"}'
+
+# Returns 10-20 AI-generated flashcards in seconds`}
+          </code>
+        </pre>
+      </div>
+
+      {/* Feature pills */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+        <div className="flex items-start gap-4 bg-gray-800 rounded-xl p-5">
+          <Zap className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <h3 className="font-semibold text-white mb-1">AI Generation</h3>
+            <p className="text-sm text-gray-400">Generate flashcards from any topic. Batch support for Pro/Enterprise.</p>
+          </div>
+        </div>
+        <div className="flex items-start gap-4 bg-gray-800 rounded-xl p-5">
+          <Brain className="h-6 w-6 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <h3 className="font-semibold text-white mb-1">Spaced Repetition</h3>
+            <p className="text-sm text-gray-400">SM-2 algorithm with due cards, sessions, and per-card analytics.</p>
+          </div>
+        </div>
+        <div className="flex items-start gap-4 bg-gray-800 rounded-xl p-5">
+          <Trophy className="h-6 w-6 text-purple-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <h3 className="font-semibold text-white mb-1">Versus Mode</h3>
+            <p className="text-sm text-gray-400">Competitive challenges with composite scoring and leaderboards.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* CTAs */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <Link
+          href="/docs/api/getting-started"
+          className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+        >
+          Read the Docs
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+        <Link
+          href="/docs/api"
+          className="inline-flex items-center justify-center px-6 py-3 border border-gray-600 text-gray-300 font-semibold rounded-xl hover:bg-gray-800 transition-colors"
+        >
+          Interactive API Reference
+        </Link>
+      </div>
+
+      <p className="text-center text-sm text-gray-500 mt-6">
+        27 endpoints, including signed outbound webhooks. Free tier: 100 generations/month. No credit card required.
+      </p>
+
+      {/* White-label teaser */}
+      <div className="max-w-xl mx-auto mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 text-center">
+        <p className="text-sm font-medium text-purple-300">White-Label Study App. From $499.</p>
+        <p className="text-xs text-gray-400 mt-1">
+          Deploy your own branded flashcard platform. Your name, colors, domain. AI generation and spaced repetition included.{' '}
+          <a href="/pricing#api-pricing-heading" className="underline text-purple-300 hover:text-white">View plans &rarr;</a>
+        </p>
+      </div>
+    </div>
+  </section>
+);
 
 // Final CTA Section
 const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
@@ -367,13 +566,19 @@ const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
             Try AI Generator First
           </Link>
         </div>
+        <p className="mt-8 text-blue-200 text-sm">
+          Curious about what&apos;s next?{' '}
+          <Link href="/roadmap" className="text-white underline hover:text-yellow-300 font-medium">
+            View our roadmap
+          </Link>
+        </p>
       </div>
     </div>
   );
 };
 
-// Main Component
-export default async function Home() {
+// Home control variant (current production homepage). Wired by app/(public)/page.tsx.
+export default async function HomeControl() {
   const session = await getServerSession(authOptions);
   const isAuthenticated = !!session;
 
@@ -387,10 +592,23 @@ export default async function Home() {
       </div>
     }>
       <div className="min-h-screen">
+        <ActivePromoBanner variant="hero" />
         <ModernHero isAuthenticated={isAuthenticated} session={session} />
         <BenefitsSection isAuthenticated={isAuthenticated} />
-        {!isAuthenticated && <FeaturesShowcase />}
+        {!isAuthenticated && (
+          <>
+            <FeaturesShowcase />
+            <SocialSection />
+            <div className="bg-gray-50 pb-12 text-center">
+              <Link href="/roadmap" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                See everything we&apos;re building →
+              </Link>
+            </div>
+          </>
+        )}
+        <DeveloperAPISection />
         <FinalCTA isAuthenticated={isAuthenticated} />
+        <Footer />
       </div>
     </Suspense>
   );

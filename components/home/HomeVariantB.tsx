@@ -308,8 +308,8 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
   );
 };
 
-// Main Component
-export default async function Home() {
+// Home variant B (homepage A/B test). Wired by app/(public)/page.tsx.
+export default async function HomeVariantB() {
   const session = await getServerSession(authOptions);
   const isAuthenticated = !!session;
 
