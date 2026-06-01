@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Conversation } from '@/models/Conversation';
 import { Message } from '@/models/Message';
+import { mirrorFeedbackToInbox } from '@/lib/feedback/inbox-mirror';
 
 export async function GET(
   request: Request,
@@ -84,6 +85,20 @@ export async function POST(
       lastMessageAt: new Date(),
       unreadByAdmin: true,
     });
+
+    // Non-blocking mirror of the user's reply to the WitUS Inbox (→ Triage).
+    // This route only ever creates user messages (senderRole 'user'); admin
+    // replies go through a separate admin path, so nothing to skip here.
+    const user = session.user as { name?: string; email?: string };
+    mirrorFeedbackToInbox({
+      type: conversation.type,
+      subject: conversation.subject,
+      message: content,
+      conversationId: id,
+      kind: 'reply',
+      submitterEmail: user.email,
+      submitterName: user.name,
+    }).catch(() => {});
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {
