@@ -217,8 +217,8 @@ const UnauthenticatedHome = () => {
   );
 };
 
-// Main Component with Authentication Check
-export default async function Home() {
+// Home variant A (homepage A/B test). Wired by app/(public)/page.tsx.
+export default async function HomeVariantA() {
   const session = await getServerSession(authOptions);
 
   return (

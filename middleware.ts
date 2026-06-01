@@ -4,6 +4,12 @@ import { getToken } from 'next-auth/jwt';
 import { edgeLogger, EdgeLogContext } from '@/lib/logging/edge-logger';
 import { isReconProbe } from '@/lib/security/reconProbes';
 import { checkReconProbeRateLimit } from '@/lib/ratelimit/reconProbeLimit';
+import {
+  HOME_AB_COOKIE,
+  HOME_AB_COOKIE_MAX_AGE,
+  assignHomeVariant,
+  isHomeAbTestEnabled,
+} from '@/lib/analytics/ab-test';
 
 const secret = process.env.NEXTAUTH_SECRET;
 
@@ -117,7 +123,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // Homepage A/B test: pin a first-time visitor to a variant via cookie so the
+  // server renders the assigned design with no flash. Scoped to "/", public,
+  // and fail-open — it never blocks or alters any other route, and only runs
+  // when the test is switched on. Runs after the suspended/auth checks above so
+  // it cannot bypass them.
+  if (pathname === '/') {
+    try {
+      if (isHomeAbTestEnabled() && !request.cookies.get(HOME_AB_COOKIE)?.value) {
+        response.cookies.set(HOME_AB_COOKIE, assignHomeVariant(), {
+          path: '/',
+          maxAge: HOME_AB_COOKIE_MAX_AGE,
+          sameSite: 'lax',
+        });
+      }
+    } catch {
+      // Never let variant assignment break the homepage.
+    }
+  }
+
+  return response;
 }
 
 export const config = {
