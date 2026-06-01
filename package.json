@@ -11,7 +11,8 @@
     "test:watch": "jest --watch",
     "seed:standards": "tsx scripts/seedStandards.ts",
     "seed:finals-promo": "tsx --env-file=.env.local scripts/seedFinalsPromo.ts",
-    "press:short-links": "tsx --env-file=.env.local scripts/generatePressShortLinks.ts"
+    "press:short-links": "tsx --env-file=.env.local scripts/generatePressShortLinks.ts",
+    "engagement-check": "tsx --env-file=.env.local scripts/engagementCheck.ts"
   },
   "config": {
     "mongodbMemoryServer": {
