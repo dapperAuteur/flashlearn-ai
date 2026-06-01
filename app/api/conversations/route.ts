@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db/dbConnect';
 import { Conversation } from '@/models/Conversation';
 import { Message } from '@/models/Message';
 import { checkUserHasPrioritySupport, notifyAdminOfPriorityConversation } from '@/lib/api/prioritySupport';
+import { mirrorFeedbackToInbox } from '@/lib/feedback/inbox-mirror';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -67,14 +68,26 @@ export async function POST(request: Request) {
     });
 
     // Notify admin immediately for priority conversations
+    const user = session.user as { name?: string; email?: string };
     if (hasPriority) {
-      const user = session.user as { name?: string; email?: string };
       notifyAdminOfPriorityConversation(
         subject,
         user.name || 'Unknown',
         user.email || ''
       ).catch(() => {}); // fire-and-forget
     }
+
+    // Non-blocking mirror to the WitUS Inbox (→ Triage). MongoDB stays the
+    // system of record; this gets the submission into BAM's one triage view.
+    mirrorFeedbackToInbox({
+      type: type || 'general',
+      subject,
+      message,
+      conversationId: conversation._id.toString(),
+      kind: 'new',
+      submitterEmail: user.email,
+      submitterName: user.name,
+    }).catch(() => {});
 
     return NextResponse.json({ conversation }, { status: 201 });
   } catch (error) {
