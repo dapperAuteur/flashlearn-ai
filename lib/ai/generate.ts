@@ -46,7 +46,7 @@ export async function generateFlashcards(opts: FlashcardOptions): Promise<Genera
         },
       ],
     });
-    return object;
+    return cleanCards(object);
   }
 
   const { object } = await generateObject({
@@ -55,7 +55,12 @@ export async function generateFlashcards(opts: FlashcardOptions): Promise<Genera
     schema: FlashcardSchema,
     prompt,
   });
-  return object;
+  return cleanCards(object);
+}
+
+/** Drop cards missing a front or back (schema constraints are kept loose for provider compatibility). */
+function cleanCards(cards: GeneratedFlashcard[]): GeneratedFlashcard[] {
+  return cards.filter((c) => c.front?.trim() && c.back?.trim());
 }
 
 /** Evaluate a typed answer against the correct answer. */
@@ -65,7 +70,8 @@ export async function evaluateAnswer(prompt: string, keyType?: ApiKeyType): Prom
     schema: EvaluationSchema,
     prompt,
   });
-  return object;
+  // Clamp similarity to [0,1] — the schema keeps the bound loose for provider compatibility.
+  return { ...object, similarity: Math.max(0, Math.min(1, object.similarity)) };
 }
 
 /** Generate multiple-choice distractors for a batch of flashcards. */
