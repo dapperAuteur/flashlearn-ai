@@ -3,6 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import dbConnect from '@/lib/db/dbConnect';
 import { AppConfig } from '@/models/AppConfig';
 import { clearRateLimitCache } from '@/lib/ratelimit/rateLimitGemini';
+import { getConfigSchema, validateConfigValue } from '@/lib/admin/configSchema';
 import { Logger, LogContext } from '@/lib/logging/logger';
 
 const secret = process.env.NEXTAUTH_SECRET;
@@ -34,6 +35,20 @@ export async function PUT(request: NextRequest) {
 
     if (!key) {
       return NextResponse.json({ error: 'Key is required' }, { status: 400 });
+    }
+
+    // Validate against the field schema for known keys (defense in depth — the UI
+    // validates too, but a malformed value must never reach the database).
+    const schema = getConfigSchema(key);
+    if (schema) {
+      const { ok, errors } = validateConfigValue(schema, value);
+      if (!ok) {
+        const summary = Object.values(errors).join(' ');
+        return NextResponse.json(
+          { error: `Invalid value for ${key}: ${summary}`, fieldErrors: errors },
+          { status: 400 },
+        );
+      }
     }
 
     await dbConnect();
