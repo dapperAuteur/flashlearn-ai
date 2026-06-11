@@ -6,7 +6,8 @@ import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLi
 // and vision providers (Cerebras/OpenRouter/Mistral/Together) can't ingest audio.
 // To move this onto the provider abstraction, switch to an audio-capable provider via
 // the AI SDK (e.g. Gemini through @ai-sdk/google with a file part).
-import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
+import { FLASHCARD_MIN, MODEL } from '@/lib/constants';
+import { getFlashcardMax } from '@/lib/appConfigValues';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
 import { isAudioGenerationEnabled } from '@/lib/features';
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       sourceKind: 'audio',
       userInstructions,
       min: FLASHCARD_MIN,
-      max: FLASHCARD_MAX,
+      max: await getFlashcardMax(),
     });
 
     const result = await MODEL.generateContent([
