@@ -12,7 +12,8 @@
     "seed:standards": "tsx scripts/seedStandards.ts",
     "seed:finals-promo": "tsx --env-file=.env.local scripts/seedFinalsPromo.ts",
     "press:short-links": "tsx --env-file=.env.local scripts/generatePressShortLinks.ts",
-    "engagement-check": "tsx --env-file=.env.local scripts/engagementCheck.ts"
+    "engagement-check": "tsx --env-file=.env.local scripts/engagementCheck.ts",
+    "check:providers": "tsx --env-file=.env.local scripts/checkProviders.ts"
   },
   "config": {
     "mongodbMemoryServer": {
@@ -20,7 +21,9 @@
     }
   },
   "dependencies": {
+    "@ai-sdk/cerebras": "^2.0.54",
     "@ai-sdk/google": "^3.0.80",
+    "@ai-sdk/mistral": "^3.0.37",
     "@ai-sdk/openai-compatible": "^2.0.48",
     "@google/genai": "^0.10.0",
     "@google/generative-ai": "^0.24.1",

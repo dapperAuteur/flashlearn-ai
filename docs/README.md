@@ -2,11 +2,11 @@
 
 ## Overview
 
-FlashLearn AI is a full-featured, AI-powered flashcard platform for students, teachers, and developers. Generate flashcards from text, PDFs, YouTube videos, audio, or images using Google Gemini AI. Study with spaced repetition (SM-2), compete in versus challenges, and access everything offline.
+FlashLearn AI is a full-featured, AI-powered flashcard platform for students, teachers, and developers. Generate flashcards from text, PDFs, YouTube videos, audio, or images through a switchable AI provider layer (Cerebras, OpenRouter, Mistral, Together, or Google Gemini). Study with spaced repetition (SM-2), compete in versus challenges, and access everything offline.
 
 ## Key Features
 
-- **AI-Powered Generation.** Create flashcards from text prompts, PDFs, YouTube transcripts, audio, and images using Gemini 2.5 Flash.
+- **AI-Powered Generation.** Create flashcards from text prompts, PDFs, YouTube transcripts, audio, and images through a switchable provider layer (`lib/ai/`) — Cerebras, OpenRouter, Mistral, Together, or Gemini, selected with `LLM_PROVIDER`.
 - **Multiple Study Modes.** Classic flip, multiple choice, type-your-answer, and confidence rating.
 - **Spaced Repetition (SM-2).** Scientifically-proven algorithm for optimal retention scheduling.
 - **Versus Mode.** Competitive async challenges with composite scoring (accuracy, speed, confidence, streak).
@@ -27,7 +27,7 @@ FlashLearn AI is a full-featured, AI-powered flashcard platform for students, te
 - **Styling:** Tailwind CSS v4
 - **Database:** MongoDB with Mongoose ODM
 - **Offline Sync:** PowerSync + IndexedDB
-- **AI:** Google Gemini API (gemini-2.5-flash)
+- **AI:** Vercel AI SDK with a switchable provider layer (`lib/ai/`) — Cerebras (default), OpenRouter, Mistral, Together (OpenAI-compatible), and Google Gemini. Structured output via `generateObject` + Zod.
 - **Auth:** NextAuth.js v4 (credentials + email code)
 - **Payments:** Stripe (subscriptions + metered API billing)
 - **Email:** Mailgun / Nodemailer / Resend
@@ -48,7 +48,8 @@ FlashLearn AI is a full-featured, AI-powered flashcard platform for students, te
 2. Copy [`.env.sample`](../.env.sample) to `.env.local` and fill in real values. The sample is the canonical annotated reference. Required minimums for local dev:
    - `MONGODB_URI`. MongoDB connection string.
    - `NEXTAUTH_SECRET`. NextAuth secret (`openssl rand -base64 32`).
-   - `GEMINI_API_KEY_PUBLIC`. Google Gemini API key. One per key type for cost isolation.
+   - `LLM_PROVIDER` (default `cerebras`) + the matching key (`CEREBRAS_API_KEY`, `OPENROUTER_API_KEY`, `MISTRAL_API_KEY`, or `TOGETHER_API_KEY`). `LLM_VISION_PROVIDER` (default `mistral`) handles image flashcards.
+   - `GEMINI_API_KEY_PUBLIC`. Google Gemini key — required for audio flashcards and as a fallback; also a selectable text provider (`LLM_PROVIDER=gemini`).
    - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`. For rate limiting.
 
    For ecosystem outbound webhooks add: `WEBHOOK_ENCRYPTION_KEY` (`openssl rand -hex 32`), `UPSTASH_QSTASH_TOKEN`, `UPSTASH_QSTASH_CURRENT_SIGNING_KEY`, `UPSTASH_QSTASH_NEXT_SIGNING_KEY`.

@@ -1,5 +1,7 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createCerebras } from '@ai-sdk/cerebras';
+import { createMistral } from '@ai-sdk/mistral';
 import type { LanguageModel } from 'ai';
 import { type ApiKeyType } from '@/types/api';
 
@@ -23,7 +25,10 @@ import { type ApiKeyType } from '@/types/api';
 export type ProviderName = 'cerebras' | 'openrouter' | 'mistral' | 'together' | 'gemini';
 
 interface ProviderConfig {
-  kind: 'openai-compatible' | 'google';
+  // Official AI SDK providers (cerebras, mistral, google) handle each API's
+  // structured-output quirks correctly; the generic openai-compatible client is
+  // used for providers without a dedicated package (openrouter, together).
+  kind: 'openai-compatible' | 'google' | 'cerebras' | 'mistral';
   baseURL?: string;
   apiKey: string | undefined;
   /** Default text model id when LLM_TEXT_MODEL is unset. */
@@ -34,25 +39,23 @@ interface ProviderConfig {
 
 const REGISTRY: Record<ProviderName, ProviderConfig> = {
   cerebras: {
-    kind: 'openai-compatible',
-    baseURL: 'https://api.cerebras.ai/v1',
+    kind: 'cerebras',
     apiKey: process.env.CEREBRAS_API_KEY,
-    text: 'llama-3.3-70b',
-    // No vision: Cerebras serves text-only Llama models.
+    text: 'gpt-oss-120b',
+    // No vision: Cerebras serves text-only models.
   },
   openrouter: {
     kind: 'openai-compatible',
     baseURL: 'https://openrouter.ai/api/v1',
     apiKey: process.env.OPENROUTER_API_KEY,
     text: 'meta-llama/llama-3.3-70b-instruct',
-    vision: 'mistralai/pixtral-12b',
+    vision: 'mistralai/mistral-small-3.2-24b-instruct',
   },
   mistral: {
-    kind: 'openai-compatible',
-    baseURL: 'https://api.mistral.ai/v1',
+    kind: 'mistral',
     apiKey: process.env.MISTRAL_API_KEY,
     text: 'mistral-large-latest',
-    vision: 'pixtral-12b-2409',
+    vision: 'mistral-small-latest',
   },
   together: {
     kind: 'openai-compatible',
@@ -86,16 +89,16 @@ function buildModel(provider: ProviderName, modelId: string): LanguageModel {
       `Missing API key for LLM provider "${provider}". Set the matching *_API_KEY env var.`,
     );
   }
-  if (cfg.kind === 'google') {
-    const google = createGoogleGenerativeAI({ apiKey: cfg.apiKey });
-    return google(modelId);
+  switch (cfg.kind) {
+    case 'cerebras':
+      return createCerebras({ apiKey: cfg.apiKey })(modelId);
+    case 'mistral':
+      return createMistral({ apiKey: cfg.apiKey })(modelId);
+    case 'google':
+      return createGoogleGenerativeAI({ apiKey: cfg.apiKey })(modelId);
+    case 'openai-compatible':
+      return createOpenAICompatible({ name: provider, baseURL: cfg.baseURL!, apiKey: cfg.apiKey })(modelId);
   }
-  const client = createOpenAICompatible({
-    name: provider,
-    baseURL: cfg.baseURL!,
-    apiKey: cfg.apiKey,
-  });
-  return client(modelId);
 }
 
 /**

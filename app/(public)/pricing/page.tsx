@@ -436,7 +436,7 @@ export default function PricingPage() {
         </div>
 
         {/* White-Label Pricing */}
-        <div className="mt-8 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-200 p-6">
+        <div id="white-label-pricing" className="mt-8 scroll-mt-24 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-200 p-6">
           <h3 className="text-lg font-bold text-gray-900 text-center mb-2">White-Label Study App</h3>
           <p className="text-sm text-gray-600 text-center mb-6 max-w-lg mx-auto">
             Deploy your own branded flashcard platform. AI generation, spaced repetition, versus mode &mdash; your name, your colors, your domain.
