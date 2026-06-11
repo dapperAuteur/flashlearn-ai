@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MODEL } from '@/lib/constants';
+import { evaluateAnswer } from '@/lib/ai/generate';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 
@@ -55,19 +55,7 @@ Respond with ONLY valid JSON:
 Where similarity is: 1.0 = perfect match, 0.7-0.99 = essentially correct with minor differences, 0.4-0.69 = partially correct, 0.0-0.39 = incorrect.
 Mark isCorrect as true if similarity >= 0.7.`;
 
-    const result = await MODEL.generateContent(prompt);
-    const responseText = result.response.text();
-
-    if (!responseText) {
-      throw new Error('AI returned empty response');
-    }
-
-    const jsonMatch = responseText.match(/\{[\s\S]*?\}/);
-    if (!jsonMatch) {
-      throw new Error('Could not parse AI evaluation');
-    }
-
-    const evaluation = JSON.parse(jsonMatch[0]);
+    const evaluation = await evaluateAnswer(prompt);
 
     return NextResponse.json({
       isCorrect: Boolean(evaluation.isCorrect),

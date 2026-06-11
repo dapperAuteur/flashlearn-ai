@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { GoogleGenAI } from '@google/genai';
+import { generateRagAnswer } from '@/lib/ai/generate';
 import dbConnect from '@/lib/db/dbConnect';
 import { RAGDocument } from '@/models/RAGDocument';
 import { ingestAll } from './ragIngestion';
-
-// Google Gemini client
-const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 /**
  * Index a document into MongoDB for RAG retrieval.
@@ -88,14 +85,11 @@ Question: ${question}
 
 Answer concisely and accurately. Reference specific sources when possible.`;
 
-  // Call Gemini
-  const response = await genai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
+  // Call the active AI provider
+  const text = await generateRagAnswer(prompt);
 
   const answer =
-    response.text || 'I was unable to generate an answer. Please try rephrasing your question.';
+    text || 'I was unable to generate an answer. Please try rephrasing your question.';
 
   return { answer, sources };
 }

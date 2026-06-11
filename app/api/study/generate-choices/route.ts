@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MODEL } from '@/lib/constants';
+import { generateChoices } from '@/lib/ai/generate';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 
@@ -44,19 +44,7 @@ Respond with ONLY a valid JSON array. Each element should have "id" (the card id
 Example:
 [{"id":"abc123","distractors":["Wrong A","Wrong B","Wrong C"]}]`;
 
-    const result = await MODEL.generateContent(prompt);
-    const responseText = result.response.text();
-
-    if (!responseText) {
-      throw new Error('AI returned empty response');
-    }
-
-    const jsonMatch = responseText.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-    if (!jsonMatch) {
-      throw new Error('Could not parse AI response as JSON');
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]) as { id: string; distractors: string[] }[];
+    const parsed = await generateChoices(prompt);
 
     // Build a map for quick lookup
     const choicesMap: Record<string, string[]> = {};

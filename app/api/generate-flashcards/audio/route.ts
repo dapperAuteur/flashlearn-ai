@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLimitGemini';
+// Audio generation intentionally stays on Gemini (MODEL): the OpenAI-compatible text
+// and vision providers (Cerebras/OpenRouter/Mistral/Together) can't ingest audio.
+// To move this onto the provider abstraction, switch to an audio-capable provider via
+// the AI SDK (e.g. Gemini through @ai-sdk/google with a file part).
 import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
