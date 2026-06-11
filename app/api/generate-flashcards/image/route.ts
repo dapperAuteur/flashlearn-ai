@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLimitGemini';
-import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
+import { FLASHCARD_MIN, FLASHCARD_MAX } from '@/lib/constants';
+import { generateFlashcards } from '@/lib/ai/generate';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
 import {
@@ -50,8 +51,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Maximum ${MAX_IMAGES} images allowed` }, { status: 400 });
     }
 
-    // Validate and convert images to inline data
-    const imageParts: { inlineData: { data: string; mimeType: string } }[] = [];
+    // Validate and convert images to base64 data URLs for the vision model.
+    const imageDataUrls: string[] = [];
 
     for (const file of files) {
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -66,9 +67,7 @@ export async function POST(request: NextRequest) {
 
       const buffer = Buffer.from(await file.arrayBuffer());
       const base64 = buffer.toString('base64');
-      imageParts.push({
-        inlineData: { data: base64, mimeType: file.type },
-      });
+      imageDataUrls.push(`data:${file.type};base64,${base64}`);
     }
 
     const prompt = buildSourcePrompt({
@@ -78,17 +77,9 @@ export async function POST(request: NextRequest) {
       max: FLASHCARD_MAX,
     });
 
-    const result = await MODEL.generateContent([prompt, ...imageParts]);
-    const responseText = result.response.text();
-
-    const jsonMatch = responseText.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-    if (!jsonMatch) {
+    const flashcards = await generateFlashcards({ prompt, imageDataUrls });
+    if (flashcards.length === 0) {
       return NextResponse.json({ error: 'Failed to generate flashcards from images.' }, { status: 500 });
-    }
-
-    const flashcards = JSON.parse(jsonMatch[0]);
-    if (!Array.isArray(flashcards) || flashcards.some((c: { front?: string; back?: string }) => !c.front || !c.back)) {
-      return NextResponse.json({ error: 'Failed to parse generated flashcards.' }, { status: 500 });
     }
 
     await incrementGenerationCount(userId);

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLimitGemini';
-import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
+import { FLASHCARD_MIN, FLASHCARD_MAX } from '@/lib/constants';
+import { generateFlashcards } from '@/lib/ai/generate';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
 import { PDFParse } from 'pdf-parse';
@@ -81,17 +82,9 @@ export async function POST(request: NextRequest) {
       max: FLASHCARD_MAX,
     });
 
-    const result = await MODEL.generateContent(prompt);
-    const responseText = result.response.text();
-
-    const jsonMatch = responseText.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-    if (!jsonMatch) {
+    const flashcards = await generateFlashcards({ prompt });
+    if (flashcards.length === 0) {
       return NextResponse.json({ error: 'Failed to generate flashcards from PDF content.' }, { status: 500 });
-    }
-
-    const flashcards = JSON.parse(jsonMatch[0]);
-    if (!Array.isArray(flashcards) || flashcards.some((c: { front?: string; back?: string }) => !c.front || !c.back)) {
-      return NextResponse.json({ error: 'Failed to parse generated flashcards.' }, { status: 500 });
     }
 
     await incrementGenerationCount(userId);

@@ -20,6 +20,8 @@
     }
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.80",
+    "@ai-sdk/openai-compatible": "^2.0.48",
     "@google/genai": "^0.10.0",
     "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.1",
@@ -33,6 +35,7 @@
     "@upstash/redis": "^1.35.4",
     "@upstash/search": "^0.1.5",
     "@vercel/analytics": "^1.5.0",
+    "ai": "^6.0.201",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.9",

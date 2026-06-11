@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { withApiAuth, apiSuccess, apiError } from '@/lib/api/withApiAuth';
-import { getModelForKeyType } from '@/lib/constants';
+import { evaluateAnswer } from '@/lib/ai/generate';
 import dbConnect from '@/lib/db/dbConnect';
 import { type ApiAuthContext } from '@/types/api';
 
@@ -34,24 +34,16 @@ async function handler(request: NextRequest, context: ApiAuthContext & { user: a
     return apiSuccess({ isCorrect: true, similarity: 1.0, feedback: 'Exact match.' }, { requestId });
   }
 
-  // AI evaluation using the appropriate Gemini key
+  // AI evaluation via the active provider (keyType threaded for quota logic)
   try {
-    const model = getModelForKeyType(context.keyType);
     const prompt = `Compare the user's answer to the correct answer. Consider spelling variations, synonyms, and partial correctness.
 ${question ? `Question: "${question}"` : ''}
 Correct answer: "${correctAnswer}"
 User's answer: "${userAnswer}"
 
-Respond with ONLY a JSON object: {"isCorrect": boolean, "similarity": number (0.0-1.0), "feedback": "brief explanation"}`;
+Decide whether the answer is correct, a similarity score from 0.0 to 1.0, and a brief explanation.`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return apiSuccess({ isCorrect: false, similarity: 0, feedback: 'Could not evaluate answer.' }, { requestId });
-    }
-
-    const evaluation = JSON.parse(jsonMatch[0]);
+    const evaluation = await evaluateAnswer(prompt, context.keyType);
     const isCorrect = evaluation.similarity >= 0.7;
 
     return apiSuccess({

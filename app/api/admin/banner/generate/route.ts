@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import dbConnect from '@/lib/db/dbConnect';
-import { MODEL } from '@/lib/constants';
+import { generateBanner } from '@/lib/ai/generate';
 import clientPromise from '@/lib/db/mongodb';
 
 const secret = process.env.NEXTAUTH_SECRET;
@@ -44,19 +44,9 @@ export async function POST(request: NextRequest) {
 - Study sessions this week: ${sessionsThisWeek}
 - Popular sets: ${topSetNames}
 
-Generate 3 different banner messages. Make them feel celebratory, encouraging, or highlight trending content. No emojis. Return ONLY a JSON array of 3 strings, no other text.`;
+Generate 3 different banner messages. Make them feel celebratory, encouraging, or highlight trending content. No emojis.`;
 
-    const result = await MODEL.generateContent(prompt);
-    const text = result.response.text().trim();
-
-    // Parse the JSON response
-    let suggestions: string[];
-    try {
-      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      suggestions = JSON.parse(cleaned);
-    } catch {
-      suggestions = [text.slice(0, 120)];
-    }
+    const suggestions = await generateBanner(prompt);
 
     return NextResponse.json({ suggestions });
   } catch (error) {

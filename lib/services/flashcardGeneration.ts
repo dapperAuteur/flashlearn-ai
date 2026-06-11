@@ -1,4 +1,5 @@
-import { MODEL, FLASHCARD_MAX, FLASHCARD_MIN, getModelForKeyType } from '@/lib/constants';
+import { FLASHCARD_MAX, FLASHCARD_MIN } from '@/lib/constants';
+import { generateFlashcards } from '@/lib/ai/generate';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { getErrorMessage } from '@/lib/utils/getErrorMessage';
 import { type ApiKeyType } from '@/types/api';
@@ -9,13 +10,11 @@ export interface GeneratedFlashcard {
 }
 
 /**
- * Generates flashcards from a topic using the AI model.
- * When called from the public API, uses the Gemini key associated with the API key type.
- * When called from internal routes, uses the default MODEL.
+ * Generates flashcards from a topic using the active AI provider (see lib/ai/providers).
  *
  * @param topic - The subject to generate flashcards about
  * @param requestId - Request ID for logging/tracing
- * @param keyType - Optional API key type (determines which Gemini key to use)
+ * @param keyType - Optional API key type (threaded for quota logic / future per-tier routing)
  * @returns Array of generated flashcard objects
  */
 export async function generateFlashcardsFromAI(
@@ -46,37 +45,14 @@ export async function generateFlashcardsFromAI(
   `;
 
   try {
-    // Use the appropriate Gemini model based on the API key type
-    const model = keyType ? getModelForKeyType(keyType) : MODEL;
+    const flashcards = await generateFlashcards({ prompt: fullPrompt, keyType });
 
-    const result = await model.generateContent(fullPrompt);
-    const responseText = result.response.text();
-
-    if (!responseText) {
-      await Logger.warning(LogContext.AI, 'AI returned an empty response.', {
+    if (flashcards.length === 0) {
+      await Logger.warning(LogContext.AI, 'AI returned no flashcards.', {
         requestId,
         metadata: { topic },
       });
-      throw new Error('AI returned an empty response.');
-    }
-
-    const jsonMatch = responseText.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-    if (!jsonMatch) {
-      await Logger.warning(LogContext.AI, 'AI response did not contain a valid JSON array.', {
-        requestId,
-        metadata: { responseText },
-      });
-      throw new Error('Could not parse flashcards from AI response.');
-    }
-
-    const flashcards: GeneratedFlashcard[] = JSON.parse(jsonMatch[0]);
-
-    if (!Array.isArray(flashcards) || flashcards.some(card => !card.front || !card.back)) {
-      await Logger.warning(LogContext.AI, 'Parsed JSON from AI is not in the expected Flashcard[] format.', {
-        requestId,
-        metadata: { parsedJson: flashcards },
-      });
-      throw new Error('Parsed JSON from AI is not in the expected Flashcard[] format.');
+      throw new Error('AI returned no flashcards.');
     }
 
     return flashcards;
