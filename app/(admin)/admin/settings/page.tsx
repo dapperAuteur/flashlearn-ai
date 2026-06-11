@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Switch } from "@headlessui/react";
 import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import {
@@ -312,6 +313,28 @@ export default function AdminSettingsPage() {
         <p className={`mt-2 text-xs ${audioFlag ? "text-green-600" : "text-gray-500"}`} role="status">
           {audioFlagSaving ? "Saving…" : audioFlag ? "On — available to all users" : "Off — coming soon (admins only)"}
         </p>
+      </div>
+
+      {/* Managed on dedicated pages */}
+      <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-1">Managed on dedicated pages</h2>
+        <p className="text-xs text-gray-500 mb-3">These settings have their own full editors — they aren&apos;t shown below to avoid two places editing the same thing.</p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link
+            href="/admin/api-management"
+            className="flex-1 rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
+          >
+            <p className="text-sm font-medium text-gray-900">API Rate Limits</p>
+            <p className="text-xs text-gray-500 mt-0.5">Per key-type and tier (burst, monthly generations, monthly calls) → API Management</p>
+          </Link>
+          <Link
+            href="/admin/seo"
+            className="flex-1 rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
+          >
+            <p className="text-sm font-medium text-gray-900">SEO Metadata</p>
+            <p className="text-xs text-gray-500 mt-0.5">Per-page titles and descriptions → SEO settings</p>
+          </Link>
+        </div>
       </div>
 
       {/* Guided config forms */}

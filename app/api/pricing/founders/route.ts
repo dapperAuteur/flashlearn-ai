@@ -19,7 +19,7 @@ export async function GET() {
 
     const now = new Date();
 
-    const [stripePaid, cashAppVerified, activeLifetimePromo] = await Promise.all([
+    const [stripePaid, cashAppVerified, activeLifetimePromo, salesModeDoc] = await Promise.all([
       db.collection('users').countDocuments({
         subscriptionTier: 'Lifetime Learner',
         stripeCustomerId: { $exists: true, $ne: null },
@@ -38,6 +38,8 @@ export async function GET() {
           { endDate: { $gte: now } },
         ],
       }),
+      // Admin override (Admin → Settings → "Lifetime Memberships For Sale")
+      db.collection('appconfigs').findOne({ key: 'LIFETIME_SALES_MODE' }),
     ]);
 
     const count = stripePaid + cashAppVerified;
@@ -46,6 +48,12 @@ export async function GET() {
 
     // Lifetime is available if founders spots remain OR an admin promo is running
     const promoActive = !!activeLifetimePromo;
+
+    // Admin override: 'on' forces the offer live, 'off' hides it, 'auto' (default)
+    // uses the founders-cap + promo logic.
+    const salesMode = (salesModeDoc?.value as string) || 'auto';
+    const active =
+      salesMode === 'on' ? true : salesMode === 'off' ? false : foundersActive || promoActive;
     const promoName = activeLifetimePromo?.name || null;
     const promoCap = activeLifetimePromo?.userCap || null;
     const promoRedemptions = activeLifetimePromo?.redemptions || 0;
@@ -55,8 +63,9 @@ export async function GET() {
       count,
       remaining,
       foundersActive,
-      // Lifetime offer is live if founders OR promo is active
-      active: foundersActive || promoActive,
+      // Lifetime offer is live per the admin override, else founders OR promo.
+      active,
+      salesMode,
       promo: promoActive
         ? {
             name: promoName,

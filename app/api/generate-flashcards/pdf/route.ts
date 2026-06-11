@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLimitGemini';
-import { FLASHCARD_MIN, FLASHCARD_MAX } from '@/lib/constants';
+import { FLASHCARD_MIN } from '@/lib/constants';
+import { getFlashcardMax } from '@/lib/appConfigValues';
 import { generateFlashcards } from '@/lib/ai/generate';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
       body: text,
       userInstructions,
       min: FLASHCARD_MIN,
-      max: FLASHCARD_MAX,
+      max: await getFlashcardMax(),
     });
 
     const flashcards = await generateFlashcards({ prompt });

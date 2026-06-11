@@ -66,54 +66,40 @@ export const CONFIG_SCHEMAS: ConfigSchema[] = [
   },
   {
     key: 'FLASHCARD_MAX',
-    label: 'Max Flashcards Per Set',
-    description: 'Upper limit on how many cards a single set can contain.',
+    label: 'AI Generation — Max Cards',
+    description: 'The most flashcards the AI generates per request (the upper end of the default "5 to N" range). The minimum stays at 5.',
     kind: 'scalar',
     fields: [
       {
         name: '__value',
-        label: 'Maximum cards',
+        label: 'Maximum cards generated',
         type: 'number',
         integer: true,
-        min: 1,
-        max: 1000,
+        min: 5,
+        max: 50,
         required: true,
-        help: 'A whole number between 1 and 1000.',
-        sample: '100',
+        help: 'A whole number between 5 and 50. Defaults to 20 if unset.',
+        sample: '20',
       },
     ],
   },
   {
-    key: 'PROMO_LIFETIME_ACTIVE',
-    label: 'Lifetime Promo Active',
-    description: 'Whether the lifetime-pricing promotion is currently running.',
+    key: 'LIFETIME_SALES_MODE',
+    label: 'Lifetime Memberships For Sale',
+    description: 'Controls whether the lifetime offer appears on the pricing page and can be purchased.',
     kind: 'scalar',
     fields: [
       {
         name: '__value',
-        label: 'Promotion active',
-        type: 'boolean',
+        label: 'Availability',
+        type: 'select',
         required: true,
-        help: 'On = the promotional lifetime price is offered to users.',
-      },
-    ],
-  },
-  {
-    key: 'PROMO_LIFETIME_PRICE_CENTS',
-    label: 'Lifetime Promo Price (cents)',
-    description: 'Promotional lifetime price, in cents.',
-    kind: 'scalar',
-    fields: [
-      {
-        name: '__value',
-        label: 'Price in cents',
-        type: 'number',
-        integer: true,
-        min: 0,
-        max: 100_000_000,
-        required: true,
-        help: 'Whole cents. 10000 = $100.00.',
-        sample: '10000',
+        options: [
+          { value: 'auto', label: 'Auto — first 100 founders + active promos' },
+          { value: 'on', label: 'Force on — always for sale' },
+          { value: 'off', label: 'Force off — hidden' },
+        ],
+        help: 'Auto = available while founder spots remain or a Lifetime promo campaign is active. Force on/off overrides that. (Price is set by the Stripe product, not here.)',
       },
     ],
   },
@@ -208,25 +194,6 @@ export const CONFIG_SCHEMAS: ConfigSchema[] = [
     ],
   },
   {
-    key: 'MAX_DAILY_INVITATIONS',
-    label: 'Max Daily Invitations',
-    description: 'How many invitations an admin can send per day.',
-    kind: 'scalar',
-    fields: [
-      {
-        name: '__value',
-        label: 'Invitations per day',
-        type: 'number',
-        integer: true,
-        min: 0,
-        max: 10_000,
-        required: true,
-        help: 'A whole number between 0 and 10000.',
-        sample: '20',
-      },
-    ],
-  },
-  {
     key: 'AUTO_FLAG_THRESHOLD',
     label: 'Auto-Flag Threshold',
     description: 'Auto-hide a public set once it receives this many content flags.',
@@ -253,8 +220,13 @@ export function getConfigSchema(key: string): ConfigSchema | undefined {
   return CONFIG_SCHEMAS.find((s) => s.key === key);
 }
 
-/** Keys managed elsewhere (not via the generic guided/raw editors). */
-export const MANAGED_ELSEWHERE_KEYS = new Set(['FEATURE_FLAGS']);
+/**
+ * Keys managed elsewhere (not via the generic guided/raw editors):
+ * FEATURE_FLAGS has its own toggle; API_RATE_LIMITS and SEO_CONFIG have dedicated
+ * admin pages (/admin/api-management, /admin/seo) — editing them here too would
+ * create a second source of truth.
+ */
+export const MANAGED_ELSEWHERE_KEYS = new Set(['FEATURE_FLAGS', 'API_RATE_LIMITS', 'SEO_CONFIG']);
 
 /** A short human hint about what a field accepts, e.g. "Number (integer, 0–1000)". */
 export function fieldTypeHint(field: ConfigField): string {
