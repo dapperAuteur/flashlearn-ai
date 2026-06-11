@@ -4,7 +4,10 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Switch } from "@headlessui/react";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
+
+const FEATURE_FLAGS_KEY = "FEATURE_FLAGS";
 
 interface ConfigEntry {
   _id: string;
@@ -84,6 +87,8 @@ export default function AdminSettingsPage() {
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [seedingHelp, setSeedingHelp] = useState(false);
   const [seedResult, setSeedResult] = useState<string | null>(null);
+  const [audioFlag, setAudioFlag] = useState(false);
+  const [audioFlagSaving, setAudioFlagSaving] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -99,6 +104,10 @@ export default function AdminSettingsPage() {
         if (!res.ok) throw new Error("Failed to fetch configs");
         const data = await res.json();
         setConfigs(data.configs || []);
+
+        // Seed the feature-flags toggle from the stored FEATURE_FLAGS config.
+        const flagsDoc = (data.configs || []).find((c: ConfigEntry) => c.key === FEATURE_FLAGS_KEY);
+        setAudioFlag(Boolean(flagsDoc?.value?.audioGeneration));
 
         // Initialize edit values
         const values: Record<string, string> = {};
@@ -171,6 +180,44 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleToggleAudio = async (next: boolean) => {
+    setAudioFlag(next); // optimistic
+    setAudioFlagSaving(true);
+    try {
+      const value = { audioGeneration: next };
+      const res = await fetch("/api/admin/configs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: FEATURE_FLAGS_KEY,
+          value,
+          description: "Feature flags. audioGeneration: show audio flashcard generation to all users (admins always have access).",
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Failed to update feature flag");
+        setAudioFlag(!next); // revert
+        return;
+      }
+      const data = await res.json();
+      if (data?.config) {
+        setConfigs((prev) => {
+          const idx = prev.findIndex((c) => c.key === FEATURE_FLAGS_KEY);
+          if (idx === -1) return [...prev, data.config];
+          const nextConfigs = [...prev];
+          nextConfigs[idx] = data.config;
+          return nextConfigs;
+        });
+      }
+    } catch {
+      alert("Failed to update feature flag");
+      setAudioFlag(!next); // revert
+    } finally {
+      setAudioFlagSaving(false);
+    }
+  };
+
   if (status === "loading" || loading) {
     return (
       <div className="p-6 text-center">
@@ -186,7 +233,9 @@ export default function AdminSettingsPage() {
     ...DEFAULT_CONFIGS.map((d) => d.key),
   ]);
 
-  const configCards = Array.from(allKeys).map((key) => {
+  const configCards = Array.from(allKeys)
+    .filter((key) => key !== FEATURE_FLAGS_KEY) // managed by the Feature Flags toggle card
+    .map((key) => {
     const existing = configs.find((c) => c.key === key);
     const defaultDef = DEFAULT_CONFIGS.find((d) => d.key === key);
     return {
@@ -241,6 +290,37 @@ export default function AdminSettingsPage() {
             {seedResult}
           </p>
         )}
+      </div>
+
+      {/* Feature Flags */}
+      <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-3">Feature Flags</h2>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-900">Audio flashcard generation</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              When off, audio shows as &quot;coming soon&quot; to everyone except admins (who always have access). Turn it on to launch for all users. Audio runs on Gemini — make sure the Gemini key is active first.
+            </p>
+          </div>
+          <Switch
+            checked={audioFlag}
+            onChange={handleToggleAudio}
+            disabled={audioFlagSaving}
+            className={`${audioFlag ? "bg-green-600" : "bg-gray-300"} relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors disabled:opacity-50`}
+          >
+            <span className="sr-only">Toggle audio flashcard generation</span>
+            <span
+              className={`${audioFlag ? "translate-x-6" : "translate-x-1"} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+            />
+          </Switch>
+        </div>
+        <p className={`mt-2 text-xs ${audioFlag ? "text-green-600" : "text-gray-500"}`} role="status">
+          {audioFlagSaving
+            ? "Saving…"
+            : audioFlag
+              ? "On — available to all users"
+              : "Off — coming soon (admins only)"}
+        </p>
       </div>
 
       <div className="space-y-4">

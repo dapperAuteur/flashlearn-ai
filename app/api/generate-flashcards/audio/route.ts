@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Audio generation is gated as "coming soon": available to admins for testing,
-  // and to everyone once NEXT_PUBLIC_AUDIO_GENERATION_ENABLED=true.
+  // and to everyone once the audio feature flag is enabled (Admin → Settings).
   const isAdmin = session.user.role === 'Admin';
-  if (!isAdmin && !isAudioGenerationEnabled()) {
+  if (!isAdmin && !(await isAudioGenerationEnabled())) {
     return NextResponse.json(
       { error: 'Audio flashcard generation is coming soon.' },
       { status: 403 },

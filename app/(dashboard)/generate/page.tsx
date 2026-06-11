@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import FlashcardPreviewGrid from '@/components/flashcards/FlashcardPreviewGrid';
 import SaveControls from '@/components/flashcards/SaveControls';
 import UpgradeNudge from '@/components/ui/UpgradeNudge';
-import { isAudioGenerationEnabled } from '@/lib/features';
 import {
   SparklesIcon,
   CloudArrowUpIcon,
@@ -36,10 +35,24 @@ export default function GenerateFlashcardsPage(){
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.role === 'Admin';
   // Audio generation is "coming soon": admins always have access; everyone else
-  // only once NEXT_PUBLIC_AUDIO_GENERATION_ENABLED=true.
-  const audioPublic = isAudioGenerationEnabled();
+  // only once the audio feature flag is on (toggled in Admin → Settings, read from
+  // the public /api/features endpoint).
+  const [audioPublic, setAudioPublic] = useState(false);
   const audioEnabled = isAdmin || audioPublic;
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/features')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (active && data) setAudioPublic(Boolean(data.audioGeneration));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Core state and API logic is managed by this Hook
   const {
