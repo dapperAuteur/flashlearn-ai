@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,7 +34,25 @@ import {
 export default function GenerateFlashcardsPage(){
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.role === 'Admin';
+  // Audio generation is "coming soon": admins always have access; everyone else
+  // only once the audio feature flag is on (toggled in Admin → Settings, read from
+  // the public /api/features endpoint).
+  const [audioPublic, setAudioPublic] = useState(false);
+  const audioEnabled = isAdmin || audioPublic;
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/features')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (active && data) setAudioPublic(Boolean(data.audioGeneration));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Core state and API logic is managed by this Hook
   const {
@@ -439,17 +457,36 @@ export default function GenerateFlashcardsPage(){
                       <span className="text-xs font-medium text-gray-700">YouTube</span>
                     </button>
 
-                    {/* Audio */}
-                    <button
-                      onClick={triggerAudioUpload}
-                      disabled={anyActionInProgress}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-violet-300 hover:bg-violet-50/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
-                    >
-                      <div className="p-2 rounded-lg bg-violet-100 group-hover:bg-violet-200 transition-colors">
-                        <MicrophoneIcon className="h-6 w-6 text-violet-600" />
-                      </div>
-                      <span className="text-xs font-medium text-gray-700">Audio</span>
-                    </button>
+                    {/* Audio — gated "coming soon" for non-admins */}
+                    {audioEnabled ? (
+                      <button
+                        onClick={triggerAudioUpload}
+                        disabled={anyActionInProgress}
+                        className="relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-violet-300 hover:bg-violet-50/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
+                      >
+                        {isAdmin && !audioPublic && (
+                          <span className="absolute top-1 right-1 text-[10px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-full">Admin</span>
+                        )}
+                        <div className="p-2 rounded-lg bg-violet-100 group-hover:bg-violet-200 transition-colors">
+                          <MicrophoneIcon className="h-6 w-6 text-violet-600" />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700">Audio</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        aria-label="Audio generation — coming soon"
+                        title="Audio generation is coming soon"
+                        className="relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 opacity-60 cursor-not-allowed"
+                      >
+                        <span className="absolute top-1 right-1 text-[10px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full">Soon</span>
+                        <div className="p-2 rounded-lg bg-gray-100">
+                          <MicrophoneIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+                        </div>
+                        <span className="text-xs font-medium text-gray-500">Audio</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* YouTube URL Input */}

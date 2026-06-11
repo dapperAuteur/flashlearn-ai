@@ -9,6 +9,7 @@ import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLi
 import { FLASHCARD_MIN, FLASHCARD_MAX, MODEL } from '@/lib/constants';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
+import { isAudioGenerationEnabled } from '@/lib/features';
 import {
   buildSourcePrompt,
   sanitizeUserInstructions,
@@ -32,6 +33,16 @@ export async function POST(request: NextRequest) {
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Audio generation is gated as "coming soon": available to admins for testing,
+  // and to everyone once the audio feature flag is enabled (Admin → Settings).
+  const isAdmin = session.user.role === 'Admin';
+  if (!isAdmin && !(await isAudioGenerationEnabled())) {
+    return NextResponse.json(
+      { error: 'Audio flashcard generation is coming soon.' },
+      { status: 403 },
+    );
   }
 
   await dbConnect();
