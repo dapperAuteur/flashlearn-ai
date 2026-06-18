@@ -69,6 +69,6 @@ async function handler(request: NextRequest, context: ApiAuthContext, requestId:
 }
 
 export const GET = withApiAuth(handler, {
-  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app'],
+  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app', 'ecosystem'],
   requiredPermission: 'sets:explore',
 });

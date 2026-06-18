@@ -241,5 +241,5 @@ async function handler(
 
 export const POST = withApiAuth(handler, {
   allowedKeyTypes: ['public', 'admin_public', 'admin', 'ecosystem'],
-  requiredPermission: 'sessions:write',
+  requiredPermission: 'kids:write',
 });

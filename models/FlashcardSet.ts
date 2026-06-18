@@ -15,6 +15,13 @@ const FlashcardSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  // Optional caller-supplied stable id (e.g. "ces:glossary:abduction"). Lets a
+  // partner app map its source content to a specific card so quiz outcomes can
+  // drive review scheduling. Opaque to FlashLearn; never required.
+  externalId: {
+    type: String,
+    trim: true,
+  },
 }, { _id: true });
 
 // Interface for a single flashcard
@@ -22,6 +29,7 @@ export interface IFlashcard {
   _id?: Types.ObjectId;
   front: string;
   back: string;
+  externalId?: string;
 }
 
 // Interface for the FlashcardSet document

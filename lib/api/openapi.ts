@@ -605,7 +605,7 @@ export const openApiSpec = {
           } } } } },
           '400': { description: 'Invalid input (e.g. unknown standard code)' },
           '401': { description: 'Missing or invalid API key' },
-          '403': { description: 'API key lacks sessions:write permission' },
+          '403': { description: 'API key lacks kids:write permission' },
           '429': { description: 'Rate limit or monthly quota exceeded' },
           '502': { description: 'AI generation failed' },
         },

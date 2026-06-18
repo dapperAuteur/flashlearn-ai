@@ -38,10 +38,11 @@ async function handleGet(request: NextRequest, context: ApiAuthContext, requestI
     isPublic: set.isPublic,
     cardCount: set.cardCount,
     rating: set.ratings?.average || 0,
-    flashcards: set.flashcards.map((c: { _id: unknown; front: string; back: string }) => ({
+    flashcards: set.flashcards.map((c: { _id: unknown; front: string; back: string; externalId?: string }) => ({
       id: String(c._id),
       front: c.front,
       back: c.back,
+      externalId: c.externalId,
     })),
     createdAt: set.createdAt,
     updatedAt: set.updatedAt,
@@ -87,9 +88,12 @@ async function handlePatch(request: NextRequest, context: ApiAuthContext, reques
       return apiError('INVALID_INPUT', requestId, { field: 'flashcards' },
         'Each flashcard must have front and back fields.');
     }
-    set.flashcards = flashcards.map((card: { front: string; back: string }) => ({
+    set.flashcards = flashcards.map((card: { front: string; back: string; externalId?: string }) => ({
       front: card.front,
       back: card.back,
+      ...(typeof card.externalId === 'string' && card.externalId.trim() !== ''
+        ? { externalId: card.externalId.trim() }
+        : {}),
       mlData: { easinessFactor: 2.5, interval: 0, repetitions: 0, nextReviewDate: new Date() },
     }));
     set.cardCount = flashcards.length;
@@ -135,16 +139,16 @@ async function handleDelete(request: NextRequest, context: ApiAuthContext, reque
 }
 
 export const GET = withApiAuth(handleGet, {
-  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app'],
+  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app', 'ecosystem'],
   requiredPermission: 'sets:read',
 });
 
 export const PATCH = withApiAuth(handlePatch, {
-  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app'],
+  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app', 'ecosystem'],
   requiredPermission: 'sets:write',
 });
 
 export const DELETE = withApiAuth(handleDelete, {
-  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app'],
+  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app', 'ecosystem'],
   requiredPermission: 'sets:write',
 });
