@@ -57,7 +57,7 @@ Decide whether the answer is correct, a similarity score from 0.0 to 1.0, and a 
 }
 
 export const POST = withApiAuth(handler, {
-  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app'],
+  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app', 'ecosystem'],
   requiredPermission: 'study:write',
   isGenerationRoute: true, // Uses AI, counts against quota
 });

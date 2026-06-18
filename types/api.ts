@@ -18,15 +18,18 @@ export const API_KEY_PREFIXES: Record<ApiKeyType, string> = {
   ecosystem: 'fl_eco_',
 } as const;
 
-// kids:* covers the ecosystem session/mastery/child surface introduced for
-// cross-product consumers (e.g. Wanderlearn). Public keys do NOT get it by
-// default — it is opt-in at key creation. Admin/admin_public get it explicitly.
+// kids:* gates the child-flow surface (sessions/mastery/children) for
+// cross-product consumers like Wanderlearn. Public keys do NOT get it by default;
+// it is opt-in at key creation. Admin/admin_public get it explicitly.
+// Ecosystem keys also carry the standard Sets + Study scopes so partners such as
+// Centenarian Academy can build decks from authored question pools and read SRS
+// progress, not just run the child flow.
 export const DEFAULT_PERMISSIONS: Record<ApiKeyType, string[]> = {
   admin: ['admin:*', 'generate', 'sets:*', 'study:*', 'users:*', 'analytics:*', 'kids:*'],
   app: ['generate', 'sets:read', 'sets:write', 'study:*', 'categories:read'],
   public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read', 'study:*', 'versus:*'],
   admin_public: ['generate', 'sets:read', 'sets:write', 'sets:explore', 'categories:read', 'study:*', 'versus:*', 'kids:*', 'admin:bypass_quota'],
-  ecosystem: ['generate', 'kids:*'],
+  ecosystem: ['generate', 'sets:read', 'sets:write', 'study:*', 'categories:read', 'kids:*'],
 } as const;
 
 export const GEMINI_KEY_ENV_MAP: Record<ApiKeyType, string> = {

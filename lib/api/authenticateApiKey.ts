@@ -3,7 +3,11 @@ import { ApiKey } from '@/models/ApiKey';
 import { User } from '@/models/User';
 import dbConnect from '@/lib/db/dbConnect';
 import { Logger, LogContext } from '@/lib/logging/logger';
+import { detectKeyType } from './detectKeyType';
 import { type ApiKeyType, type ApiAuthContext } from '@/types/api';
+
+// Re-exported so existing imports of detectKeyType from this module keep working.
+export { detectKeyType };
 
 /**
  * Checks if an IP address falls within a CIDR range (e.g., 10.0.0.0/8).
@@ -14,17 +18,6 @@ function isIPInCIDR(ip: string, cidr: string): boolean {
   const ipNum = ip.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct), 0);
   const rangeNum = range.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct), 0);
   return (ipNum & mask) === (rangeNum & mask);
-}
-
-/**
- * Detects the key type from the prefix of the API key string.
- */
-function detectKeyType(key: string): ApiKeyType | null {
-  if (key.startsWith('fl_admin_') && !key.startsWith('fl_adm_pub_')) return 'admin';
-  if (key.startsWith('fl_adm_pub_')) return 'admin_public';
-  if (key.startsWith('fl_app_')) return 'app';
-  if (key.startsWith('fl_pub_')) return 'public';
-  return null;
 }
 
 /**

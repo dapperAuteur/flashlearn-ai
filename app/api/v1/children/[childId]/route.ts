@@ -48,5 +48,5 @@ async function handler(request: NextRequest, context: ApiAuthContext, requestId:
 
 export const DELETE = withApiAuth(handler, {
   allowedKeyTypes: ['public', 'admin_public', 'admin', 'ecosystem'],
-  requiredPermission: 'children:delete',
+  requiredPermission: 'kids:delete',
 });
