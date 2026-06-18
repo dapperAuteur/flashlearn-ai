@@ -81,3 +81,37 @@ export function calculateSM2(
 
   return { easinessFactor, interval, repetitions, nextReviewDate };
 }
+
+export interface CardStateProjection extends SM2Data {
+  correctCount: number;
+  incorrectCount: number;
+  lastResultAt: Date | null;
+}
+
+/**
+ * Fold the SM-2 algorithm over one card's results in the order they happened.
+ * Pure and deterministic, so a per-student card state can be stored as a plain
+ * projection of an append-only result ledger and re-ingesting the same results
+ * never changes the outcome. Returns the final SM-2 state plus tallies.
+ */
+export function replaySm2(
+  results: { isCorrect: boolean; confidenceRating?: number; occurredAt: Date }[],
+): CardStateProjection {
+  const ordered = [...results].sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
+
+  let sm2: SM2Data | null = null;
+  let correctCount = 0;
+  let incorrectCount = 0;
+  let lastResultAt: Date | null = null;
+
+  for (const r of ordered) {
+    sm2 = calculateSM2(sm2, r.isCorrect, r.confidenceRating);
+    if (r.isCorrect) correctCount += 1;
+    else incorrectCount += 1;
+    if (!lastResultAt || r.occurredAt.getTime() > lastResultAt.getTime()) lastResultAt = r.occurredAt;
+  }
+
+  const finalSm2: SM2Data = sm2 ?? { ...DEFAULT_SM2, nextReviewDate: new Date() };
+
+  return { ...finalSm2, correctCount, incorrectCount, lastResultAt };
+}
