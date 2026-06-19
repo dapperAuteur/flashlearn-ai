@@ -86,4 +86,19 @@ describe('buildFlashcardDoc', () => {
     const r = buildFlashcardDoc({ front: 'q', back: 'a', frontImage: 'http://insecure/x.png' });
     expect(r.ok).toBe(false);
   });
+
+  it('accepts an https video URL + alt and rejects a non-https one', () => {
+    const ok = buildFlashcardDoc({
+      front: 'Watch the movement',
+      back: 'Shoulder abduction',
+      frontVideo: 'https://res.cloudinary.com/x/abduction.mp4',
+      frontVideoAlt: 'Arm raising to the side',
+    });
+    expect(ok.ok).toBe(true);
+    if (ok.ok) {
+      expect(ok.doc.frontVideo).toBe('https://res.cloudinary.com/x/abduction.mp4');
+      expect(ok.doc.frontVideoAlt).toBe('Arm raising to the side');
+    }
+    expect(buildFlashcardDoc({ front: 'q', back: 'a', backVideo: 'http://x/v.mp4' }).ok).toBe(false);
+  });
 });

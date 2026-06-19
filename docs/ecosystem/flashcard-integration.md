@@ -114,9 +114,11 @@ Then put that URL on a card (this pairs naturally with authored options to make 
 }
 ```
 
-Image URLs must be `https` (a plain `http` URL is rejected with `400`). The upload
-endpoint also accepts video (mp4, webm, mov) up to 50MB; an in-study video player
-is on the way, so video uploads are accepted ahead of it.
+Image URLs must be `https` (a plain `http` URL is rejected with `400`).
+
+Video works the same way: set `frontVideo`/`backVideo` to an https URL (with
+`frontVideoAlt`/`backVideoAlt`) and study renders a player. Upload video (mp4,
+webm, mov, to 50MB) through the same `POST /api/v1/media` endpoint.
 
 ## 3. Read progress for your dashboard
 

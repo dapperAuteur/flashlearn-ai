@@ -69,11 +69,16 @@ export interface FlashcardInput {
   backImage?: unknown;
   frontImageAlt?: unknown;
   backImageAlt?: unknown;
+  frontVideo?: unknown;
+  backVideo?: unknown;
+  frontVideoAlt?: unknown;
+  backVideoAlt?: unknown;
 }
 
-// Card media must be an https URL (our Cloudinary or a partner CDN). We render it
-// as an <img>/<video> src, so a plain http or non-URL value is rejected.
-function readImageUrl(value: unknown, field: string): { ok: true; url?: string } | { ok: false; error: string } {
+// Card media (image or video) must be an https URL (our Cloudinary or a partner
+// CDN). We render it as an <img>/<video> src, so a plain http or non-URL value is
+// rejected.
+function readHttpsUrl(value: unknown, field: string): { ok: true; url?: string } | { ok: false; error: string } {
   if (value === undefined || value === null || value === '') return { ok: true };
   if (typeof value !== 'string' || !/^https:\/\/\S+$/.test(value.trim())) {
     return { ok: false, error: `${field} must be an https URL.` };
@@ -98,10 +103,16 @@ export function buildFlashcardDoc(
   const optionsResult = validateFlashcardOptions(card.options, card.correctOptionId);
   if (!optionsResult.ok) return { ok: false, error: optionsResult.error };
 
-  const frontImage = readImageUrl(card.frontImage, 'frontImage');
-  if (!frontImage.ok) return { ok: false, error: frontImage.error };
-  const backImage = readImageUrl(card.backImage, 'backImage');
-  if (!backImage.ok) return { ok: false, error: backImage.error };
+  const media: Array<[keyof FlashcardInput, string]> = [
+    ['frontImage', 'frontImage'], ['backImage', 'backImage'],
+    ['frontVideo', 'frontVideo'], ['backVideo', 'backVideo'],
+  ];
+  const mediaUrls: Record<string, string> = {};
+  for (const [key, field] of media) {
+    const r = readHttpsUrl(card[key], field);
+    if (!r.ok) return { ok: false, error: r.error };
+    if (r.url) mediaUrls[field] = r.url;
+  }
 
   const doc: Record<string, unknown> = { front: card.front, back: card.back, mlData: DEFAULT_ML_DATA() };
   if (typeof card.externalId === 'string' && card.externalId.trim() !== '') {
@@ -111,10 +122,11 @@ export function buildFlashcardDoc(
     doc.options = optionsResult.value.options;
     doc.correctOptionId = optionsResult.value.correctOptionId;
   }
-  if (frontImage.url) doc.frontImage = frontImage.url;
-  if (backImage.url) doc.backImage = backImage.url;
-  if (typeof card.frontImageAlt === 'string' && card.frontImageAlt.trim() !== '') doc.frontImageAlt = card.frontImageAlt.trim();
-  if (typeof card.backImageAlt === 'string' && card.backImageAlt.trim() !== '') doc.backImageAlt = card.backImageAlt.trim();
+  Object.assign(doc, mediaUrls);
+  for (const alt of ['frontImageAlt', 'backImageAlt', 'frontVideoAlt', 'backVideoAlt'] as const) {
+    const v = card[alt];
+    if (typeof v === 'string' && v.trim() !== '') doc[alt] = v.trim();
+  }
   return { ok: true, doc };
 }
 
@@ -129,6 +141,10 @@ export interface StoredCardLike {
   backImage?: string;
   frontImageAlt?: string;
   backImageAlt?: string;
+  frontVideo?: string;
+  backVideo?: string;
+  frontVideoAlt?: string;
+  backVideoAlt?: string;
 }
 
 /**
@@ -150,5 +166,9 @@ export function serializeApiCard(c: StoredCardLike) {
     backImage: c.backImage,
     frontImageAlt: c.frontImageAlt,
     backImageAlt: c.backImageAlt,
+    frontVideo: c.frontVideo,
+    backVideo: c.backVideo,
+    frontVideoAlt: c.frontVideoAlt,
+    backVideoAlt: c.backVideoAlt,
   };
 }
