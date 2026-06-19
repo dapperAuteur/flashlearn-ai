@@ -98,6 +98,37 @@ POST /api/v1/sets
 
 ---
 
+## Card content: multiple-choice options & media
+
+Each card may also carry a stable `externalId`, authored multiple-choice options,
+and an image on either side. All are optional and work on `POST`/`PATCH /api/v1/sets`.
+
+```json
+{
+  "front": "Which muscle is highlighted?",
+  "back": "Deltoid",
+  "frontImage": "https://res.cloudinary.com/.../deltoid.png",
+  "frontImageAlt": "Posterior shoulder with the deltoid highlighted",
+  "options": [
+    { "id": "a", "text": "Deltoid" },
+    { "id": "b", "text": "Trapezius" },
+    { "id": "c", "text": "Rhomboid major" }
+  ],
+  "correctOptionId": "a"
+}
+```
+
+- **Options:** at least two `{ id, text }` plus `correctOptionId` (must match an
+  option id, else `400`). Multiple-choice study uses them and scores by id; cards
+  without options get generated distractors.
+- **Media:** `frontImage`/`backImage` (or `frontVideo`/`backVideo`) must be `https`
+  URLs; always send the matching `*Alt` field for screen readers. Study renders
+  images and a video player.
+- **Hosting:** bring your own CDN, or `POST /api/v1/media` (multipart `file`;
+  images to 10MB, video to 50MB) and use the returned `url`.
+
+---
+
 ## List Your Sets
 
 ```bash

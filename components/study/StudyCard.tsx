@@ -179,6 +179,18 @@ export default function StudyCard({
                   </div>
                 </div>
               )}
+              {flashcard.frontVideo && (
+                <div className="mt-6 flex justify-center">
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                    <video
+                      src={flashcard.frontVideo}
+                      controls
+                      className="max-h-48 rounded-lg"
+                      aria-label={flashcard.frontVideoAlt || 'Front video'}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             {canFlip && (
               <div className="absolute bottom-4 right-4 bg-white/70 backdrop-blur-sm text-gray-600 px-3 py-2 rounded-lg text-sm font-medium opacity-60">
@@ -214,6 +226,18 @@ export default function StudyCard({
                       width={400}
                       height={400}
                       unoptimized
+                    />
+                  </div>
+                </div>
+              )}
+              {flashcard.backVideo && (
+                <div className="mt-6 flex justify-center">
+                  <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                    <video
+                      src={flashcard.backVideo}
+                      controls
+                      className="max-h-48 rounded-lg"
+                      aria-label={flashcard.backVideoAlt || 'Back video'}
                     />
                   </div>
                 </div>
