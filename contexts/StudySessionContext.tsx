@@ -23,6 +23,21 @@ type StudyDirection = 'front-to-back' | 'back-to-front';
 type StudyMode = 'classic' | 'multiple-choice' | 'type-answer';
 type LastCardResult = 'correct' | 'incorrect' | null;
 
+// Authored multiple-choice options are stored in PowerSync as a JSON text column.
+// Parse defensively so a malformed value falls back to generated distractors.
+function parseCardOptions(raw: string | null | undefined): { id: string; text: string }[] | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.every(o => o && typeof o.id === 'string' && typeof o.text === 'string')) {
+      return parsed.map((o: { id: string; text: string }) => ({ id: o.id, text: o.text }));
+    }
+  } catch {
+    // ignore malformed JSON
+  }
+  return undefined;
+}
+
 interface StudySessionState {
   sessionId: string | null;
   isLoading: boolean;
@@ -115,6 +130,8 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
             back: card.back,
             frontImage: card.front_image || undefined,
             backImage: card.back_image || undefined,
+            options: parseCardOptions(card.options),
+            correctOptionId: card.correct_option_id || undefined,
             tags: [],
             userId: card.user_id || 'offline-user',
             difficulty: 1,
@@ -156,6 +173,8 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
               back: card.back as string,
               frontImage: (card.frontImage as string) || undefined,
               backImage: (card.backImage as string) || undefined,
+              options: Array.isArray(card.options) ? (card.options as { id: string; text: string }[]) : undefined,
+              correctOptionId: (card.correctOptionId as string) || undefined,
               tags: [],
               userId: authSession?.user?.id || 'public-user',
               difficulty: 1,
@@ -203,14 +222,19 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       setCurrentConfidenceRating(null);
       setHasCompletedConfidence(!isConfidenceRequired);
 
-      // Fetch MC distractors if in multiple-choice mode
+      // Fetch MC distractors if in multiple-choice mode. Cards that already carry
+      // authored options are skipped entirely — the player renders those options
+      // directly, so they need no generated distractors.
       if (effectiveMode === 'multiple-choice') {
         let mcChoices: Record<string, string[]> = {};
+        const needsDistractors = shuffled.filter(
+          c => !(Array.isArray(c.options) && c.options.length >= 2 && c.correctOptionId),
+        );
 
         // Try AI-generated distractors if online
-        if (!isOffline) {
+        if (!isOffline && needsDistractors.length > 0) {
           try {
-            const mcCards = shuffled.slice(0, 30).map(c => ({
+            const mcCards = needsDistractors.slice(0, 30).map(c => ({
               id: String(c._id),
               front: c.front,
               back: c.back,
@@ -233,7 +257,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
         const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
         const allBacks = shuffled.map(c => stripHtml(c.back)).filter(b => b.length > 0);
 
-        for (const card of shuffled) {
+        for (const card of needsDistractors) {
           const cardId = String(card._id);
           if (!mcChoices[cardId] || mcChoices[cardId].length === 0) {
             const cardBack = stripHtml(card.back);

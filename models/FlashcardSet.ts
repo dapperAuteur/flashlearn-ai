@@ -22,14 +22,38 @@ const FlashcardSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  // Optional authored multiple-choice options. When present, multiple-choice
+  // study serves these exact options and scores against correctOptionId, instead
+  // of AI-generating distractors and treating `back` as correct. Absent => the
+  // existing generated-distractor behavior is unchanged.
+  options: {
+    type: [
+      new mongoose.Schema(
+        { id: { type: String, required: true, trim: true }, text: { type: String, required: true, trim: true } },
+        { _id: false },
+      ),
+    ],
+    default: undefined,
+  },
+  correctOptionId: {
+    type: String,
+    trim: true,
+  },
 }, { _id: true });
 
 // Interface for a single flashcard
+export interface IFlashcardOption {
+  id: string;
+  text: string;
+}
+
 export interface IFlashcard {
   _id?: Types.ObjectId;
   front: string;
   back: string;
   externalId?: string;
+  options?: IFlashcardOption[];
+  correctOptionId?: string;
 }
 
 // Interface for the FlashcardSet document

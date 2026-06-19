@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { withApiAuth, apiSuccess, apiError } from '@/lib/api/withApiAuth';
 import { FlashcardSet as FlashcardSetModel } from '@/models/FlashcardSet';
 import { Profile as ProfileModel } from '@/models/Profile';
+import { buildFlashcardDoc, serializeApiCard, type FlashcardInput } from '@/lib/api/flashcardOptions';
 import dbConnect from '@/lib/db/dbConnect';
 import { type ApiAuthContext } from '@/types/api';
 
@@ -38,12 +39,7 @@ async function handleGet(request: NextRequest, context: ApiAuthContext, requestI
     isPublic: set.isPublic,
     cardCount: set.cardCount,
     rating: set.ratings?.average || 0,
-    flashcards: set.flashcards.map((c: { _id: unknown; front: string; back: string; externalId?: string }) => ({
-      id: String(c._id),
-      front: c.front,
-      back: c.back,
-      externalId: c.externalId,
-    })),
+    flashcards: set.flashcards.map(serializeApiCard),
     createdAt: set.createdAt,
     updatedAt: set.updatedAt,
   }, { requestId });
@@ -84,19 +80,19 @@ async function handlePatch(request: NextRequest, context: ApiAuthContext, reques
   if (description !== undefined) set.description = description;
   if (isPublic !== undefined) set.isPublic = isPublic;
   if (flashcards !== undefined) {
-    if (!Array.isArray(flashcards) || flashcards.some((c: { front?: string; back?: string }) => !c.front || !c.back)) {
-      return apiError('INVALID_INPUT', requestId, { field: 'flashcards' },
-        'Each flashcard must have front and back fields.');
+    if (!Array.isArray(flashcards) || flashcards.length === 0) {
+      return apiError('INVALID_INPUT', requestId, { field: 'flashcards' }, 'flashcards must be a non-empty array.');
     }
-    set.flashcards = flashcards.map((card: { front: string; back: string; externalId?: string }) => ({
-      front: card.front,
-      back: card.back,
-      ...(typeof card.externalId === 'string' && card.externalId.trim() !== ''
-        ? { externalId: card.externalId.trim() }
-        : {}),
-      mlData: { easinessFactor: 2.5, interval: 0, repetitions: 0, nextReviewDate: new Date() },
-    }));
-    set.cardCount = flashcards.length;
+    const cardDocs = [];
+    for (let i = 0; i < flashcards.length; i++) {
+      const built = buildFlashcardDoc(flashcards[i] as FlashcardInput);
+      if (!built.ok) {
+        return apiError('INVALID_INPUT', requestId, { field: `flashcards[${i}]` }, built.error);
+      }
+      cardDocs.push(built.doc);
+    }
+    set.flashcards = cardDocs;
+    set.cardCount = cardDocs.length;
   }
 
   await set.save();

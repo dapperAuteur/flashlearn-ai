@@ -56,6 +56,33 @@ One set per content type or per module works well. For a one-time bulk import of
 ~20 sets, stay under the ecosystem burst limit of 60 requests per minute (a short
 loop is fine).
 
+## 2b. Authored multiple-choice options
+
+If your quiz already has options (one correct, several distractors), put them on
+the card instead of letting FlashLearn generate distractors. Add `options`
+(at least two `{ id, text }`) and `correctOptionId` (matching one option id):
+
+```json
+{
+  "front": "Which muscle abducts the arm at the shoulder?",
+  "back": "Deltoid",
+  "externalId": "ces:m3:q7",
+  "options": [
+    { "id": "a", "text": "Deltoid" },
+    { "id": "b", "text": "Pectoralis major" },
+    { "id": "c", "text": "Latissimus dorsi" },
+    { "id": "d", "text": "Trapezius" }
+  ],
+  "correctOptionId": "a"
+}
+```
+
+When a card has options, multiple-choice study shows exactly those (scored by
+`correctOptionId`); cards without options fall back to generated distractors, so
+you can mix both in one set. `correctOptionId` must match an option id or the
+create call returns `400`. Options come back on `GET /api/v1/sets/{id}` and on the
+study session payload.
+
 ## 3. Read progress for your dashboard
 
 Two reads back a "mastered / due" view.
