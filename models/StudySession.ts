@@ -66,7 +66,8 @@ const StudySessionSchema: Schema = new Schema(
 
 StudySessionSchema.index({ userId: 1, createdAt: -1 });
 StudySessionSchema.index({ userId: 1, status: 1, startTime: -1 });
-StudySessionSchema.index({ sessionId: 1 });
+// sessionId is already indexed by `unique: true` on the field; a second
+// declaration here triggered Mongoose's duplicate-index warning.
 
 // Virtual property to check if session is complete
 StudySessionSchema.virtual('isComplete').get(function(this: IStudySession) {

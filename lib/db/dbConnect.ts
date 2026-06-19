@@ -31,6 +31,15 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      // Bound the connection so a slow/unreachable Atlas handshake fails fast and
+      // the next request retries on a fresh promise, instead of hanging ~44s
+      // (the `secureConnect timed out` errors seen on /results requests).
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      // Cap the pool so concurrent serverless invocations don't exhaust Atlas.
+      maxPoolSize: 10,
+      minPoolSize: 0,
     };
 
     console.log('=> using new database connection');
