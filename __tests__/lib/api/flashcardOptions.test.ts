@@ -67,4 +67,23 @@ describe('buildFlashcardDoc', () => {
     const r = buildFlashcardDoc({ front: 'q', back: 'a', options: [{ id: 'a', text: 'A' }], correctOptionId: 'a' });
     expect(r.ok).toBe(false);
   });
+
+  it('accepts https image URLs + alt text', () => {
+    const r = buildFlashcardDoc({
+      front: 'Identify the muscle',
+      back: 'Deltoid',
+      frontImage: 'https://res.cloudinary.com/x/deltoid.png',
+      frontImageAlt: 'Posterior view of the shoulder',
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.doc.frontImage).toBe('https://res.cloudinary.com/x/deltoid.png');
+      expect(r.doc.frontImageAlt).toBe('Posterior view of the shoulder');
+    }
+  });
+
+  it('rejects a non-https image URL', () => {
+    const r = buildFlashcardDoc({ front: 'q', back: 'a', frontImage: 'http://insecure/x.png' });
+    expect(r.ok).toBe(false);
+  });
 });

@@ -10,6 +10,8 @@ export interface Flashcard {
   back: string;                   // Back content (answer/definition)
   frontImage?: string;            // URL to image on front side
   backImage?: string;             // URL to image on back side
+  frontImageAlt?: string;         // Screen-reader description for the front image
+  backImageAlt?: string;          // Screen-reader description for the back image
   // Authored multiple-choice options. When present, multiple-choice study uses
   // these exact options and scores against correctOptionId instead of generating
   // distractors and treating `back` as correct.

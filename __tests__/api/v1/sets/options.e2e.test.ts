@@ -113,4 +113,27 @@ describe('v1 sets API with authored options', () => {
     const cards = created.data!.flashcards as Array<{ options?: unknown }>;
     expect(cards[0].options).toBeUndefined();
   });
+
+  it('round-trips image URL + alt and rejects a non-https image', async () => {
+    const created = await readJson(await createSet(postSetReq({
+      title: 'Muscle ID',
+      flashcards: [{
+        front: 'Identify the muscle',
+        back: 'Deltoid',
+        frontImage: 'https://res.cloudinary.com/x/deltoid.png',
+        frontImageAlt: 'Posterior shoulder',
+      }],
+    })));
+    const setId = created.data!.id as string;
+    const got = await readJson(await getSet(new NextRequest(`${BASE}/api/v1/sets/${setId}`)));
+    const cards = got.data!.flashcards as Array<{ frontImage?: string; frontImageAlt?: string }>;
+    expect(cards[0].frontImage).toBe('https://res.cloudinary.com/x/deltoid.png');
+    expect(cards[0].frontImageAlt).toBe('Posterior shoulder');
+
+    const rejected = await createSet(postSetReq({
+      title: 'Bad image',
+      flashcards: [{ front: 'q', back: 'a', frontImage: 'http://insecure/x.png' }],
+    }));
+    expect(rejected.status).toBe(400);
+  });
 });

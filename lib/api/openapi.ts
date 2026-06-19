@@ -49,6 +49,10 @@ export const openApiSpec = {
             minItems: 2,
           },
           correctOptionId: { type: 'string' as const, description: 'The id of the correct option. Required when options are present.' },
+          frontImage: { type: 'string' as const, format: 'uri' as const, description: 'Optional https image/video URL on the front (our Cloudinary via /api/v1/media, or any partner CDN).' },
+          backImage: { type: 'string' as const, format: 'uri' as const, description: 'Optional https image/video URL on the back.' },
+          frontImageAlt: { type: 'string' as const, description: 'Screen-reader description for the front image. Supply whenever frontImage is set.' },
+          backImageAlt: { type: 'string' as const, description: 'Screen-reader description for the back image.' },
         },
         required: ['front', 'back'],
       },
@@ -308,6 +312,10 @@ export const openApiSpec = {
                           minItems: 2,
                         },
                         correctOptionId: { type: 'string' as const, description: 'Required when options are present; must match an option id.' },
+                        frontImage: { type: 'string' as const, format: 'uri' as const, description: 'Optional https image/video URL on the front.' },
+                        backImage: { type: 'string' as const, format: 'uri' as const, description: 'Optional https image/video URL on the back.' },
+                        frontImageAlt: { type: 'string' as const, description: 'Alt text for the front image.' },
+                        backImageAlt: { type: 'string' as const, description: 'Alt text for the back image.' },
                       },
                       required: ['front', 'back'],
                     },
@@ -498,6 +506,23 @@ export const openApiSpec = {
           },
         } } } },
         responses: { '200': { description: 'Evaluation result with similarity score (0-1) and feedback' } },
+      },
+    },
+    '/api/v1/media': {
+      post: {
+        operationId: 'uploadMedia',
+        summary: 'Upload an image or video for a card',
+        description:
+          'Uploads a file to FlashLearn-hosted storage and returns an https URL to use as a card frontImage/backImage. Partners that already host their media can skip this and set the URL on the card directly. Send multipart/form-data with a single `file` field. Images up to 10MB; video up to 50MB.',
+        tags: ['Sets'],
+        requestBody: { required: true, content: { 'multipart/form-data': { schema: {
+          type: 'object' as const, required: ['file'],
+          properties: { file: { type: 'string' as const, format: 'binary' as const } },
+        } } } },
+        responses: {
+          '201': { description: 'Uploaded; returns { url, publicId, type }.' },
+          '400': { description: 'Missing file, unsupported type, or file too large.' },
+        },
       },
     },
     '/api/v1/study/external-results': {

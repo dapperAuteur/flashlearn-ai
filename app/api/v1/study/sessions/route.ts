@@ -72,7 +72,7 @@ async function handler(request: NextRequest, context: ApiAuthContext & { user: a
     studyMode,
     studyDirection,
     totalCards: cards.length,
-    flashcards: cards.map((c: { _id: unknown; front: string; back: string; options?: { id: string; text: string }[]; correctOptionId?: string }) => ({
+    flashcards: cards.map((c: { _id: unknown; front: string; back: string; options?: { id: string; text: string }[]; correctOptionId?: string; frontImage?: string; backImage?: string; frontImageAlt?: string; backImageAlt?: string }) => ({
       id: String(c._id),
       front: c.front,
       back: c.back,
@@ -80,6 +80,10 @@ async function handler(request: NextRequest, context: ApiAuthContext & { user: a
         ? c.options.map((o) => ({ id: o.id, text: o.text }))
         : undefined,
       correctOptionId: c.correctOptionId,
+      frontImage: c.frontImage,
+      backImage: c.backImage,
+      frontImageAlt: c.frontImageAlt,
+      backImageAlt: c.backImageAlt,
     })),
   }, { requestId }, 201);
 }

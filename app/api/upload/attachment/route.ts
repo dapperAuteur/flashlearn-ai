@@ -1,29 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
-import { v2 as cloudinary } from 'cloudinary';
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const ALLOWED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-];
-
-const ALLOWED_VIDEO_TYPES = [
-  'video/mp4',
-  'video/webm',
-  'video/quicktime', // .mov
-];
-
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+import { validateMediaFile, uploadMediaBuffer } from '@/lib/media/cloudinaryUpload';
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -39,67 +17,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const mimeType = file.type;
-    const isImage = ALLOWED_IMAGE_TYPES.includes(mimeType);
-    const isVideo = ALLOWED_VIDEO_TYPES.includes(mimeType);
-
-    if (!isImage && !isVideo) {
-      return NextResponse.json(
-        {
-          error:
-            'Invalid file type. Allowed: JPG, PNG, GIF, WebP, MP4, WebM, MOV',
-        },
-        { status: 400 }
-      );
+    const check = validateMediaFile(file.type, file.size);
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: 400 });
     }
 
-    const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
-    if (file.size > maxSize) {
-      const maxMB = maxSize / (1024 * 1024);
-      return NextResponse.json(
-        { error: `File too large. Maximum size is ${maxMB}MB for ${isImage ? 'images' : 'videos'}` },
-        { status: 400 }
-      );
-    }
-
-    // Convert file to buffer for Cloudinary upload
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Upload to Cloudinary
-    const uploadResult = await new Promise<{
-      secure_url: string;
-      public_id: string;
-      resource_type: string;
-    }>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'flashlearn/attachments',
-          resource_type: isVideo ? 'video' : 'image',
-        },
-        (error: unknown, result: { secure_url: string; public_id: string; resource_type: string } | undefined) => {
-          if (error) {
-            reject(error);
-          } else if (result) {
-            resolve(result);
-          } else {
-            reject(new Error('Upload failed with no result'));
-          }
-        }
-      );
-
-      uploadStream.end(buffer);
-    });
-
-    const fileType = isVideo ? 'video' : 'image';
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const uploaded = await uploadMediaBuffer(buffer, check.kind, 'flashlearn/attachments');
 
     return NextResponse.json({
-      url: uploadResult.secure_url,
-      publicId: uploadResult.public_id,
-      type: fileType,
+      url: uploaded.url,
+      publicId: uploaded.publicId,
+      type: uploaded.type,
       filename: file.name,
       size: file.size,
-      mimeType,
+      mimeType: file.type,
     });
   } catch (error) {
     console.error('Error uploading attachment:', error);

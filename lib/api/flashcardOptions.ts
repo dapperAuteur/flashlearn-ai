@@ -65,6 +65,20 @@ export interface FlashcardInput {
   externalId?: unknown;
   options?: unknown;
   correctOptionId?: unknown;
+  frontImage?: unknown;
+  backImage?: unknown;
+  frontImageAlt?: unknown;
+  backImageAlt?: unknown;
+}
+
+// Card media must be an https URL (our Cloudinary or a partner CDN). We render it
+// as an <img>/<video> src, so a plain http or non-URL value is rejected.
+function readImageUrl(value: unknown, field: string): { ok: true; url?: string } | { ok: false; error: string } {
+  if (value === undefined || value === null || value === '') return { ok: true };
+  if (typeof value !== 'string' || !/^https:\/\/\S+$/.test(value.trim())) {
+    return { ok: false, error: `${field} must be an https URL.` };
+  }
+  return { ok: true, url: value.trim() };
 }
 
 const DEFAULT_ML_DATA = () => ({ easinessFactor: 2.5, interval: 0, repetitions: 0, nextReviewDate: new Date() });
@@ -84,6 +98,11 @@ export function buildFlashcardDoc(
   const optionsResult = validateFlashcardOptions(card.options, card.correctOptionId);
   if (!optionsResult.ok) return { ok: false, error: optionsResult.error };
 
+  const frontImage = readImageUrl(card.frontImage, 'frontImage');
+  if (!frontImage.ok) return { ok: false, error: frontImage.error };
+  const backImage = readImageUrl(card.backImage, 'backImage');
+  if (!backImage.ok) return { ok: false, error: backImage.error };
+
   const doc: Record<string, unknown> = { front: card.front, back: card.back, mlData: DEFAULT_ML_DATA() };
   if (typeof card.externalId === 'string' && card.externalId.trim() !== '') {
     doc.externalId = card.externalId.trim();
@@ -92,6 +111,10 @@ export function buildFlashcardDoc(
     doc.options = optionsResult.value.options;
     doc.correctOptionId = optionsResult.value.correctOptionId;
   }
+  if (frontImage.url) doc.frontImage = frontImage.url;
+  if (backImage.url) doc.backImage = backImage.url;
+  if (typeof card.frontImageAlt === 'string' && card.frontImageAlt.trim() !== '') doc.frontImageAlt = card.frontImageAlt.trim();
+  if (typeof card.backImageAlt === 'string' && card.backImageAlt.trim() !== '') doc.backImageAlt = card.backImageAlt.trim();
   return { ok: true, doc };
 }
 
@@ -102,6 +125,10 @@ export interface StoredCardLike {
   externalId?: string;
   options?: IFlashcardOption[];
   correctOptionId?: string;
+  frontImage?: string;
+  backImage?: string;
+  frontImageAlt?: string;
+  backImageAlt?: string;
 }
 
 /**
@@ -119,5 +146,9 @@ export function serializeApiCard(c: StoredCardLike) {
       ? c.options.map((o) => ({ id: o.id, text: o.text }))
       : undefined,
     correctOptionId: c.correctOptionId,
+    frontImage: c.frontImage,
+    backImage: c.backImage,
+    frontImageAlt: c.frontImageAlt,
+    backImageAlt: c.backImageAlt,
   };
 }

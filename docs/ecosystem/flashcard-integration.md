@@ -83,6 +83,41 @@ you can mix both in one set. `correctOptionId` must match an option id or the
 create call returns `400`. Options come back on `GET /api/v1/sets/{id}` and on the
 study session payload.
 
+## 2c. Images on cards (e.g. identify the muscle)
+
+A card can carry an image on either side. Set `frontImage`/`backImage` to an https
+URL and always pass `frontImageAlt`/`backImageAlt` so screen-reader users get a
+description. The URL can be your own CDN, or one you get from our upload endpoint:
+
+```bash
+curl -X POST https://flashlearnai.witus.online/api/v1/media \
+  -H "Authorization: Bearer $FLASHLEARN_KEY" \
+  -F "file=@deltoid.png"
+# => { "url": "https://res.cloudinary.com/.../deltoid.png", "publicId": "...", "type": "image" }
+```
+
+Then put that URL on a card (this pairs naturally with authored options to make an
+"identify the muscle" question):
+
+```json
+{
+  "front": "Which muscle is highlighted?",
+  "back": "Deltoid",
+  "frontImage": "https://res.cloudinary.com/.../deltoid.png",
+  "frontImageAlt": "Posterior view of the shoulder with the deltoid highlighted",
+  "options": [
+    { "id": "a", "text": "Deltoid" },
+    { "id": "b", "text": "Trapezius" },
+    { "id": "c", "text": "Rhomboid major" }
+  ],
+  "correctOptionId": "a"
+}
+```
+
+Image URLs must be `https` (a plain `http` URL is rejected with `400`). The upload
+endpoint also accepts video (mp4, webm, mov) up to 50MB; an in-study video player
+is on the way, so video uploads are accepted ahead of it.
+
 ## 3. Read progress for your dashboard
 
 Two reads back a "mastered / due" view.

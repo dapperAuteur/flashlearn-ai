@@ -170,10 +170,11 @@ export default function StudyCard({
                   <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-lg">
                     <Image
                       src={flashcard.frontImage}
-                      alt="Front visual"
+                      alt={flashcard.frontImageAlt || 'Front visual'}
                       className="max-h-48 object-contain rounded-lg"
                       width={400}
                       height={400}
+                      unoptimized
                     />
                   </div>
                 </div>
@@ -208,10 +209,11 @@ export default function StudyCard({
                   <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-lg">
                     <Image
                       src={flashcard.backImage}
-                      alt="Back visual"
+                      alt={flashcard.backImageAlt || 'Back visual'}
                       className="max-h-48 object-contain rounded-lg"
                       width={400}
                       height={400}
+                      unoptimized
                     />
                   </div>
                 </div>
