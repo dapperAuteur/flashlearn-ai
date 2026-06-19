@@ -26,6 +26,15 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim();
 }
 
+function shuffleStrings(items: string[]): string[] {
+  const all = [...items];
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all;
+}
+
 function shuffleChoices(correct: string, distractors: string[]): string[] {
   // Strip HTML from all choices and filter out blanks/duplicates
   const cleanCorrect = stripHtml(correct);
@@ -33,12 +42,18 @@ function shuffleChoices(correct: string, distractors: string[]): string[] {
     .map(d => stripHtml(d))
     .filter(d => d && d !== cleanCorrect);
 
-  const all = [cleanCorrect, ...cleanDistractors.slice(0, 3)];
-  for (let i = all.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [all[i], all[j]] = [all[j], all[i]];
-  }
-  return all;
+  return shuffleStrings([cleanCorrect, ...cleanDistractors.slice(0, 3)]);
+}
+
+// When a card carries authored options, the correct answer and the full choice
+// list come from those options (scored by id), not from `back` + AI distractors.
+function authoredChoices(flashcard: Flashcard): { correct: string; choices: string[] } | null {
+  const options = flashcard.options;
+  if (!Array.isArray(options) || options.length < 2 || !flashcard.correctOptionId) return null;
+  const correctOption = options.find(o => o.id === flashcard.correctOptionId);
+  if (!correctOption) return null;
+  const texts = options.map(o => stripHtml(o.text)).filter(Boolean);
+  return { correct: stripHtml(correctOption.text), choices: shuffleStrings(texts) };
 }
 
 export default function MultipleChoiceCard({
@@ -59,16 +74,19 @@ export default function MultipleChoiceCard({
 
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
   const choiceRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const correctAnswer = stripHtml(flashcard.back);
+  const authored = authoredChoices(flashcard);
+  const correctAnswer = authored ? authored.correct : stripHtml(flashcard.back);
   const cardId = String(flashcard._id);
 
   useEffect(() => {
-    setChoices(shuffleChoices(correctAnswer, distractors));
+    setChoices(authored ? authored.choices : shuffleChoices(correctAnswer, distractors));
     setSelectedAnswer(null);
     setIsAnswered(false);
     setHintUsed(false);
     setEliminatedChoices(new Set());
     setFocusedIndex(0);
+    // authored is derived from the card; cardId changing covers it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardId, correctAnswer, distractors]);
 
   const handleSelect = useCallback(
@@ -159,7 +177,10 @@ export default function MultipleChoiceCard({
         return;
       }
 
-      const keyMap: Record<string, number> = { '1': 0, '2': 1, '3': 2, '4': 3, a: 0, b: 1, c: 2, d: 3 };
+      const keyMap: Record<string, number> = {
+        '1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5,
+        a: 0, b: 1, c: 2, d: 3, e: 4, f: 5,
+      };
       const idx = keyMap[e.key.toLowerCase()];
       if (idx !== undefined && idx < choices.length && !eliminatedChoices.has(choices[idx])) {
         handleSelect(choices[idx]);
@@ -170,7 +191,7 @@ export default function MultipleChoiceCard({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAnswered, hintUsed, hasCompletedConfidence, choices, eliminatedChoices, handleHint, handleSelect, onEndSession, focusedIndex]);
 
-  const labels = ['A', 'B', 'C', 'D'];
+  const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-2">

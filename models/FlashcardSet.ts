@@ -22,14 +22,49 @@ const FlashcardSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  // Optional authored multiple-choice options. When present, multiple-choice
+  // study serves these exact options and scores against correctOptionId, instead
+  // of AI-generating distractors and treating `back` as correct. Absent => the
+  // existing generated-distractor behavior is unchanged.
+  options: {
+    type: [
+      new mongoose.Schema(
+        { id: { type: String, required: true, trim: true }, text: { type: String, required: true, trim: true } },
+        { _id: false },
+      ),
+    ],
+    default: undefined,
+  },
+  correctOptionId: {
+    type: String,
+    trim: true,
+  },
+  // Optional media on either side (e.g. a muscle image to identify). Values are
+  // https URLs — our Cloudinary (via POST /api/v1/media) or any partner-hosted
+  // CDN. Alt text is stored for screen readers; supply it whenever an image is set.
+  frontImage: { type: String, trim: true },
+  backImage: { type: String, trim: true },
+  frontImageAlt: { type: String, trim: true },
+  backImageAlt: { type: String, trim: true },
 }, { _id: true });
 
 // Interface for a single flashcard
+export interface IFlashcardOption {
+  id: string;
+  text: string;
+}
+
 export interface IFlashcard {
   _id?: Types.ObjectId;
   front: string;
   back: string;
   externalId?: string;
+  options?: IFlashcardOption[];
+  correctOptionId?: string;
+  frontImage?: string;
+  backImage?: string;
+  frontImageAlt?: string;
+  backImageAlt?: string;
 }
 
 // Interface for the FlashcardSet document

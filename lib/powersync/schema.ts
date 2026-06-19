@@ -42,6 +42,12 @@ const flashcards = new Table(
     back: column.text,
     front_image: column.text,
     back_image: column.text,
+    front_image_alt: column.text,
+    back_image_alt: column.text,
+    // Authored multiple-choice options, stored as a JSON string ([{id,text}]),
+    // plus the id of the correct option. Null for cards without authored options.
+    options: column.text,
+    correct_option_id: column.text,
     order: column.integer,
     created_at: column.text,
     updated_at: column.text,
@@ -130,6 +136,10 @@ export interface PowerSyncFlashcard {
   back: string;
   front_image: string | null;
   back_image: string | null;
+  front_image_alt?: string | null;
+  back_image_alt?: string | null;
+  options?: string | null;
+  correct_option_id?: string | null;
   order: number;
   created_at: string;
   updated_at: string;

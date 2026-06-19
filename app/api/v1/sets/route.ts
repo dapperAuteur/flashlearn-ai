@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { withApiAuth, apiSuccess, apiError } from '@/lib/api/withApiAuth';
 import { FlashcardSet as FlashcardSetModel } from '@/models/FlashcardSet';
 import { Profile as ProfileModel } from '@/models/Profile';
+import { buildFlashcardDoc, serializeApiCard, type FlashcardInput } from '@/lib/api/flashcardOptions';
 import dbConnect from '@/lib/db/dbConnect';
 import { type ApiAuthContext } from '@/types/api';
 
@@ -73,7 +74,7 @@ async function handlePost(request: NextRequest, context: ApiAuthContext, request
     title?: string;
     description?: string;
     isPublic?: boolean;
-    flashcards?: { front: string; back: string; externalId?: string }[];
+    flashcards?: FlashcardInput[];
   };
 
   if (!title || typeof title !== 'string' || title.trim() === '') {
@@ -84,8 +85,13 @@ async function handlePost(request: NextRequest, context: ApiAuthContext, request
     return apiError('INVALID_INPUT', requestId, { field: 'flashcards' }, 'At least one flashcard is required.');
   }
 
-  if (flashcards.some(c => !c.front || !c.back)) {
-    return apiError('INVALID_INPUT', requestId, { field: 'flashcards' }, 'Each flashcard must have front and back fields.');
+  const cardDocs = [];
+  for (let i = 0; i < flashcards.length; i++) {
+    const built = buildFlashcardDoc(flashcards[i]);
+    if (!built.ok) {
+      return apiError('INVALID_INPUT', requestId, { field: `flashcards[${i}]` }, built.error);
+    }
+    cardDocs.push(built.doc);
   }
 
   await dbConnect();
@@ -104,20 +110,8 @@ async function handlePost(request: NextRequest, context: ApiAuthContext, request
     description: description || '',
     isPublic: isPublic !== undefined ? isPublic : true,
     source: 'CSV', // API-created sets marked as CSV source
-    flashcards: flashcards.map(card => ({
-      front: card.front,
-      back: card.back,
-      ...(typeof card.externalId === 'string' && card.externalId.trim() !== ''
-        ? { externalId: card.externalId.trim() }
-        : {}),
-      mlData: {
-        easinessFactor: 2.5,
-        interval: 0,
-        repetitions: 0,
-        nextReviewDate: new Date(),
-      },
-    })),
-    cardCount: flashcards.length,
+    flashcards: cardDocs,
+    cardCount: cardDocs.length,
   });
 
   return apiSuccess({
@@ -126,12 +120,7 @@ async function handlePost(request: NextRequest, context: ApiAuthContext, request
     description: newSet.description,
     isPublic: newSet.isPublic,
     cardCount: newSet.flashcards.length,
-    flashcards: newSet.flashcards.map((c: { _id: { toString(): string }; front: string; back: string; externalId?: string }) => ({
-      id: c._id.toString(),
-      front: c.front,
-      back: c.back,
-      externalId: c.externalId,
-    })),
+    flashcards: newSet.flashcards.map(serializeApiCard),
     createdAt: newSet.createdAt,
   }, { requestId }, 201);
 }
