@@ -9,10 +9,11 @@ AI-powered flashcard platform with spaced repetition, versus mode, and offline-f
 - **AI Generation.** Create flashcards from topics, PDFs, YouTube videos, audio files, and images (OCR).
 - **Spaced Repetition.** SM-2 algorithm schedules reviews at optimal intervals.
 - **3 Study Modes.** Classic flip cards, multiple choice, type-your-answer with AI grading.
+- **Rich cards.** Authored multiple-choice options (scored by option id) and images on either side with alt text, all settable through the API so any partner can build "identify the image" questions. Video upload is supported; an in-study video player is on the way.
 - **Versus Mode.** Head-to-head challenges with composite scoring (accuracy, speed, confidence, streaks) and ELO ratings.
 - **Offline-First.** PowerSync + IndexedDB with automatic sync and conflict resolution.
 - **Teams & Classrooms.** Study groups with join codes, shared sets, team chat, and teacher-led classrooms.
-- **Public API.** 27 REST endpoints for building on top of FlashLearnAI.
+- **Public API.** A REST API for building on top of FlashLearnAI, including card media upload and per-student progress for partners.
 - **Ecosystem API for cross-product partners.** Spaced-repetition and comprehension backend for any consumer-facing learning product. Learner-scoped scheduled sessions, per-standard mastery rollups, cascade-delete, and signed outbound webhooks. Powers Wanderlearn and BVC classes.
 - **Signed outbound webhooks.** HMAC-SHA256 signed callbacks with 7-attempt exponential backoff, dead-letter, AES-256-GCM secret encryption at rest, and a self-service developer dashboard with replay.
 - **White-label app.** Branded study platform for schools and companies (sold separately).
