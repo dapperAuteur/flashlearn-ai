@@ -81,6 +81,6 @@ async function handler(request: NextRequest, context: ApiAuthContext & { user: a
 }
 
 export const POST = withApiAuth(handler, {
-  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app'],
+  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app', 'ecosystem'],
   requiredPermission: 'study:write',
 });

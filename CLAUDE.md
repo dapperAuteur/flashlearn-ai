@@ -39,3 +39,9 @@ Full rule with rationale: `/Users/bam/Code_NOiCloud/ai-builds/gemini/witus/CLAUD
 ## Plans convention
 
 All implementation plans live in `./plans/` as markdown named `NN-description-of-plan.md` — two-digit numeric prefix, kebab-case slug, next available number, don't skip. Sub-queues: `./plans/user-tasks/NN-slug.md` (operator tasks), `./plans/bugs/`, `./plans/future/`. (`plans/` is typically gitignored — local working notes.) Full rule: `gemini/witus/CLAUDE.md` §"Plans convention".
+
+---
+
+## Docs-currency rule — update docs in the same change
+
+After implementing a new feature or a bug fix, update the docs it touches as part of the same change, not a later pass. That means README, the help/docs pages under `app/(public)/docs/`, the OpenAPI spec at `lib/api/openapi.ts`, the changelog and roadmap pages, and any blog or tutorial that describes the changed behavior. Treat "the docs that describe this" as part of done: before handing back a branch, grep the docs for the routes, scopes, symbols, or behavior you changed and reconcile them. Keep the prose in house style (no em dashes, none of the banned stock words). This exists because docs drifting behind code is how ecosystem partners hit walls.

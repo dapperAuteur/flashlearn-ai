@@ -73,7 +73,7 @@ async function handlePost(request: NextRequest, context: ApiAuthContext, request
     title?: string;
     description?: string;
     isPublic?: boolean;
-    flashcards?: { front: string; back: string }[];
+    flashcards?: { front: string; back: string; externalId?: string }[];
   };
 
   if (!title || typeof title !== 'string' || title.trim() === '') {
@@ -107,6 +107,9 @@ async function handlePost(request: NextRequest, context: ApiAuthContext, request
     flashcards: flashcards.map(card => ({
       front: card.front,
       back: card.back,
+      ...(typeof card.externalId === 'string' && card.externalId.trim() !== ''
+        ? { externalId: card.externalId.trim() }
+        : {}),
       mlData: {
         easinessFactor: 2.5,
         interval: 0,
@@ -123,20 +126,22 @@ async function handlePost(request: NextRequest, context: ApiAuthContext, request
     description: newSet.description,
     isPublic: newSet.isPublic,
     cardCount: newSet.flashcards.length,
-    flashcards: newSet.flashcards.map((c: { front: string; back: string }) => ({
+    flashcards: newSet.flashcards.map((c: { _id: { toString(): string }; front: string; back: string; externalId?: string }) => ({
+      id: c._id.toString(),
       front: c.front,
       back: c.back,
+      externalId: c.externalId,
     })),
     createdAt: newSet.createdAt,
   }, { requestId }, 201);
 }
 
 export const GET = withApiAuth(handleGet, {
-  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app'],
+  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app', 'ecosystem'],
   requiredPermission: 'sets:read',
 });
 
 export const POST = withApiAuth(handlePost, {
-  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app'],
+  allowedKeyTypes: ['public', 'admin_public', 'admin', 'app', 'ecosystem'],
   requiredPermission: 'sets:write',
 });

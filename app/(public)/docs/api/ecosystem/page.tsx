@@ -38,6 +38,10 @@ export default function EcosystemDocsPage() {
           <li>You want signed webhook callbacks instead of polling for results.</li>
           <li>Parents/guardians have a privacy-rights workflow that may require deleting all of a child&apos;s data.</li>
         </ul>
+        <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-gray-700">
+          <p className="font-semibold text-gray-900">Authored decks for adult or general learners?</p>
+          <p className="mt-1">If your content is your own question pool (not auto-generated from a curriculum standard) and your learners are not children, use the standard <Link href="/docs/api/generation" className="text-blue-600 hover:underline">Sets</Link> + <Link href="/docs/api/spaced-repetition" className="text-blue-600 hover:underline">Study</Link> API instead. Ecosystem keys can call it directly: create a set from your cards (each card may carry an <code className="bg-white px-1 rounded text-xs">externalId</code>), then push outcomes from your own quiz to <code className="bg-white px-1 rounded text-xs">POST /api/v1/study/external-results</code> with an <code className="bg-white px-1 rounded text-xs">externalStudentId</code> to track each student. See the partner flashcard guide in the FlashLearn docs.</p>
+        </div>
       </section>
 
       <section aria-labelledby="key" className="mb-10">

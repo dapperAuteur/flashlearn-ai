@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateApiKey } from './authenticateApiKey';
+import { hasPermission } from './permissions';
 import { apiSuccess, apiError, generateRequestId } from './apiResponse';
 import { checkBurstLimit, checkMonthlyQuota, incrementUsage } from '@/lib/ratelimit/rateLimitApi';
 import { ApiLog } from '@/models/ApiLog';
@@ -66,16 +67,7 @@ export function withApiAuth(handler: ApiHandler, options: WithApiAuthOptions = {
 
     // 3. Check permission
     if (requiredPermission) {
-      const hasPermission = apiKey.permissions.some((p: string) => {
-        if (p === '*') return true;
-        if (p.endsWith(':*')) {
-          const prefix = p.slice(0, -2);
-          return requiredPermission.startsWith(prefix);
-        }
-        return p === requiredPermission;
-      });
-
-      if (!hasPermission) {
+      if (!hasPermission(apiKey.permissions, requiredPermission)) {
         return apiError('FORBIDDEN', requestId, undefined,
           `API key lacks the '${requiredPermission}' permission.`
         );
