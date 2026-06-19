@@ -3,7 +3,11 @@ import { getToken } from 'next-auth/jwt';
 import dbConnect from '@/lib/db/dbConnect';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { AppConfig, IAppConfig } from '@/models/AppConfig';
+// Registers the Category model so `.populate('categories')` resolves on a cold start.
+import { Category } from '@/models/Category';
 import { Logger, LogContext } from '@/lib/logging/logger';
+
+void Category;
 
 const secret = process.env.NEXTAUTH_SECRET;
 
