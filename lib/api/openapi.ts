@@ -41,6 +41,7 @@ export const openApiSpec = {
           id: { type: 'string' as const, description: 'Flashcard ID' },
           front: { type: 'string' as const, description: 'Question or term (front of card)' },
           back: { type: 'string' as const, description: 'Answer or definition (back of card)' },
+          externalId: { type: 'string' as const, description: 'Optional caller-supplied stable id (e.g. "ces:glossary:abduction"). Stored and returned; used to address the card in /study/external-results.' },
         },
         required: ['front', 'back'],
       },
@@ -292,6 +293,7 @@ export const openApiSpec = {
                       properties: {
                         front: { type: 'string' as const },
                         back: { type: 'string' as const },
+                        externalId: { type: 'string' as const, description: 'Optional stable id to map this card to your source content.' },
                       },
                       required: ['front', 'back'],
                     },
@@ -423,9 +425,12 @@ export const openApiSpec = {
     '/api/v1/study/due-cards': {
       get: {
         operationId: 'getDueCards', summary: 'Get cards due for spaced repetition review',
-        description: 'Returns flashcard sets with cards whose SM-2 review date has passed.',
+        description: 'Returns flashcard sets with cards whose SM-2 review date has passed. Pass externalStudentId to read one partner-tracked student instead of the key owner.',
         tags: ['Study'],
-        parameters: [{ name: 'setId', in: 'query' as const, schema: { type: 'string' as const }, description: 'Filter to a specific set' }],
+        parameters: [
+          { name: 'setId', in: 'query' as const, schema: { type: 'string' as const }, description: 'Filter to a specific set' },
+          { name: 'externalStudentId', in: 'query' as const, schema: { type: 'string' as const }, description: 'Opaque partner student id; scopes the read to that student (populated via /study/external-results)' },
+        ],
         responses: { '200': { description: 'Due cards grouped by set' } },
       },
     },
@@ -481,11 +486,46 @@ export const openApiSpec = {
         responses: { '200': { description: 'Evaluation result with similarity score (0-1) and feedback' } },
       },
     },
+    '/api/v1/study/external-results': {
+      post: {
+        operationId: 'ingestExternalResults',
+        summary: 'Ingest study results captured outside FlashLearn',
+        description:
+          'Records quiz/study outcomes from your own app to drive per-student SM-2 scheduling. Cards are addressed by their externalId, so you never need FlashLearn card ids. Idempotent on (externalStudentId, cardExternalId, occurredAt): retries dedupe and never double-count. Available to app and ecosystem keys.',
+        tags: ['Study'],
+        requestBody: { required: true, content: { 'application/json': { schema: {
+          type: 'object' as const, required: ['setId', 'externalStudentId', 'results'],
+          properties: {
+            setId: { type: 'string' as const, description: 'Flashcard set the cards belong to (must be owned by your key).' },
+            externalStudentId: { type: 'string' as const, description: 'Opaque id for the student in your system.' },
+            results: { type: 'array' as const, minItems: 1, items: { type: 'object' as const,
+              required: ['cardExternalId', 'isCorrect', 'occurredAt'],
+              properties: {
+                cardExternalId: { type: 'string' as const, description: 'The externalId set on the card at creation.' },
+                isCorrect: { type: 'boolean' as const },
+                confidenceRating: { type: 'integer' as const, minimum: 1, maximum: 5 },
+                source: { type: 'string' as const, description: 'Optional label, e.g. "course_quiz".' },
+                occurredAt: { type: 'string' as const, format: 'date-time' as const },
+              },
+            } },
+          },
+        } } } },
+        responses: {
+          '200': { description: 'Counts of applied vs duplicate results plus any unresolvedCardExternalIds.' },
+          '403': { description: 'The set is not owned by this key.' },
+          '404': { description: 'Set not found.' },
+        },
+      },
+    },
     '/api/v1/study/analytics/{setId}': {
       get: {
         operationId: 'getStudyAnalytics', summary: 'Get SM-2 spaced repetition analytics for a set',
+        description: 'Per-card SM-2 data. Pass externalStudentId to read one partner-tracked student instead of the key owner.',
         tags: ['Study'],
-        parameters: [{ name: 'setId', in: 'path' as const, required: true, schema: { type: 'string' as const } }],
+        parameters: [
+          { name: 'setId', in: 'path' as const, required: true, schema: { type: 'string' as const } },
+          { name: 'externalStudentId', in: 'query' as const, schema: { type: 'string' as const }, description: 'Opaque partner student id; scopes the read to that student' },
+        ],
         responses: { '200': { description: 'Per-card SM-2 data (easiness factor, interval, repetitions, next review date)' } },
       },
     },

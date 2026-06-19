@@ -97,7 +97,7 @@ UPSTASH_QSTASH_NEXT_SIGNING_KEY=      # For zero-downtime signing-key rotation
 Two key types share the tier table. Choose based on your use case:
 
 - **Public** (`fl_pub_`). For apps building on top of FlashLearnAI (study apps, LMS integrations).
-- **Ecosystem** (`fl_eco_`). For cross-product partners using FlashLearnAI as their backend (learner-scoped sessions, mastery, cascade-delete, signed webhooks). Admin-issued.
+- **Ecosystem** (`fl_eco_`). For cross-product partners using FlashLearnAI as their backend. Two paths: the child/curriculum flow (learner-scoped sessions, mastery, cascade-delete, signed webhooks) and the standard Sets + Study API for authored decks with per-student progress via `externalStudentId`. Admin-issued.
 
 | Tier | Price | Generations/mo | API calls/mo | Burst/min |
 |------|-------|---------------|---------------|-----------|
