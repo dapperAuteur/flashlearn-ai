@@ -46,6 +46,12 @@ const FlashcardSchema = new mongoose.Schema({
   backImage: { type: String, trim: true },
   frontImageAlt: { type: String, trim: true },
   backImageAlt: { type: String, trim: true },
+  // Optional video on either side (https URL from POST /api/v1/media or a partner
+  // CDN). Alt is the screen-reader label for the player.
+  frontVideo: { type: String, trim: true },
+  backVideo: { type: String, trim: true },
+  frontVideoAlt: { type: String, trim: true },
+  backVideoAlt: { type: String, trim: true },
 }, { _id: true });
 
 // Interface for a single flashcard
@@ -65,6 +71,10 @@ export interface IFlashcard {
   backImage?: string;
   frontImageAlt?: string;
   backImageAlt?: string;
+  frontVideo?: string;
+  backVideo?: string;
+  frontVideoAlt?: string;
+  backVideoAlt?: string;
 }
 
 // Interface for the FlashcardSet document

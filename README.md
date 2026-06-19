@@ -9,7 +9,7 @@ AI-powered flashcard platform with spaced repetition, versus mode, and offline-f
 - **AI Generation.** Create flashcards from topics, PDFs, YouTube videos, audio files, and images (OCR).
 - **Spaced Repetition.** SM-2 algorithm schedules reviews at optimal intervals.
 - **3 Study Modes.** Classic flip cards, multiple choice, type-your-answer with AI grading.
-- **Rich cards.** Authored multiple-choice options (scored by option id) and images on either side with alt text, all settable through the API so any partner can build "identify the image" questions. Video upload is supported; an in-study video player is on the way.
+- **Rich cards.** Authored multiple-choice options (scored by option id) and images or video on either side with alt text, all settable through the API so any partner can build "identify the image" questions. Media uploads via a Cloudinary-backed endpoint or any partner CDN URL.
 - **Versus Mode.** Head-to-head challenges with composite scoring (accuracy, speed, confidence, streaks) and ELO ratings.
 - **Offline-First.** PowerSync + IndexedDB with automatic sync and conflict resolution.
 - **Teams & Classrooms.** Study groups with join codes, shared sets, team chat, and teacher-led classrooms.
