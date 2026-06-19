@@ -51,6 +51,11 @@ describe('replaySm2', () => {
       { isCorrect: true, confidenceRating: 5, occurredAt: at('2026-06-18T10:00:00Z') },
       { isCorrect: true, confidenceRating: 4, occurredAt: at('2026-06-18T11:00:00Z') },
     ];
-    expect(replaySm2(results)).toEqual(replaySm2(results));
+    // nextReviewDate is now-based (now + interval days), so two calls can differ by
+    // a few ms. Compare every other field exactly.
+    const { nextReviewDate: _a, ...a } = replaySm2(results);
+    const { nextReviewDate: _b, ...b } = replaySm2(results);
+    void _a; void _b;
+    expect(a).toEqual(b);
   });
 });
