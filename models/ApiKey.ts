@@ -80,7 +80,7 @@ const ApiKeySchema = new Schema<IApiKey>({
 
 // Compound indexes for common queries
 ApiKeySchema.index({ userId: 1, status: 1, keyType: 1 });
-ApiKeySchema.index({ keyHash: 1 }, { unique: true });
-ApiKeySchema.index({ keyPrefix: 1 }, { unique: true });
+// keyHash and keyPrefix are already uniquely indexed by `unique: true` on their
+// fields; re-declaring them here triggered Mongoose's duplicate-index warning.
 
 export const ApiKey = models.ApiKey || model<IApiKey>('ApiKey', ApiKeySchema);

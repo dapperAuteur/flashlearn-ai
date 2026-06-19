@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db/dbConnect';
 import { FlashcardSet } from '@/models/FlashcardSet';
+// Registers the Category model so `.populate('categories')` below resolves. Without
+// this import the model is unregistered on a cold start and the route 500s with
+// `MissingSchemaError: Schema hasn't been registered for model "Category"`.
+import { Category } from '@/models/Category';
 import mongoose from 'mongoose';
+
+void Category;
 
 export async function GET(request: NextRequest) {
   await dbConnect();

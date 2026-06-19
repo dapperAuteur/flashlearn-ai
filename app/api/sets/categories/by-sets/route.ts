@@ -3,8 +3,12 @@ import { getServerSession } from 'next-auth/next';
 import { ObjectId } from 'mongodb';
 import dbConnect from '@/lib/db/dbConnect';
 import { FlashcardSet } from '@/models/FlashcardSet';
+// Registers the Category model so `.populate('categories')` resolves on a cold start.
+import { Category } from '@/models/Category';
 import { authOptions } from '@/lib/auth/auth';
 import { Logger, LogContext } from '@/lib/logging/logger';
+
+void Category;
 
 // POST /api/sets/categories/by-sets - Batch fetch category info for a list of set IDs
 export async function POST(request: NextRequest) {
