@@ -223,6 +223,24 @@ export default function SignInForm() {
         </button>
       </div>
 
+      {/* WitUS ecosystem SSO — shown only when the provider is configured */}
+      {process.env.NEXT_PUBLIC_WITUS_SSO === 'true' && (
+        <div className="space-y-4">
+          <button
+            type="button"
+            onClick={() => signIn('witus', { callbackUrl })}
+            className="w-full px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Sign in with WitUS
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400 uppercase">or</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+        </div>
+      )}
+
       {error && (
         <div role="alert" className="p-3 text-sm text-red-600 bg-red-100 rounded-md">
           {error}

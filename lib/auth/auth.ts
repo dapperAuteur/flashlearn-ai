@@ -4,7 +4,46 @@ import { compare } from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
 import { NextAuthOptions } from "next-auth";
 import type { User } from "next-auth";
+import type { OAuthConfig } from "next-auth/providers/oauth";
 import { Logger, LogContext } from "@/lib/logging/logger";
+
+// --- WitUS ecosystem SSO ("Sign in with WitUS") ---
+// Central Better-Auth/OIDC IdP at accounts.witus.online. Added as a standard
+// OIDC provider ALONGSIDE the existing Credentials providers — public users can
+// still sign in with email/password or email code. No admin gate here.
+interface WitusProfile {
+  sub: string;
+  email?: string;
+  name?: string;
+}
+
+function witusProvider(): OAuthConfig<WitusProfile> {
+  return {
+    id: "witus",
+    name: "WitUS",
+    type: "oauth",
+    wellKnown:
+      process.env.WITUS_OIDC_DISCOVERY_URL ??
+      "https://accounts.witus.online/api/idp/.well-known/openid-configuration",
+    clientId: process.env.WITUS_OIDC_CLIENT_ID,
+    clientSecret: process.env.WITUS_OIDC_CLIENT_SECRET,
+    authorization: { params: { scope: "openid email profile" } },
+    idToken: true,
+    checks: ["pkce", "state"],
+    profile(profile): User {
+      // Defaults for the app's required fields; SSO users start as free Students.
+      return {
+        id: profile.sub,
+        email: profile.email ?? "",
+        name: profile.name ?? "",
+        image: null,
+        role: "Student",
+        subscriptionTier: "Free",
+        emailVerified: true,
+      };
+    },
+  };
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -134,7 +173,8 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
       },
-    })
+    }),
+    ...(process.env.WITUS_OIDC_CLIENT_ID ? [witusProvider()] : []),
   ],
   callbacks: {
     async jwt({ token, user, trigger }) {
