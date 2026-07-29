@@ -31,6 +31,7 @@ AI-powered flashcard platform with spaced repetition, versus mode, and offline-f
 - **Offline:** PowerSync (SQLite via wa-sqlite), IndexedDB
 - **Rate Limiting:** Upstash Redis
 - **Background Jobs:** Upstash QStash (delayed delivery + webhook retries)
+- **Error Monitoring:** Better Stack via the Sentry SDK ([`lib/sentry-scrub.ts`](./lib/sentry-scrub.ts) scrubs emails, cookies, auth headers, and token-bearing URLs before an event is sent). Inert unless a DSN is set.
 - **Hosting:** Vercel
 - **Link Tracking:** Switchy.io
 
@@ -83,6 +84,17 @@ WEBHOOK_ENCRYPTION_KEY=               # openssl rand -hex 32 (AES-256-GCM key fo
 UPSTASH_QSTASH_TOKEN=                 # Upstash QStash publishing token
 UPSTASH_QSTASH_CURRENT_SIGNING_KEY=   # For verifying QStash callbacks
 UPSTASH_QSTASH_NEXT_SIGNING_KEY=      # For zero-downtime signing-key rotation
+```
+
+Optional, for error monitoring. Leave unset and the SDK never initializes:
+
+```env
+SENTRY_DSN=                           # Better Stack ingest DSN (server + edge runtimes)
+NEXT_PUBLIC_SENTRY_DSN=               # Same DSN for the browser; must be set at BUILD time (CSP)
+SENTRY_ENVIRONMENT=                   # Optional label; defaults to VERCEL_ENV, then NODE_ENV
+SENTRY_ORG=                           # Build-time only, for source-map upload (readable traces)
+SENTRY_PROJECT=
+SENTRY_AUTH_TOKEN=
 ```
 
 ## Pricing
