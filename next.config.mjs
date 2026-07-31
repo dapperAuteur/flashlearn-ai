@@ -1,3 +1,18 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
+// The CSP below pins connect-src to 'self'. When error monitoring is switched on we must also let
+// the browser POST to the ingest host, so derive that origin from the public DSN. With no DSN this
+// is an empty string and the CSP is byte-for-byte what it was before.
+const sentryConnectSrc = (() => {
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) return '';
+  try {
+    return ` ${new URL(dsn).origin}`;
+  } catch {
+    return '';
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -60,7 +75,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             // THIS IS THE FIX: Allow 'data:' for connect-src to enable image sharing
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com; font-src 'self'; connect-src 'self' data:; frame-src 'self'; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; media-src 'self'; object-src 'none'",
+            value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com; font-src 'self'; connect-src 'self' data:${sentryConnectSrc}; frame-src 'self'; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; media-src 'self'; object-src 'none'`,
           },
         ],
       },
@@ -68,4 +83,17 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Wrap with Sentry's build plugin (Better Stack ingest speaks the Sentry protocol). Safe with no
+// Sentry env set: without SENTRY_AUTH_TOKEN it just skips source-map upload, so you get minified
+// stack traces, and the runtime SDK stays inert without a DSN. org/project/authToken come from env
+// so nothing secret is committed here.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  // Strips the SDK's debug logging from the client bundle. SDK v10 prints a deprecation notice for
+  // this key (the replacement is webpack.treeshake.removeDebugLogging); kept for now so this repo
+  // matches the shared WitUS pattern, and swap both repos together when the option is removed.
+  disableLogger: true,
+});
