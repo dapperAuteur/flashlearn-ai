@@ -31,7 +31,7 @@ AI-powered flashcard platform with spaced repetition, versus mode, and offline-f
 - **Offline:** PowerSync (SQLite via wa-sqlite), IndexedDB
 - **Rate Limiting:** Upstash Redis
 - **Background Jobs:** Upstash QStash (delayed delivery + webhook retries)
-- **Error Monitoring:** Better Stack via the Sentry SDK ([`lib/sentry-scrub.ts`](./lib/sentry-scrub.ts) scrubs emails, cookies, auth headers, and token-bearing URLs before an event is sent). Inert unless a DSN is set.
+- **Error Monitoring:** Better Stack via the Sentry SDK ([`lib/sentry-scrub.ts`](./lib/sentry-scrub.ts) scrubs emails, cookies, auth headers, and token-bearing URLs before an event is sent). Inert unless a DSN is set. [`app/global-error.tsx`](./app/global-error.tsx) is the last-resort boundary for errors thrown by the root layout itself: it renders its own `<html>`/`<body>`, reports the error, and offers a retry. Keep it dependency free and inline styled, since anything it imports could be the thing that broke.
 - **Hosting:** Vercel
 - **Link Tracking:** Switchy.io
 
