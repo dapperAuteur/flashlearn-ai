@@ -97,6 +97,29 @@ SENTRY_PROJECT=
 SENTRY_AUTH_TOKEN=
 ```
 
+## Health Check
+
+`GET /api/health` is the endpoint to point an uptime monitor at (Better Stack, Pingdom, etc). Do not
+monitor the homepage: it can answer 200 from cache while the database is down, so a green check there
+proves nothing.
+
+Every request pings MongoDB, so the status code reflects the app's critical dependency:
+
+| Status | Body |
+|--------|------|
+| 200 | `{"ok":true,"checks":{"db":"ok"}}` |
+| 503 | `{"ok":false,"error":"database_unreachable","checks":{"db":"fail"}}` |
+
+Notes:
+
+- Public and unauthenticated, and deliberately says nothing else. No version, no env values, no
+  counts, no user data, and never the underlying error (a Mongo failure commonly carries the
+  connection URI including the password), only the fixed `database_unreachable` token.
+- Never cached (`Cache-Control: no-store`).
+- Bounded by a 4 second timeout, so a hung database returns 503 quickly instead of hanging the check.
+- Checks the database only. No AI provider or other third-party API is called, so a vendor outage
+  cannot turn the uptime monitor red.
+
 ## Pricing
 
 | Plan | Price |
