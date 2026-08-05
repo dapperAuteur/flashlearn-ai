@@ -18,7 +18,7 @@
 
 Imagine you learn a new word today. If you don't review it, you'll forget it in a few days.
 
-But if you review it **tomorrow**, then **3 days later**, then **a week later**, then **a month later** — you'll remember it for years.
+But if you review it **tomorrow**, then **3 days later**, then **a week later**, then **a month later**, you'll remember it for years.
 
 That's spaced repetition. It's like a coach that tells you: "Hey, review this card now before you forget it!"
 
@@ -93,9 +93,9 @@ curl -X POST https://flashlearnai.witus.online/api/v1/study/sessions \
 ```
 
 **Study modes:**
-- `classic` — See the question, flip to see the answer, grade yourself
-- `type-answer` — Type your answer and AI checks it (see Tutorial 4)
-- `multiple-choice` — Pick from choices
+- `classic`: See the question, flip to see the answer, grade yourself
+- `type-answer`: Type your answer and AI checks it (see Tutorial 4)
+- `multiple-choice`: Pick from choices
 
 The API gives you a **session ID** and a shuffled list of flashcards:
 
@@ -133,9 +133,9 @@ curl -X POST https://flashlearnai.witus.online/api/v1/study/sessions/sess_xyz789
 ```
 
 For each card, you send:
-- **isCorrect** — Did you get it right? `true` or `false`
-- **timeSeconds** — How many seconds it took you
-- **confidenceRating** — How sure were you? (1 = total guess, 5 = absolutely sure)
+- **isCorrect**: Did you get it right? `true` or `false`
+- **timeSeconds**: How many seconds it took you
+- **confidenceRating**: How sure were you? (1 = total guess, 5 = absolutely sure)
 
 ### What happened behind the scenes?
 
@@ -188,9 +188,9 @@ curl https://flashlearnai.witus.online/api/v1/study/analytics/abc123 \
 ```
 
 What the numbers mean:
-- **easinessFactor** — Higher = easier for you (2.5 is average, below 2.0 means you're struggling)
-- **interval** — Days until the next review (higher = you know it well)
-- **nextReviewDate** — When this card will show up again
+- **easinessFactor**: Higher = easier for you (2.5 is average, below 2.0 means you're struggling)
+- **interval**: Days until the next review (higher = you know it well)
+- **nextReviewDate**: When this card will show up again
 
 ---
 

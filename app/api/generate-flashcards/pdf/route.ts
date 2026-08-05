@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     if (!text || text.length < 20) {
       return NextResponse.json(
-        { error: 'Could not extract enough text from this PDF. It may be image-based — try the Image upload instead.' },
+        { error: 'Could not extract enough text from this PDF. It may be image-based; try the Image upload instead.' },
         { status: 400 },
       );
     }

@@ -49,7 +49,7 @@ export default function Footer() {
               FlashLearnAI<span className="text-blue-400">.WitUS.Online</span>
             </Link>
             <p className="mt-3 text-sm text-gray-300 max-w-xs">
-              AI-powered flashcard generation, spaced repetition, and competitive learning — for students, teachers, and developers.
+              AI-powered flashcard generation, spaced repetition, and competitive learning, for students, teachers, and developers.
             </p>
           </div>
 

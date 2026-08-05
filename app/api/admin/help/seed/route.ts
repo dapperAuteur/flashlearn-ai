@@ -19,13 +19,13 @@ FlashLearnAI is an AI-powered flashcard platform that helps you study smarter. G
 
 ## Key Features
 
-- **AI Generation** — Create flashcards from text topics, PDFs, YouTube videos, audio, and images
-- **Spaced Repetition** — SM-2 algorithm schedules reviews at the optimal time
-- **Multiple Study Modes** — Classic flip cards, multiple choice, and type-your-answer
-- **Versus Mode** — Challenge friends to flashcard battles with composite scoring
-- **Offline Support** — Study without internet; data syncs when you reconnect
-- **Teams & Classrooms** — Study groups with shared sets and leaderboards
-- **Public API** — Build your own apps with our developer API
+- **AI Generation**: Create flashcards from text topics, PDFs, YouTube videos, audio, and images
+- **Spaced Repetition**: SM-2 algorithm schedules reviews at the optimal time
+- **Multiple Study Modes**: Classic flip cards, multiple choice, and type-your-answer
+- **Versus Mode**: Challenge friends to flashcard battles with composite scoring
+- **Offline Support**: Study without internet; data syncs when you reconnect
+- **Teams & Classrooms**: Study groups with shared sets and leaderboards
+- **Public API**: Build your own apps with our developer API
 
 ## Getting Started
 
@@ -46,7 +46,7 @@ FlashLearnAI is an AI-powered flashcard platform that helps you study smarter. G
 
 1. Go to **Generate** from the dashboard
 2. Enter a topic (e.g., "Introduction to Machine Learning")
-3. Click **Generate** — AI creates flashcards instantly
+3. Click **Generate**: AI creates flashcards instantly
 4. Review, edit, then save your set
 
 ## CSV Import
@@ -58,10 +58,10 @@ FlashLearnAI is an AI-powered flashcard platform that helps you study smarter. G
 ## Other Sources
 
 You can also generate from:
-- **PDF** — Extract text and create flashcards
-- **YouTube** — Generate from video transcripts
-- **Audio** — Upload audio files for transcription
-- **Images** — OCR text extraction from photos`,
+- **PDF**: Extract text and create flashcards
+- **YouTube**: Generate from video transcripts
+- **Audio**: Upload audio files for transcription
+- **Images**: OCR text extraction from photos`,
   },
   // ──── Study Modes ────
   {
@@ -110,10 +110,10 @@ Versus mode lets you challenge others to flashcard battles. Everyone studies the
 
 ## Composite Scoring (0-1000)
 Your score is calculated from four factors:
-- **Accuracy** (40%) — Correct answers / total
-- **Speed** (25%) — Average time per card
-- **Confidence** (20%) — How well your confidence matches your performance
-- **Streak** (15%) — Longest consecutive correct answers
+- **Accuracy** (40%): Correct answers / total
+- **Speed** (25%): Average time per card
+- **Confidence** (20%): How well your confidence matches your performance
+- **Streak** (15%): Longest consecutive correct answers
 
 ## Leaderboards
 Global and classroom leaderboards track lifetime performance. Players also have ELO-style ratings that adjust after each challenge.`,
@@ -141,9 +141,9 @@ FlashLearnAI is built offline-first. Your flashcards and study data are stored l
 - Creating and editing flashcard sets
 
 ## Sync Indicators
-- **Amber bar** — You're offline, progress saved locally
-- **Blue bar** — Syncing items to the server
-- **Green toast** — All synced, your data is up to date
+- **Amber bar**: You're offline, progress saved locally
+- **Blue bar**: Syncing items to the server
+- **Green toast**: All synced, your data is up to date
 
 ## Automatic Sync
 The app syncs on three triggers:
@@ -177,8 +177,8 @@ Navigate to **Dashboard → Conflicts** (or tap the Review link). For each confl
 1. **Side-by-side view** shows your local version and the server version
 2. Fields that differ are highlighted in blue (local) and green (server)
 3. Choose one:
-   - **Keep Local** — Push your offline changes to the server
-   - **Keep Server** — Discard your local changes and use the server version
+   - **Keep Local**: Push your offline changes to the server
+   - **Keep Server**: Discard your local changes and use the server version
 
 ## Preventing Conflicts
 - Sync regularly when online (the app does this automatically every 5 minutes)

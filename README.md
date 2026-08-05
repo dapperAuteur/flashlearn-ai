@@ -27,7 +27,7 @@ AI-powered flashcard platform with spaced repetition, versus mode, and offline-f
 - **Auth:** NextAuth.js with JWT sessions
 - **Payments:** Stripe (subscriptions + metered billing)
 - **Email:** Mailgun, Resend
-- **AI:** Switchable provider layer ([`lib/ai/`](./lib/ai/)) via the Vercel AI SDK. `LLM_PROVIDER` selects the text backend — Cerebras (default), OpenRouter, Mistral, Together, or Google Gemini. Image generation uses a vision provider (default Mistral `mistral-small`); audio stays on Gemini.
+- **AI:** Switchable provider layer ([`lib/ai/`](./lib/ai/)) via the Vercel AI SDK. `LLM_PROVIDER` selects the text backend: Cerebras (default), OpenRouter, Mistral, Together, or Google Gemini. Image generation uses a vision provider (default Mistral `mistral-small`); audio stays on Gemini.
 - **Offline:** PowerSync (SQLite via wa-sqlite), IndexedDB
 - **Rate Limiting:** Upstash Redis
 - **Background Jobs:** Upstash QStash (delayed delivery + webhook retries)
@@ -66,7 +66,7 @@ NEXTAUTH_URL=                         # http://localhost:3000
 LLM_PROVIDER=cerebras                 # Text AI backend: cerebras | openrouter | mistral | together | gemini
 CEREBRAS_API_KEY=                     # Key for the selected LLM_PROVIDER (CEREBRAS_/OPENROUTER_/MISTRAL_/TOGETHER_API_KEY)
 LLM_VISION_PROVIDER=mistral           # Provider for image flashcards (text-only providers can't accept images)
-GEMINI_API_KEY_PUBLIC=                # Google Gemini key — still required for audio flashcards + as fallback
+GEMINI_API_KEY_PUBLIC=                # Google Gemini key, still required for audio flashcards + as fallback
 UPSTASH_REDIS_REST_URL=               # Rate limiting + webhook milestone dedupe
 UPSTASH_REDIS_REST_TOKEN=
 STRIPE_SECRET_KEY=                    # Stripe secret key

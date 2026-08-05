@@ -37,9 +37,9 @@ curl -X POST https://flashlearnai.witus.online/api/v1/study/evaluate-answer \
 ```
 
 You send three things:
-- **userAnswer** — What the student typed
-- **correctAnswer** — The right answer from the flashcard
-- **question** — The question (optional, but helps the AI understand context)
+- **userAnswer**: What the student typed
+- **correctAnswer**: The right answer from the flashcard
+- **question**: The question (optional, but helps the AI understand context)
 
 ---
 
@@ -56,9 +56,9 @@ You send three things:
 ```
 
 What the numbers mean:
-- **isCorrect** — `true` or `false`. The AI marks it correct if the similarity is 0.7 or higher.
-- **similarity** — A number from 0.0 to 1.0. Think of it like a percentage: 0.95 means 95% match.
-- **feedback** — A short message explaining the result.
+- **isCorrect**: `true` or `false`. The AI marks it correct if the similarity is 0.7 or higher.
+- **similarity**: A number from 0.0 to 1.0. Think of it like a percentage: 0.95 means 95% match.
+- **feedback**: A short message explaining the result.
 
 ---
 

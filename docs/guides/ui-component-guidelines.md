@@ -77,7 +77,7 @@ We encourage the use of the Atomic Design methodology to structure our component
 
 ### 2.4. Server Components
 
-* Leverage Next.js Server Components for data fetching, accessing backend resources, and improving performance.
+* Use Next.js Server Components for data fetching, accessing backend resources, and improving performance.
 * Clearly differentiate between Server Components and Client Components.
 * Pass data fetched in Server Components as props to Client Components when needed.
 * Avoid using browser-specific APIs or `useState`, `useEffect` in Server Components.
@@ -105,7 +105,7 @@ We encourage the use of the Atomic Design methodology to structure our component
 
 ### 3.4. Theming
 
-* If theming is required, leverage Tailwind's configuration to customize colors, fonts, etc.
+* If theming is required, use Tailwind's configuration to customize colors, fonts, etc.
 * Define clear theming variables and guidelines.
 
 ## 4. Accessibility (a11y)

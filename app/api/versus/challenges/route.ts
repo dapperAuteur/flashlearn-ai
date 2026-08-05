@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
     fireOutboxDrafts({
       triggerUserId: session.user.id,
       externalRefBase: `challenge-created-${challenge._id}`,
-      caption: `New flashcard challenge: "${challenge.setName}" — ${challenge.cardCount} cards. Take it on: ${siteUrlForOutbox}/versus/join/${challengeCode}`,
+      caption: `New flashcard challenge: "${challenge.setName}", ${challenge.cardCount} cards. Take it on: ${siteUrlForOutbox}/versus/join/${challengeCode}`,
     });
   }
 

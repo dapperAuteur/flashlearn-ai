@@ -1,4 +1,4 @@
-# FlashLearn Starter — White-Label Study App
+# FlashLearn Starter: White-Label Study App
 
 A ready-to-deploy study app powered by the [FlashLearnAI.WitUS.Online](https://flashlearnai.witus.online) Public API. Built for schools, study groups, and companies who want their own branded flashcard platform.
 
@@ -25,7 +25,7 @@ API usage is billed separately per your [API tier](https://flashlearnai.witus.on
 - AI-powered answer grading (handles typos + synonyms)
 - Versus mode with competitive scoring and leaderboards
 - Usage tracking dashboard
-- **White-label branding** — customize name, colors, logo, and features
+- **White-label branding**: customize name, colors, logo, and features
 - **Admin branding dashboard** at `/admin/branding`
 - **Admin SEO dashboard** at `/admin/seo`
 
@@ -134,4 +134,4 @@ app/                  <- Next.js pages (21 routes)
 
 ---
 
-**Powered by [FlashLearnAI.WitUS.Online](https://flashlearnai.witus.online)** — a [WitUS.Online](https://WitUS.Online) product by B4C LLC.
+**Powered by [FlashLearnAI.WitUS.Online](https://flashlearnai.witus.online)**, a [WitUS.Online](https://WitUS.Online) product by B4C LLC.

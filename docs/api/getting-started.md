@@ -1,14 +1,14 @@
-# FlashLearn AI API — Getting Started Guide
+# FlashLearn AI API: Getting Started Guide
 
 ## Overview
 
-The FlashLearn AI API lets you generate AI-powered flashcards, manage study content, run spaced repetition sessions, and create competitive quiz challenges — all via REST endpoints.
+The FlashLearn AI API lets you generate AI-powered flashcards, manage study content, run spaced repetition sessions, and create competitive quiz challenges, all via REST endpoints.
 
 **Base URL:** `https://flashlearnai.witus.online/api/v1`
 
-**Interactive Docs:** [flashlearnai.witus.online/docs/api](https://flashlearnai.witus.online/docs/api) — visual API explorer where you can try endpoints live.
+**Interactive Docs:** [flashlearnai.witus.online/docs/api](https://flashlearnai.witus.online/docs/api): a visual API explorer where you can try endpoints live.
 
-**OpenAPI Spec:** [flashlearnai.witus.online/api/v1/openapi](https://flashlearnai.witus.online/api/v1/openapi) — import into Postman, Insomnia, or any OpenAPI-compatible tool.
+**OpenAPI Spec:** [flashlearnai.witus.online/api/v1/openapi](https://flashlearnai.witus.online/api/v1/openapi): import into Postman, Insomnia, or any OpenAPI-compatible tool.
 
 ---
 
@@ -18,7 +18,7 @@ The FlashLearn AI API lets you generate AI-powered flashcards, manage study cont
 2. Go to the **Developer Portal** at [flashlearnai.witus.online/developer](https://flashlearnai.witus.online/developer)
 3. Click **API Keys** > **New Key**
 4. Name your key (e.g., "My App - Production") and click **Create**
-5. **Copy the key immediately** — it's shown once and starts with `fl_pub_`
+5. **Copy the key immediately**: it's shown once and starts with `fl_pub_`
 
 ## 2. Authentication
 
@@ -118,7 +118,7 @@ Every response includes these headers:
 
 ## What's Next?
 
-- [Flashcard Generation Guide](./guide-generation.md) — Generate cards from topics, browse public sets
-- [Spaced Repetition Guide](./guide-spaced-repetition.md) — Build a study app with SM-2 scheduling
-- [Versus Mode Guide](./guide-versus-mode.md) — Create competitive quiz challenges
-- [Interactive Docs](https://flashlearnai.witus.online/docs/api) — Try every endpoint in your browser
+- [Flashcard Generation Guide](./guide-generation.md): Generate cards from topics, browse public sets
+- [Spaced Repetition Guide](./guide-spaced-repetition.md): Build a study app with SM-2 scheduling
+- [Versus Mode Guide](./guide-versus-mode.md): Create competitive quiz challenges
+- [Interactive Docs](https://flashlearnai.witus.online/docs/api): Try every endpoint in your browser

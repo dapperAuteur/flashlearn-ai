@@ -52,9 +52,9 @@ export default function MasteryDocsPage() {
         <h2 id="states" className="text-xl font-semibold text-gray-900 mt-8 mb-4">State transitions</h2>
         <p className="text-gray-700">Three states. Promotion is sticky once reached; a child cannot regress.</p>
         <ul className="list-disc pl-6 text-gray-700 space-y-2 mt-3">
-          <li><strong>exposed</strong> — at least one session created against this standard.</li>
-          <li><strong>practiced</strong> — at least one card attempted on this standard.</li>
-          <li><strong>demonstrated</strong> — first-attempt correct rate is at least 80 percent over the last 5 first-attempts.</li>
+          <li><strong>exposed</strong>: at least one session created against this standard.</li>
+          <li><strong>practiced</strong>: at least one card attempted on this standard.</li>
+          <li><strong>demonstrated</strong>: first-attempt correct rate is at least 80 percent over the last 5 first-attempts.</li>
         </ul>
       </section>
 

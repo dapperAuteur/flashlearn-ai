@@ -30,10 +30,10 @@ export default function SpacedRepetitionPage() {
         <h2 id="how-sm2" className="text-xl font-semibold text-gray-900 mt-8 mb-4">How SM-2 Works</h2>
         <p className="text-gray-600 mb-3">Each card tracks four values that determine when it appears next:</p>
         <ul className="text-gray-600 space-y-1 list-disc pl-5 text-sm">
-          <li><strong>Easiness Factor</strong> (2.5 default) — How easy this card is. Drops on wrong answers.</li>
-          <li><strong>Interval</strong> — Days until next review. Grows exponentially: 1 → 6 → 6 x EF → ...</li>
-          <li><strong>Repetitions</strong> — Consecutive correct answers. Resets to 0 on any mistake.</li>
-          <li><strong>Next Review Date</strong> — When this card should next appear.</li>
+          <li><strong>Easiness Factor</strong> (2.5 default): How easy this card is. Drops on wrong answers.</li>
+          <li><strong>Interval</strong>: Days until next review. Grows exponentially: 1 → 6 → 6 x EF → ...</li>
+          <li><strong>Repetitions</strong>: Consecutive correct answers. Resets to 0 on any mistake.</li>
+          <li><strong>Next Review Date</strong>: When this card should next appear.</li>
         </ul>
       </section>
 

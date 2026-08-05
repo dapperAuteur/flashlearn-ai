@@ -248,7 +248,7 @@ export default function AdminSettingsPage() {
     <div className="p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">App Configuration</h1>
       <p className="text-sm text-gray-500 mb-6">
-        Each setting is a guided form — fill in the fields and Save. Values are checked before they&apos;re stored.
+        Each setting is a guided form: fill in the fields and Save. Values are checked before they&apos;re stored.
       </p>
 
       {error && <div className="text-red-600 bg-red-50 p-3 rounded-lg mb-4 text-sm">{error}</div>}
@@ -297,7 +297,7 @@ export default function AdminSettingsPage() {
             <p className="text-sm font-medium text-gray-900">Audio flashcard generation</p>
             <p className="text-xs text-gray-500 mt-0.5">
               When off, audio shows as &quot;coming soon&quot; to everyone except admins (who always have access). Turn it
-              on to launch for all users. Audio runs on Gemini — make sure the Gemini key is active first.
+              on to launch for all users. Audio runs on Gemini, so make sure the Gemini key is active first.
             </p>
           </div>
           <Switch
@@ -311,14 +311,14 @@ export default function AdminSettingsPage() {
           </Switch>
         </div>
         <p className={`mt-2 text-xs ${audioFlag ? "text-green-600" : "text-gray-500"}`} role="status">
-          {audioFlagSaving ? "Saving…" : audioFlag ? "On — available to all users" : "Off — coming soon (admins only)"}
+          {audioFlagSaving ? "Saving…" : audioFlag ? "On: available to all users" : "Off: coming soon (admins only)"}
         </p>
       </div>
 
       {/* Managed on dedicated pages */}
       <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
         <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-1">Managed on dedicated pages</h2>
-        <p className="text-xs text-gray-500 mb-3">These settings have their own full editors — they aren&apos;t shown below to avoid two places editing the same thing.</p>
+        <p className="text-xs text-gray-500 mb-3">These settings have their own full editors; they aren&apos;t shown below to avoid two places editing the same thing.</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
             href="/admin/api-management"

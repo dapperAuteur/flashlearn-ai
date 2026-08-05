@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       fireOutboxDrafts({
         triggerUserId: userId,
         externalRefBase: `public-set-${savedSet._id}`,
-        caption: `New public deck on FlashLearn: "${title}" — ${flashcards.length} cards. Free to study or remix. ${setUrl}`,
+        caption: `New public deck on FlashLearn: "${title}", ${flashcards.length} cards. Free to study or remix. ${setUrl}`,
       });
     }
 

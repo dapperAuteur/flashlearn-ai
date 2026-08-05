@@ -188,14 +188,14 @@ export default function StudySessionResults() {
     const reverseIsWeaker = hasTriedReverse && currentEntry && reverseEntry.accuracy < currentEntry.accuracy - 10;
 
     if (!hasTriedReverse && studyDirection === 'front-to-back') {
-      return `You've only studied front→back. Test yourself in reverse — back-to-front is the gold standard for true mastery.`;
+      return `You've only studied front→back. Test yourself in reverse: back-to-front is the gold standard for true mastery.`;
     }
     if (reverseIsWeaker) {
       return `Your ${reverseDirection} accuracy (${reverseEntry!.accuracy}%) is noticeably lower. Strengthen it with a focused reverse session.`;
     }
     if (studyMode === 'classic') {
       const mcEntry = modeBreakdown.find((m) => m.mode === 'multiple-choice' && m.direction === studyDirection);
-      if (!mcEntry) return `Try Multiple Choice mode — it tests recognition differently and can reveal blind spots classic mode misses.`;
+      if (!mcEntry) return `Try Multiple Choice mode; it tests recognition differently and can reveal blind spots classic mode misses.`;
     }
     return null;
   }, [modeBreakdown, studyMode, studyDirection]);

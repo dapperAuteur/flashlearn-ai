@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: BoardPageProps): Promise<Meta
     ...(challenge.participants ?? []).map((p: any) => p.compositeScore ?? 0),
   );
 
-  const title = `${challenge.setName} — Challenge Board`;
+  const title = `${challenge.setName}: Challenge Board`;
   const description = `${completedCount} player${completedCount !== 1 ? 's' : ''} competed · Top score: ${topScore} · ${challenge.cardCount} flashcards`;
 
   return {

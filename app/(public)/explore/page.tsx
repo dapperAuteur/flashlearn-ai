@@ -113,7 +113,7 @@ export default function ExplorePage() {
             Explore Flashcard Sets
           </h1>
           <p className="text-gray-600 max-w-xl mx-auto">
-            Browse community flashcard sets and start studying — no account required.
+            Browse community flashcard sets and start studying. No account required.
           </p>
         </div>
 
