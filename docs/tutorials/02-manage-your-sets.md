@@ -35,7 +35,7 @@ curl -X POST https://flashlearnai.witus.online/api/v1/sets \
 
 ### What happened?
 
-You created a set called "My Math Facts" with 3 cards. The API saved it and gave you back an `id` for the set. Save that ID — you'll need it.
+You created a set called "My Math Facts" with 3 cards. The API saved it and gave you back an `id` for the set. Save that ID; you'll need it.
 
 ---
 
@@ -152,6 +152,6 @@ curl https://flashlearnai.witus.online/api/v1/categories \
 
 ## What's next?
 
-Now that you have flashcards, let's learn how to study them the smart way — with spaced repetition!
+Now that you have flashcards, let's learn how to study them the smart way: with spaced repetition!
 
 [Next: Study Smarter with Spaced Repetition →](./03-study-with-spaced-repetition.md)

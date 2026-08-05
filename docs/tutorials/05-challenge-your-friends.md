@@ -45,9 +45,9 @@ curl -X POST https://flashlearnai.witus.online/api/v1/versus/challenges \
 ```
 
 **Scope options:**
-- `direct` — 1 vs 1 (up to 10 people)
-- `classroom` — For a class (up to 30)
-- `public` — Anyone can join (up to 50)
+- `direct`: 1 vs 1 (up to 10 people)
+- `classroom`: For a class (up to 30)
+- `public`: Anyone can join (up to 50)
 
 You'll get back a **challenge code**:
 
@@ -151,7 +151,7 @@ curl -X POST https://flashlearnai.witus.online/api/v1/versus/challenges/ch_abc12
 }
 ```
 
-847 out of 1,000 — nice score!
+847 out of 1,000. Nice score!
 
 ---
 
@@ -234,6 +234,6 @@ You've completed all 5 tutorials. You can now:
 Go build something awesome!
 
 **Links:**
-- [Interactive API Reference](https://flashlearnai.witus.online/docs/api) — Try every endpoint in your browser
-- [Developer Portal](https://flashlearnai.witus.online/developer) — Manage your API keys
-- [API Pricing](https://flashlearnai.witus.online/pricing) — Free tier: 100 generations/month
+- [Interactive API Reference](https://flashlearnai.witus.online/docs/api): Try every endpoint in your browser
+- [Developer Portal](https://flashlearnai.witus.online/developer): Manage your API keys
+- [API Pricing](https://flashlearnai.witus.online/pricing): Free tier: 100 generations/month

@@ -108,7 +108,7 @@ export default function KeysPage() {
       {newPlaintextKey && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <h3 className="text-sm font-semibold text-amber-800 mb-2">
-            Save your API key now — it won&apos;t be shown again
+            Save your API key now. It won&apos;t be shown again
           </h3>
           <div className="flex items-center gap-2">
             <code className="flex-1 bg-white border rounded px-3 py-2 text-sm font-mono text-gray-800 overflow-x-auto">

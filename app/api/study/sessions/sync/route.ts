@@ -385,7 +385,7 @@ export async function POST(request: NextRequest) {
     fireOutboxDrafts({
       triggerUserId: userId,
       externalRefBase: `study-session-${sessionId}`,
-      caption: `Just drilled ${cardCount} cards on "${deckTitle}" — ${accuracyPct}% recall after ${durationMin} minute${durationMin === 1 ? '' : 's'}.`,
+      caption: `Just drilled ${cardCount} cards on "${deckTitle}": ${accuracyPct}% recall after ${durationMin} minute${durationMin === 1 ? '' : 's'}.`,
     });
 
     return NextResponse.json({

@@ -89,10 +89,10 @@ You'll see something like this:
 
 Let's break this down:
 
-- **flashcards** — This is a list of your cards. Each card has a `front` (the question) and a `back` (the answer).
-- **setId** — This is the ID for your set of cards. You can use it later to study or share them.
-- **source** — This says `"generated"` because the AI made them fresh. If someone already made cards on this topic, it might say `"shared"` instead.
-- **cardCount** — How many cards were made. Usually between 5 and 20.
+- **flashcards**: This is a list of your cards. Each card has a `front` (the question) and a `back` (the answer).
+- **setId**: This is the ID for your set of cards. You can use it later to study or share them.
+- **source**: This says `"generated"` because the AI made them fresh. If someone already made cards on this topic, it might say `"shared"` instead.
+- **cardCount**: How many cards were made. Usually between 5 and 20.
 
 ---
 

@@ -209,7 +209,7 @@ export default function CreateChallengePage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Choose a Flashcard Set</h2>
             <p className="text-sm text-gray-500 mb-4">
               {selectedSetId
-                ? 'A set has been pre-selected — change it here or continue.'
+                ? 'A set has been pre-selected. Change it here or continue.'
                 : 'Select the set you want to use for this challenge.'}
             </p>
 

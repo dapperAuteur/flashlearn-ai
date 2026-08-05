@@ -38,9 +38,9 @@ POST /api/v1/versus/challenges
 ```
 
 **Scopes:**
-- `direct` — 1v1 match (max 10 participants)
-- `classroom` — Class competition (max 30)
-- `public` — Open to anyone (max 50)
+- `direct`: 1v1 match (max 10 participants)
+- `classroom`: Class competition (max 30)
+- `public`: Open to anyone (max 50)
 
 **Response:**
 ```json

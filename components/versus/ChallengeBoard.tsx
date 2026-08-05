@@ -370,7 +370,7 @@ export default function ChallengeBoard({ challenge, participants, currentUserId 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
         <div className="flex flex-wrap items-start gap-2 mb-1">
           <h1 className="text-xl font-bold text-gray-900 leading-tight flex-1">
-            {challenge.setName} — Challenge Board
+            {challenge.setName}: Challenge Board
           </h1>
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${scopeColor}`}>
             {scopeLabel}

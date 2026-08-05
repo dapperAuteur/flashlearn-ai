@@ -476,7 +476,7 @@ export default function GenerateFlashcardsPage(){
                       <button
                         type="button"
                         disabled
-                        aria-label="Audio generation — coming soon"
+                        aria-label="Audio generation (coming soon)"
                         title="Audio generation is coming soon"
                         className="relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 opacity-60 cursor-not-allowed"
                       >

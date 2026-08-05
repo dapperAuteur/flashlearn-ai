@@ -50,7 +50,7 @@ export default function UsagePage() {
   }
 
   const periodLabel = data.currentPeriod
-    ? `${new Date(data.currentPeriod.start).toLocaleDateString()} — ${new Date(data.currentPeriod.end).toLocaleDateString()}`
+    ? `${new Date(data.currentPeriod.start).toLocaleDateString()} – ${new Date(data.currentPeriod.end).toLocaleDateString()}`
     : "";
 
   return (

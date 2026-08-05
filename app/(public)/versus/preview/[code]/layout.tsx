@@ -40,7 +40,7 @@ export async function generateMetadata({
   const { setName, cardCount, maxParticipants, participantCount } = challenge;
   const upperCode = code.toUpperCase();
   const ogImageUrl = `/api/og?type=versus&code=${upperCode}&topic=${encodeURIComponent(setName)}&participants=${participantCount}&max=${maxParticipants}&cards=${cardCount}`;
-  const title = `Join "${setName}" — Flashcard Challenge`;
+  const title = `Join "${setName}": Flashcard Challenge`;
   const description = `${participantCount}/${maxParticipants} players joined. Can you beat them on ${cardCount} cards? Use code ${upperCode}.`;
 
   return {

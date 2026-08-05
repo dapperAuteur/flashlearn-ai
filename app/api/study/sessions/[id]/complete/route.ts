@@ -88,7 +88,7 @@ export async function POST(
     fireOutboxDrafts({
       triggerUserId: session.user.id,
       externalRefBase: `study-session-${sessionId}`,
-      caption: `Just drilled ${cardCount} cards on "${deckTitle}" — ${accuracyPct}% recall after ${durationMin} minute${durationMin === 1 ? '' : 's'}.`,
+      caption: `Just drilled ${cardCount} cards on "${deckTitle}": ${accuracyPct}% recall after ${durationMin} minute${durationMin === 1 ? '' : 's'}.`,
     });
 
     // Return session summary

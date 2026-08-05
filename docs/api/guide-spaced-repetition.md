@@ -1,16 +1,16 @@
 # Guide: Spaced Repetition (SM-2) API
 
-FlashLearn uses the **SuperMemo 2 (SM-2) algorithm** — the same algorithm behind Anki — to schedule reviews at scientifically optimal intervals. This guide shows how to build a complete study app using the API.
+FlashLearn uses the **SuperMemo 2 (SM-2) algorithm** (the same algorithm behind Anki) to schedule reviews at scientifically optimal intervals. This guide shows how to build a complete study app using the API.
 
 ---
 
 ## How SM-2 Works
 
 Each card tracks four values:
-- **Easiness Factor** (default 2.5) — How easy this card is for you. Drops when you get it wrong.
-- **Interval** (days) — Days until next review. Grows exponentially with correct answers.
-- **Repetitions** — Consecutive correct answers. Resets to 0 on any wrong answer.
-- **Next Review Date** — When this card should next appear.
+- **Easiness Factor** (default 2.5): How easy this card is for you. Drops when you get it wrong.
+- **Interval** (days): Days until next review. Grows exponentially with correct answers.
+- **Repetitions**: Consecutive correct answers. Resets to 0 on any wrong answer.
+- **Next Review Date**: When this card should next appear.
 
 When you answer a card:
 - **Correct**: Interval increases (1 day → 6 days → 6 × EF days → ...). Easiness factor adjusts based on confidence.
@@ -92,9 +92,9 @@ POST /api/v1/study/sessions
 ```
 
 **Study modes:**
-- `classic` — Show front, reveal back, self-grade
-- `multiple-choice` — Pick from options
-- `type-answer` — Type your answer, AI evaluates
+- `classic`: Show front, reveal back, self-grade
+- `multiple-choice`: Pick from options
+- `type-answer`: Type your answer, AI evaluates
 
 **Response:**
 ```json

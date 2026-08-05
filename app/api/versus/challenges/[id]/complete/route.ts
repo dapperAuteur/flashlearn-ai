@@ -178,8 +178,8 @@ export async function POST(
     const siteUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
     const challengeUrl = `${siteUrl}/versus/preview/${challenge.challengeCode}`;
     const caption = acceptorWon
-      ? `${handle} beat my "${challenge.setName}" challenge with ${Math.round(acceptorScore)} — congrats. Try beating me: ${challengeUrl}`
-      : `${handle} took on my "${challenge.setName}" challenge — scored ${Math.round(acceptorScore)}. Crown's still mine. Try yours: ${challengeUrl}`;
+      ? `${handle} beat my "${challenge.setName}" challenge with ${Math.round(acceptorScore)}. Congrats. Try beating me: ${challengeUrl}`
+      : `${handle} took on my "${challenge.setName}" challenge and scored ${Math.round(acceptorScore)}. Crown's still mine. Try yours: ${challengeUrl}`;
 
     fireOutboxDrafts({
       triggerUserId: ownerId,

@@ -175,7 +175,7 @@ export async function PATCH(request: NextRequest) {
           : '';
         sendEmail({
           to: rejectedUser.email,
-          subject: 'CashApp payment update — action needed',
+          subject: 'CashApp payment update: action needed',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background-color: #4A7BF7; padding: 24px 32px; border-radius: 8px 8px 0 0; text-align: center;">

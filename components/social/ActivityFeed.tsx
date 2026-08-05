@@ -24,7 +24,7 @@ function getEventDescription(event: ActivityEventItem): string {
   const meta = event.metadata;
   switch (event.type) {
     case 'study_session':
-      return meta.setName ? `Studied "${meta.setName}" — ${meta.accuracy || 0}% accuracy` : 'Completed a study session';
+      return meta.setName ? `Studied "${meta.setName}": ${meta.accuracy || 0}% accuracy` : 'Completed a study session';
     case 'achievement_earned':
       return meta.title ? `Earned "${meta.title}"` : 'Earned an achievement';
     case 'set_created':

@@ -322,7 +322,7 @@ export default function AdminRevenuePage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
             <div>
               <h2 className="text-base font-semibold text-gray-800">Founder&apos;s Lifetime Tracker</h2>
-              <p className="text-xs text-gray-500">$103.29 introductory price — first {lifetimeData.cap} paid users</p>
+              <p className="text-xs text-gray-500">$103.29 introductory price for the first {lifetimeData.cap} paid users</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-purple-600">{lifetimeData.totalPaid || 0} <span className="text-sm font-normal text-gray-500">/ {lifetimeData.cap} paid</span></p>
@@ -343,7 +343,7 @@ export default function AdminRevenuePage() {
             )}
           </div>
           {lifetimeData.remaining === 0 && (
-            <p className="mt-2 text-sm text-red-600 font-medium">Founder&apos;s cap reached — pricing page now shows annual plan.</p>
+            <p className="mt-2 text-sm text-red-600 font-medium">Founder&apos;s cap reached; pricing page now shows annual plan.</p>
           )}
         </div>
       )}

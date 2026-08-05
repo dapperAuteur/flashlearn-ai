@@ -70,11 +70,11 @@ View application and authentication logs with filtering and search.
 
 **Settings** (`/admin/settings`)
 Platform configuration including:
-- `RATE_LIMITS` — Per-tier AI generation limits
-- `FLASHCARD_MAX` — Maximum cards per set
-- `PROMO_LIFETIME_ACTIVE` — Lifetime plan availability
-- `ANNOUNCEMENT_BANNER` — Site-wide messaging
-- `AUTO_FLAG_THRESHOLD` — Content auto-flagging threshold
+- `RATE_LIMITS`: Per-tier AI generation limits
+- `FLASHCARD_MAX`: Maximum cards per set
+- `PROMO_LIFETIME_ACTIVE`: Lifetime plan availability
+- `ANNOUNCEMENT_BANNER`: Site-wide messaging
+- `AUTO_FLAG_THRESHOLD`: Content auto-flagging threshold
 
 ## Admin-Only Features
 
@@ -83,6 +83,6 @@ When generating flashcards via AI, admins see an additional "Card Quantity" inpu
 
 ## Access Control
 
-- Admin routes are protected by middleware (`middleware.ts`) — non-admin users are redirected to `/dashboard`
+- Admin routes are protected by middleware (`middleware.ts`); non-admin users are redirected to `/dashboard`
 - All admin API endpoints verify `token.role === 'Admin'` before processing requests
 - Admins cannot demote their own account to prevent lockout
