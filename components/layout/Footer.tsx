@@ -79,7 +79,7 @@ export default function Footer() {
         <div className="mt-10 pt-8 border-t border-gray-800">
           <p className="text-sm text-gray-400 mb-4">
             Powered by{' '}
-            <a href="https://WitUS.Online" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400 transition-colors">
+            <a href="https://WitUS.Online" target="_blank" rel="noopener noreferrer" className="text-white underline hover:text-blue-400 transition-colors">
               WitUS.Online
             </a>
             , a{' '}
@@ -94,7 +94,7 @@ export default function Footer() {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-gray-500 hover:text-white transition-colors"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
               >
                 {link.label}
               </a>
@@ -103,25 +103,25 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="pt-6 border-t border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-400">
               &copy; {year} FlashLearnAI.WitUS.Online. All rights reserved.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link href="/privacy" className="text-xs text-gray-500 hover:text-gray-300 min-h-[44px] inline-flex items-center">
+              <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-300 min-h-[44px] inline-flex items-center">
                 Privacy
               </Link>
-              <Link href="/terms" className="text-xs text-gray-500 hover:text-gray-300 min-h-[44px] inline-flex items-center">
+              <Link href="/terms" className="text-xs text-gray-400 hover:text-gray-300 min-h-[44px] inline-flex items-center">
                 Terms
               </Link>
               <a
                 href="/api/v1/openapi"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-gray-500 hover:text-gray-300 min-h-[44px] inline-flex items-center"
+                className="text-xs text-gray-400 hover:text-gray-300 min-h-[44px] inline-flex items-center"
               >
                 OpenAPI Spec
               </a>
-              <Link href="/docs/api" className="text-xs text-gray-500 hover:text-gray-300 min-h-[44px] inline-flex items-center">
+              <Link href="/docs/api" className="text-xs text-gray-400 hover:text-gray-300 min-h-[44px] inline-flex items-center">
                 API Reference
               </Link>
             </div>
