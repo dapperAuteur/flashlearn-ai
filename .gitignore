@@ -51,3 +51,7 @@ docs/data-backup/
 .claude/
 
 plans/
+
+# Playwright output
+test-results/
+playwright-report/
