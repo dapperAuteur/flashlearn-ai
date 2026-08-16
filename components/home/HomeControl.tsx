@@ -449,7 +449,7 @@ const DeveloperAPISection = () => (
 
       {/* Code sample */}
       <div className="max-w-2xl mx-auto mb-12">
-        <pre className="bg-gray-800 rounded-xl p-5 overflow-x-auto text-sm leading-relaxed" role="region" aria-label="API code example">
+        <pre className="bg-gray-800 rounded-xl p-5 overflow-x-auto text-sm leading-relaxed" role="region" aria-label="API code example" tabIndex={0}>
           <code className="text-gray-300">
 {`curl -X POST https://flashlearnai.witus.online/api/v1/generate \\
   -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
@@ -503,7 +503,7 @@ const DeveloperAPISection = () => (
         </Link>
       </div>
 
-      <p className="text-center text-sm text-gray-500 mt-6">
+      <p className="text-center text-sm text-gray-400 mt-6">
         27 endpoints, including signed outbound webhooks. Free tier: 100 generations/month. No credit card required.
       </p>
 
