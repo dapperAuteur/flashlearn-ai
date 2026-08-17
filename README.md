@@ -120,6 +120,71 @@ Notes:
 - Checks the database only. No AI provider or other third-party API is called, so a vendor outage
   cannot turn the uptime monitor red.
 
+## Observability & E2E
+
+Error monitoring (Better Stack via the Sentry SDK, inert unless a DSN is set) is covered under
+[Tech Stack](#tech-stack) and the optional `SENTRY_*` block in
+[Key Environment Variables](#key-environment-variables). The rest of the observability story:
+
+### Distributed tracing
+
+Traces go to **Honeycomb** over OTLP via `@vercel/otel` ([`otel.config.ts`](./otel.config.ts),
+loaded from [`instrumentation.ts`](./instrumentation.ts) **before** the Sentry configs — whoever
+registers the global tracer provider first wins, and Sentry is told to stand down via
+`skipOpenTelemetrySetup` in `sentry.server.config.ts`). Service name is **`flashlearnai`**.
+
+- **Inert until the key is set.** `HONEYCOMB_INGEST_API_KEY_SECRET` (fallback `HONEYCOMB_API_KEY`).
+  With neither set, registration is skipped entirely — same leave-unset-and-nothing-initializes
+  pattern as the Sentry DSN.
+- **`/api/health` spans are dropped at the sampler.** Uptime monitors probe it around the clock,
+  and those requests must not spend Honeycomb's free-tier event budget. Everything else is recorded
+  unsampled.
+
+### E2E + accessibility CI
+
+Playwright specs live in [`e2e/`](./e2e/); the gate runs in
+[`.github/workflows/e2e.yml`](./.github/workflows/e2e.yml) on `deployment_status` — it tests the
+**real Vercel deployment URL** (preview → full suite, production → `@smoke` only), so CI needs no
+secrets, database, or env. The suite runs desktop plus a 360px mobile project, and covered pages
+must pass an axe check with **zero serious or critical violations** — minor/moderate findings are
+reported but don't gate. The gate is strict on purpose; fix the page, not the gate.
+
+- Local runs: `PLAYWRIGHT_BASE_URL=<url> npx playwright test` — local runs drive installed Chrome
+  via `channel: "chrome"` (Playwright's bundled chromium doesn't support macOS 13); CI uses the
+  bundled browser.
+- If the Vercel project enables Deployment Protection, set the project's "Protection Bypass for
+  Automation" secret as the `VERCEL_AUTOMATION_BYPASS_SECRET` Actions secret; public previews need
+  nothing.
+
+### Synthetic traffic tag
+
+Every request Playwright makes — the CI gate and tutorial recordings alike — carries
+`x-witus-origin-test: playwright-synthetic` (an `extraHTTPHeaders` entry in both Playwright
+configs). The OTel layer surfaces it as the **`witus.origin_test`** span attribute
+(`attributesFromHeaders` in [`otel.config.ts`](./otel.config.ts)), so Honeycomb queries can include
+or exclude synthetic traffic. Absent header = attribute absent = real user; queries about real
+users exclude the attribute.
+
+### Tutorial pipeline (tutorial-as-test)
+
+Every user-facing tutorial is a **runnable Playwright spec** in
+[`e2e/tutorials/`](./e2e/tutorials/) (`*.tutorial.ts`, driven by the helper in
+[`e2e/tutorials/tutorial.ts`](./e2e/tutorials/tutorial.ts)) — so a tutorial that no longer matches
+the app **fails**, instead of quietly rotting as prose:
+
+```bash
+npm run tutorial:record   # run the specs via playwright.tutorial.config.ts → video + step marks
+npm run tutorial:docs     # generate per-step markdown walkthroughs into docs/tutorials/
+npm run tutorial:video    # compose the narrated video from recordings + narration audio
+```
+
+Auth-gated tutorials **skip** (never fail) unless `TUTORIAL_STORAGE_STATE` points at a signed-in
+Playwright storage state (e.g. `.auth/tutorial-user.json`). The generated walkthroughs are
+**committed** at [`docs/tutorials/`](./docs/tutorials/); recordings, step marks, narration audio,
+storage states, and composed video are gitignored (`tutorial-output/`, `audio/`, `.auth/`,
+`docs/tutorials/video/`). The per-step narration master lives in the witus repo at
+`plans/31-tutorial-narration-scripts.md`.
+
 ## Pricing
 
 | Plan | Price |
