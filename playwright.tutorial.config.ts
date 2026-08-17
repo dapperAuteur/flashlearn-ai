@@ -21,6 +21,9 @@ export default defineConfig({
     viewport: { width: 1280, height: 720 },
     video: { mode: "on", size: { width: 1280, height: 720 } },
     launchOptions: { slowMo: 350 },
+    // Recording sessions are synthetic traffic too — same tag as the CI suite, so Honeycomb and
+    // analytics can separate tutorial takes from real users (tag, not a drop: traces still flow).
+    extraHTTPHeaders: { "x-witus-origin-test": "playwright-synthetic" },
     ...(process.env.TUTORIAL_STORAGE_STATE ? { storageState: process.env.TUTORIAL_STORAGE_STATE } : {}),
     ...(process.env.CI ? {} : { channel: "chrome" as const }),
   },
