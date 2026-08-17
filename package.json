@@ -13,7 +13,10 @@
     "seed:finals-promo": "tsx --env-file=.env.local scripts/seedFinalsPromo.ts",
     "press:short-links": "tsx --env-file=.env.local scripts/generatePressShortLinks.ts",
     "engagement-check": "tsx --env-file=.env.local scripts/engagementCheck.ts",
-    "check:providers": "tsx --env-file=.env.local scripts/checkProviders.ts"
+    "check:providers": "tsx --env-file=.env.local scripts/checkProviders.ts",
+    "tutorial:record": "playwright test --config playwright.tutorial.config.ts",
+    "tutorial:docs": "node scripts/tutorial-video/gen-docs.mjs",
+    "tutorial:video": "node scripts/tutorial-video/compose.mjs"
   },
   "config": {
     "mongodbMemoryServer": {
