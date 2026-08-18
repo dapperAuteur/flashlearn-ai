@@ -18,17 +18,19 @@
  * See the witus repo's plans/26-posthog-ecosystem-rollout.md for the full contract and
  * lib/analytics/INTEGRATE.md for the integration playbook.
  *
- * NOTE ON THE SLUG: this is "flashlearnai", matching the OpenTelemetry serviceName in
- * otel.config.ts and the flashlearnai.witus.online host, so a trace in Honeycomb and an
- * event in PostHog carry the same app label. The SSO client slug in the witus repo's
- * lib/identity/clients.ts is the shorter "flashlearn" — a known difference between the
- * auth registry and the observability label, not a typo. If the ecosystem ever
- * standardises on one, change it in both places at once, because renaming `app` after
- * data has landed splits every series in the shared project.
+ * NOTE ON THE SLUG: this is "flashlearn", NOT "flashlearnai". The analytics slug is the
+ * IDENTITY slug from the witus repo's lib/identity/clients.ts, so a funnel can join a
+ * PostHog event to the app that authenticated the user with no translation table in
+ * between. It deliberately does NOT match the OpenTelemetry serviceName in
+ * otel.config.ts ("flashlearnai") or the flashlearnai.witus.online host — those name a
+ * service and a domain; this names an OIDC client. Enforced by the ecosystem's
+ * check-posthog-conformance.mjs, which fails the build on a mismatch, because renaming
+ * `app` after data has landed splits one app into two series that no back-fill merges
+ * cleanly.
  */
 
-/** This app's slug. Every event carries it. */
-export const ANALYTICS_APP = "flashlearnai";
+/** This app's slug — matches lib/identity/clients.ts in witus. Every event carries it. */
+export const ANALYTICS_APP = "flashlearn";
 
 /**
  * Events with identical names across every ecosystem app. Names are contractual.
