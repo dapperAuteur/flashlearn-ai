@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
+import { Logger, LogContext } from '@/lib/logging/logger';
+import { getClientIp } from '@/lib/utils/utils';
+import { purgeUserAccount } from '@/lib/api/purgeUserAccount';
 import { User } from '@/models/User';
 
-const PROFILE_FIELDS = 'name email username profilePicture role subscriptionTier createdAt';
+const PROFILE_FIELDS =
+  'name email username profilePicture role subscriptionTier createdAt onboardingCompleted';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -78,4 +82,96 @@ export async function PUT(request: NextRequest) {
   }
 
   return NextResponse.json({ user, message: 'Profile updated successfully' });
+}
+
+// Narrow partial update. PATCH accepts one field and nothing else. It is
+// deliberately not a laxer PUT: a handler that copied the request body into
+// the update would let anyone hand themselves `role: 'Admin'` or a paid
+// `subscriptionTier`. Adding a field here means adding it to this list on
+// purpose, with its own validation.
+export async function PATCH(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  await dbConnect();
+  const body = await request.json();
+  const { onboardingCompleted } = body;
+
+  if (typeof onboardingCompleted !== 'boolean') {
+    return NextResponse.json(
+      { error: 'onboardingCompleted must be true or false' },
+      { status: 400 },
+    );
+  }
+
+  const user = await User.findByIdAndUpdate(
+    session.user.id,
+    { onboardingCompleted },
+    { new: true, select: PROFILE_FIELDS },
+  ).lean();
+
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  }
+
+  return NextResponse.json({ user, message: 'Profile updated successfully' });
+}
+
+// Account deletion, the right the privacy page already promises. The target is
+// always the session user: no id is read from the body or the query string, so
+// there is no way to aim this at somebody else.
+//
+// Admin accounts are refused. An Admin owns classrooms, verifies payments, and
+// reviews content flags, and the last Admin deleting themselves would leave the
+// instance with nobody who can administer it. The admin console already refuses
+// to let an Admin delete an Admin, so this route matching that rule keeps one
+// answer rather than two.
+export async function DELETE(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    await dbConnect();
+    const user = await User.findById(session.user.id)
+      .select('role')
+      .lean<{ role?: string } | null>();
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (user.role === 'Admin') {
+      return NextResponse.json(
+        { error: 'Admin accounts cannot be deleted here. Ask another admin to remove it.' },
+        { status: 403 },
+      );
+    }
+
+    const requestId = crypto.randomUUID();
+    const result = await purgeUserAccount(session.user.id, {
+      requestId,
+      requesterIp: getClientIp(request),
+    });
+
+    Logger.info(LogContext.USER, 'Account deleted by owner', {
+      requestId,
+      deletedRecordCount: result.deletedRecordCount,
+      anonymizedRecordCount: result.anonymizedRecordCount,
+      membershipsPulled: result.membershipsPulled,
+      byCollection: result.byCollection,
+    });
+
+    return NextResponse.json({
+      message: 'Account deleted',
+      deletedRecordCount: result.deletedRecordCount,
+      anonymizedRecordCount: result.anonymizedRecordCount,
+    });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
