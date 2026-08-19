@@ -51,4 +51,8 @@ export interface IUser extends Document {
   utmMedium?: string;
   utmCampaign?: string;
   referredBy?: Schema.Types.ObjectId;
+  // Soft-delete grace period
+  deletedAt?: Date;
+  purgeScheduledFor?: Date;
+  deletionHiddenSetIds?: Schema.Types.ObjectId[];
 }

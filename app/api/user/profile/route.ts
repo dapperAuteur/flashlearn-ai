@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { getClientIp } from '@/lib/utils/utils';
-import { purgeUserAccount } from '@/lib/api/purgeUserAccount';
+import { softDeleteUserAccount, ACCOUNT_GRACE_PERIOD_DAYS } from '@/lib/api/purgeUserAccount';
 import { User } from '@/models/User';
 
 const PROFILE_FIELDS =
@@ -123,6 +123,16 @@ export async function PATCH(request: NextRequest) {
 // always the session user: no id is read from the body or the query string, so
 // there is no way to aim this at somebody else.
 //
+// This route does NOT erase anything. It stamps the account for deletion and
+// starts a grace period; /api/cron/purge-deleted-accounts does the
+// irreversible part once the clock runs out. Signing in before then cancels
+// the request and puts the account back. The one thing that happens right
+// away is that the account's public sets go private, because an account that
+// has asked to be gone should stop appearing in Explore immediately.
+//
+// The caller signs the user out on a 2xx. With a JWT session there is no
+// server-side session to revoke, so the sign-out is the client's half of this.
+//
 // Admin accounts are refused. An Admin owns classrooms, verifies payments, and
 // reviews content flags, and the last Admin deleting themselves would leave the
 // instance with nobody who can administer it. The admin console already refuses
@@ -152,26 +162,29 @@ export async function DELETE(request: NextRequest) {
     }
 
     const requestId = crypto.randomUUID();
-    const result = await purgeUserAccount(session.user.id, {
+    const result = await softDeleteUserAccount(session.user.id);
+
+    if (!result) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    Logger.info(LogContext.USER, 'Account scheduled for deletion by owner', {
       requestId,
       requesterIp: getClientIp(request),
-    });
-
-    Logger.info(LogContext.USER, 'Account deleted by owner', {
-      requestId,
-      deletedRecordCount: result.deletedRecordCount,
-      anonymizedRecordCount: result.anonymizedRecordCount,
-      membershipsPulled: result.membershipsPulled,
-      byCollection: result.byCollection,
+      purgeScheduledFor: result.purgeScheduledFor.toISOString(),
+      hiddenSetCount: result.hiddenSetCount,
+      alreadyScheduled: result.alreadyScheduled,
     });
 
     return NextResponse.json({
-      message: 'Account deleted',
-      deletedRecordCount: result.deletedRecordCount,
-      anonymizedRecordCount: result.anonymizedRecordCount,
+      message: `Your account is scheduled for deletion on ${result.purgeScheduledFor.toDateString()}. Sign in again before then to cancel it.`,
+      deletedAt: result.deletedAt.toISOString(),
+      purgeScheduledFor: result.purgeScheduledFor.toISOString(),
+      gracePeriodDays: ACCOUNT_GRACE_PERIOD_DAYS,
+      hiddenSetCount: result.hiddenSetCount,
     });
   } catch (error) {
-    console.error('Error deleting account:', error);
+    console.error('Error scheduling account deletion:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

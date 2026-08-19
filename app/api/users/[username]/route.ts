@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: Params) {
     const { username } = await params;
     await dbConnect();
 
-    const user = await User.findOne({ username: username.toLowerCase() })
+    const user = await User.findOne({ username: username.toLowerCase(), deletedAt: null })
       .select('name username profilePicture bio studyInterests isProfilePublic showStats showActivity followersCount followingCount role createdAt')
       .lean() as any;
 

@@ -85,7 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    const publicUsers = await User.find({ isProfilePublic: true, username: { $exists: true, $ne: null } })
+    const publicUsers = await User.find({ isProfilePublic: true, username: { $exists: true, $ne: null }, deletedAt: null })
       .select('username updatedAt')
       .limit(1000)
       .lean();

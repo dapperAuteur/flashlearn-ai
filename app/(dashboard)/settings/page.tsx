@@ -257,8 +257,13 @@ export default function SettingsPage() {
           </h3>
           <div className="mt-2 text-sm text-gray-500">
             <p>
-              Once you delete your account, all of your data will be permanently removed.
-              This action cannot be undone.
+              Deleting your account signs you out and hides your public sets right away.
+              Your data is then held for 30 days before it is erased for good.
+            </p>
+            <p className="mt-2">
+              Changed your mind? Sign back in any time in those 30 days and your account
+              and your public sets come back exactly as they were. After 30 days the
+              erasure is permanent and cannot be undone.
             </p>
           </div>
           <div className="mt-5">
@@ -278,7 +283,7 @@ export default function SettingsPage() {
                   onClick={handleDeleteAccount}
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
-                  Yes, delete my account
+                  Yes, schedule my account for deletion
                 </button>
                 <button
                   type="button"
