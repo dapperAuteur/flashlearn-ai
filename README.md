@@ -197,9 +197,17 @@ npm run seed:math -- --owner-email=you@example.com --dry-run
 npm run seed:math -- --owner-email=you@example.com
 ```
 
-`seed:math` creates the math library: 65 math fact sets (22 addition, 11 subtraction, 22
-multiplication, 10 division) plus the geometry, trigonometry, and calculus reference sets. Every set
-holds 10 to 20 cards.
+`seed:math` creates the math library: **110 sets, 1,504 cards**. Every set holds 10 to 20 cards.
+
+| Area | Sets | Cards |
+|------|------|-------|
+| Addition | 22 | 242 |
+| Subtraction | 11 | 121 |
+| Multiplication | 22 | 242 |
+| Division | 10 | 110 |
+| Geometry | 14 | 256 |
+| Trigonometry | 14 | 256 |
+| Calculus | 17 | 277 |
 
 - Math fact sets hold 11 cards, one focus number crossed with 0 through 10. Addition and
   multiplication get two sets per number, one for each position of that number in the problem
