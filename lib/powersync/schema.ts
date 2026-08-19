@@ -23,6 +23,11 @@ const flashcard_sets = new Table(
     is_deleted: column.integer,
   },
   {
+    // Local only: nothing in this store is ever uploaded by the SDK. Without
+    // it every write appends to PowerSync's internal ps_crud queue, and since
+    // no connector is wired that queue is never drained and grows for the
+    // lifetime of the browser profile.
+    localOnly: true,
     indexes: {
       user_sets: ['user_id', 'is_deleted'],
       public_sets: ['is_public', 'is_deleted'],
@@ -57,6 +62,11 @@ const flashcards = new Table(
     updated_at: column.text,
   },
   {
+    // Local only: nothing in this store is ever uploaded by the SDK. Without
+    // it every write appends to PowerSync's internal ps_crud queue, and since
+    // no connector is wired that queue is never drained and grows for the
+    // lifetime of the browser profile.
+    localOnly: true,
     indexes: {
       set_cards: ['set_id', 'order'],
       user_cards: ['user_id'],
@@ -77,6 +87,11 @@ const offline_sets = new Table(
     created_at: column.text,
   },
   {
+    // Local only: nothing in this store is ever uploaded by the SDK. Without
+    // it every write appends to PowerSync's internal ps_crud queue, and since
+    // no connector is wired that queue is never drained and grows for the
+    // lifetime of the browser profile.
+    localOnly: true,
     indexes: {
       user_offline: ['user_id', 'last_accessed'],
       set_offline: ['user_id', 'set_id'],
@@ -96,6 +111,11 @@ const categories = new Table(
     created_at: column.text,
   },
   {
+    // Local only: nothing in this store is ever uploaded by the SDK. Without
+    // it every write appends to PowerSync's internal ps_crud queue, and since
+    // no connector is wired that queue is never drained and grows for the
+    // lifetime of the browser profile.
+    localOnly: true,
     indexes: {
       user_categories: ['user_id'],
     },

@@ -1,66 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FlashcardManager from '@/components/flashcards/FlashcardManager';
 import OfflineHistoryModal from '@/components/study/OfflineHistoryModal';
-import { useMigration } from '@/hooks/useMigration';
 import { ChartBarIcon } from '@heroicons/react/24/outline';
-import { Logger, LogContext } from '@/lib/logging/client-logger';
-import { useSession } from 'next-auth/react';
-import { useFlashcards } from '@/contexts/FlashcardContext';
-import { useToast } from '@/hooks/use-toast';
 
 export default function FlashcardsPage() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const router = useRouter();
-
-  const { flashcardSets } = useFlashcards();
-  const { toast } = useToast();
-  const { data: session, status } = useSession();
-  const { migrateAllSets } = useMigration();
-
-  useEffect(() => {
-    const hasMigrated = sessionStorage.getItem('autoMigrated');
-
-    if (hasMigrated || status !== 'authenticated' || !session?.user?.id) {
-      return;
-    }
-
-    if (flashcardSets.length === 0) {
-      Logger.log(LogContext.FLASHCARD, 'No local sets found. Triggering automatic migration...');
-
-      toast({
-        title: 'Syncing your account',
-        description: 'Please wait while we fetch your flashcard sets...',
-      });
-
-      sessionStorage.setItem('autoMigrated', 'true');
-
-      migrateAllSets({
-        onComplete: () => {
-          Logger.log(LogContext.FLASHCARD, 'Automatic migration complete.');
-          toast({
-            title: 'Sync Complete',
-            description: 'Your flashcard sets are all up to date.',
-          });
-        },
-        onError: (error: unknown) => {
-           Logger.error(LogContext.FLASHCARD, 'Auto-migration failed', { error });
-           toast({
-             variant: 'destructive',
-             title: 'Sync Failed',
-             description: 'Could not fetch your sets. Please try clearing the local cache or refreshing.',
-           });
-           sessionStorage.removeItem('autoMigrated');
-        }
-      });
-
-    } else {
-      Logger.log(LogContext.FLASHCARD, 'Local sets found. Skipping automatic migration.');
-      sessionStorage.setItem('autoMigrated', 'true');
-    }
-  }, [migrateAllSets, flashcardSets.length, status, session, toast]);
 
   const handleStartStudy = (setId: string) => {
     router.push(`/study?setId=${setId}`);
