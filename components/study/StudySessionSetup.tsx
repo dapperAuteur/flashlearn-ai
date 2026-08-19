@@ -25,6 +25,12 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 
+/**
+ * Tag every math fact set carries. Set by the seed script from the TAGS constant
+ * in lib/data/math-facts.ts.
+ */
+const MATH_FACTS_TAG = 'math-facts';
+
 interface StudySessionSetupProps {
   preSelectedSetId?: string;
   isReviewMode?: boolean;
@@ -53,11 +59,15 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
     dueDate?: string;
     myStatus: string;
   }>>([]);
-  const [publicSets, setPublicSets] = useState<Array<{ id: string; title: string; description: string; card_count: number }>>([]);
+  const [publicSets, setPublicSets] = useState<Array<{ id: string; title: string; description: string; card_count: number; tags: string[] }>>([]);
   const [categories, setCategories] = useState<Array<{ _id: string; name: string; slug: string; color: string }>>([]);
   const [categoryMap, setCategoryMap] = useState<Record<string, Array<{ id: string; name: string; color: string }>>>({});
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [featuredSets, setFeaturedSets] = useState<Array<{ id: string; title: string; description: string; cardCount: number; categories?: Array<{ name: string; color: string }> }>>([]);
+  const [featuredSets, setFeaturedSets] = useState<Array<{ id: string; title: string; description: string; cardCount: number; tags?: string[]; categories?: Array<{ name: string; color: string }> }>>([]);
+  // Tags for the set the student picked. PowerSync's local flashcard_sets table
+  // has no tags column, so for a signed-in student they are not in hand here and
+  // have to be fetched. The public and featured payloads already carry them.
+  const [selectedSetTags, setSelectedSetTags] = useState<string[]>([]);
 
   // Pre-select set if provided via URL query param
   useEffect(() => {
@@ -81,11 +91,12 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.sets) {
-          setPublicSets(data.sets.map((s: { id: string; title: string; description: string; cardCount: number }) => ({
+          setPublicSets(data.sets.map((s: { id: string; title: string; description: string; cardCount: number; tags?: string[] }) => ({
             id: s.id,
             title: s.title,
             description: s.description,
             card_count: s.cardCount,
+            tags: s.tags ?? [],
           })));
         }
         if (data?.featured) setFeaturedSets(data.featured);
@@ -167,6 +178,58 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
       })
       .catch(() => { /* silent */ });
   }, [selectedListId, status]);
+
+  // Resolve the selected set's tags, which decide whether multiple choice is
+  // offered. Reuse the tags already in hand before spending a request.
+  useEffect(() => {
+    if (!selectedListId) {
+      setSelectedSetTags([]);
+      return;
+    }
+
+    // The local cache carries tags now, so a signed-in student gets an answer
+    // with no request and, more to the point, gets one offline. Without this
+    // the check fails open and offers multiple choice on a recall-only set.
+    const local = flashcardSets.find((s) => s.id === selectedListId)?.tags;
+
+    const known =
+      (local ? local.split(',').filter(Boolean) : undefined) ??
+      featuredSets.find((s) => s.id === selectedListId)?.tags ??
+      publicSets.find((s) => s.id === selectedListId)?.tags;
+
+    if (known) {
+      setSelectedSetTags(known);
+      return;
+    }
+
+    let cancelled = false;
+    setSelectedSetTags([]);
+
+    fetch(`/api/sets/${selectedListId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data?.tags)) setSelectedSetTags(data.tags);
+      })
+      .catch(() => { /* offline or not readable: tags stay unknown */ });
+
+    return () => { cancelled = true; };
+  }, [selectedListId, featuredSets, publicSets, flashcardSets]);
+
+  /**
+   * Math fact sets drill recall. Picking 49 out of four numbers is an easier task
+   * than producing 49, so a student can clear a multiple-choice card without
+   * knowing the fact, and that answer would still tell the scheduler the card is
+   * mastered. The cards therefore ship no answer options and the mode is off.
+   */
+  const isMathFactSet = useMemo(() => selectedSetTags.includes(MATH_FACTS_TAG), [selectedSetTags]);
+
+  // If multiple choice was already picked when the student chose a math fact
+  // set, drop back to Classic rather than starting in a mode that is now off.
+  useEffect(() => {
+    if (isMathFactSet && studyMode === 'multiple-choice') {
+      setStudyMode('classic');
+    }
+  }, [isMathFactSet, studyMode, setStudyMode]);
 
   const handleStartSession = async () => {
     if (!selectedListId) {
@@ -745,21 +808,40 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
                 </button>
 
                 <button
-                  onClick={() => setStudyMode('multiple-choice')}
-                  aria-pressed={studyMode === 'multiple-choice'}
+                  onClick={() => {
+                    if (isMathFactSet) return;
+                    setStudyMode('multiple-choice');
+                  }}
+                  aria-pressed={!isMathFactSet && studyMode === 'multiple-choice'}
+                  aria-disabled={isMathFactSet}
                   aria-describedby="mode-mc-desc"
                   className={clsx(
                     'p-4 rounded-xl border-2 text-left transition-all',
-                    studyMode === 'multiple-choice'
-                      ? 'border-purple-500 bg-purple-50 shadow-md'
-                      : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                    isMathFactSet
+                      ? 'border-gray-300 border-dashed bg-gray-50 cursor-not-allowed'
+                      : studyMode === 'multiple-choice'
+                        ? 'border-purple-500 bg-purple-50 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                   )}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <ListBulletIcon className="h-5 w-5 text-purple-600" />
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <ListBulletIcon
+                      className={clsx('h-5 w-5', isMathFactSet ? 'text-gray-600' : 'text-purple-600')}
+                      aria-hidden="true"
+                    />
                     <h3 className="font-semibold text-gray-900 text-sm">Multiple Choice</h3>
+                    {isMathFactSet && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full">
+                        <LockClosedIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                        Not available
+                      </span>
+                    )}
                   </div>
-                  <p id="mode-mc-desc" className="text-xs text-gray-600">AI-generated answer options</p>
+                  <p id="mode-mc-desc" className="text-xs text-gray-600">
+                    {isMathFactSet
+                      ? 'Math fact sets ask you to remember the answer, not pick it from a list.'
+                      : 'AI-generated answer options'}
+                  </p>
                 </button>
               </div>
             </div>

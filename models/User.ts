@@ -72,6 +72,19 @@ const UserSchema = new Schema<IUser>({
   lastAiGenerationDate: {
     type: Date,
   },
+  /**
+   * When the current 30-day allowance period began.
+   *
+   * The counter used to reset only when the LAST generation was more than 30
+   * days old, which is 30 days of total inactivity rather than a 30-day
+   * allowance. Anyone who generated at least once a month never reset and their
+   * count climbed until it hit the cap for good. Absent on accounts that
+   * predate this field; the limiter treats the first generation after that as
+   * the start of a fresh period.
+   */
+  aiGenerationWindowStart: {
+    type: Date,
+  },
   preferences: {
     defaultStudyDirection: {
       type: String,
