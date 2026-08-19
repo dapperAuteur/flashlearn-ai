@@ -56,11 +56,15 @@ After reviewing the project requirements and existing documentation, I've create
 - [ ] Public/private toggle for flashcards
 - [ ] Team performance analytics
 
-### Phase 8: Real-time Multiplayer
-- [ ] Live study sessions with multiple users
-- [ ] Competitive quiz modes
-- [ ] Collaborative flashcard creation
-- [ ] Real-time interaction
+### Phase 8: Real-time Multiplayer (abandoned 2026-08-19)
+
+Dropped rather than deferred: Versus mode covers head to head competition asynchronously by design,
+and no websocket, Pusher, or Ably dependency was ever added. Nothing here is pending.
+
+- ~~Live study sessions with multiple users~~
+- ~~Competitive quiz modes~~
+- ~~Collaborative flashcard creation~~
+- ~~Real-time interaction~~
 
 ### Phase 9: Quality Assurance & Optimization
 - [ ] Comprehensive testing

@@ -1,5 +1,11 @@
 # FlashLearn AI: Next Phases Proposal
 
+> **Historical document.** The assessment below was written before the phases it proposes were
+> worked. It is kept as a record of what the proposal was answering, not as a status page. Many
+> rows in "What's NOT Built Yet" have shipped since. For current status read
+> `app/(public)/roadmap/page.tsx`, `app/(public)/changelog/page.tsx`, and `README.md`.
+> Last reconciled 2026-08-19.
+
 ## Current State Assessment
 
 ### What's Built and Working
@@ -29,6 +35,7 @@
 | Public roadmap page at `/roadmap` | Done |
 | Shareable set pages + shareable session results | Done |
 | Category management | Done |
+| Type-your-answer study mode | Done (shipped after this assessment) |
 
 ### What's NOT Built Yet
 | Feature | Priority | Notes |
@@ -39,7 +46,6 @@
 | **Admin user management** | High | `/admin/users` linked in nav but page doesn't exist |
 | **Admin app config page** | Medium | `/admin/settings` linked but doesn't exist |
 | **Multiple choice study mode** | Medium | Only flip-card Easy Mode exists |
-| **Type-your-answer study mode** | Medium | Not implemented |
 | **PDF text extraction** | Medium | `source: 'PDF'` type exists but no processing code |
 | **YouTube transcript extraction** | Low | Type exists, no code |
 | **Profile page forms** | Medium | Display works but update name/change password forms do nothing |
