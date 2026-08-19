@@ -25,7 +25,7 @@ const mockGetServerSession = jest.fn();
 jest.mock('next-auth/next', () => ({ getServerSession: () => mockGetServerSession() }));
 jest.mock('../../../lib/auth/auth', () => ({ authOptions: {} }));
 
-import { GET } from '@/app/api/powersync/route';
+import { GET } from '@/app/api/sync/pull/route';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { Profile } from '@/models/Profile';
 import { User } from '@/models/User';
@@ -89,14 +89,14 @@ async function pull() {
   // NextRequest, not Request: the route reads request.nextUrl.searchParams,
   // which only exists on the Next wrapper.
   const res = await GET(
-    new NextRequest('http://localhost/api/powersync?last_synced_at=1970-01-01T00:00:00.000Z'),
+    new NextRequest('http://localhost/api/sync/pull?last_synced_at=1970-01-01T00:00:00.000Z'),
   );
   const body = await res.json();
   if (!body?.data) throw new Error(`pull returned ${res.status}: ${JSON.stringify(body)}`);
   return (body.data as Array<Record<string, unknown>>).filter((d) => d.type === 'flashcards');
 }
 
-describe('GET /api/powersync: what an offline device receives', () => {
+describe('GET /api/sync/pull: what an offline device receives', () => {
   it('sends the authored multiple-choice options, not just front and back', async () => {
     const cards = await pull();
     const card = cards.find((c) => (c.data as Record<string, unknown>).front === '7 × 7 = ?');

@@ -51,6 +51,8 @@ const releases: Release[] = [
       '/admin/archived reassigns an archived classroom, study group, or school to a new owner, with eligibility checked per container kind',
       'Removed the /lists and /statistics placeholder pages and every link that pointed at them',
       'Retired the MongoDB-to-PowerSync migration path. Background sync already fills a fresh device with your sets, so signing in on a new browser no longer prompts for a migration you were not allowed to run.',
+      'Removed the offline conflict-resolution screen and its banner. The feature never worked: the sync service watched for a 409 response that no route has ever returned, so no conflict was ever recorded and the review page was always empty. The 1.4.0 entry below describes behavior the app did not have.',
+      'Corrected the offline documentation to match the code. The local set copy runs one way, server to device, on a five-minute poll, and study results upload with retry when you reconnect. There is no live streaming and no clash detection.',
     ],
   },
   {

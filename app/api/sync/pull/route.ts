@@ -90,7 +90,13 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Pull: Send server changes to client
+ * Pull: send the caller's sets and cards down to their local cache.
+ *
+ * Despite the old name, this was never a PowerSync endpoint and does not speak
+ * the PowerSync sync protocol. The SDK would want /sync/stream and
+ * /write-checkpoint2.json here. This is a plain incremental pull that
+ * lib/services/syncService.ts calls over fetch, which is the only sync path
+ * this app has. See plans/03-offline-sync.md.
  */
 async function handlePull(userId: string, params: PullParams) {
   const lastSyncedAt = params.last_synced_at ? new Date(params.last_synced_at) : new Date(0);

@@ -8,8 +8,6 @@ import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
-  CloudArrowDownIcon,
-  CloudArrowUpIcon,
   ArrowPathIcon,
   PencilSquareIcon,
   ChevronDownIcon,
@@ -56,7 +54,7 @@ export default function FlashcardManager({
 }: FlashcardManagerProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const { flashcardSets, offlineSets: localSets, toggleOfflineAvailability, deleteFlashcardSet } = useFlashcards();
+  const { flashcardSets, deleteFlashcardSet } = useFlashcards();
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -197,15 +195,6 @@ export default function FlashcardManager({
     );
   }
 
-  const handleToggle = async (setId: string) => {
-  try {
-    setLocalError(null);
-    await toggleOfflineAvailability(setId);
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Failed to toggle offline');
-    }
-  };
-
   // Build due count map for sorting
   const dueCountMap = new Map(dueSets.map(s => [s.setId, s.dueCount]));
 
@@ -250,7 +239,6 @@ export default function FlashcardManager({
   }
   const relevantCategories = categories.filter(c => userCategoryIds.has(c.id));
 
-  const isOffline = (setId: string) => localSets.some(s => s.set_id === setId);
 
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: 'recent', label: 'Recently Studied' },
@@ -262,9 +250,16 @@ export default function FlashcardManager({
 
   return (
     <div className="space-y-4">
+      {/*
+        Says what is actually true. The old line read "N of 10 sets available
+        offline" over a star toggle that gated nothing: the pull copies every
+        set you own regardless of the flag, and the study loader never reads it.
+        So the number was wrong in both directions, and the cap was imaginary.
+      */}
       <div className="bg-white rounded-lg shadow p-4">
         <p className="text-sm text-gray-600">
-          {localSets.length} of 10 sets available offline
+          All {flashcardSets.length} of your sets are saved on this device and can be studied
+          offline.
         </p>
       </div>
 
@@ -454,22 +449,6 @@ export default function FlashcardManager({
                     })()}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleToggle(set.id)}
-                  className={`p-2 rounded-full ${
-                    isOffline(set.id)
-                      ? 'text-green-600 bg-green-100'
-                      : 'text-gray-600 bg-gray-100'
-                  }`}
-                  title={isOffline(set.id) ? 'Remove from offline' : 'Add to offline'}
-                  aria-label={isOffline(set.id) ? `Remove ${set.title} from offline` : `Save ${set.title} for offline`}
-                >
-                  {isOffline(set.id) ? (
-                    <CloudArrowDownIcon className="h-5 w-5" aria-hidden="true" />
-                  ) : (
-                    <CloudArrowUpIcon className="h-5 w-5" aria-hidden="true" />
-                  )}
-                </button>
               </div>
               <div className="mt-4 flex gap-2">
                 <button
@@ -541,22 +520,6 @@ export default function FlashcardManager({
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  onClick={() => handleToggle(set.id)}
-                  className={`p-1.5 rounded-full ${
-                    isOffline(set.id)
-                      ? 'text-green-600'
-                      : 'text-gray-600'
-                  }`}
-                  title={isOffline(set.id) ? 'Remove from offline' : 'Add to offline'}
-                  aria-label={isOffline(set.id) ? `Remove ${set.title} from offline` : `Save ${set.title} for offline`}
-                >
-                  {isOffline(set.id) ? (
-                    <CloudArrowDownIcon className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <CloudArrowUpIcon className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </button>
                 <button
                   onClick={() => handleEditSet(set)}
                   className={`p-1.5 ${canEditSet(set) ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 cursor-not-allowed'}`}

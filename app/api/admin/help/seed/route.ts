@@ -152,37 +152,35 @@ The app syncs on three triggers:
 3. Every 5 minutes while online`,
   },
   {
-    slug: 'resolving-sync-conflicts',
-    title: 'Resolving Sync Conflicts',
+    slug: 'studying-offline',
+    title: 'Studying Offline',
     category: 'offline',
-    excerpt: 'When the same content is edited on multiple devices while offline, a conflict is detected. Learn how to resolve it.',
+    excerpt: 'What works without a connection, what does not, and when your results reach your account.',
     order: 2,
-    tags: ['offline', 'sync', 'conflicts'],
-    content: `# Resolving Sync Conflicts
+    tags: ['offline', 'sync', 'study'],
+    content: `# Studying Offline
 
-A sync conflict happens when you edit a flashcard set offline on one device while it was also edited elsewhere (another device or another user with access).
+You can study your own sets with no connection. Here is exactly what that covers.
 
-## How Conflicts Are Detected
-When you go back online and the app tries to push your changes, the server detects that the content has changed since your last sync. Instead of silently overwriting, the app queues the conflict for your review.
+## Before you go offline
+Open the app online at least once while signed in. Your sets are copied to your device then, and refreshed on every app start, whenever you reconnect, and every five minutes.
 
-## The Conflict Banner
-When a conflict is detected, you'll see:
-- A **red banner** at the bottom of the screen with the number of conflicts
-- A **toast notification** alerting you
-- A **"Review" link** that takes you to the conflict resolution page
+## What you can do offline
+- Study any set you own, in any of the three study modes
+- See card images, their descriptions, and videos
+- Answer written multiple-choice questions, with the answer choices the set author wrote
 
-## Resolving a Conflict
-Navigate to **Dashboard → Conflicts** (or tap the Review link). For each conflict:
+## What needs a connection
+- Sets from Explore that you do not own. Only your own sets are copied.
+- Creating or editing a set. Edits made offline are not reliably saved.
+- Generating cards with AI, sharing, your dashboard, and your study history.
 
-1. **Side-by-side view** shows your local version and the server version
-2. Fields that differ are highlighted in blue (local) and green (server)
-3. Choose one:
-   - **Keep Local**: Push your offline changes to the server
-   - **Keep Server**: Discard your local changes and use the server version
+## Where your results go
+Answers are stored on your device as you go and upload on their own once you are back online. Your spaced review schedule updates at that point, not before, so a card you missed offline is scheduled when your results arrive.
 
-## Preventing Conflicts
-- Sync regularly when online (the app does this automatically every 5 minutes)
-- Avoid editing the same set on multiple devices while offline`,
+## Editing on two devices
+There is no clash detection. If the same set is changed in two places, whichever change is saved last is the one kept. Edit a set in one place at a time.
+`,
   },
   // ──── API ────
   {

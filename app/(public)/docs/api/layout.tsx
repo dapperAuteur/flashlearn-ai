@@ -23,7 +23,7 @@ const docsNav = [
   { href: '/docs/api/spaced-repetition', label: 'Spaced Repetition', description: 'SM-2 study sessions' },
   { href: '/docs/api/versus-mode', label: 'Versus Mode', description: 'Competitive challenges' },
   { href: '/docs/api/link-tracking', label: 'Link Tracking', description: 'Short URLs & pixel attribution' },
-  { href: '/docs/api/offline-sync', label: 'Offline & Sync', description: 'Conflict resolution' },
+  { href: '/docs/api/offline-sync', label: 'Offline & Sync', description: 'Study without a connection' },
   { href: '/docs/api/ecosystem', label: 'Ecosystem Overview', description: 'Cross-product partner integration' },
   { href: '/docs/api/sessions', label: 'Sessions', description: 'Schedule decks + submit results' },
   { href: '/docs/api/mastery', label: 'Mastery', description: 'Per-standard rollup' },

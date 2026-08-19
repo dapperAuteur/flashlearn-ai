@@ -9,11 +9,8 @@ import {
   removeSessionFromQueue,
   getResults,
   getStudyHistoryBySessionId,
-  saveConflict,
-  getConflictCount,
-  type SyncConflict,
 } from '@/lib/db/indexeddb';
-import { getPowerSync, isPowerSyncInitialized } from '@/lib/powersync/client';
+import { getPowerSync, isPowerSyncInitialized, SYNC_CHECKPOINT_KEY } from '@/lib/powersync/client';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 // ============================================================================
@@ -38,8 +35,7 @@ export type SyncEventType =
   | 'sync-start'
   | 'sync-progress'
   | 'sync-complete'
-  | 'sync-error'
-  | 'conflict-detected';
+  | 'sync-error';
 
 export interface SyncEventData {
   type: SyncEventType;
@@ -47,7 +43,6 @@ export interface SyncEventData {
   isSyncing: boolean;
   pendingCount: number;
   syncedCount: number;
-  conflictCount: number;
   error?: string;
   lastSyncedAt?: Date;
 }
@@ -65,7 +60,6 @@ export class OfflineSyncService {
   private listeners = new Set<SyncEventListener>();
   private _pendingCount = 0;
   private _syncedCount = 0;
-  private _conflictCount = 0;
   private _lastSyncedAt: Date | null = null;
   private _initialized = false;
 
@@ -132,7 +126,6 @@ export class OfflineSyncService {
       isSyncing: this.syncInProgress,
       pendingCount: this._pendingCount,
       syncedCount: this._syncedCount,
-      conflictCount: this._conflictCount,
       lastSyncedAt: this._lastSyncedAt ?? undefined,
       ...extra,
     };
@@ -204,7 +197,6 @@ export class OfflineSyncService {
     this.syncInProgress = true;
     this._syncedCount = 0;
     this._pendingCount = await this.getPendingCount();
-    this._conflictCount = await getConflictCount().catch(() => 0);
     Logger.log(LogContext.SYSTEM, 'Starting offline data sync');
     this.emit('sync-start');
 
@@ -236,7 +228,7 @@ export class OfflineSyncService {
 
   /**
    * Pull flashcard data from the server into the local PowerSync database.
-   * Uses the /api/powersync endpoint which returns changes since last sync.
+   * Uses /api/sync/pull, which returns every set changed since the watermark.
    * Only runs for authenticated users (the endpoint requires auth via cookies).
    */
   private async pullFlashcardData(): Promise<void> {
@@ -248,10 +240,10 @@ export class OfflineSyncService {
       const session = await sessionRes.json();
       if (!session?.user?.id) return; // Not authenticated, skip pull
 
-      const lastSyncedAt = localStorage.getItem('powersync_last_synced_at') || '';
+      const lastSyncedAt = localStorage.getItem(SYNC_CHECKPOINT_KEY) || '';
       const url = lastSyncedAt
-        ? `/api/powersync?last_synced_at=${encodeURIComponent(lastSyncedAt)}`
-        : '/api/powersync';
+        ? `/api/sync/pull?last_synced_at=${encodeURIComponent(lastSyncedAt)}`
+        : '/api/sync/pull';
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -262,7 +254,7 @@ export class OfflineSyncService {
       const { checkpoint, data } = await response.json();
 
       if (!data || data.length === 0) {
-        if (checkpoint) localStorage.setItem('powersync_last_synced_at', checkpoint);
+        if (checkpoint) localStorage.setItem(SYNC_CHECKPOINT_KEY, checkpoint);
         return;
       }
 
@@ -326,7 +318,7 @@ export class OfflineSyncService {
         }
       }
 
-      if (checkpoint) localStorage.setItem('powersync_last_synced_at', checkpoint);
+      if (checkpoint) localStorage.setItem(SYNC_CHECKPOINT_KEY, checkpoint);
       Logger.log(LogContext.SYSTEM, `Pulled ${data.length} flashcard changes from server`);
     } catch (error) {
       Logger.warning(LogContext.SYSTEM, 'Flashcard data pull error', { error });
@@ -405,27 +397,10 @@ export class OfflineSyncService {
           body: JSON.stringify(data)
         });
 
-        // Detect conflict: if server returns 409, queue for resolution
-        if (res.status === 409) {
-          const serverResponse = await res.json().catch(() => ({}));
-          const conflict: SyncConflict = {
-            id: `conflict-set-${data._id}-${Date.now()}`,
-            entity: 'set',
-            entityId: data._id,
-            entityTitle: data.title || 'Untitled Set',
-            localData: data,
-            serverData: serverResponse.serverVersion || serverResponse,
-            localUpdatedAt: data.updatedAt || new Date().toISOString(),
-            serverUpdatedAt: serverResponse.serverVersion?.updatedAt || new Date().toISOString(),
-            detectedAt: new Date(),
-          };
-          await saveConflict(conflict);
-          this._conflictCount++;
-          Logger.warning(LogContext.SYSTEM, 'Sync conflict detected for set', { setId: data._id });
-          this.emit('conflict-detected');
-          return; // Don't throw — conflict is queued for user resolution
-        }
-
+        // No conflict branch. PATCH /api/sets/[id] carries no version
+        // precondition and never returns 409, so the handler that used to sit
+        // here could not run. Set edits are last write wins; see
+        // plans/03-offline-sync.md.
         if (!res.ok) throw new Error(`Set update failed: ${res.status}`);
         break;
       }
@@ -655,17 +630,6 @@ export class OfflineSyncService {
    */
   isSyncing(): boolean {
     return this.syncInProgress;
-  }
-
-  /**
-   * Get current conflict count from IndexedDB
-   */
-  async getConflictCount(): Promise<number> {
-    try {
-      return await getConflictCount();
-    } catch {
-      return 0;
-    }
   }
 
   // ============================================================================
