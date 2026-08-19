@@ -10,7 +10,7 @@ AI-powered flashcard platform with spaced repetition, versus mode, and offline-f
 - **Spaced Repetition.** SM-2 algorithm schedules reviews at optimal intervals.
 - **3 Study Modes.** Classic flip cards, multiple choice, type-your-answer with AI grading.
 - **Rich cards.** Authored multiple-choice options (scored by option id) and images or video on either side with alt text, all settable through the API so any partner can build "identify the image" questions. Media uploads via a Cloudinary-backed endpoint or any partner CDN URL.
-- **Curated math library.** Ready-to-study sets seeded from the repo: every single-digit addition, subtraction, multiplication, and division fact, split into small sets so a student can drill one number at a time, plus geometry, trigonometry, and calculus reference sets. Fact cards carry authored multiple-choice answers, so math practice costs no AI generations.
+- **Curated math library.** Repo-authored sets, loaded by `npm run seed:math`: every single-digit addition, subtraction, multiplication, and division fact, split into small sets so a student can drill one number at a time, plus geometry, trigonometry, and calculus reference sets. Fact cards carry authored multiple-choice answers, so math practice costs no AI generations.
 - **Versus Mode.** Head-to-head challenges with composite scoring (accuracy, speed, confidence, streaks) and ELO ratings.
 - **Offline-First.** PowerSync + IndexedDB with automatic sync and conflict resolution.
 - **Teams & Classrooms.** Study groups with join codes, shared sets, team chat, and teacher-led classrooms.
