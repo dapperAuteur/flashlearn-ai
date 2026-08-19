@@ -60,6 +60,14 @@ interface StudySessionState {
   isOfflineSession: boolean;
   isSyncing: boolean;
   syncError: string | null;
+  /**
+   * Set when a teacher is recording for a student instead of studying
+   * themselves. The results are written to this learner, so it is carried on
+   * the stored session and shown on screen for the whole session. A null here
+   * means ordinary self-study.
+   */
+  proctorSubject: ProctorSubject | null;
+  setProctorSubject: (subject: ProctorSubject | null) => void;
   startSession: (listId: string, direction: StudyDirection, cardIds?: string[], mode?: StudyMode) => Promise<void>;
   recordCardResult: (isCorrect: boolean, timeSeconds: number, confidenceRating?: number) => Promise<void>;
   recordConfidence: (rating: number) => void;
@@ -67,6 +75,13 @@ interface StudySessionState {
   nextCard: () => void;
   showNextCard: () => void;
   resetSession: () => void;
+}
+
+export interface ProctorSubject {
+  id: string;
+  name: string;
+  /** 'proctored' = the adult holds the device. 'handoff' = the learner does. */
+  mode: 'proctored' | 'handoff';
 }
 
 const StudySessionContext = createContext<StudySessionState | undefined>(undefined);
@@ -92,6 +107,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
   const [isOfflineSession, setIsOfflineSession] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [proctorSubject, setProctorSubject] = useState<ProctorSubject | null>(null);
 
   const startSession = useCallback(async (listId: string, direction: StudyDirection, cardIds?: string[], mode?: StudyMode) => {
     try {
@@ -332,7 +348,11 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
         durationSeconds: totalTime,
         isOfflineSession,
         studyDirection,
-        studyMode
+        studyMode,
+        // Only present when a teacher ran this for someone else. syncService
+        // forwards these to the server, which re-checks the authorization
+        // rather than trusting them.
+        ...(proctorSubject ? { subjectId: proctorSubject.id, proctorMode: proctorSubject.mode } : {}),
       };
 
       await saveStudyHistory(historyEntry);
@@ -373,7 +393,7 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
       setError("Failed to save results. Please try again.");
       setIsComplete(false);
     }
-  }, [sessionId, sessionStartTime, flashcards, flashcardSetName, isOfflineSession, studyDirection, studyMode, authSession?.user?.id]);
+  }, [sessionId, sessionStartTime, flashcards, flashcardSetName, isOfflineSession, studyDirection, studyMode, authSession?.user?.id, proctorSubject]);
 
   const recordConfidence = useCallback((rating: number) => {
     if (rating < 1 || rating > 5) {
@@ -477,6 +497,10 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     setHasCompletedConfidence(!isConfidenceRequired);
     setIsOfflineSession(false);
     setIsSyncing(false);
+    // Clear the subject on reset. A teacher who finishes with one student and
+    // starts again must re-pick, because silently carrying the last learner
+    // forward is how results land on the wrong person.
+    setProctorSubject(null);
     setSyncError(null);
     setStudyMode('classic');
     setMultipleChoiceData({});
@@ -504,6 +528,8 @@ export function StudySessionProvider({ children }: { children: ReactNode }) {
     isOfflineSession,
     isSyncing,
     syncError,
+    proctorSubject,
+    setProctorSubject,
     startSession,
     recordCardResult,
     recordConfidence,

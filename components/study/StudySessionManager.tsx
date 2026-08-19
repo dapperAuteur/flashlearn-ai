@@ -9,6 +9,7 @@ import StudySessionResults from './StudySessionResults';
 import StudyCard from './StudyCard';
 import MultipleChoiceCard from './MultipleChoiceCard';
 import CardFeedback from './CardFeedback';
+import ProctorBanner from './ProctorBanner';
 import CelebrationModal from './CelebrationModal';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -46,6 +47,7 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
     lastCardResult,
     isConfidenceRequired,
     hasCompletedConfidence,
+    proctorSubject,
   } = useStudySession();
   const { status } = useSession();
   const router = useRouter();
@@ -175,6 +177,8 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
       const modeLabel = studyMode === 'multiple-choice' ? 'Multiple Choice' : 'Classic';
 
       return (
+        <div className="flex-1 min-h-0 flex flex-col gap-2">
+        {proctorSubject && <ProctorBanner subject={proctorSubject} />}
         <div ref={cardContainerRef} tabIndex={-1} className="flex-1 min-h-0 flex flex-col bg-gray-800 rounded-lg shadow-lg p-3 sm:p-4 outline-none" aria-label={`Studying ${flashcardSetName || 'Study Set'}, card ${currentIndex + 1} of ${flashcards.length}`}>
           <div className="flex items-center justify-between gap-2 text-sm text-gray-300 mb-2" aria-live="polite">
             <h3 className="flex-1 min-w-0 truncate font-semibold text-white" title={flashcardSetName || 'Study Set'}>
@@ -212,6 +216,7 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
               />
             )}
           </div>
+        </div>
         </div>
       );
     }
