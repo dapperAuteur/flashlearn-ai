@@ -14,6 +14,7 @@ export interface ITeam extends Document {
   members: ITeamMember[];
   sharedSets: mongoose.Types.ObjectId[];
   joinCode: string;
+  isArchived: boolean;
   isPublic: boolean;
   maxMembers: number;
   emailInvitesUsed: number;
@@ -70,6 +71,10 @@ const TeamSchema = new Schema<ITeam>(
       unique: true,
       uppercase: true,
       trim: true,
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
     },
     isPublic: {
       type: Boolean,

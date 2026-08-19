@@ -122,6 +122,15 @@ export default function PrivacyPage() {
                 <strong>Support conversations.</strong> Closed and unlinked from you, with the
                 content retained as a record of the support request.
               </li>
+              <li>
+                <strong>Team chat.</strong> Messages you posted in a team stay in that team&apos;s
+                history so the conversation still reads in order for everyone else, with your name
+                removed from them.
+              </li>
+              <li>
+                <strong>Invitations.</strong> An invitation someone sent to your email address stays
+                on their record, with the address itself replaced.
+              </li>
             </ul>
             <p>
               Shared content behaves differently by design. If you taught a classroom, the classroom

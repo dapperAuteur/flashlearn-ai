@@ -8,6 +8,12 @@ const BATCH_SIZE = 50;
 /**
  * GET /api/cron/purge-deleted-accounts
  *
+ * THIS ROUTE IS MANUAL-TRIGGER ONLY. It is not on a schedule and `vercel.json`
+ * does not register it. The scheduled path is /api/cron/study-reminders, which
+ * runs the same purge sweep as its second phase after sending reminders. Do not
+ * assume this endpoint is what erases accounts in production; it is the handle
+ * for draining a backlog or forcing a sweep on demand.
+ *
  * Finishes what DELETE /api/user/profile started. That route soft deletes:
  * it stamps `deletedAt` and `purgeScheduledFor` on the user and takes their
  * public sets down, but destroys nothing. This endpoint finds the accounts
@@ -24,11 +30,10 @@ const BATCH_SIZE = 50;
  * /api/cron/study-reminders. Vercel Cron sets the header automatically.
  *
  * NOTE: vercel.json registers only /api/cron/study-reminders, because Vercel's
- * free tier allows one daily cron. Scheduling this one is an operator
- * decision: it needs either a plan that allows a second cron, a QStash
- * schedule, or a swap of the existing entry. Until then the endpoint can be
- * hit manually with the CRON_SECRET bearer, and nothing is purged if it never
- * runs.
+ * free tier allows one daily cron. The purge rides along inside that handler
+ * rather than holding a second schedule of its own. This route stays as the
+ * manual handle: hit it with the CRON_SECRET bearer to drain a backlog without
+ * waiting for the daily run.
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');

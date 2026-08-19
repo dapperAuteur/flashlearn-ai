@@ -8,6 +8,7 @@ export interface ISchool extends Document {
   subscriptionTier: 'Individual Teacher' | 'School' | 'District';
   teachers: mongoose.Types.ObjectId[];
   students: mongoose.Types.ObjectId[];
+  isArchived: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +48,10 @@ const SchoolSchema = new Schema<ISchool>({
     type: Schema.Types.ObjectId,
     ref: 'User',
   }],
+  isArchived: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 export const School = mongoose.models.School || mongoose.model<ISchool>('School', SchoolSchema);

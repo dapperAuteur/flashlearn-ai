@@ -25,6 +25,7 @@ import { ApiUsage } from '@/models/ApiUsage';
 import { ApiLog } from '@/models/ApiLog';
 import { Conversation } from '@/models/Conversation';
 import { Message } from '@/models/Message';
+import { TeamMessage } from '@/models/TeamMessage';
 import { Challenge } from '@/models/Challenge';
 import { ShareEvent } from '@/models/ShareEvent';
 import { ABTestEvent } from '@/models/ABTestEvent';
@@ -39,6 +40,7 @@ import {
   purgeUserAccount,
   DELETED_USER_TOMBSTONE,
   DELETED_USER_DISPLAY_NAME,
+  DELETED_USER_REDACTED_EMAIL,
   ACCOUNT_DELETION_LOG_COLLECTION,
 } from '@/lib/api/purgeUserAccount';
 
@@ -81,6 +83,7 @@ afterEach(async () => {
     ApiLog.deleteMany({}),
     Conversation.deleteMany({}),
     Message.deleteMany({}),
+    TeamMessage.deleteMany({}),
     Challenge.deleteMany({}),
     ShareEvent.deleteMany({}),
     ABTestEvent.deleteMany({}),
@@ -869,4 +872,208 @@ it('cuts every dangling reference in the archive bucket without deleting a row',
   } | null>();
   expect(referredAfter).not.toBeNull();
   expect(referredAfter?.referredBy).toBeNull();
+});
+
+it('archives team chat instead of tearing it out of the thread', async () => {
+  const leaver = await seedAccount('chat-leaver');
+  const teammate = await seedAccount('chat-teammate');
+
+  const team = await Team.create({
+    name: 'Finals Crew',
+    creatorId: teammate.userId,
+    members: [
+      { userId: teammate.userId, role: 'admin' },
+      { userId: leaver.userId, role: 'member' },
+    ],
+    joinCode: 'CHAT01',
+  });
+
+  const fromLeaver = await TeamMessage.create({
+    teamId: team._id,
+    senderId: leaver.userId,
+    content: 'Reviewing chapters 6 and 7 tonight if anyone wants to join.',
+  });
+
+  const fromTeammate = await TeamMessage.create({
+    teamId: team._id,
+    senderId: teammate.userId,
+    content: 'I am in. Meet at 7.',
+  });
+
+  const result = await purgeUserAccount(leaver.userId, meta);
+
+  const messages = await TeamMessage.find({ teamId: team._id })
+    .sort({ createdAt: 1 })
+    .lean<Array<{ _id: Types.ObjectId; senderId: Types.ObjectId; content: string }>>();
+
+  // Nothing is removed from the thread the rest of the team still reads.
+  expect(messages).toHaveLength(2);
+
+  const leaverMessage = messages.find((m) => m._id.toString() === fromLeaver._id.toString());
+  expect(leaverMessage?.senderId.toString()).toBe(DELETED_USER_TOMBSTONE.toString());
+  expect(leaverMessage?.content).toBe(
+    'Reviewing chapters 6 and 7 tonight if anyone wants to join.',
+  );
+
+  const teammateMessage = messages.find((m) => m._id.toString() === fromTeammate._id.toString());
+  expect(teammateMessage?.senderId.toString()).toBe(teammate.userId.toString());
+  expect(teammateMessage?.content).toBe('I am in. Meet at 7.');
+
+  expect(result.byCollection.team_messages).toBe(1);
+});
+
+it('redacts an invitation addressed to the deleted account and keeps the row', async () => {
+  const invitee = await seedAccount('invitee');
+  const inviter = await seedAccount('inviter');
+
+  const addressedToLeaver = await Invitation.create({
+    email: 'invitee@example.test',
+    invitedBy: inviter.userId,
+    token: 'tok-to-leaver',
+    personalNote: 'Come study with us.',
+  });
+
+  const addressedToSomebodyElse = await Invitation.create({
+    email: 'stranger@example.test',
+    invitedBy: inviter.userId,
+    token: 'tok-to-stranger',
+  });
+
+  await purgeUserAccount(invitee.userId, meta);
+
+  const redacted = await Invitation.findById(addressedToLeaver._id).lean<{
+    email: string;
+    invitedBy: Types.ObjectId;
+    token: string;
+    personalNote: string;
+  } | null>();
+
+  // The row survives: it is the inviter's record of who they invited and it
+  // counts against their invite cap.
+  expect(redacted).not.toBeNull();
+  expect(redacted?.email).toBe(DELETED_USER_REDACTED_EMAIL);
+  // Whatever replaced the address must not still be one.
+  expect(redacted?.email).not.toContain('@');
+  expect(redacted?.invitedBy.toString()).toBe(inviter.userId.toString());
+  expect(redacted?.token).toBe('tok-to-leaver');
+  expect(redacted?.personalNote).toBe('Come study with us.');
+
+  const untouched = await Invitation.findById(addressedToSomebodyElse._id).lean<{
+    email: string;
+  } | null>();
+  expect(untouched?.email).toBe('stranger@example.test');
+});
+
+it('archives a team its creator deleted and keeps every other member', async () => {
+  const creator = await seedAccount('team-creator');
+  const memberA = await seedAccount('team-member-a');
+  const memberB = await seedAccount('team-member-b');
+
+  const team = await Team.create({
+    name: 'Anatomy Group',
+    creatorId: creator.userId,
+    members: [
+      { userId: creator.userId, role: 'admin' },
+      { userId: memberA.userId, role: 'member' },
+      { userId: memberB.userId, role: 'viewer' },
+    ],
+    joinCode: 'TARCH1',
+  });
+
+  const result = await purgeUserAccount(creator.userId, meta);
+
+  const after = await Team.findById(team._id).lean<{
+    isArchived: boolean;
+    creatorId: Types.ObjectId;
+    members: Array<{ userId: Types.ObjectId; role: string }>;
+    name: string;
+  } | null>();
+
+  expect(after).not.toBeNull();
+  expect(after?.isArchived).toBe(true);
+  expect(after?.name).toBe('Anatomy Group');
+  // The former creator's id is the breadcrumb an admin hands the team over by.
+  expect(after?.creatorId.toString()).toBe(creator.userId.toString());
+  // Only the departing account's own membership goes. Nobody else is stripped.
+  expect(after?.members.map((m) => m.userId.toString())).toEqual([
+    memberA.userId.toString(),
+    memberB.userId.toString(),
+  ]);
+  expect(after?.members[1].role).toBe('viewer');
+
+  expect(result.byCollection.teams_archived).toBe(1);
+});
+
+it('archives a school its admin deleted and keeps both rosters', async () => {
+  const admin = await seedAccount('school-owner');
+  const teacher = await seedAccount('school-staff');
+  const student = await seedAccount('school-pupil');
+
+  const school = await School.create({
+    name: 'Lakeside Middle',
+    schoolCode: 'LAKE01',
+    adminId: admin.userId,
+    teachers: [teacher.userId],
+    students: [student.userId],
+  });
+
+  const result = await purgeUserAccount(admin.userId, meta);
+
+  const after = await School.findById(school._id).lean<{
+    isArchived: boolean;
+    adminId: Types.ObjectId;
+    teachers: Types.ObjectId[];
+    students: Types.ObjectId[];
+  } | null>();
+
+  expect(after).not.toBeNull();
+  expect(after?.isArchived).toBe(true);
+  // Same breadcrumb rule as classrooms and teams.
+  expect(after?.adminId.toString()).toBe(admin.userId.toString());
+  expect(after?.teachers.map(String)).toEqual([teacher.userId.toString()]);
+  expect(after?.students.map(String)).toEqual([student.userId.toString()]);
+
+  expect(result.byCollection.schools_archived).toBe(1);
+});
+
+it('leaves a team and school the departing user only belonged to unarchived', async () => {
+  const owner = await seedAccount('staying-owner');
+  const leaver = await seedAccount('leaving-member');
+
+  const team = await Team.create({
+    name: 'Latin Roots',
+    creatorId: owner.userId,
+    members: [
+      { userId: owner.userId, role: 'admin' },
+      { userId: leaver.userId, role: 'member' },
+    ],
+    joinCode: 'TARCH2',
+  });
+
+  const school = await School.create({
+    name: 'Northgate Academy',
+    schoolCode: 'NORTH1',
+    adminId: owner.userId,
+    teachers: [leaver.userId],
+    students: [],
+  });
+
+  const result = await purgeUserAccount(leaver.userId, meta);
+
+  const teamAfter = await Team.findById(team._id).lean<{
+    isArchived: boolean;
+    members: Array<{ userId: Types.ObjectId }>;
+  } | null>();
+  expect(teamAfter?.isArchived).toBe(false);
+  expect(teamAfter?.members.map((m) => m.userId.toString())).toEqual([owner.userId.toString()]);
+
+  const schoolAfter = await School.findById(school._id).lean<{
+    isArchived: boolean;
+    teachers: Types.ObjectId[];
+  } | null>();
+  expect(schoolAfter?.isArchived).toBe(false);
+  expect(schoolAfter?.teachers).toHaveLength(0);
+
+  expect(result.byCollection.teams_archived).toBe(0);
+  expect(result.byCollection.schools_archived).toBe(0);
 });

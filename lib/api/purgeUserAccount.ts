@@ -21,6 +21,7 @@ import { ApiUsage } from '@/models/ApiUsage';
 import { ApiLog } from '@/models/ApiLog';
 import { Conversation } from '@/models/Conversation';
 import { Message } from '@/models/Message';
+import { TeamMessage } from '@/models/TeamMessage';
 import { Challenge } from '@/models/Challenge';
 import { ShareEvent } from '@/models/ShareEvent';
 import { ABTestEvent } from '@/models/ABTestEvent';
@@ -58,6 +59,13 @@ export const DELETED_USER_TOMBSTONE = new Types.ObjectId('0000000000000000000000
 // scoreboard to render; it does not have to keep this person's name.
 export const DELETED_USER_DISPLAY_NAME = 'Deleted user';
 
+// Replaces an email address that was copied onto a row belonging to somebody
+// else, such as an invitation addressed to this account. The field is required
+// on those schemas, so it needs a value rather than a null, and the value is
+// deliberately not shaped like an address: nothing should be able to mail it,
+// match it, or mistake it for one.
+export const DELETED_USER_REDACTED_EMAIL = '[redacted]';
+
 // How long a soft-deleted account sits before the cron erases it. Long enough
 // to cover an angry-at-2am deletion and a support ticket about it.
 export const ACCOUNT_GRACE_PERIOD_DAYS = 30;
@@ -77,8 +85,11 @@ const RETAINED_COLLECTIONS = [
   'api_usage',
   'api_logs',
   'classrooms_archived',
+  'teams_archived',
+  'schools_archived',
   'conversations',
   'messages',
+  'team_messages',
   'challenges',
   'share_events',
   'ab_test_events',
@@ -106,20 +117,22 @@ const RETAINED_COLLECTIONS = [
 //       chargeback defense; auth_logs backs brute-force and account-takeover
 //       investigation; ApiUsage feeds overage billing; ApiLog is the request
 //       log; Conversation and Message are support threads whose admin half is
-//       the business's own record. Those obligations outlive an erasure
-//       request, so the row stays and the link to the person is cut instead
-//       (null the ref where the field is optional, DELETED_USER_TOMBSTONE
-//       where it is required, direct identifiers blanked).
+//       the business's own record; TeamMessage is team chat other members can
+//       still read. Those obligations outlive an erasure request, so the row
+//       stays and the link to the person is cut instead (null the ref where
+//       the field is optional, DELETED_USER_TOMBSTONE where it is required,
+//       direct identifiers blanked or replaced).
 //
 //   (c) $PULL MEMBERSHIP — classrooms, teams, schools, and assignments the
 //       user belonged to but does not own. Removing a member must never delete
 //       the container, because the container holds other people's data.
 //
 //   (d) ARCHIVE OWNED CONTAINERS — a classroom whose teacher deletes their
-//       account is archived, not deleted, and its students stay in it. The
-//       classroom's `teacherId` is deliberately left pointing at the gone
+//       account is archived, not deleted, and its students stay in it. Teams
+//       and schools work the same way. The owner reference (`teacherId`,
+//       `creatorId`, `adminId`) is deliberately left pointing at the gone
 //       account: it is the only breadcrumb an admin has for reassigning the
-//       room to a new teacher without guessing.
+//       container to a new owner without guessing.
 //
 // Order matters. Outbound credentials and webhook targets go first so nothing
 // can authenticate or fire mid-deletion, then derived rows, then owned
@@ -136,6 +149,14 @@ export async function purgeUserAccount(
   const userObjId = typeof userId === 'string' ? new Types.ObjectId(userId) : userId;
   const byCollection: Record<string, number> = {};
   let membershipsPulled = 0;
+
+  // The address this account was reachable at, read once up front because the
+  // invitation step needs it and the User row is already gone on a re-run. A
+  // null here means there is nothing left to redact, which is the correct
+  // answer on a second pass.
+  const accountRow = await User.findById(userObjId, { email: 1 })
+    .lean<{ email?: string } | null>();
+  const accountEmail = accountRow?.email ?? null;
 
   // --- (a) DELETE ---------------------------------------------------------
 
@@ -296,15 +317,32 @@ export async function purgeUserAccount(
 
   // --- (d) ARCHIVE OWNED CONTAINERS --------------------------------------
 
-  // Step 10: classrooms this user taught. Deleting them would destroy every
-  // enrolled student's assignment history, so the room is archived instead and
-  // the roster is left intact. `teacherId` still names the account that is
-  // going away, which is what an admin reassigning the room needs to know.
+  // Step 10: containers this user owned. Deleting them would destroy every
+  // other member's history, so each is archived instead and its roster is left
+  // exactly as it was. Only the archive flag is written here; no membership
+  // array is touched. The owner reference still names the account that is going
+  // away, which is what an admin reassigning the container needs to know.
   const classroomsArchived = await Classroom.updateMany(
     { teacherId: userObjId, isArchived: { $ne: true } },
     { $set: { isArchived: true } },
   );
   byCollection.classrooms_archived = classroomsArchived.modifiedCount ?? 0;
+
+  // Teams keep the owner on `creatorId`. Same breadcrumb, same reason.
+  const teamsArchived = await Team.updateMany(
+    { creatorId: userObjId, isArchived: { $ne: true } },
+    { $set: { isArchived: true } },
+  );
+  byCollection.teams_archived = teamsArchived.modifiedCount ?? 0;
+
+  // Schools keep the owner on `adminId`. A school archived this way still holds
+  // its teacher and student rosters, and the classrooms under it are archived
+  // by the step above only if this same account taught them.
+  const schoolsArchived = await School.updateMany(
+    { adminId: userObjId, isArchived: { $ne: true } },
+    { $set: { isArchived: true } },
+  );
+  byCollection.schools_archived = schoolsArchived.modifiedCount ?? 0;
 
   // --- (b) ANONYMIZE AND RETAIN ------------------------------------------
 
@@ -402,7 +440,19 @@ export async function purgeUserAccount(
   byCollection.messages = messagesResult.modifiedCount ?? 0;
   anonymizedRecordCount += messagesResult.modifiedCount ?? 0;
 
-  // Step 17: everything else holding a reference to this account. Each row is
+  // Step 17: team chat. Unlike a support thread, TeamMessage is genuine
+  // two-party conversation, so deleting this account's half would tear holes in
+  // what every other member of the team can still scroll back through. The
+  // message keeps its content and its place in the history; the sender is cut
+  // out of it. `senderId` is required on the schema, so it takes the tombstone.
+  const teamMessagesResult = await TeamMessage.updateMany(
+    { senderId: userObjId },
+    { $set: { senderId: DELETED_USER_TOMBSTONE } },
+  );
+  byCollection.team_messages = teamMessagesResult.modifiedCount ?? 0;
+  anonymizedRecordCount += teamMessagesResult.modifiedCount ?? 0;
+
+  // Step 18: everything else holding a reference to this account. Each row is
   // somebody else's record or an aggregate that would lose meaning if it
   // vanished, so the row survives and only the pointer is cut. Optional refs
   // become null; required refs get the tombstone.
@@ -477,8 +527,23 @@ export async function purgeUserAccount(
     { acceptedUserId: userObjId },
     { $set: { acceptedUserId: null } },
   );
+  // An invite addressed TO this account still carries their real address, which
+  // is a live identifier that would otherwise outlive the erasure request. The
+  // row is the sender's own record of who they invited and counts against their
+  // invite cap, so it stays; the address is replaced. `email` is required on the
+  // schema, so it takes a redaction value rather than a null.
+  let invitationRecipientCount = 0;
+  if (accountEmail) {
+    const invitationRecipient = await Invitation.updateMany(
+      { email: accountEmail },
+      { $set: { email: DELETED_USER_REDACTED_EMAIL } },
+    );
+    invitationRecipientCount = invitationRecipient.modifiedCount ?? 0;
+  }
   const invitationCount =
-    (invitationSender.modifiedCount ?? 0) + (invitationAccepter.modifiedCount ?? 0);
+    (invitationSender.modifiedCount ?? 0) +
+    (invitationAccepter.modifiedCount ?? 0) +
+    invitationRecipientCount;
   byCollection.invitations = invitationCount;
   anonymizedRecordCount += invitationCount;
 
@@ -520,7 +585,7 @@ export async function purgeUserAccount(
   byCollection.users_referral = referralResult.modifiedCount ?? 0;
   anonymizedRecordCount += referralResult.modifiedCount ?? 0;
 
-  // Step 18: the account row itself, last, so a crash before this point
+  // Step 19: the account row itself, last, so a crash before this point
   // leaves a user who can sign in and retry rather than an orphaned session.
   const userResult = await User.deleteOne({ _id: userObjId });
   byCollection.users = userResult.deletedCount ?? 0;
@@ -529,7 +594,7 @@ export async function purgeUserAccount(
     .filter(([name]) => !RETAINED_COLLECTIONS.includes(name as typeof RETAINED_COLLECTIONS[number]))
     .reduce((sum, [, count]) => sum + count, 0);
 
-  // Step 19: the receipt. Written even on a no-op re-run so support can prove
+  // Step 20: the receipt. Written even on a no-op re-run so support can prove
   // when a deletion request was honored.
   if (db) {
     await db.collection(ACCOUNT_DELETION_LOG_COLLECTION).insertOne({
