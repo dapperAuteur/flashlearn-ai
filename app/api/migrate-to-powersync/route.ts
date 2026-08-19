@@ -15,22 +15,32 @@ export async function POST(request: NextRequest) {
     }
 
     await dbConnect();
-    
-    // Get user's profiles
-    // const profiles = await Profile.find({ user: new mongoose.Types.ObjectId(session.user.id) });
-    // const profileIds = profiles.map(p => p._id);
 
     const body = await request.json().catch(() => ({}));
     const { migrateAll = false, limit = 100, skip = 0 } = body;
-    
-    // Get all sets
-    // const sets = await FlashcardSet.find({ profile: { $in: profileIds } }).lean();
+
+    // migrateAll reads every set in the database, private sets included. Without
+    // this check any signed-in user could POST { migrateAll: true } and page
+    // through everyone else's content. The old code only warned about it in a
+    // comment, which is not a check.
+    if (migrateAll && session.user.role !== 'Admin') {
+      Logger.log({
+        context: LogContext.SYSTEM,
+        level: LogLevel.WARNING,
+        message: 'Non-admin attempted a migrateAll migration',
+        userId: session.user.id,
+      });
+      return NextResponse.json(
+        { error: 'Admin role required to migrate all sets.' },
+        { status: 403 },
+      );
+    }
+
     let sets;
     let totalCount;
 
     if (migrateAll) {
-      // Admin migration - get ALL sets from MongoDB
-      // WARNING: Only enable this for trusted admin users
+      // Admin-only: every set in the database, paged. Guarded above.
       Logger.log({
         context: LogContext.SYSTEM,
         level: LogLevel.WARNING,
