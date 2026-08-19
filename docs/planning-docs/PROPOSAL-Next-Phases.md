@@ -56,7 +56,7 @@
 | **Push notifications** | Low | Not started |
 | **Celebration/achievement system** | Low | Not started |
 | **Rich text editor (TipTap)** | Low | Not started |
-| **Image upload for cards** | Medium | Not started |
+| **Image upload for cards** | Medium | Done. `POST/DELETE /api/flashcards/[setId]/images`, wired into My Flashcards. Alt text required. |
 
 ### Known Bugs
 | Bug | Location |
