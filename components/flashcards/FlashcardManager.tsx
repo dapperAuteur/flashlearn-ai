@@ -8,8 +8,6 @@ import { PowerSyncFlashcardSet } from '@/lib/powersync/schema';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
-  CloudArrowDownIcon,
-  CloudArrowUpIcon,
   ArrowPathIcon,
   PencilSquareIcon,
   ChevronDownIcon,
@@ -25,7 +23,6 @@ import CardImageModal from './CardImageModal';
 
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useMigration } from '@/hooks/useMigration';
 import { useSession } from 'next-auth/react';
 import { LogContext, Logger } from '@/lib/logging/client-logger';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -57,15 +54,13 @@ export default function FlashcardManager({
 }: FlashcardManagerProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const { flashcardSets, offlineSets: localSets, toggleOfflineAvailability, deleteFlashcardSet } = useFlashcards();
-  const { migrating, error: migrationError, migrationProgress, migrateAllSets } = useMigration();
+  const { flashcardSets, deleteFlashcardSet } = useFlashcards();
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedSet, setSelectedSet] = useState<PowerSyncFlashcardSet | null>(null);
   const [imageModalSet, setImageModalSet] = useState<PowerSyncFlashcardSet | null>(null);
 
-  const { clearLocalCache } = useMigration();
   const { toast } = useToast();
 
   const [localError, setLocalError] = useState<string | null>(null);
@@ -184,11 +179,6 @@ export default function FlashcardManager({
       }
     }
   };
-  const handleClearCache = async () => {
-    if (confirm('Are you sure you want to clear the local cache? This will force a full re-sync from the server.')) {
-      await clearLocalCache();
-    }
-  }
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -204,15 +194,6 @@ export default function FlashcardManager({
       </div>
     );
   }
-
-  const handleToggle = async (setId: string) => {
-  try {
-    setLocalError(null);
-    await toggleOfflineAvailability(setId);
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Failed to toggle offline');
-    }
-  };
 
   // Build due count map for sorting
   const dueCountMap = new Map(dueSets.map(s => [s.setId, s.dueCount]));
@@ -258,7 +239,6 @@ export default function FlashcardManager({
   }
   const relevantCategories = categories.filter(c => userCategoryIds.has(c.id));
 
-  const isOffline = (setId: string) => localSets.some(s => s.set_id === setId);
 
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: 'recent', label: 'Recently Studied' },
@@ -270,9 +250,16 @@ export default function FlashcardManager({
 
   return (
     <div className="space-y-4">
+      {/*
+        Says what is actually true. The old line read "N of 10 sets available
+        offline" over a star toggle that gated nothing: the pull copies every
+        set you own regardless of the flag, and the study loader never reads it.
+        So the number was wrong in both directions, and the cap was imaginary.
+      */}
       <div className="bg-white rounded-lg shadow p-4">
         <p className="text-sm text-gray-600">
-          {localSets.length} of 10 sets available offline
+          All {flashcardSets.length} of your sets are saved on this device and can be studied
+          offline.
         </p>
       </div>
 
@@ -425,32 +412,6 @@ export default function FlashcardManager({
             <p className="text-red-800">{localError}</p>
           </div>
         )}
-        {migrationError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800 font-medium">Migration Error</p>
-            <p className="text-red-800">{migrationError}</p>
-          </div>
-        )}
-        {/* Migration progress */}
-      {migrating && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-blue-800 font-medium">Migration in Progress</p>
-          <div className="mt-2 bg-blue-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{
-                width: `${migrationProgress.total > 0
-                  ? (migrationProgress.completed / migrationProgress.total) * 100
-                  : 0}%`
-              }}
-            />
-          </div>
-          <p className="text-blue-700 text-sm mt-2">
-            Processing batch {migrationProgress.currentBatch} sets...
-          </p>
-        </div>
-      )}
-
       {/* Grid View */}
       {viewMode === 'grid' && (
         <div role="list" aria-label="Flashcard sets" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -488,22 +449,6 @@ export default function FlashcardManager({
                     })()}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleToggle(set.id)}
-                  className={`p-2 rounded-full ${
-                    isOffline(set.id)
-                      ? 'text-green-600 bg-green-100'
-                      : 'text-gray-600 bg-gray-100'
-                  }`}
-                  title={isOffline(set.id) ? 'Remove from offline' : 'Add to offline'}
-                  aria-label={isOffline(set.id) ? `Remove ${set.title} from offline` : `Save ${set.title} for offline`}
-                >
-                  {isOffline(set.id) ? (
-                    <CloudArrowDownIcon className="h-5 w-5" aria-hidden="true" />
-                  ) : (
-                    <CloudArrowUpIcon className="h-5 w-5" aria-hidden="true" />
-                  )}
-                </button>
               </div>
               <div className="mt-4 flex gap-2">
                 <button
@@ -575,22 +520,6 @@ export default function FlashcardManager({
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  onClick={() => handleToggle(set.id)}
-                  className={`p-1.5 rounded-full ${
-                    isOffline(set.id)
-                      ? 'text-green-600'
-                      : 'text-gray-600'
-                  }`}
-                  title={isOffline(set.id) ? 'Remove from offline' : 'Add to offline'}
-                  aria-label={isOffline(set.id) ? `Remove ${set.title} from offline` : `Save ${set.title} for offline`}
-                >
-                  {isOffline(set.id) ? (
-                    <CloudArrowDownIcon className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <CloudArrowUpIcon className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </button>
                 <button
                   onClick={() => handleEditSet(set)}
                   className={`p-1.5 ${canEditSet(set) ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 cursor-not-allowed'}`}

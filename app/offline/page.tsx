@@ -2,11 +2,14 @@
 
 import { WifiOff } from 'lucide-react';
 
+// Both of these read from the local set copy, so they work with no
+// connection once a device has synced at least once. Other precached pages
+// (/dashboard, /history, /analytics, /explore, /versus) load their shell from
+// the service worker but fetch every figure they show from the server, so they
+// render empty offline and are deliberately not listed here.
 const cachedRoutes = [
   { href: '/flashcards', label: 'My Flashcards' },
   { href: '/study', label: 'Study' },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/history', label: 'Study History' },
 ];
 
 export default function OfflinePage() {
@@ -27,7 +30,9 @@ export default function OfflinePage() {
           You&apos;re Offline
         </h1>
         <p className="text-gray-700 mb-8">
-          No internet connection. You can still access your cached content below.
+          No internet connection. You can still study the sets already saved on
+          this device. Your results are saved here and upload on their own once
+          you are back online.
         </p>
 
         <nav aria-label="Available offline pages">
@@ -44,6 +49,11 @@ export default function OfflinePage() {
             ))}
           </ul>
         </nav>
+
+        <p className="text-sm text-gray-600 mt-8">
+          Your dashboard, study history, and anything that generates or shares a
+          set need a connection.
+        </p>
       </div>
     </main>
   );

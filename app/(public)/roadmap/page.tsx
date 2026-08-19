@@ -226,13 +226,12 @@ const phases: Phase[] = [
       },
       {
         title: 'Conflict Resolution',
-        description: 'Handle sync conflicts gracefully.',
-        status: 'done',
+        description: 'Withdrawn. The screens were built but never worked.',
+        status: 'planned',
         items: [
-          'Side-by-side diff view for conflicts',
-          'Keep Local / Keep Server resolution options',
-          'Offline indicator with conflict badge and review link',
-          'Reconnection flash notification with conflict alerts',
+          'The sync service watched for an HTTP 409 that no route ever returned, so no conflict was ever recorded and the review screen never had anything to show',
+          'The screens and the conflict badge were removed in August 2026 rather than left looking functional',
+          'Set edits are last write wins today. Real detection needs a version check on the set update, which is not built',
         ],
       },
     ],

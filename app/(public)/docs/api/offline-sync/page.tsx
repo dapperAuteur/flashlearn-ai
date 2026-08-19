@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Offline Sync & Conflict Resolution',
-  description: 'FlashLearnAI works offline-first with PowerSync and IndexedDB. Learn how data syncs, how conflicts are detected, and how to resolve them.',
+  title: 'Offline Study & Sync',
+  description: 'FlashLearnAI copies your own sets to the device so you can study without a connection, then uploads your results when you reconnect. Here is exactly what travels and what does not.',
   openGraph: {
-    title: 'FlashLearn Offline Sync & Conflict Resolution',
-    description: 'Offline-first architecture with automatic sync and conflict resolution.',
+    title: 'FlashLearn Offline Study & Sync',
+    description: 'Study your own sets with no connection. Results upload when you reconnect.',
   },
 };
 
@@ -21,127 +21,119 @@ function Code({ code, lang = 'bash' }: { code: string; lang?: string }) {
 export default function OfflineSyncGuidePage() {
   return (
     <article className="prose prose-gray max-w-none prose-headings:scroll-mt-20">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Offline Sync &amp; Conflict Resolution</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Offline Study &amp; Sync</h1>
       <p className="text-base sm:text-lg text-gray-600 mb-8">
-        FlashLearnAI is offline-first. Study without internet, and your data syncs automatically when you reconnect.
+        Sign in once with a connection and your own sets are copied to the device. After that you can study them on a train, in a basement, or on a plane, and your results upload the next time you are online.
       </p>
 
       <nav aria-label="On this page" className="bg-gray-50 rounded-lg p-4 mb-8">
         <h2 className="text-sm font-semibold text-gray-700 mb-2">On this page</h2>
         <ul className="text-sm space-y-1">
-          <li><a href="#architecture" className="text-blue-600 hover:underline">Architecture</a></li>
+          <li><a href="#architecture" className="text-blue-600 hover:underline">Where the data lives</a></li>
           <li><a href="#sync-flow" className="text-blue-600 hover:underline">Sync flow</a></li>
-          <li><a href="#conflict-detection" className="text-blue-600 hover:underline">Conflict detection</a></li>
-          <li><a href="#resolving-conflicts" className="text-blue-600 hover:underline">Resolving conflicts</a></li>
+          <li><a href="#what-travels" className="text-blue-600 hover:underline">What travels with a card</a></li>
+          <li><a href="#limits" className="text-blue-600 hover:underline">What offline does not cover</a></li>
           <li><a href="#offline-indicator" className="text-blue-600 hover:underline">Offline indicator</a></li>
         </ul>
       </nav>
 
       <section aria-labelledby="architecture">
-        <h2 id="architecture" className="text-xl font-semibold text-gray-900 mt-8 mb-4">Architecture</h2>
+        <h2 id="architecture" className="text-xl font-semibold text-gray-900 mt-8 mb-4">Where the Data Lives</h2>
         <p className="text-gray-600 mb-4">
-          FlashLearnAI uses a two-layer local storage system:
+          Two stores sit on the device, and they hold different things:
         </p>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm" role="table">
             <thead><tr className="border-b text-left">
-              <th className="pb-2 pr-4 font-semibold text-gray-700" scope="col">Layer</th>
+              <th className="pb-2 pr-4 font-semibold text-gray-700" scope="col">Store</th>
               <th className="pb-2 pr-4 font-semibold text-gray-700" scope="col">Technology</th>
-              <th className="pb-2 font-semibold text-gray-700" scope="col">What It Stores</th>
+              <th className="pb-2 font-semibold text-gray-700" scope="col">What it holds</th>
             </tr></thead>
             <tbody className="text-gray-600">
-              <tr className="border-b"><td className="py-2 pr-4 font-medium">PowerSync</td><td className="py-2 pr-4">SQLite (wa-sqlite)</td><td className="py-2">Flashcard sets, cards, categories, offline set metadata</td></tr>
-              <tr><td className="py-2 pr-4 font-medium">IndexedDB</td><td className="py-2 pr-4">Native browser</td><td className="py-2">Study results, session queue, pending changes, conflict queue</td></tr>
+              <tr className="border-b"><td className="py-2 pr-4 font-medium">Local set cache</td><td className="py-2 pr-4">SQLite in the browser (PowerSync with wa-sqlite)</td><td className="py-2">A copy of the flashcard sets and cards you own. Read side only: the app studies from it, and the server is the source it copies from.</td></tr>
+              <tr><td className="py-2 pr-4 font-medium">IndexedDB</td><td className="py-2 pr-4">Native browser</td><td className="py-2">Your study results and the queue of sessions waiting to upload. Until a session uploads, this is the only copy of it anywhere.</td></tr>
             </tbody>
           </table>
         </div>
         <p className="text-gray-600 mt-4">
-          A service worker caches navigation and static assets, serving an offline fallback page when the network is unavailable.
+          A service worker separately caches page shells and static assets, and serves an offline fallback page when a page you have not visited is requested with no network.
         </p>
       </section>
 
       <section aria-labelledby="sync-flow">
         <h2 id="sync-flow" className="text-xl font-semibold text-gray-900 mt-10 mb-4">Sync Flow</h2>
         <p className="text-gray-600 mb-4">
-          The <strong>OfflineSyncService</strong> orchestrates all sync operations. It runs automatically on three triggers:
+          The sync service runs on three triggers:
         </p>
         <ol className="text-gray-600 space-y-2 mb-4">
-          <li><strong>App startup</strong> &mdash; syncs immediately when online</li>
-          <li><strong>Reconnection</strong> &mdash; triggered by the browser&apos;s <code className="bg-gray-100 px-1 rounded">online</code> event</li>
-          <li><strong>Periodic</strong> &mdash; every 5 minutes while online</li>
+          <li><strong>App startup</strong>, if the browser is online</li>
+          <li><strong>Reconnection</strong>, from the browser&apos;s <code className="bg-gray-100 px-1 rounded">online</code> event</li>
+          <li><strong>Every 5 minutes</strong> while online</li>
         </ol>
-        <p className="text-gray-600 mb-4">Each sync cycle runs three phases in order:</p>
-        <Code lang="text" code={`1. PULL  — Fetch server flashcard changes → PowerSync local DB
-2. PUSH  — Send pending set/category edits → Server API
-3. PUSH  — Send queued study sessions → Server API`} />
+        <p className="text-gray-600 mb-4">Each run does two things that matter:</p>
+        <Code lang="text" code={`1. DOWNLOAD  Sets and cards you own, changed since the last
+             checkpoint, into the local set cache.
+
+2. UPLOAD    Study sessions queued in IndexedDB, sent to the
+             server. This is the moment your spaced-repetition
+             schedule advances.`} />
         <p className="text-gray-600 mt-4">
-          Failed operations retry up to 3 times with exponential backoff (2s, 4s, 6s). Sessions that still fail remain in the queue for the next sync cycle.
+          Each queued session gets up to three upload attempts, pausing two seconds and then four seconds between them. A session that still fails stays in the queue and is tried again on the next run, so closing the tab does not lose it.
+        </p>
+        <p className="text-gray-600 mt-4">
+          The download is a poll, not a live stream. Nothing is pushed to the device between runs, so a set you edit on a laptop can take up to five minutes to appear on a phone that is already open.
         </p>
       </section>
 
-      <section aria-labelledby="conflict-detection">
-        <h2 id="conflict-detection" className="text-xl font-semibold text-gray-900 mt-10 mb-4">Conflict Detection</h2>
+      <section aria-labelledby="what-travels">
+        <h2 id="what-travels" className="text-xl font-semibold text-gray-900 mt-10 mb-4">What Travels With a Card</h2>
         <p className="text-gray-600 mb-4">
-          A conflict occurs when you edit a flashcard set offline while someone else (or you on another device) edits the same set on the server.
+          A cached card carries everything the study player needs to ask the question as it was written:
         </p>
-        <p className="text-gray-600 mb-4">
-          During the <strong>PUSH</strong> phase, if the server returns a <code className="bg-gray-100 px-1 rounded">409 Conflict</code> response, the sync service:
-        </p>
-        <ol className="text-gray-600 space-y-2">
-          <li>Captures both the local version and the server version</li>
-          <li>Saves a <strong>SyncConflict</strong> record to the IndexedDB conflict queue</li>
-          <li>Emits a <code className="bg-gray-100 px-1 rounded">conflict-detected</code> event</li>
-          <li>Shows a toast notification and a persistent red banner</li>
-        </ol>
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
-          Conflicts are never silently overwritten. The app always asks you to choose which version to keep.
-        </p>
-      </section>
-
-      <section aria-labelledby="resolving-conflicts">
-        <h2 id="resolving-conflicts" className="text-xl font-semibold text-gray-900 mt-10 mb-4">Resolving Conflicts</h2>
-        <p className="text-gray-600 mb-4">
-          Navigate to <strong>/dashboard/conflicts</strong> (or tap the &quot;Review&quot; link in the red banner) to see all unresolved conflicts.
-        </p>
-        <p className="text-gray-600 mb-4">Each conflict shows a side-by-side comparison:</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 not-prose">
-          <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
-            <p className="text-sm font-semibold text-blue-700 mb-2">Your Local Version</p>
-            <p className="text-xs text-gray-600">The changes you made while offline on this device.</p>
-          </div>
-          <div className="border border-green-200 bg-green-50 rounded-lg p-4">
-            <p className="text-sm font-semibold text-green-700 mb-2">Server Version</p>
-            <p className="text-xs text-gray-600">The current version on the server (from another device or user).</p>
-          </div>
-        </div>
-        <p className="text-gray-600 mb-4">Fields that differ are highlighted. You can:</p>
-        <ul className="text-gray-600 space-y-1">
-          <li><strong>Keep Local</strong> &mdash; Overwrite the server with your offline changes</li>
-          <li><strong>Keep Server</strong> &mdash; Discard your local changes and use the server version</li>
+        <ul className="text-gray-600 space-y-1 mb-4">
+          <li>Front and back text</li>
+          <li>Front and back images, with their alt text</li>
+          <li>Front and back video, with its alt text</li>
+          <li>Authored multiple-choice options and the id of the correct one</li>
+          <li>Card order within the set</li>
         </ul>
-        <p className="text-gray-600 mt-4">
-          Once resolved, the conflict is removed from the queue and the chosen version is pushed to the server.
+        <p className="text-gray-600">
+          The authored options matter most in the curated math library, where a fact card ships its own answer choices. With them cached, an offline multiple-choice question offers the same choices it would online.
+        </p>
+      </section>
+
+      <section aria-labelledby="limits">
+        <h2 id="limits" className="text-xl font-semibold text-gray-900 mt-10 mb-4">What Offline Does Not Cover</h2>
+        <p className="text-gray-600 mb-4">
+          Studying offline works. Everything else about offline is thinner than it looks, and it is better to say so:
+        </p>
+        <ul className="text-gray-600 space-y-3 mb-4">
+          <li><strong>The copy runs one way.</strong> Sets flow from the server to the device. A set you create or edit while offline is not reliably sent back, so treat editing as something to do with a connection.</li>
+          <li><strong>No clash detection.</strong> Nothing compares versions when a set is saved. If the same set is edited in two places, the last save wins and the earlier one is gone with no warning.</li>
+          <li><strong>Only sets you own.</strong> A public set from Explore belongs to someone else, so it is never copied to the device and cannot be studied without a connection.</li>
+          <li><strong>A device has to sync at least once.</strong> A browser signing in for the first time with no connection has nothing cached to study.</li>
+          <li><strong>Generating, sharing, and versus mode need the network.</strong> So do the dashboard and study history pages, which read from the server every time.</li>
+        </ul>
+        <p className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-3">
+          An earlier version of this page described a conflict review screen with a side-by-side diff. That feature never functioned. The sync service watched for a response the API never sent, so no clash was ever recorded and the screen was always empty. It has been removed rather than left in place as a promise the code could not keep.
         </p>
       </section>
 
       <section aria-labelledby="offline-indicator">
         <h2 id="offline-indicator" className="text-xl font-semibold text-gray-900 mt-10 mb-4">Offline Indicator</h2>
         <p className="text-gray-600 mb-4">
-          A persistent banner at the bottom of the screen shows the current sync state:
+          A banner at the bottom of the screen appears when there is something to say:
         </p>
         <div className="space-y-3 not-prose text-sm">
           <div className="flex items-center gap-3 bg-amber-600 text-white rounded-lg px-4 py-2">
-            <span>Amber</span><span>&mdash;</span><span>You&apos;re offline, progress saved locally</span>
+            <span className="font-semibold">Amber</span><span>You&apos;re offline, progress saved locally</span>
           </div>
           <div className="flex items-center gap-3 bg-blue-600 text-white rounded-lg px-4 py-2">
-            <span>Blue</span><span>&mdash;</span><span>Syncing items to the server</span>
-          </div>
-          <div className="flex items-center gap-3 bg-red-600 text-white rounded-lg px-4 py-2">
-            <span>Red</span><span>&mdash;</span><span>Conflicts need your review (with &quot;Review&quot; link)</span>
+            <span className="font-semibold">Blue</span><span>Uploading queued items to the server</span>
           </div>
         </div>
         <p className="text-gray-600 mt-4">
-          Toast notifications also appear when going offline, coming back online, and when conflicts are detected.
+          Toast notifications also appear when the connection drops and when it returns.
         </p>
       </section>
 

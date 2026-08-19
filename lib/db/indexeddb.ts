@@ -3,14 +3,20 @@
 
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 const DB_NAME = 'FlashlearnAI';
-const DB_VERSION = 5; // Incremented for conflict resolution
+const DB_VERSION = 6; // Incremented to drop the three stores nothing wrote to
 const STUDY_RESULTS_STORE = 'studyResults';
 const SYNC_QUEUE_STORE = 'syncQueue';
-const OFFLINE_SETS_STORE = 'offlineSets';
-const CATEGORIES_STORE = 'categories';
 const STUDY_HISTORY_STORE = 'studyHistory';
 const PENDING_CHANGES_STORE = 'pendingChanges';
-const CONFLICT_QUEUE_STORE = 'conflictQueue';
+
+/**
+ * Stores that shipped in versions 1 through 5 and were never populated:
+ * `offlineSets` and `categories` had no writer that any screen reached, and
+ * `conflictQueue` could only fill on an HTTP 409 that no route ever returns.
+ * Version 6 drops them so an existing browser reclaims the space instead of
+ * carrying empty stores forever.
+ */
+const RETIRED_STORES = ['offlineSets', 'categories', 'conflictQueue'];
 
 // Existing interfaces
 export interface CardResult {
@@ -28,33 +34,6 @@ interface StoredResult extends CardResult {
 
 interface QueuedSession {
   sessionId: string;
-}
-
-// New interfaces for offline functionality
-export interface OfflineFlashcardSet {
-  setId: string;
-  title: string;
-  description?: string;
-  isPublic: boolean;
-  categories: string[];
-  tags: string[];
-  flashcards: Array<{
-    _id: string;
-    front: string;
-    back: string;
-    frontImage?: string;
-    backImage?: string;
-  }>;
-  lastSynced: Date;
-  isOfflineEnabled: boolean;
-  cardCount: number;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  color?: string;
-  createdAt: Date;
 }
 
 export interface StudySessionHistory {
@@ -87,18 +66,6 @@ export interface PendingChange {
   data: any; // Keep as any for flexibility with different update types
   timestamp: Date;
   retryCount: number;
-}
-
-export interface SyncConflict {
-  id: string;
-  entity: 'set' | 'flashcard';
-  entityId: string;
-  entityTitle: string;
-  localData: Record<string, any>;
-  serverData: Record<string, any>;
-  localUpdatedAt: string;
-  serverUpdatedAt: string;
-  detectedAt: Date;
 }
 
 let db: IDBDatabase;
@@ -138,19 +105,6 @@ function openDB(): Promise<IDBDatabase> {
         });
       }
 
-      // New stores for offline functionality
-      if (!dbInstance.objectStoreNames.contains(OFFLINE_SETS_STORE)) {
-        dbInstance.createObjectStore(OFFLINE_SETS_STORE, {
-          keyPath: 'setId',
-        });
-      }
-
-      if (!dbInstance.objectStoreNames.contains(CATEGORIES_STORE)) {
-        dbInstance.createObjectStore(CATEGORIES_STORE, {
-          keyPath: 'id',
-        });
-      }
-
       if (!dbInstance.objectStoreNames.contains(STUDY_HISTORY_STORE)) {
         dbInstance.createObjectStore(STUDY_HISTORY_STORE, {
           keyPath: 'sessionId',
@@ -163,10 +117,13 @@ function openDB(): Promise<IDBDatabase> {
         });
       }
 
-      if (!dbInstance.objectStoreNames.contains(CONFLICT_QUEUE_STORE)) {
-        dbInstance.createObjectStore(CONFLICT_QUEUE_STORE, {
-          keyPath: 'id',
-        });
+      // Drop the stores retired in version 6. Guarded by `contains` so a first
+      // run, where none of them were ever created, is a no-op rather than a
+      // NotFoundError.
+      for (const name of RETIRED_STORES) {
+        if (dbInstance.objectStoreNames.contains(name)) {
+          dbInstance.deleteObjectStore(name);
+        }
       }
     };
   });
@@ -290,108 +247,6 @@ export async function removeSessionFromQueue(sessionId: string): Promise<void> {
   });
 }
 
-// NEW: Offline Sets Management
-export async function saveOfflineSet(set: OfflineFlashcardSet): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
-    const store = tx.objectStore(OFFLINE_SETS_STORE);
-    const request = store.put(set);
-
-    request.onsuccess = () => {
-      Logger.log(LogContext.SYSTEM, 'Offline set saved', { setId: set.setId });
-      resolve();
-    };
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error saving offline set', { error: request.error });
-      reject('Could not save offline set.');
-    };
-  });
-}
-
-export async function getOfflineSets(): Promise<OfflineFlashcardSet[]> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(OFFLINE_SETS_STORE, 'readonly');
-    const store = tx.objectStore(OFFLINE_SETS_STORE);
-    const request = store.getAll();
-
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error getting offline sets', { error: request.error });
-      reject('Could not get offline sets.');
-    };
-  });
-}
-
-export async function getOfflineSet(setId: string): Promise<OfflineFlashcardSet | null> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(OFFLINE_SETS_STORE, 'readonly');
-    const store = tx.objectStore(OFFLINE_SETS_STORE);
-    const request = store.get(setId);
-
-    request.onsuccess = () => {
-      resolve(request.result || null);
-    };
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error getting offline set', { error: request.error });
-      reject('Could not get offline set.');
-    };
-  });
-}
-
-export async function removeOfflineSet(setId: string): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(OFFLINE_SETS_STORE, 'readwrite');
-    const store = tx.objectStore(OFFLINE_SETS_STORE);
-    const request = store.delete(setId);
-
-    request.onsuccess = () => {
-      Logger.log(LogContext.SYSTEM, 'Offline set removed', { setId });
-      resolve();
-    };
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error removing offline set', { error: request.error });
-      reject('Could not remove offline set.');
-    };
-  });
-}
-
-// NEW: Categories Management
-export async function saveCategory(category: Category): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(CATEGORIES_STORE, 'readwrite');
-    const store = tx.objectStore(CATEGORIES_STORE);
-    const request = store.put(category);
-
-    request.onsuccess = () => resolve();
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error saving category', { error: request.error });
-      reject('Could not save category.');
-    };
-  });
-}
-
-export async function getCategories(): Promise<Category[]> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(CATEGORIES_STORE, 'readonly');
-    const store = tx.objectStore(CATEGORIES_STORE);
-    const request = store.getAll();
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error getting categories', { error: request.error });
-      reject('Could not get categories.');
-    };
-  });
-}
-
 // NEW: Study History Management
 export async function saveStudyHistory(session: StudySessionHistory): Promise<void> {
   const db = await openDB();
@@ -489,76 +344,6 @@ export async function removePendingChange(changeId: string): Promise<void> {
     request.onerror = () => {
       Logger.error(LogContext.SYSTEM, 'Error removing pending change', { error: request.error });
       reject('Could not remove pending change.');
-    };
-  });
-}
-
-// ============================================================================
-// CONFLICT QUEUE MANAGEMENT
-// ============================================================================
-
-export async function saveConflict(conflict: SyncConflict): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(CONFLICT_QUEUE_STORE, 'readwrite');
-    const store = tx.objectStore(CONFLICT_QUEUE_STORE);
-    const request = store.put(conflict);
-
-    request.onsuccess = () => {
-      Logger.log(LogContext.SYSTEM, 'Conflict saved', { conflictId: conflict.id });
-      resolve();
-    };
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error saving conflict', { error: request.error });
-      reject('Could not save conflict.');
-    };
-  });
-}
-
-export async function getConflicts(): Promise<SyncConflict[]> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(CONFLICT_QUEUE_STORE, 'readonly');
-    const store = tx.objectStore(CONFLICT_QUEUE_STORE);
-    const request = store.getAll();
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error getting conflicts', { error: request.error });
-      reject('Could not get conflicts.');
-    };
-  });
-}
-
-export async function getConflictCount(): Promise<number> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(CONFLICT_QUEUE_STORE, 'readonly');
-    const store = tx.objectStore(CONFLICT_QUEUE_STORE);
-    const request = store.count();
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error counting conflicts', { error: request.error });
-      reject('Could not count conflicts.');
-    };
-  });
-}
-
-export async function removeConflict(conflictId: string): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(CONFLICT_QUEUE_STORE, 'readwrite');
-    const store = tx.objectStore(CONFLICT_QUEUE_STORE);
-    const request = store.delete(conflictId);
-
-    request.onsuccess = () => {
-      Logger.log(LogContext.SYSTEM, 'Conflict resolved', { conflictId });
-      resolve();
-    };
-    request.onerror = () => {
-      Logger.error(LogContext.SYSTEM, 'Error removing conflict', { error: request.error });
-      reject('Could not remove conflict.');
     };
   });
 }
