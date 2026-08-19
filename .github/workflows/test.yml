@@ -1,0 +1,38 @@
+# Unit + type gate. Runs on every push and pull request, on every branch.
+#
+# This is deliberately separate from e2e.yml. That workflow triggers on `deployment_status`, which
+# only fires after Vercel finishes deploying, so it tests a live URL rather than the checkout. That
+# is right for e2e, but it meant the Jest suite and `tsc --noEmit` had no trigger at all and never
+# ran in CI on any branch. Broken unit tests and type errors could land unnoticed. This workflow is
+# the missing gate.
+#
+# It needs no secrets and no database: the suite mocks its data layer and sets the few env vars it
+# cares about inside the tests themselves.
+name: test
+
+on:
+  push:
+  pull_request:
+
+# A PR branch fires both `push` and `pull_request`. Group them so the older run is cancelled
+# instead of burning a duplicate runner.
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: types + unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Unit tests
+        run: npm test

@@ -141,6 +141,25 @@ registers the global tracer provider first wins, and Sentry is told to stand dow
   and those requests must not spend Honeycomb's free-tier event budget. Everything else is recorded
   unsampled.
 
+### Unit test + type-check CI
+
+[`.github/workflows/test.yml`](./.github/workflows/test.yml) runs `tsc --noEmit` and `npm test` as
+two named steps on every push and pull request, so a failure says which gate broke. It needs no
+secrets, database, or env: the suite is self-contained and the few tests that need a value set it
+themselves.
+
+Kept separate from the e2e gate below because that one triggers on `deployment_status`, meaning it
+only fires after Vercel finishes a deploy. Unit tests should fail before a deploy, not after.
+
+Two things worth knowing if you touch [`jest.config.js`](./jest.config.js):
+
+- The config is an **async function**, not a plain object. `next/jest` hardcodes its own
+  `node_modules` ignore pattern and only appends yours, and because `transformIgnorePatterns` is an
+  OR, next/jest's pattern always matches first. Appending an allowlist to it is dead config. We
+  resolve next/jest's config and then replace the array outright, which is what actually gets the
+  ESM-only packages compiled.
+- Add ESM-only packages to the `esmPackages` array, not to `transformIgnorePatterns` directly.
+
 ### E2E + accessibility CI
 
 Playwright specs live in [`e2e/`](./e2e/); the gate runs in
