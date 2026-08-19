@@ -281,9 +281,9 @@ export class OfflineSyncService {
             }
 
             await db.execute(
-              `INSERT OR REPLACE INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, created_at, updated_at, is_deleted)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [d.id, d.user_id, d.title, d.description || null, d.is_public, d.card_count, d.source, d.created_at, d.updated_at, d.is_deleted ?? 0]
+              `INSERT OR REPLACE INTO flashcard_sets (id, user_id, title, description, is_public, card_count, source, tags, created_at, updated_at, is_deleted)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [d.id, d.user_id, d.title, d.description || null, d.is_public, d.card_count, d.source, d.tags || null, d.created_at, d.updated_at, d.is_deleted ?? 0]
             );
           }
         } catch (err) {

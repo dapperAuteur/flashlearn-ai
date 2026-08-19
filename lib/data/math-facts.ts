@@ -21,10 +21,13 @@
  *   multiplication  22 sets x 11 = 242 cards (121 distinct facts, each in 2 sets)
  *   division        10 sets x 11 = 110 cards (divisor 1-10; dividing by zero is undefined)
  *
- * Every card ships authored multiple-choice options, so multiple-choice study
- * serves fixed, teacher-grade distractors instead of asking a model to invent
- * them. Distractors are the errors students actually make: off-by-one counting
- * slips, the neighbouring row of a times table, and applying the wrong operation.
+ * A card carries a question and an answer, and nothing else. Fact fluency is
+ * recall: the skill being drilled is producing 49 from "7 x 7", and picking 49
+ * out of four numbers is an easier task a student can pass without knowing the
+ * fact. Those answers feed SM-2 scheduling, so a card cleared by recognition
+ * would be scheduled as mastered and stop coming back. Authored multiple-choice
+ * options were removed for that reason, and the study picker turns multiple
+ * choice off for these sets. Please do not add them back.
  *
  * Nothing here touches the network, a clock, or a random source. The same input
  * always produces byte-identical cards, which is what lets the seed script
@@ -33,18 +36,11 @@
 
 export type MathFactOperation = 'addition' | 'subtraction' | 'multiplication' | 'division';
 
-export interface MathFactOption {
-  id: string;
-  text: string;
-}
-
 export interface MathFactCard {
   /** Stable id so a re-seed updates a card instead of duplicating it. */
   externalId: string;
   front: string;
   back: string;
-  options: MathFactOption[];
-  correctOptionId: string;
 }
 
 export interface MathFactSet {
@@ -65,11 +61,6 @@ export const MAX_OPERAND = 10;
 /** Cards per set: one focus number crossed with 0 through 10. */
 export const CARDS_PER_SET = MAX_OPERAND + 1;
 
-/** Number of choices offered on a multiple-choice math fact card. */
-const CHOICE_COUNT = 4;
-
-const OPTION_IDS = ['a', 'b', 'c', 'd'];
-
 const OPERATION_SYMBOL: Record<MathFactOperation, string> = {
   addition: '+',
   subtraction: '-',
@@ -79,55 +70,6 @@ const OPERATION_SYMBOL: Record<MathFactOperation, string> = {
 
 const range = (start: number, end: number): number[] =>
   Array.from({ length: end - start + 1 }, (_, i) => start + i);
-
-/**
- * Choose three wrong answers from a ranked candidate list.
- *
- * Candidates are tried in order, so the caller controls which misconception gets
- * offered first. Anything negative, fractional, duplicated, or equal to the
- * correct answer is dropped. If the list runs dry the gap is filled by walking
- * outward from the correct answer, which guarantees three usable choices for
- * even the smallest facts (0 + 0, for example).
- */
-export function pickDistractors(correct: number, candidates: number[]): number[] {
-  const chosen: number[] = [];
-
-  const accept = (value: number): void => {
-    if (chosen.length >= CHOICE_COUNT - 1) return;
-    if (!Number.isInteger(value) || value < 0) return;
-    if (value === correct || chosen.includes(value)) return;
-    chosen.push(value);
-  };
-
-  candidates.forEach(accept);
-
-  for (let step = 1; chosen.length < CHOICE_COUNT - 1; step += 1) {
-    accept(correct + step);
-    accept(correct - step);
-  }
-
-  return chosen;
-}
-
-/**
- * Build the option list for one card. Options are sorted low to high so the
- * stored order is predictable for anyone reading a set through the API; the
- * study player shuffles them before display, so the correct answer is not
- * pinned to one position on screen.
- */
-export function buildOptions(
-  correct: number,
-  distractors: number[],
-): { options: MathFactOption[]; correctOptionId: string } {
-  const values = [correct, ...distractors].sort((a, b) => a - b);
-  const options = values.map((value, index) => ({
-    id: OPTION_IDS[index],
-    text: String(value),
-  }));
-  const correctOptionId = options[values.indexOf(correct)].id;
-
-  return { options, correctOptionId };
-}
 
 const ID_PREFIX: Record<MathFactOperation, string> = {
   addition: 'add',
@@ -148,60 +90,30 @@ function makeCard(
   left: number,
   right: number,
   answer: number,
-  candidates: number[],
 ): MathFactCard {
-  const { options, correctOptionId } = buildOptions(answer, pickDistractors(answer, candidates));
-
   return {
     externalId: `math:${ID_PREFIX[operation]}:${left}${ID_SEPARATOR[operation]}${right}`,
     front: `${left} ${OPERATION_SYMBOL[operation]} ${right} = ?`,
     back: String(answer),
-    options,
-    correctOptionId,
   };
 }
 
-/**
- * One addition card. Off-by-one counting slips lead the distractors, then the
- * answer to the same pair under the wrong operation, then a wider miscount.
- */
+/** One addition card, a + b. */
 function additionCard(a: number, b: number): MathFactCard {
-  const sum = a + b;
-  return makeCard('addition', a, b, sum, [sum + 1, sum - 1, a * b, sum + 2, sum - 2, sum + 10]);
+  return makeCard('addition', a, b, a + b);
 }
 
 /**
  * One subtraction card, written as (answer + subtrahend) - subtrahend so the
- * answer is always a whole number from 0 to 10. Answering with the subtrahend or
- * the minuend is what a student does when the operation itself slips, so both
- * are offered as distractors.
+ * answer is always a whole number from 0 to 10.
  */
 function subtractionCard(answer: number, subtrahend: number): MathFactCard {
-  const minuend = answer + subtrahend;
-  return makeCard('subtraction', minuend, subtrahend, answer, [
-    answer + 1,
-    answer - 1,
-    subtrahend,
-    minuend,
-    answer + 2,
-    answer - 2,
-  ]);
+  return makeCard('subtraction', answer + subtrahend, subtrahend, answer);
 }
 
-/**
- * One multiplication card. The neighbouring entry in the same times table is the
- * classic error, so it leads. Then the sum, which is the wrong-operation answer.
- */
+/** One multiplication card, a x b. */
 function multiplicationCard(a: number, b: number): MathFactCard {
-  const product = a * b;
-  return makeCard('multiplication', a, b, product, [
-    product + a,
-    product - a,
-    product + b,
-    product - b,
-    a + b,
-    product + 1,
-  ]);
+  return makeCard('multiplication', a, b, a * b);
 }
 
 /**
@@ -209,15 +121,7 @@ function multiplicationCard(a: number, b: number): MathFactCard {
  * at 1 because division by zero has no answer to drill.
  */
 function divisionCard(quotient: number, divisor: number): MathFactCard {
-  const dividend = quotient * divisor;
-  return makeCard('division', dividend, divisor, quotient, [
-    quotient + 1,
-    quotient - 1,
-    divisor,
-    dividend - divisor,
-    quotient + 2,
-    dividend,
-  ]);
+  return makeCard('division', quotient * divisor, divisor, quotient);
 }
 
 const OPERATION_LABEL: Record<MathFactOperation, string> = {
@@ -316,7 +220,7 @@ export function multiplicationSets(max: number = MAX_OPERAND): MathFactSet[] {
         n,
         `${n}-times-each`,
         `Multiplication Facts: ${n} × 0 to ${n} × 10`,
-        `The ${n} times table, from ${n} × 0 through ${n} × 10. Wrong answers come from the neighbouring row, so a near miss still tests the fact.`,
+        `The ${n} times table, from ${n} × 0 through ${n} × 10. Recall each product rather than working it out by adding, which is what makes the table fast.`,
         range(0, max).map((b) => multiplicationCard(n, b)),
       ),
       set(

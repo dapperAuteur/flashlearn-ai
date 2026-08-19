@@ -138,6 +138,7 @@ async function handlePull(userId: string, params: PullParams) {
       correctOptionId?: string;
     }>;
     source: string;
+    tags?: string[];
     createdAt?: Date;
     updatedAt?: Date;
   }>;
@@ -161,6 +162,7 @@ async function handlePull(userId: string, params: PullParams) {
         is_public: set.isPublic ? 1 : 0,
         card_count: set.flashcards?.length || 0,
         source: set.source,
+        tags: (set.tags ?? []).join(','),
         created_at: set.createdAt?.toISOString() || new Date().toISOString(),
         updated_at: set.updatedAt?.toISOString() || new Date().toISOString(),
         is_deleted: 0,
