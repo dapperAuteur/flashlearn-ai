@@ -15,6 +15,8 @@ export interface IUser extends Document {
   stripeCustomerId?: string;
   aiGenerationCount: number;
   lastAiGenerationDate?: Date;
+  /** When the current 30-day AI allowance period began. Absent on older accounts. */
+  aiGenerationWindowStart?: Date;
   preferences?: {
     defaultStudyDirection: 'front-to-back' | 'back-to-front';
     defaultStudyMode: 'classic' | 'multiple-choice' | 'type-answer';

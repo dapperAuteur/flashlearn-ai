@@ -18,6 +18,10 @@ const flashcard_sets = new Table(
     is_public: column.integer,
     card_count: column.integer,
     source: column.text,
+    // Comma separated. The study setup screen needs these to tell a math fact
+    // set from any other, and without them offline it cannot, so it would leave
+    // multiple choice enabled on a set that is meant to be recall only.
+    tags: column.text,
     created_at: column.text,
     updated_at: column.text,
     is_deleted: column.integer,
@@ -147,6 +151,8 @@ export interface PowerSyncFlashcardSet {
   is_public: 0 | 1;
   card_count: number;
   source: string;
+  /** Comma separated, as stored. Null on rows pulled before the column existed. */
+  tags: string | null;
   created_at: string;
   updated_at: string;
   is_deleted: 0 | 1;

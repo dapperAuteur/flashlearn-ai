@@ -59,7 +59,7 @@ export function clearRateLimitCache(): void {
  * @throws {AppError} if the user is not found.
  */
 export async function checkRateLimit(userId: string): Promise<{ limited: boolean; reason?: string }> {
-    const user = await User.findById(userId).select('role subscriptionTier aiGenerationCount lastAiGenerationDate');
+    const user = await User.findById(userId).select('role subscriptionTier aiGenerationCount lastAiGenerationDate aiGenerationWindowStart');
 
     if (!user) {
         throw new AppError(`User not found during rate limit check`, 500);
@@ -76,27 +76,39 @@ export async function checkRateLimit(userId: string): Promise<{ limited: boolean
     const tierLimit = limits[user.subscriptionTier as keyof typeof limits] ?? limits.Free;
     const promo = await getActivePromotion();
     const effectiveLimit = promo ? Math.max(tierLimit, promo.flatLimit) : tierLimit;
-    const { aiGenerationCount, lastAiGenerationDate } = user;
+    const { aiGenerationCount, lastAiGenerationDate, aiGenerationWindowStart } = user;
 
-    if (lastAiGenerationDate) {
-        const windowStart = new Date();
-        windowStart.setDate(windowStart.getDate() - AI_GENERATION_WINDOW_DAYS);
+    // The allowance is N per 30-DAY PERIOD, measured from when the period
+    // started. It used to be measured from the last generation, which meant the
+    // count reset only after 30 days of complete inactivity. Anyone who
+    // generated even once a month never reset: their count climbed one at a
+    // time until it reached the cap and stayed there, on a tier they were
+    // nowhere near using up. The promo made that visible, but it was never
+    // promo-specific.
+    //
+    // Accounts predating aiGenerationWindowStart fall back to
+    // lastAiGenerationDate, which is the closest thing to a period start we can
+    // infer, and is never later than the real one, so nobody is over-restricted
+    // by the migration.
+    const periodStart = aiGenerationWindowStart ?? lastAiGenerationDate;
 
-        // If the last generation was within the current window, check the count.
-        if (lastAiGenerationDate > windowStart) {
+    if (periodStart) {
+        const periodExpiresAt = new Date(periodStart);
+        periodExpiresAt.setDate(periodExpiresAt.getDate() + AI_GENERATION_WINDOW_DAYS);
+
+        if (periodExpiresAt > new Date()) {
             if (aiGenerationCount >= effectiveLimit) {
                 const reason = `User has reached their AI generation limit of ${effectiveLimit} per ${AI_GENERATION_WINDOW_DAYS} days for the ${user.subscriptionTier} tier.`;
                 Logger.warning(LogContext.AI, reason, { userId, tier: user.subscriptionTier, tierLimit, effectiveLimit, promoActive: !!promo, promoSlug: promo?.slug, count: aiGenerationCount });
                 return { limited: true, reason };
             }
         } else {
-            // NOTE: This is a write operation within a "check" function.
-            // It resets the user's count if their last generation was outside the window.
-            // This is an optimization to reset the count upon the user's next action
-            // without needing a separate cron job.
+            // The period has run out. Start a fresh one now rather than waiting
+            // for a cron, which is why a check function writes here.
             user.aiGenerationCount = 0;
+            user.aiGenerationWindowStart = new Date();
             await user.save();
-            Logger.info(LogContext.AI, `Reset AI generation count for user.`, { userId });
+            Logger.info(LogContext.AI, `Started a new AI generation period for user.`, { userId });
         }
     }
 
@@ -109,10 +121,20 @@ export async function checkRateLimit(userId: string): Promise<{ limited: boolean
  */
 export async function incrementGenerationCount(userId: string): Promise<void> {
     try {
-        await User.findByIdAndUpdate(userId, {
-            $inc: { aiGenerationCount: 1 },
-            $set: { lastAiGenerationDate: new Date() },
-        });
+        const now = new Date();
+        // An aggregation-pipeline update so the period start is established on
+        // the first generation and never moved afterwards, atomically. A plain
+        // $set would slide the period forward on every generation, which is the
+        // bug this replaced.
+        await User.findByIdAndUpdate(userId, [
+            {
+                $set: {
+                    aiGenerationCount: { $add: [{ $ifNull: ['$aiGenerationCount', 0] }, 1] },
+                    lastAiGenerationDate: now,
+                    aiGenerationWindowStart: { $ifNull: ['$aiGenerationWindowStart', now] },
+                },
+            },
+        ]);
         Logger.info(LogContext.AI, `Incremented AI generation count for user.`, { userId });
     } catch (error) {
         // This is a critical error as it could lead to incorrect billing or limits.

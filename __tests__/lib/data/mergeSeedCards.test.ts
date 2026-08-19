@@ -58,6 +58,27 @@ describe('mergeSeedCards', () => {
     expect(result.cards[0]).toMatchObject({ _id: 'oid', stage: 3, front: '1 + 1 = ?', back: '2' });
   });
 
+  it('clears options a card used to carry when the deck no longer supplies them', () => {
+    // Math fact cards shipped with authored multiple-choice options and no
+    // longer do. A re-seed has to actually remove them from the stored card,
+    // not just stop sending new ones, or the old choices sit in the database
+    // and the offline player would still serve them.
+    const existing = [
+      {
+        ...stored('math:mul:7x7', '7 × 7 = ?', '49', 'keep-me'),
+        options: [{ id: 'a', text: '42' }, { id: 'b', text: '49' }],
+        correctOptionId: 'b',
+      },
+    ];
+    const result = mergeSeedCards(existing, [seed('math:mul:7x7', '7 × 7 = ?', '49')]);
+
+    expect(result.cards[0]._id).toBe('keep-me');
+    expect(result.cards[0].options).toBeUndefined();
+    expect(result.cards[0].correctOptionId).toBeUndefined();
+    // And it counts as a change, so the seed reports the set as updated.
+    expect(result.changed).toBe(1);
+  });
+
   it('prunes a seeded card that is no longer in the deck', () => {
     const existing = [
       stored('math:add:1+1', '1 + 1 = ?', '2'),

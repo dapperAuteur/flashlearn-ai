@@ -3,12 +3,10 @@ import {
   minuendSets,
   mixedReviewSets,
   patternSets,
-  buildOptions,
   CARDS_PER_SET,
   divisionSets,
   mathFactSets,
   multiplicationSets,
-  pickDistractors,
   subtractionSets,
 } from '@/lib/data/math-facts';
 
@@ -18,34 +16,6 @@ const OPERATORS: Record<string, (a: number, b: number) => number> = {
   '×': (a, b) => a * b,
   '÷': (a, b) => a / b,
 };
-
-describe('pickDistractors', () => {
-  it('returns three wrong answers drawn from the candidate list in order', () => {
-    expect(pickDistractors(12, [13, 11, 35, 14])).toEqual([13, 11, 35]);
-  });
-
-  it('drops the correct answer, duplicates, negatives, and fractions', () => {
-    expect(pickDistractors(5, [5, 6, 6, -1, 2.5, 7])).toEqual([6, 7, 4]);
-  });
-
-  it('fills from around the correct answer when candidates run out', () => {
-    expect(pickDistractors(0, [])).toEqual([1, 2, 3]);
-  });
-});
-
-describe('buildOptions', () => {
-  it('sorts options low to high and points correctOptionId at the right one', () => {
-    const { options, correctOptionId } = buildOptions(12, [13, 11, 35]);
-
-    expect(options).toEqual([
-      { id: 'a', text: '11' },
-      { id: 'b', text: '12' },
-      { id: 'c', text: '13' },
-      { id: 'd', text: '35' },
-    ]);
-    expect(correctOptionId).toBe('b');
-  });
-});
 
 describe('math fact sets', () => {
   const sets = mathFactSets();
@@ -162,19 +132,16 @@ describe('math fact sets', () => {
     }
   });
 
-  it('offers four whole, non-negative, distinct choices with the answer among them', () => {
+  it('offers no answer choices, because fact fluency is recall and not recognition', () => {
+    // Picking 49 out of four numbers is an easier task than producing 49, and a
+    // student can pass it without knowing the fact. Those answers drive SM-2
+    // scheduling, so a card cleared by recognition would be filed as mastered
+    // and stop coming back. If this test fails, options were added back.
     for (const set of sets) {
       for (const card of set.cards) {
-        expect(card.options).toHaveLength(4);
-        expect(new Set(card.options.map((o) => o.text)).size).toBe(4);
-
-        for (const option of card.options) {
-          expect(Number(option.text)).toBeGreaterThanOrEqual(0);
-          expect(Number.isInteger(Number(option.text))).toBe(true);
-        }
-
-        const correct = card.options.find((o) => o.id === card.correctOptionId);
-        expect(correct?.text).toBe(card.back);
+        expect(Object.keys(card).sort()).toEqual(['back', 'externalId', 'front']);
+        expect('options' in card).toBe(false);
+        expect('correctOptionId' in card).toBe(false);
       }
     }
   });
