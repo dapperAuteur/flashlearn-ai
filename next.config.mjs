@@ -24,6 +24,41 @@ const nextConfig = {
     ],
   },
   serverExternalPackages: ['mongoose', 'pdf-parse'],
+  // PostHog's endpoints use trailing slashes (/e/, /flags/, /s/). Without this, Next
+  // issues a 308 to the slashless form before the rewrite runs and ingest breaks.
+  // Required by PostHog's documented Next.js proxy setup.
+  //
+  // SIDE EFFECT worth knowing: this disables Next's automatic trailing-slash redirect
+  // for EVERY route, not just /ingest. So /about/ no longer 308s to /about and both
+  // forms become reachable. The per-page `alternates.canonical` metadata is what keeps
+  // search engines pointed at one form — verify those survive any future metadata
+  // refactor. See the witus repo's plans/26.
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    // Reverse-proxy PostHog through our own origin. us.i.posthog.com is on uBlock
+    // Origin, Brave Shields, and Safari's tracker list, so a meaningful share of
+    // events never leave the browser — including, reliably, our own test visits.
+    // Routing ingest through flashlearnai.witus.online leaves blockers nothing to
+    // match on.
+    //
+    // It also keeps the CSP below untouched: because ingest is same-origin, the
+    // existing `connect-src 'self'` and `script-src 'self'` already cover it. A
+    // direct-to-PostHog api_host would have needed both widened to a third-party
+    // host, which is a strictly worse security posture for the same data.
+    //
+    // Assets come from a different upstream host than ingest, hence two rules. The
+    // more specific /static rule must come first.
+    return [
+      {
+        source: '/ingest/static/:path*',
+        destination: 'https://us-assets.i.posthog.com/static/:path*',
+      },
+      {
+        source: '/ingest/:path*',
+        destination: 'https://us.i.posthog.com/:path*',
+      },
+    ];
+  },
   webpack: (config) => {
     // DNS lookup issue fix for MongoDB connections
     config.resolve.fallback = { dns: false, net: false, tls: false };

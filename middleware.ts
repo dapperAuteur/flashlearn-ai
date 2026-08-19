@@ -148,7 +148,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // `ingest` is excluded deliberately, and it is load-bearing. /ingest/* is the
+  // reverse proxy to PostHog (see next.config.mjs). It is not in `publicPaths`, so
+  // without this exclusion the `!token && !isPublicPath` branch above would 302 every
+  // analytics request from a logged-out visitor to /auth/signin — silently dropping
+  // exactly the anonymous traffic the analytics exist to measure, with no error
+  // anywhere to notice. Excluding it here also saves an edge invocation per event.
   matcher: [
-    '/((?!api|_next/static|_next/image|.*\\.png$|.*\\.ico$).*)',
+    '/((?!api|ingest|_next/static|_next/image|.*\\.png$|.*\\.ico$).*)',
   ],
 };
