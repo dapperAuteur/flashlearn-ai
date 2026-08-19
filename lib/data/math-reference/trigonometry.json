@@ -819,7 +819,7 @@
         },
         {
           "front": "How do you look for the second angle in an ambiguous SSA case?",
-          "back": "Subtract the first angle from 180°. Keep that second option only if the three angles still total less than 180°."
+          "back": "Subtract the first angle from 180°. Keep that second option only if it and the given angle still add to less than 180°, which is what leaves room for a positive third angle."
         },
         {
           "front": "What is the area of a triangle given two sides and the included angle?",
