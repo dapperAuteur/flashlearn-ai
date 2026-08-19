@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Classroom } from '@/models/Classroom';
+import { School } from '@/models/School';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 function generateJoinCode(): string {
@@ -59,6 +61,15 @@ export async function POST(request: NextRequest) {
     }
 
     await dbConnect();
+
+    // A classroom cannot be filed under a school that has been archived.
+    if (schoolId) {
+      const school = await School.findById(schoolId)
+        .select('isArchived')
+        .lean<{ isArchived?: boolean }>();
+      const archivedSchool = assertNotArchived(school, 'school');
+      if (archivedSchool) return archivedSchool;
+    }
 
     const classroom = await Classroom.create({
       name: name.trim(),

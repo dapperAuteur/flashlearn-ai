@@ -6,6 +6,7 @@ import dbConnect from '@/lib/db/dbConnect';
 import { Team } from '@/models/Team';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { createActivityEvent } from '@/lib/services/activityService';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -82,6 +83,9 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (!isMember) {
       return NextResponse.json({ error: 'Only team members can share sets' }, { status: 403 });
     }
+
+    const archived = assertNotArchived(team, 'team');
+    if (archived) return archived;
 
     // Verify the set exists
     const set = await FlashcardSet.findById(setId).select('_id').lean();

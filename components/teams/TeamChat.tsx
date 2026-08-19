@@ -13,9 +13,11 @@ interface Message {
 
 interface TeamChatProps {
   teamId: string;
+  /** An archived group keeps its message history readable but takes no new messages. */
+  isArchived?: boolean;
 }
 
-export default function TeamChat({ teamId }: TeamChatProps) {
+export default function TeamChat({ teamId, isArchived = false }: TeamChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -144,6 +146,11 @@ export default function TeamChat({ teamId }: TeamChatProps) {
       )}
 
       {/* Input */}
+      {isArchived ? (
+        <p className="pt-3 border-t border-gray-100 text-xs text-gray-600">
+          This study group is archived, so it takes no new messages. The history above stays readable.
+        </p>
+      ) : (
       <form onSubmit={handleSend} className="flex items-center gap-2 pt-3 border-t border-gray-100">
         <label htmlFor="chat-input" className="sr-only">
           Type a message
@@ -167,6 +174,7 @@ export default function TeamChat({ teamId }: TeamChatProps) {
           <Send className="h-4 w-4" aria-hidden="true" />
         </button>
       </form>
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ export async function GET() {
     await dbConnect();
 
     const teams = await Team.find({ 'members.userId': session.user.id })
-      .select('name description avatar isPublic tags members joinCode creatorId createdAt')
+      .select('name description avatar isPublic tags members joinCode creatorId createdAt isArchived')
       .lean();
 
     const teamsWithCount = teams.map((team) => ({

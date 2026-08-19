@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Users, Crown, Shield, User } from 'lucide-react';
+import { Users, Crown, Shield, User, Archive } from 'lucide-react';
 
 interface Team {
   _id: string;
@@ -10,6 +10,7 @@ interface Team {
   memberCount: number;
   role: 'owner' | 'admin' | 'member';
   joinCode: string;
+  isArchived?: boolean;
 }
 
 interface TeamCardProps {
@@ -29,7 +30,7 @@ export default function TeamCard({ team }: TeamCardProps) {
   return (
     <article
       role="listitem"
-      aria-label={`Team: ${team.name}`}
+      aria-label={team.isArchived ? `Team: ${team.name} (archived)` : `Team: ${team.name}`}
       className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow p-5"
     >
       <Link href={`/team/${team._id}`} className="block">
@@ -39,6 +40,12 @@ export default function TeamCard({ team }: TeamCardProps) {
             <h3 className="text-lg font-semibold text-gray-900 truncate hover:text-blue-600 transition-colors">
               {team.name}
             </h3>
+            {team.isArchived && (
+              <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900">
+                <Archive className="h-3 w-3" aria-hidden="true" />
+                Archived
+              </span>
+            )}
           </div>
           <span
             className={`flex-shrink-0 ml-3 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${badge.classes}`}
