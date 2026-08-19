@@ -67,6 +67,33 @@ describe('math fact sets', () => {
     expect(new Set(sets.map((s) => s.slug)).size).toBe(sets.length);
   });
 
+  it('covers every ordered pair from 0 through 10, not just the low numbers', () => {
+    // Enumerated rather than counted. A count can be right while a specific
+    // family is missing, and "the 7s are not there" is exactly the kind of gap
+    // a total would hide.
+    const fronts = new Set(sets.flatMap((s) => s.cards.map((c) => c.front)));
+    const missing: string[] = [];
+
+    for (let a = 0; a <= 10; a += 1) {
+      for (let b = 0; b <= 10; b += 1) {
+        if (!fronts.has(`${a} + ${b} = ?`)) missing.push(`${a} + ${b}`);
+        if (!fronts.has(`${a} × ${b} = ?`)) missing.push(`${a} × ${b}`);
+      }
+    }
+
+    expect(missing).toEqual([]);
+  });
+
+  it('gives every number 0 through 10 both an addition and a multiplication set', () => {
+    for (let n = 0; n <= 10; n += 1) {
+      const slugs = sets.map((s) => s.slug);
+      expect(slugs).toContain(`math-facts-addition-${n}-plus-each`);
+      expect(slugs).toContain(`math-facts-addition-each-plus-${n}`);
+      expect(slugs).toContain(`math-facts-multiplication-${n}-times-each`);
+      expect(slugs).toContain(`math-facts-multiplication-each-times-${n}`);
+    }
+  });
+
   it('covers all 473 distinct facts across the four operations', () => {
     const ids = new Set(sets.flatMap((s) => s.cards.map((c) => c.externalId)));
 
