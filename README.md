@@ -217,14 +217,17 @@ npm run seed:math -- --owner-email=you@example.com --dry-run
 npm run seed:math -- --owner-email=you@example.com
 ```
 
-`seed:math` creates the math library: **110 sets, 1,504 cards**. Every set holds 10 to 20 cards.
+`seed:math` creates the math library: **134 sets, 1,838 cards**. Every set holds 10 to 20 cards.
 
 | Area | Sets | Cards |
 |------|------|-------|
-| Addition | 22 | 242 |
-| Subtraction | 11 | 121 |
-| Multiplication | 22 | 242 |
-| Division | 10 | 110 |
+| Addition, per number | 22 | 242 |
+| Subtraction, by what you take away | 11 | 121 |
+| Subtraction, by what you take from | 9 | 121 |
+| Multiplication, per number | 22 | 242 |
+| Division, per divisor | 10 | 110 |
+| Patterns (doubles, ways to make 10, squares) | 3 | 33 |
+| Mixed review, all four operations | 12 | 180 |
 | Geometry | 14 | 256 |
 | Trigonometry | 14 | 256 |
 | Calculus | 17 | 277 |
