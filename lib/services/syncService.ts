@@ -509,6 +509,10 @@ export class OfflineSyncService {
         endTime: historyEntry?.endTime ? new Date(historyEntry.endTime).toISOString() : new Date().toISOString(),
         studyDirection: historyEntry?.studyDirection || 'front-to-back',
         studyMode: historyEntry?.studyMode || 'classic',
+        // Only present when a teacher ran this session for a student. Omitted
+        // entirely otherwise, so a self-study payload is unchanged.
+        ...(historyEntry?.subjectId ? { subjectId: historyEntry.subjectId } : {}),
+        ...(historyEntry?.proctorMode ? { proctorMode: historyEntry.proctorMode } : {}),
         results: results.map(r => ({
           cardId: r.flashcardId || (r as any).cardId,
           isCorrect: r.isCorrect,

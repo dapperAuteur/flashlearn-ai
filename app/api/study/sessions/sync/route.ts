@@ -8,8 +8,7 @@ import { StudySession } from '@/models/StudySession';
 import { CardResult as CardResultModel } from '@/models/CardResult';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { StudyAnalytics } from '@/models/StudyAnalytics';
-import { User } from '@/models/User';
-import { Profile } from '@/models/Profile';
+import { resolveStudySubject } from '@/lib/study/resolveStudySubject';
 import { calculateSM2 } from '@/lib/algorithms/sm2';
 import { Logger, LogContext, LogLevel } from '@/lib/logging/logger';
 import { fireOutboxDrafts } from '@/lib/outbox-trigger';
@@ -19,11 +18,6 @@ interface SyncCardResult {
   isCorrect: boolean;
   timeSeconds: number;
   confidenceRating?: number;
-}
-
-interface LeanUser {
-  _id: mongoose.Types.ObjectId;
-  profiles?: mongoose.Types.ObjectId[];
 }
 
 function updateConfidenceData(confidenceData: any, confidenceRating: number, isCorrect: boolean) {
@@ -76,6 +70,23 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
 
+    // Whose learning this is. Defaults to the signed-in user, so every existing
+    // caller is unaffected; a teacher may name a student they are authorized
+    // for. Decided server-side, because a subject in the body is a request.
+    const resolved = await resolveStudySubject(userId, body.subjectId);
+    if (!resolved.ok) {
+      Logger.log({
+        context: LogContext.STUDY,
+        level: LogLevel.WARNING,
+        message: 'Study subject rejected on offline sync',
+        userId,
+        metadata: { subjectId: body.subjectId, status: resolved.status },
+      });
+      return NextResponse.json({ message: resolved.error }, { status: resolved.status });
+    }
+    const subject = resolved.subject;
+    const learnerId = subject.userId ?? new mongoose.Types.ObjectId(userId);
+
     // 4b1: collected during the SM-2 loop below; fired after analytics.save()
     // so a write failure doesn't broadcast a milestone that didn't persist.
     const milestonesToFire: Array<{ cardId: string; newIntervalDays: number; front: string }> = [];
@@ -113,7 +124,12 @@ export async function POST(request: NextRequest) {
     } else {
       const newSession = new StudySession({
         sessionId,
-        userId,
+        // The learner owns the row; the proctor is recorded separately.
+        userId: learnerId,
+        ...(subject.proctorId ? { proctorId: subject.proctorId } : {}),
+        ...(subject.isProctored
+          ? { proctorMode: body.proctorMode === 'handoff' ? 'handoff' : 'proctored' }
+          : {}),
         listId: setId,
         setName,
         totalCards,
@@ -197,35 +213,11 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      const user = await User.findById(userId).select('profiles').lean() as LeanUser | null;
-      if (!user) {
-        Logger.warning(LogContext.STUDY, 'User not found for analytics', { userId });
-        return NextResponse.json({
-          success: true, sessionId,
-          created: !existingSession, updated: !!existingSession,
-          cardResultsSaved: savedResultsCount
-        });
-      }
-
-      // Self-healing: create profile if missing
-      let profileId: mongoose.Types.ObjectId;
-      if (!user.profiles || user.profiles.length === 0) {
-        Logger.log({
-          context: LogContext.STUDY,
-          level: LogLevel.INFO,
-          message: 'Creating default profile for user during sync',
-          userId,
-        });
-        const newProfile = new Profile({
-          user: user._id,
-          profileName: 'My Profile',
-        });
-        await newProfile.save();
-        await User.findByIdAndUpdate(user._id, { $push: { profiles: newProfile._id } });
-        profileId = newProfile._id;
-      } else {
-        profileId = user.profiles[0];
-      }
+      // The spaced-repetition schedule belongs to the subject, which on a
+      // proctored session is the student rather than the teacher signed in.
+      // resolveStudySubject already did the self-healing profile creation this
+      // block used to do inline.
+      const profileId = subject.profileId;
 
       // Find or create analytics document
       let analytics = await StudyAnalytics.findOne({ profile: profileId, set: setIdAsObjectId });
