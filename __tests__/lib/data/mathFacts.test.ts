@@ -1,5 +1,8 @@
 import {
   additionSets,
+  minuendSets,
+  mixedReviewSets,
+  patternSets,
   buildOptions,
   CARDS_PER_SET,
   divisionSets,
@@ -47,20 +50,65 @@ describe('buildOptions', () => {
 describe('math fact sets', () => {
   const sets = mathFactSets();
 
-  it('produces 22 addition, 11 subtraction, 22 multiplication, and 10 division sets', () => {
+  it('produces the per-number families, the minuend groups, the patterns, and mixed review', () => {
     expect(additionSets()).toHaveLength(22);
     expect(subtractionSets()).toHaveLength(11);
     expect(multiplicationSets()).toHaveLength(22);
     expect(divisionSets()).toHaveLength(10);
-    expect(sets).toHaveLength(65);
+    expect(minuendSets()).toHaveLength(9);
+    expect(patternSets()).toHaveLength(3);
+    expect(mixedReviewSets('addition')).toHaveLength(3);
+    // 65 family sets + 9 minuend + 3 pattern + 12 mixed review.
+    expect(sets).toHaveLength(89);
   });
 
-  it('gives every set 11 cards, inside the 10 to 20 range a study set should hold', () => {
+  it('keeps every set inside the 10 to 20 range a study set should hold', () => {
     for (const set of sets) {
-      expect(set.cards).toHaveLength(CARDS_PER_SET);
       expect(set.cards.length).toBeGreaterThanOrEqual(10);
       expect(set.cards.length).toBeLessThanOrEqual(20);
     }
+  });
+
+  it('gives every per-number family exactly one focus number crossed with 0 to 10', () => {
+    for (const set of [...additionSets(), ...subtractionSets(), ...multiplicationSets(), ...divisionSets()]) {
+      expect(set.cards).toHaveLength(CARDS_PER_SET);
+    }
+  });
+
+  it('regroups subtraction by total without gaining or losing a fact', () => {
+    const bySubtrahend = new Set(subtractionSets().flatMap((s) => s.cards.map((c) => c.externalId)));
+    const byMinuend = new Set(minuendSets().flatMap((s) => s.cards.map((c) => c.externalId)));
+
+    // Same 121 facts seen from the other direction, so a student can drill
+    // "minus 3" or "ways to break up 12" and meet the same material.
+    expect(byMinuend.size).toBe(121);
+    expect([...byMinuend].sort()).toEqual([...bySubtrahend].sort());
+  });
+
+  it('interleaves mixed review instead of accidentally grouping it', () => {
+    for (const operation of ['addition', 'subtraction', 'multiplication', 'division'] as const) {
+      for (const set of mixedReviewSets(operation)) {
+        // A set that happened to hold one number's family would defeat the
+        // point, which is recalling a fact away from its neighbours.
+        const leftOperands = new Set(set.cards.map((c) => c.front.split(' ')[0]));
+        expect(leftOperands.size).toBeGreaterThan(3);
+      }
+    }
+  });
+
+  it('builds the pattern sets from the patterns they claim', () => {
+    const [doubles, makeTen, squares] = patternSets();
+
+    expect(doubles.cards.map((c) => c.front)).toContain('7 + 7 = ?');
+    expect(doubles.cards.every((c) => {
+      const [a, , b] = c.front.split(' ');
+      return a === b;
+    })).toBe(true);
+    expect(makeTen.cards.every((c) => Number(c.back) === 10)).toBe(true);
+    expect(squares.cards.every((c) => {
+      const [a, , b] = c.front.split(' ');
+      return a === b;
+    })).toBe(true);
   });
 
   it('uses a unique slug per set', () => {

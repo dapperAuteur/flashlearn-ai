@@ -51,7 +51,7 @@ export interface MathFactSet {
   /** Stable key used by the seed script to find an existing set. */
   slug: string;
   operation: MathFactOperation;
-  /** The number this set drills. */
+  /** The number this set drills, or -1 for a set that is not about one number. */
   focusNumber: number;
   title: string;
   description: string;
@@ -220,6 +220,21 @@ function divisionCard(quotient: number, divisor: number): MathFactCard {
   ]);
 }
 
+const OPERATION_LABEL: Record<MathFactOperation, string> = {
+  addition: 'Addition',
+  subtraction: 'Subtraction',
+  multiplication: 'Multiplication',
+  division: 'Division',
+};
+
+/** Fixed per-operation seeds, so each operation shuffles differently but repeatably. */
+const OPERATION_SEED: Record<MathFactOperation, number> = {
+  addition: 17,
+  subtraction: 29,
+  multiplication: 41,
+  division: 53,
+};
+
 const TAGS: Record<MathFactOperation, string[]> = {
   addition: ['math', 'math-facts', 'addition', 'fluency', 'elementary'],
   subtraction: ['math', 'math-facts', 'subtraction', 'fluency', 'elementary'],
@@ -332,7 +347,179 @@ export function divisionSets(max: number = MAX_OPERAND): MathFactSet[] {
   );
 }
 
+
+/**
+ * A deterministic shuffle. The module must produce byte-identical output on
+ * every run so the seed stays safe to re-run, which rules out Math.random. A
+ * small linear congruential generator seeded per set gives a fixed but
+ * well-mixed order, which is all interleaved practice needs.
+ */
+function seededShuffle<T>(items: T[], seed: number): T[] {
+  const out = [...items];
+  let state = seed * 2654435761 + 1;
+
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    state = (state * 1103515245 + 12345) & 0x7fffffff;
+    const j = state % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+
+  return out;
+}
+
+/** Cards per mixed-practice set. Inside the 10 to 20 a study set should hold. */
+const MIXED_SET_SIZE = 15;
+
+/** How many interleaved review sets each operation gets. */
+const MIXED_SET_COUNT = 3;
+
+/** Every fact for one operation, ungrouped, in generation order. */
+function allCardsFor(operation: MathFactOperation, max: number = MAX_OPERAND): MathFactCard[] {
+  const range0 = range(0, max);
+
+  switch (operation) {
+    case 'addition':
+      return range0.flatMap((a) => range0.map((b) => additionCard(a, b)));
+    case 'multiplication':
+      return range0.flatMap((a) => range0.map((b) => multiplicationCard(a, b)));
+    case 'subtraction':
+      return range0.flatMap((s) => range0.map((answer) => subtractionCard(answer, s)));
+    case 'division':
+      return range(1, max).flatMap((d) => range0.map((q) => divisionCard(q, d)));
+  }
+}
+
+/**
+ * Interleaved practice. The per-number sets teach one family at a time, which is
+ * how a fact is learned; recalling it among unrelated facts is a different skill
+ * and the one that shows up on a test. These sets mix the whole pool.
+ *
+ * Deliberately a sample rather than full coverage: the family sets already cover
+ * every fact, so what is wanted here is variety, not another 121 cards.
+ */
+export function mixedReviewSets(operation: MathFactOperation): MathFactSet[] {
+  const pool = seededShuffle(allCardsFor(operation), OPERATION_SEED[operation]);
+
+  return Array.from({ length: MIXED_SET_COUNT }, (_, i) => {
+    const cards = pool.slice(i * MIXED_SET_SIZE, (i + 1) * MIXED_SET_SIZE);
+    const n = i + 1;
+
+    return set(
+      operation,
+      -1,
+      `mixed-${n}`,
+      `${OPERATION_LABEL[operation]} Facts: Mixed Review ${n}`,
+      `${MIXED_SET_SIZE} ${operation} facts drawn from across the whole range, in no particular order. Practise this once the single-number sets feel easy: recalling a fact on its own and recalling it among unrelated facts are different skills.`,
+      cards,
+    );
+  });
+}
+
+/**
+ * The two patterns worth their own set because students learn them as patterns
+ * rather than as separate facts.
+ */
+export function patternSets(): MathFactSet[] {
+  const doubles = range(0, MAX_OPERAND).map((n) => additionCard(n, n));
+  const makeTen = range(0, MAX_OPERAND).map((a) => additionCard(a, MAX_OPERAND - a));
+  const squares = range(0, MAX_OPERAND).map((n) => multiplicationCard(n, n));
+
+  return [
+    set(
+      'addition',
+      -1,
+      'doubles',
+      'Addition Facts: Doubles',
+      'Every double from 0 + 0 to 10 + 10. Students usually learn these as one pattern rather than eleven separate facts, and the near doubles fall out of them.',
+      doubles,
+    ),
+    set(
+      'addition',
+      -1,
+      'make-ten',
+      'Addition Facts: Ways to Make 10',
+      'Every pair that adds to 10. Worth its own set because so much later arithmetic leans on knowing these without counting.',
+      makeTen,
+    ),
+    set(
+      'multiplication',
+      -1,
+      'squares',
+      'Multiplication Facts: Squares',
+      'Every square from 0 × 0 to 10 × 10. The anchor facts of the times tables, and the ones a student can use to work out a neighbour.',
+      squares,
+    ),
+  ];
+}
+
+
+/**
+ * Subtraction grouped by the number you subtract FROM, rather than by the number
+ * you take away.
+ *
+ * `subtractionSets` answers "what is minus 3", which is the inverse of the
+ * addition families. This answers "what are the ways to break up 12", which is
+ * how many curricula teach it and how a student reasons about regrouping.
+ * Together they cover the same 121 facts from both directions.
+ *
+ * Group sizes are uneven by nature: there is exactly one way to make 0 and
+ * eleven ways to make 10. Adjacent totals are therefore merged until every set
+ * lands inside the 10 to 20 a study set should hold, which is why some sets
+ * cover one total and others cover five.
+ */
+const MINUEND_GROUPS: number[][] = [
+  [0, 1, 2, 3, 4],
+  [5, 6],
+  [7, 8],
+  [9],
+  [10],
+  [11],
+  [12, 13],
+  [14, 15],
+  [16, 17, 18, 19, 20],
+];
+
+function describeGroup(minuends: number[]): string {
+  if (minuends.length === 1) return `${minuends[0]}`;
+  if (minuends.length === 2) return `${minuends[0]} or ${minuends[1]}`;
+  return `${minuends[0]} to ${minuends[minuends.length - 1]}`;
+}
+
+export function minuendSets(max: number = MAX_OPERAND): MathFactSet[] {
+  return MINUEND_GROUPS.map((minuends) => {
+    // For a total m, every subtrahend that leaves an answer still inside 0..max.
+    const cards = minuends.flatMap((m) =>
+      range(0, max)
+        .filter((subtrahend) => m - subtrahend >= 0 && m - subtrahend <= max)
+        .map((subtrahend) => subtractionCard(m - subtrahend, subtrahend)),
+    );
+
+    const label = describeGroup(minuends);
+    const slugPart = minuends.length === 1 ? `${minuends[0]}` : `${minuends[0]}-${minuends[minuends.length - 1]}`;
+
+    return set(
+      'subtraction',
+      minuends.length === 1 ? minuends[0] : -1,
+      `from-${slugPart}`,
+      `Subtraction Facts: Take from ${label}`,
+      `Every way to subtract from ${label}. Grouped by the total rather than by what is taken away, which is how a student reasons about breaking a number apart.`,
+      cards,
+    );
+  });
+}
+
 /** Every math fact set, in the order they should appear to a student. */
 export function mathFactSets(): MathFactSet[] {
-  return [...additionSets(), ...subtractionSets(), ...multiplicationSets(), ...divisionSets()];
+  return [
+    ...additionSets(),
+    ...subtractionSets(),
+    ...minuendSets(),
+    ...multiplicationSets(),
+    ...divisionSets(),
+    ...patternSets(),
+    ...mixedReviewSets('addition'),
+    ...mixedReviewSets('subtraction'),
+    ...mixedReviewSets('multiplication'),
+    ...mixedReviewSets('division'),
+  ];
 }
