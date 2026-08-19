@@ -1,0 +1,1211 @@
+{
+  "subject": "trigonometry",
+  "sets": [
+    {
+      "slug": "trigonometry-right-triangle-ratios",
+      "title": "Trigonometry: Right Triangle Ratios and SOH CAH TOA",
+      "description": "The six trig ratios as sides of a right triangle, plus solving for a missing side or a missing angle. Includes angle of elevation and angle of depression problems.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "right-triangles",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "In a right triangle, sin θ equals which ratio of sides?",
+          "back": "sin θ = opposite ÷ hypotenuse."
+        },
+        {
+          "front": "In a right triangle, cos θ equals which ratio of sides?",
+          "back": "cos θ = adjacent ÷ hypotenuse."
+        },
+        {
+          "front": "In a right triangle, tan θ equals which ratio of sides?",
+          "back": "tan θ = opposite ÷ adjacent."
+        },
+        {
+          "front": "In a right triangle, csc θ equals which ratio of sides?",
+          "back": "csc θ = hypotenuse ÷ opposite. It is the reciprocal of sine."
+        },
+        {
+          "front": "In a right triangle, sec θ equals which ratio of sides?",
+          "back": "sec θ = hypotenuse ÷ adjacent. It is the reciprocal of cosine."
+        },
+        {
+          "front": "In a right triangle, cot θ equals which ratio of sides?",
+          "back": "cot θ = adjacent ÷ opposite. It is the reciprocal of tangent."
+        },
+        {
+          "front": "What does the mnemonic SOH CAH TOA stand for?",
+          "back": "Sine = Opposite ÷ Hypotenuse, Cosine = Adjacent ÷ Hypotenuse, Tangent = Opposite ÷ Adjacent."
+        },
+        {
+          "front": "Which side of a right triangle is the hypotenuse?",
+          "back": "The side across from the right angle. It is always the longest side of the triangle."
+        },
+        {
+          "front": "How are the opposite and adjacent legs named?",
+          "back": "Always relative to the acute angle you are working with. The opposite leg is across from θ, and the adjacent leg touches θ without being the hypotenuse."
+        },
+        {
+          "front": "How do the two acute angles of a right triangle relate?",
+          "back": "They are complementary and add to 90°, because all three angles total 180° and one of them is already 90°."
+        },
+        {
+          "front": "You know an acute angle and the hypotenuse. How do you find the opposite side?",
+          "back": "Use sine: opposite = hypotenuse × sin θ."
+        },
+        {
+          "front": "You know an acute angle and the hypotenuse. How do you find the adjacent side?",
+          "back": "Use cosine: adjacent = hypotenuse × cos θ."
+        },
+        {
+          "front": "You know an acute angle and the adjacent side. How do you find the opposite side?",
+          "back": "Use tangent: opposite = adjacent × tan θ."
+        },
+        {
+          "front": "You know both legs of a right triangle. How do you find an acute angle?",
+          "back": "Use the inverse tangent: θ = arctan(opposite ÷ adjacent)."
+        },
+        {
+          "front": "You know the opposite side and the hypotenuse. How do you find the angle?",
+          "back": "Use the inverse sine: θ = arcsin(opposite ÷ hypotenuse)."
+        },
+        {
+          "front": "You know the adjacent side and the hypotenuse. How do you find the angle?",
+          "back": "Use the inverse cosine: θ = arccos(adjacent ÷ hypotenuse)."
+        },
+        {
+          "front": "What is an angle of elevation?",
+          "back": "The angle measured upward from a horizontal line of sight to an object above the observer."
+        },
+        {
+          "front": "What is an angle of depression?",
+          "back": "The angle measured downward from a horizontal line of sight to an object below the observer."
+        },
+        {
+          "front": "How does an angle of depression compare with the matching angle of elevation?",
+          "back": "They are equal. The two horizontal lines are parallel and the line of sight cuts across both, making the pair alternate interior angles."
+        },
+        {
+          "front": "A 20 foot ladder leans on a wall at 60° to the ground. How high does it reach?",
+          "back": "Height = 20 × sin 60° = 20 × sqrt(3)/2, which is about 17.3 feet."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-degrees-and-radians",
+      "title": "Trigonometry: Degree and Radian Measure",
+      "description": "Converting angles in both directions, arc length, sector area, and angles drawn in standard position. Coterminal angles are covered here too.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "angle-measure",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "How do you convert an angle from degrees to radians?",
+          "back": "Multiply by π/180. Example: 135° × π/180 = 3π/4 radians."
+        },
+        {
+          "front": "How do you convert an angle from radians to degrees?",
+          "back": "Multiply by 180/π. Example: 5π/6 × 180/π = 150°."
+        },
+        {
+          "front": "How many degrees are in π radians?",
+          "back": "π radians = 180°. A full circle is 2π radians = 360°, so one radian is about 57.3°."
+        },
+        {
+          "front": "What is one radian?",
+          "back": "The central angle of a circle that cuts off an arc equal in length to the radius."
+        },
+        {
+          "front": "Convert 45° to radians.",
+          "back": "45 × π/180 = π/4 radians."
+        },
+        {
+          "front": "Convert 240° to radians.",
+          "back": "240 × π/180 = 4π/3 radians."
+        },
+        {
+          "front": "Convert 300° to radians.",
+          "back": "300 × π/180 = 5π/3 radians."
+        },
+        {
+          "front": "Convert 7π/4 radians to degrees.",
+          "back": "7π/4 × 180/π = 315°."
+        },
+        {
+          "front": "Convert 2π/3 radians to degrees.",
+          "back": "2π/3 × 180/π = 120°."
+        },
+        {
+          "front": "Convert 11π/6 radians to degrees.",
+          "back": "11π/6 × 180/π = 330°."
+        },
+        {
+          "front": "State the arc length formula.",
+          "back": "s = rθ, where r is the radius and θ is the central angle in radians. Convert degrees to radians before using it."
+        },
+        {
+          "front": "A circle of radius 6 has a central angle of π/3. What is the arc length?",
+          "back": "s = rθ = 6 × π/3 = 2π units, about 6.28 units."
+        },
+        {
+          "front": "State the formula for the area of a circular sector.",
+          "back": "A = (1/2)r²θ, with θ measured in radians."
+        },
+        {
+          "front": "A sector has radius 4 and central angle π/2. What is its area?",
+          "back": "A = (1/2)(4²)(π/2) = (1/2)(16)(π/2) = 4π square units, about 12.57."
+        },
+        {
+          "front": "What does it mean for an angle to be in standard position?",
+          "back": "Its vertex sits at the origin and its initial side lies along the positive x-axis."
+        },
+        {
+          "front": "What are the initial side and the terminal side of an angle?",
+          "back": "The initial side is where the rotation starts, along the positive x-axis in standard position. The terminal side is where the rotation stops."
+        },
+        {
+          "front": "What do positive and negative angle measures mean?",
+          "back": "A positive angle rotates counterclockwise from the initial side. A negative angle rotates clockwise."
+        },
+        {
+          "front": "What are coterminal angles?",
+          "back": "Angles in standard position that share the same terminal side. They differ by whole turns, so 360°n in degrees or 2πn in radians."
+        },
+        {
+          "front": "Find a positive angle coterminal with -60°.",
+          "back": "-60° + 360° = 300°. Any angle of the form -60° + 360°n also works."
+        },
+        {
+          "front": "Find an angle between 0° and 360° coterminal with 400°.",
+          "back": "400° - 360° = 40°."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-unit-circle-sine",
+      "title": "Trigonometry: Unit Circle Sine Values",
+      "description": "One card per angle for the exact sine values around the full unit circle. Sine is the y-coordinate of the point where the terminal side meets the circle.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "unit-circle",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "What is sin 0° (0 radians)?",
+          "back": "sin 0° = 0. The point (1, 0) has y-coordinate 0."
+        },
+        {
+          "front": "What is sin 30° (π/6)?",
+          "back": "sin 30° = (1/2). Reference angle 30°, and sine is positive in Quadrant I."
+        },
+        {
+          "front": "What is sin 45° (π/4)?",
+          "back": "sin 45° = sqrt(2)/2. Reference angle 45°, and sine is positive in Quadrant I."
+        },
+        {
+          "front": "What is sin 60° (π/3)?",
+          "back": "sin 60° = sqrt(3)/2. Reference angle 60°, and sine is positive in Quadrant I."
+        },
+        {
+          "front": "What is sin 90° (π/2)?",
+          "back": "sin 90° = 1. The point (0, 1) has y-coordinate 1, the largest value sine ever reaches."
+        },
+        {
+          "front": "What is sin 120° (2π/3)?",
+          "back": "sin 120° = sqrt(3)/2. Reference angle 60°, and sine is positive in Quadrant II."
+        },
+        {
+          "front": "What is sin 135° (3π/4)?",
+          "back": "sin 135° = sqrt(2)/2. Reference angle 45°, and sine is positive in Quadrant II."
+        },
+        {
+          "front": "What is sin 150° (5π/6)?",
+          "back": "sin 150° = (1/2). Reference angle 30°, and sine is positive in Quadrant II."
+        },
+        {
+          "front": "What is sin 180° (π)?",
+          "back": "sin 180° = 0. The point (-1, 0) has y-coordinate 0."
+        },
+        {
+          "front": "What is sin 210° (7π/6)?",
+          "back": "sin 210° = -(1/2). Reference angle 30°, and sine is negative in Quadrant III."
+        },
+        {
+          "front": "What is sin 225° (5π/4)?",
+          "back": "sin 225° = -sqrt(2)/2. Reference angle 45°, and sine is negative in Quadrant III."
+        },
+        {
+          "front": "What is sin 240° (4π/3)?",
+          "back": "sin 240° = -sqrt(3)/2. Reference angle 60°, and sine is negative in Quadrant III."
+        },
+        {
+          "front": "What is sin 270° (3π/2)?",
+          "back": "sin 270° = -1. The point (0, -1) has y-coordinate -1, the smallest value sine ever reaches."
+        },
+        {
+          "front": "What is sin 300° (5π/3)?",
+          "back": "sin 300° = -sqrt(3)/2. Reference angle 60°, and sine is negative in Quadrant IV."
+        },
+        {
+          "front": "What is sin 315° (7π/4)?",
+          "back": "sin 315° = -sqrt(2)/2. Reference angle 45°, and sine is negative in Quadrant IV."
+        },
+        {
+          "front": "What is sin 330° (11π/6)?",
+          "back": "sin 330° = -(1/2). Reference angle 30°, and sine is negative in Quadrant IV."
+        },
+        {
+          "front": "What is sin 360° (2π)?",
+          "back": "sin 360° = 0. A full turn lands back on (1, 0), so the value matches 0°."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-unit-circle-cosine",
+      "title": "Trigonometry: Unit Circle Cosine Values",
+      "description": "One card per angle for the exact cosine values around the full unit circle. Cosine is the x-coordinate of the point where the terminal side meets the circle.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "unit-circle",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "What is cos 0° (0 radians)?",
+          "back": "cos 0° = 1. The point (1, 0) has x-coordinate 1, the largest value cosine ever reaches."
+        },
+        {
+          "front": "What is cos 30° (π/6)?",
+          "back": "cos 30° = sqrt(3)/2. Reference angle 30°, and cosine is positive in Quadrant I."
+        },
+        {
+          "front": "What is cos 45° (π/4)?",
+          "back": "cos 45° = sqrt(2)/2. Reference angle 45°, and cosine is positive in Quadrant I."
+        },
+        {
+          "front": "What is cos 60° (π/3)?",
+          "back": "cos 60° = (1/2). Reference angle 60°, and cosine is positive in Quadrant I."
+        },
+        {
+          "front": "What is cos 90° (π/2)?",
+          "back": "cos 90° = 0. The point (0, 1) has x-coordinate 0."
+        },
+        {
+          "front": "What is cos 120° (2π/3)?",
+          "back": "cos 120° = -(1/2). Reference angle 60°, and cosine is negative in Quadrant II."
+        },
+        {
+          "front": "What is cos 135° (3π/4)?",
+          "back": "cos 135° = -sqrt(2)/2. Reference angle 45°, and cosine is negative in Quadrant II."
+        },
+        {
+          "front": "What is cos 150° (5π/6)?",
+          "back": "cos 150° = -sqrt(3)/2. Reference angle 30°, and cosine is negative in Quadrant II."
+        },
+        {
+          "front": "What is cos 180° (π)?",
+          "back": "cos 180° = -1. The point (-1, 0) has x-coordinate -1, the smallest value cosine ever reaches."
+        },
+        {
+          "front": "What is cos 210° (7π/6)?",
+          "back": "cos 210° = -sqrt(3)/2. Reference angle 30°, and cosine is negative in Quadrant III."
+        },
+        {
+          "front": "What is cos 225° (5π/4)?",
+          "back": "cos 225° = -sqrt(2)/2. Reference angle 45°, and cosine is negative in Quadrant III."
+        },
+        {
+          "front": "What is cos 240° (4π/3)?",
+          "back": "cos 240° = -(1/2). Reference angle 60°, and cosine is negative in Quadrant III."
+        },
+        {
+          "front": "What is cos 270° (3π/2)?",
+          "back": "cos 270° = 0. The point (0, -1) has x-coordinate 0."
+        },
+        {
+          "front": "What is cos 300° (5π/3)?",
+          "back": "cos 300° = (1/2). Reference angle 60°, and cosine is positive in Quadrant IV."
+        },
+        {
+          "front": "What is cos 315° (7π/4)?",
+          "back": "cos 315° = sqrt(2)/2. Reference angle 45°, and cosine is positive in Quadrant IV."
+        },
+        {
+          "front": "What is cos 330° (11π/6)?",
+          "back": "cos 330° = sqrt(3)/2. Reference angle 30°, and cosine is positive in Quadrant IV."
+        },
+        {
+          "front": "What is cos 360° (2π)?",
+          "back": "cos 360° = 1. A full turn lands back on (1, 0), so the value matches 0°."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-unit-circle-tangent",
+      "title": "Trigonometry: Unit Circle Tangent Values",
+      "description": "One card per angle for the exact tangent values around the full unit circle. Tangent is sine divided by cosine, so it is undefined wherever cosine equals zero.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "unit-circle",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "What is tan 0° (0 radians)?",
+          "back": "tan 0° = 0. It works out as sin 0° ÷ cos 0° = 0 ÷ 1."
+        },
+        {
+          "front": "What is tan 30° (π/6)?",
+          "back": "tan 30° = sqrt(3)/3. Reference angle 30°, and tangent is positive in Quadrant I."
+        },
+        {
+          "front": "What is tan 45° (π/4)?",
+          "back": "tan 45° = 1. Reference angle 45°, and tangent is positive in Quadrant I."
+        },
+        {
+          "front": "What is tan 60° (π/3)?",
+          "back": "tan 60° = sqrt(3). Reference angle 60°, and tangent is positive in Quadrant I."
+        },
+        {
+          "front": "What is tan 90° (π/2)?",
+          "back": "Undefined, because cos 90° = 0 and you cannot divide by zero. The graph has a vertical asymptote there."
+        },
+        {
+          "front": "What is tan 120° (2π/3)?",
+          "back": "tan 120° = -sqrt(3). Reference angle 60°, and tangent is negative in Quadrant II."
+        },
+        {
+          "front": "What is tan 135° (3π/4)?",
+          "back": "tan 135° = -1. Reference angle 45°, and tangent is negative in Quadrant II."
+        },
+        {
+          "front": "What is tan 150° (5π/6)?",
+          "back": "tan 150° = -sqrt(3)/3. Reference angle 30°, and tangent is negative in Quadrant II."
+        },
+        {
+          "front": "What is tan 180° (π)?",
+          "back": "tan 180° = 0. It works out as sin 180° ÷ cos 180° = 0 ÷ -1."
+        },
+        {
+          "front": "What is tan 210° (7π/6)?",
+          "back": "tan 210° = sqrt(3)/3. Reference angle 30°, and tangent is positive in Quadrant III."
+        },
+        {
+          "front": "What is tan 225° (5π/4)?",
+          "back": "tan 225° = 1. Reference angle 45°, and tangent is positive in Quadrant III."
+        },
+        {
+          "front": "What is tan 240° (4π/3)?",
+          "back": "tan 240° = sqrt(3). Reference angle 60°, and tangent is positive in Quadrant III."
+        },
+        {
+          "front": "What is tan 270° (3π/2)?",
+          "back": "Undefined, because cos 270° = 0 and you cannot divide by zero. The graph has a vertical asymptote there."
+        },
+        {
+          "front": "What is tan 300° (5π/3)?",
+          "back": "tan 300° = -sqrt(3). Reference angle 60°, and tangent is negative in Quadrant IV."
+        },
+        {
+          "front": "What is tan 315° (7π/4)?",
+          "back": "tan 315° = -1. Reference angle 45°, and tangent is negative in Quadrant IV."
+        },
+        {
+          "front": "What is tan 330° (11π/6)?",
+          "back": "tan 330° = -sqrt(3)/3. Reference angle 30°, and tangent is negative in Quadrant IV."
+        },
+        {
+          "front": "What is tan 360° (2π)?",
+          "back": "tan 360° = 0. It works out as sin 360° ÷ cos 360° = 0 ÷ 1, the same value as 0°."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-pythagorean-reciprocal-quotient-identities",
+      "title": "Trigonometry: Pythagorean, Reciprocal, and Quotient Identities",
+      "description": "The three Pythagorean identities, all six reciprocal relationships, and both quotient identities. Each card names the angles where the identity is undefined.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "identities",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "State the main Pythagorean identity.",
+          "back": "sin²θ + cos²θ = 1. It comes from x² + y² = 1 on the unit circle, where x = cos θ and y = sin θ."
+        },
+        {
+          "front": "State the Pythagorean identity that uses tangent and secant.",
+          "back": "1 + tan²θ = sec²θ. Divide sin²θ + cos²θ = 1 through by cos²θ to get it."
+        },
+        {
+          "front": "State the Pythagorean identity that uses cotangent and cosecant.",
+          "back": "1 + cot²θ = csc²θ. Divide sin²θ + cos²θ = 1 through by sin²θ to get it."
+        },
+        {
+          "front": "Why is sin²θ + cos²θ = 1 true for every angle?",
+          "back": "Every unit circle point is (cos θ, sin θ) and sits exactly one unit from the origin, so the Pythagorean theorem gives cos²θ + sin²θ = 1."
+        },
+        {
+          "front": "Write csc θ in terms of sin θ.",
+          "back": "csc θ = 1/sin θ, defined whenever sin θ ≠ 0."
+        },
+        {
+          "front": "Write sec θ in terms of cos θ.",
+          "back": "sec θ = 1/cos θ, defined whenever cos θ ≠ 0."
+        },
+        {
+          "front": "Write cot θ in terms of tan θ.",
+          "back": "cot θ = 1/tan θ, defined whenever tan θ exists and tan θ ≠ 0."
+        },
+        {
+          "front": "Write sin θ in terms of csc θ.",
+          "back": "sin θ = 1/csc θ, defined whenever csc θ exists."
+        },
+        {
+          "front": "Write cos θ in terms of sec θ.",
+          "back": "cos θ = 1/sec θ, defined whenever sec θ exists."
+        },
+        {
+          "front": "Write tan θ in terms of cot θ.",
+          "back": "tan θ = 1/cot θ, defined whenever cot θ exists and cot θ ≠ 0."
+        },
+        {
+          "front": "State the quotient identity for tangent.",
+          "back": "tan θ = sin θ / cos θ, defined whenever cos θ ≠ 0."
+        },
+        {
+          "front": "State the quotient identity for cotangent.",
+          "back": "cot θ = cos θ / sin θ, defined whenever sin θ ≠ 0."
+        },
+        {
+          "front": "For which angles are tan θ and sec θ undefined?",
+          "back": "Wherever cos θ = 0, which is θ = π/2 + πn radians, or 90° + 180°n, for any integer n."
+        },
+        {
+          "front": "For which angles are cot θ and csc θ undefined?",
+          "back": "Wherever sin θ = 0, which is θ = πn radians, or 180°n, for any integer n."
+        },
+        {
+          "front": "Rewrite sin²θ and cos²θ using the main Pythagorean identity.",
+          "back": "sin²θ = 1 - cos²θ and cos²θ = 1 - sin²θ."
+        },
+        {
+          "front": "Simplify sec²θ - tan²θ.",
+          "back": "It equals 1, straight from rearranging 1 + tan²θ = sec²θ."
+        },
+        {
+          "front": "Simplify csc²θ - cot²θ.",
+          "back": "It equals 1, straight from rearranging 1 + cot²θ = csc²θ."
+        },
+        {
+          "front": "Simplify sin θ csc θ.",
+          "back": "It equals 1, since csc θ = 1/sin θ. The same reasoning gives cos θ sec θ = 1 and tan θ cot θ = 1."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-even-odd-and-cofunction-identities",
+      "title": "Trigonometry: Even, Odd, and Cofunction Identities",
+      "description": "How the six trig functions respond to a negative angle, the six cofunction pairs, and the common shift identities built on π and 2π.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "identities",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "Simplify sin(-θ).",
+          "back": "sin(-θ) = -sin θ. Sine is an odd function."
+        },
+        {
+          "front": "Simplify cos(-θ).",
+          "back": "cos(-θ) = cos θ. Cosine is an even function."
+        },
+        {
+          "front": "Simplify tan(-θ).",
+          "back": "tan(-θ) = -tan θ. Tangent is an odd function."
+        },
+        {
+          "front": "Simplify csc(-θ).",
+          "back": "csc(-θ) = -csc θ. Cosecant is an odd function, matching sine."
+        },
+        {
+          "front": "Simplify sec(-θ).",
+          "back": "sec(-θ) = sec θ. Secant is an even function, matching cosine."
+        },
+        {
+          "front": "Simplify cot(-θ).",
+          "back": "cot(-θ) = -cot θ. Cotangent is an odd function, matching tangent."
+        },
+        {
+          "front": "Which trig functions are even and which are odd?",
+          "back": "Even: cosine and secant. Odd: sine, cosecant, tangent, and cotangent."
+        },
+        {
+          "front": "State the cofunction identity for sine.",
+          "back": "sin(90° - θ) = cos θ, written sin(π/2 - θ) = cos θ in radians."
+        },
+        {
+          "front": "State the cofunction identity for cosine.",
+          "back": "cos(90° - θ) = sin θ, written cos(π/2 - θ) = sin θ in radians."
+        },
+        {
+          "front": "State the cofunction identity for tangent.",
+          "back": "tan(90° - θ) = cot θ, written tan(π/2 - θ) = cot θ in radians."
+        },
+        {
+          "front": "State the cofunction identity for cotangent.",
+          "back": "cot(90° - θ) = tan θ, written cot(π/2 - θ) = tan θ in radians."
+        },
+        {
+          "front": "State the cofunction identity for secant.",
+          "back": "sec(90° - θ) = csc θ, written sec(π/2 - θ) = csc θ in radians."
+        },
+        {
+          "front": "State the cofunction identity for cosecant.",
+          "back": "csc(90° - θ) = sec θ, written csc(π/2 - θ) = sec θ in radians."
+        },
+        {
+          "front": "Why do the cofunction identities work in a right triangle?",
+          "back": "The two acute angles add to 90°, so the leg opposite one angle is adjacent to the other. Swapping the angle swaps each ratio with its cofunction."
+        },
+        {
+          "front": "Simplify sin(π - θ).",
+          "back": "sin(π - θ) = sin θ. The angle lands in Quadrant II with reference angle θ, and sine stays positive there."
+        },
+        {
+          "front": "Simplify cos(π - θ).",
+          "back": "cos(π - θ) = -cos θ. The angle lands in Quadrant II, where cosine is negative."
+        },
+        {
+          "front": "Simplify tan(π - θ).",
+          "back": "tan(π - θ) = -tan θ. Tangent is negative in Quadrant II."
+        },
+        {
+          "front": "Simplify sin(π + θ).",
+          "back": "sin(π + θ) = -sin θ. The angle lands in Quadrant III, where sine is negative."
+        },
+        {
+          "front": "Simplify cos(π + θ).",
+          "back": "cos(π + θ) = -cos θ. The angle lands in Quadrant III, where cosine is negative."
+        },
+        {
+          "front": "Simplify tan(π + θ).",
+          "back": "tan(π + θ) = tan θ. Tangent repeats every π radians."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-sum-and-difference-formulas",
+      "title": "Trigonometry: Sum and Difference Formulas",
+      "description": "The six sum and difference formulas for sine, cosine, and tangent, plus exact values for angles such as 15°, 75°, and 105° built from them.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "identities",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "Expand sin(A + B).",
+          "back": "sin(A + B) = sin A cos B + cos A sin B."
+        },
+        {
+          "front": "Expand sin(A - B).",
+          "back": "sin(A - B) = sin A cos B - cos A sin B."
+        },
+        {
+          "front": "Expand cos(A + B).",
+          "back": "cos(A + B) = cos A cos B - sin A sin B. The sign flips from plus on the left to minus on the right."
+        },
+        {
+          "front": "Expand cos(A - B).",
+          "back": "cos(A - B) = cos A cos B + sin A sin B. The sign flips from minus on the left to plus on the right."
+        },
+        {
+          "front": "Expand tan(A + B).",
+          "back": "tan(A + B) = (tan A + tan B) / (1 - tan A tan B)."
+        },
+        {
+          "front": "Expand tan(A - B).",
+          "back": "tan(A - B) = (tan A - tan B) / (1 + tan A tan B)."
+        },
+        {
+          "front": "Is sin(A + B) the same as sin A + sin B?",
+          "back": "No. Sine does not distribute over addition. You have to use sin(A + B) = sin A cos B + cos A sin B."
+        },
+        {
+          "front": "How do you check the sign rule for cos(A - B) if you forget it?",
+          "back": "Set A = B. Then cos 0 = 1, and cos A cos A + sin A sin A = 1. The plus sign is the one that works."
+        },
+        {
+          "front": "Which familiar angles combine to give 75°?",
+          "back": "45° + 30° = 75°. That lets you build exact values for 75° out of the 45° and 30° values."
+        },
+        {
+          "front": "Find the exact value of sin 75°.",
+          "back": "sin(45° + 30°) = sin 45° cos 30° + cos 45° sin 30° = (sqrt(6) + sqrt(2))/4, about 0.966."
+        },
+        {
+          "front": "Find the exact value of cos 75°.",
+          "back": "cos(45° + 30°) = cos 45° cos 30° - sin 45° sin 30° = (sqrt(6) - sqrt(2))/4, about 0.259."
+        },
+        {
+          "front": "Find the exact value of sin 15°.",
+          "back": "sin(45° - 30°) = sin 45° cos 30° - cos 45° sin 30° = (sqrt(6) - sqrt(2))/4, about 0.259."
+        },
+        {
+          "front": "Find the exact value of cos 15°.",
+          "back": "cos(45° - 30°) = cos 45° cos 30° + sin 45° sin 30° = (sqrt(6) + sqrt(2))/4, about 0.966."
+        },
+        {
+          "front": "Find the exact value of tan 75°.",
+          "back": "tan(45° + 30°) = (1 + sqrt(3)/3) / (1 - sqrt(3)/3), which simplifies to 2 + sqrt(3), about 3.732."
+        },
+        {
+          "front": "Find the exact value of tan 15°.",
+          "back": "tan(45° - 30°) = (1 - sqrt(3)/3) / (1 + sqrt(3)/3), which simplifies to 2 - sqrt(3), about 0.268."
+        },
+        {
+          "front": "Find the exact value of sin 105°.",
+          "back": "sin(60° + 45°) = sin 60° cos 45° + cos 60° sin 45° = (sqrt(6) + sqrt(2))/4, about 0.966."
+        },
+        {
+          "front": "Find the exact value of cos 105°.",
+          "back": "cos(60° + 45°) = cos 60° cos 45° - sin 60° sin 45° = (sqrt(2) - sqrt(6))/4, about -0.259."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-double-and-half-angle-formulas",
+      "title": "Trigonometry: Double and Half Angle Formulas",
+      "description": "Double angle formulas for sine, cosine, and tangent, the half angle formulas including all three tangent forms, and the power reduction formulas.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "identities",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "State the double angle formula for sine.",
+          "back": "sin 2θ = 2 sin θ cos θ."
+        },
+        {
+          "front": "State the form of cos 2θ that uses both sine and cosine.",
+          "back": "cos 2θ = cos²θ - sin²θ."
+        },
+        {
+          "front": "State the form of cos 2θ that uses cosine only.",
+          "back": "cos 2θ = 2cos²θ - 1."
+        },
+        {
+          "front": "State the form of cos 2θ that uses sine only.",
+          "back": "cos 2θ = 1 - 2sin²θ."
+        },
+        {
+          "front": "How do you get cos 2θ = 2cos²θ - 1 from cos 2θ = cos²θ - sin²θ?",
+          "back": "Replace sin²θ with 1 - cos²θ. Then cos²θ - (1 - cos²θ) = 2cos²θ - 1."
+        },
+        {
+          "front": "State the double angle formula for tangent.",
+          "back": "tan 2θ = 2 tan θ / (1 - tan²θ), valid when tan²θ ≠ 1."
+        },
+        {
+          "front": "State the half angle formula for sine.",
+          "back": "sin(θ/2) = ± sqrt((1 - cos θ)/2). Choose the sign from the quadrant that θ/2 lands in."
+        },
+        {
+          "front": "State the half angle formula for cosine.",
+          "back": "cos(θ/2) = ± sqrt((1 + cos θ)/2). Choose the sign from the quadrant that θ/2 lands in."
+        },
+        {
+          "front": "State the square root form of the half angle formula for tangent.",
+          "back": "tan(θ/2) = ± sqrt((1 - cos θ)/(1 + cos θ)). Choose the sign from the quadrant that θ/2 lands in."
+        },
+        {
+          "front": "State the tangent half angle form with sin θ in the numerator.",
+          "back": "tan(θ/2) = sin θ / (1 + cos θ). This form carries its own sign, so no sign choice is needed."
+        },
+        {
+          "front": "State the tangent half angle form with sin θ in the denominator.",
+          "back": "tan(θ/2) = (1 - cos θ) / sin θ. This form carries its own sign, so no sign choice is needed."
+        },
+        {
+          "front": "State the power reduction formula for sin²θ.",
+          "back": "sin²θ = (1 - cos 2θ)/2."
+        },
+        {
+          "front": "State the power reduction formula for cos²θ.",
+          "back": "cos²θ = (1 + cos 2θ)/2."
+        },
+        {
+          "front": "State the power reduction formula for tan²θ.",
+          "back": "tan²θ = (1 - cos 2θ)/(1 + cos 2θ)."
+        },
+        {
+          "front": "If sin θ = (3/5) and θ is in Quadrant I, what is sin 2θ?",
+          "back": "cos θ = (4/5), so sin 2θ = 2 × (3/5) × (4/5) = (24/25)."
+        },
+        {
+          "front": "If sin θ = (3/5) and θ is in Quadrant I, what is cos 2θ?",
+          "back": "cos 2θ = 1 - 2sin²θ = 1 - 2(9/25) = (7/25)."
+        },
+        {
+          "front": "Use a half angle formula to find cos 22.5°.",
+          "back": "cos(45°/2) = sqrt((1 + sqrt(2)/2)/2), about 0.924. The sign is positive because 22.5° sits in Quadrant I."
+        },
+        {
+          "front": "Use a half angle formula to find sin 22.5°.",
+          "back": "sin(45°/2) = sqrt((1 - sqrt(2)/2)/2), about 0.383. The sign is positive because 22.5° sits in Quadrant I."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-law-of-sines-and-cosines",
+      "title": "Trigonometry: Law of Sines and Law of Cosines",
+      "description": "Both laws, which triangle case calls for which, the ambiguous SSA case, and two area formulas for triangles that have no right angle.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "oblique-triangles",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "State the Law of Sines.",
+          "back": "a/sin A = b/sin B = c/sin C, where side a is opposite angle A, side b is opposite angle B, and side c is opposite angle C."
+        },
+        {
+          "front": "Which triangle cases call for the Law of Sines?",
+          "back": "AAS, ASA, and SSA, the cases where you know an angle together with the side opposite it."
+        },
+        {
+          "front": "State the Law of Cosines for side c.",
+          "back": "c² = a² + b² - 2ab cos C, where C is the angle opposite side c."
+        },
+        {
+          "front": "State the Law of Cosines for sides a and b.",
+          "back": "a² = b² + c² - 2bc cos A and b² = a² + c² - 2ac cos B. Each angle pairs with the side across from it."
+        },
+        {
+          "front": "Which triangle cases call for the Law of Cosines?",
+          "back": "SAS and SSS. Neither case hands you an angle paired with its opposite side, so the Law of Sines has nothing to start from."
+        },
+        {
+          "front": "How is the Law of Cosines related to the Pythagorean theorem?",
+          "back": "When C = 90°, cos C = 0, and the formula collapses to c² = a² + b²."
+        },
+        {
+          "front": "How do you solve for an angle using the Law of Cosines?",
+          "back": "Rearrange to cos C = (a² + b² - c²)/(2ab), then take the inverse cosine of that value."
+        },
+        {
+          "front": "Why is SSA called the ambiguous case?",
+          "back": "Two sides and a non-included angle can produce no triangle, exactly one triangle, or two different triangles, so you have to test for a second answer."
+        },
+        {
+          "front": "How do you look for the second angle in an ambiguous SSA case?",
+          "back": "Subtract the first angle from 180°. Keep that second option only if it and the given angle still add to less than 180°, which is what leaves room for a positive third angle."
+        },
+        {
+          "front": "What is the area of a triangle given two sides and the included angle?",
+          "back": "Area = (1/2)ab sin C, where C is the angle between sides a and b."
+        },
+        {
+          "front": "State Heron's formula.",
+          "back": "Area = sqrt(s(s - a)(s - b)(s - c)), where s = (a + b + c)/2 is the semiperimeter."
+        },
+        {
+          "front": "When should you reach for Heron's formula?",
+          "back": "When you know all three sides and no angle. It returns the area without making you find an angle first."
+        },
+        {
+          "front": "What is an oblique triangle?",
+          "back": "Any triangle with no right angle. Solving one takes the Law of Sines or the Law of Cosines, since SOH CAH TOA does not apply."
+        },
+        {
+          "front": "In a triangle, a = 8, b = 5, and C = 60°. Find side c.",
+          "back": "c² = 64 + 25 - 2(8)(5)(1/2) = 89 - 40 = 49, so c = 7."
+        },
+        {
+          "front": "In a triangle, A = 40°, B = 60°, and a = 10. Find side b.",
+          "back": "b = a sin B / sin A = 10 sin 60° / sin 40°, which is about 13.5."
+        },
+        {
+          "front": "Find the area of a triangle with sides 3, 4, and 5 using Heron's formula.",
+          "back": "s = 6, so Area = sqrt(6 × 3 × 2 × 1) = sqrt(36) = 6 square units."
+        },
+        {
+          "front": "What is your next step after finding two angles of a triangle?",
+          "back": "Subtract their sum from 180° to get the third angle, then use the Law of Sines for any side still missing."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-graphs-of-sine-and-cosine",
+      "title": "Trigonometry: Graphs of Sine and Cosine",
+      "description": "Amplitude, period, phase shift, vertical shift, and midline for y = a sin(b(x - c)) + d, plus where the two parent graphs peak, bottom out, and cross zero.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "graphing",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "In y = a sin(b(x - c)) + d, what is the amplitude?",
+          "back": "The amplitude is the absolute value of a, the distance from the midline up to a peak."
+        },
+        {
+          "front": "In y = a sin(b(x - c)) + d, what is the period?",
+          "back": "2π divided by the absolute value of b in radians, or 360° divided by the absolute value of b in degrees."
+        },
+        {
+          "front": "In y = a sin(b(x - c)) + d, what is the phase shift?",
+          "back": "The phase shift is c. Shift the graph right when c is positive and left when c is negative."
+        },
+        {
+          "front": "In y = a sin(b(x - c)) + d, what is the vertical shift?",
+          "back": "The vertical shift is d. It lifts the graph when d is positive and lowers it when d is negative."
+        },
+        {
+          "front": "In y = a sin(b(x - c)) + d, what is the midline?",
+          "back": "The horizontal line y = d. The curve rises one amplitude above it and drops one amplitude below it."
+        },
+        {
+          "front": "What does a negative value of a do to the graph of y = a sin x?",
+          "back": "It reflects the curve across the midline. The amplitude is still the absolute value of a, so only the up and down pattern flips."
+        },
+        {
+          "front": "What is the period of y = sin x and y = cos x?",
+          "back": "2π radians, which is 360°."
+        },
+        {
+          "front": "What are the domain and range of y = sin x?",
+          "back": "Domain: all real numbers. Range: -1 ≤ y ≤ 1."
+        },
+        {
+          "front": "What are the domain and range of y = cos x?",
+          "back": "Domain: all real numbers. Range: -1 ≤ y ≤ 1."
+        },
+        {
+          "front": "Where does y = sin x reach its maximum between 0 and 2π?",
+          "back": "At x = π/2, where sin x = 1. In general the peaks sit at x = π/2 + 2πn."
+        },
+        {
+          "front": "Where does y = sin x reach its minimum between 0 and 2π?",
+          "back": "At x = 3π/2, where sin x = -1. In general the low points sit at x = 3π/2 + 2πn."
+        },
+        {
+          "front": "Where are the zeros of y = sin x?",
+          "back": "At x = πn for every integer n, so 0, π, 2π, and the same spacing in the negative direction."
+        },
+        {
+          "front": "Where does y = cos x reach its maximum between 0 and 2π?",
+          "back": "At x = 0 and again at x = 2π, where cos x = 1. In general the peaks sit at x = 2πn."
+        },
+        {
+          "front": "Where does y = cos x reach its minimum between 0 and 2π?",
+          "back": "At x = π, where cos x = -1. In general the low points sit at x = π + 2πn."
+        },
+        {
+          "front": "Where are the zeros of y = cos x?",
+          "back": "At x = π/2 + πn for every integer n, so π/2, 3π/2, and the same spacing in both directions."
+        },
+        {
+          "front": "How is the cosine graph a shifted sine graph?",
+          "back": "cos x = sin(x + π/2). Sliding the sine curve left by π/2 produces the cosine curve."
+        },
+        {
+          "front": "What is the y-intercept of y = a sin(bx)?",
+          "back": "0, because sin 0 = 0. The sine curve always starts on its midline."
+        },
+        {
+          "front": "What is the y-intercept of y = a cos(bx)?",
+          "back": "a, because cos 0 = 1. The cosine curve starts at a peak when a is positive and at a low point when a is negative."
+        },
+        {
+          "front": "Find the amplitude and period of y = 3 sin(2x).",
+          "back": "Amplitude 3 and period 2π/2 = π."
+        },
+        {
+          "front": "Find the amplitude, period, and midline of y = -2 cos x + 5.",
+          "back": "Amplitude 2, period 2π, midline y = 5. The negative sign flips the curve, so it starts at a low point of 3."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-graphs-of-tangent-cotangent-secant-cosecant",
+      "title": "Trigonometry: Graphs of Tangent, Cotangent, Secant, and Cosecant",
+      "description": "Periods, asymptotes, domains, and ranges for the four reciprocal and quotient graphs, plus how secant and cosecant sit on top of cosine and sine.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "graphing",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "What is the period of y = tan x?",
+          "back": "π radians, which is 180°. Tangent repeats twice as often as sine and cosine."
+        },
+        {
+          "front": "What is the period of y = cot x?",
+          "back": "π radians, which is 180°, the same period as tangent."
+        },
+        {
+          "front": "What is the period of y = sec x and y = csc x?",
+          "back": "2π radians, which is 360°. They inherit the period of cosine and sine."
+        },
+        {
+          "front": "Where are the vertical asymptotes of y = tan x?",
+          "back": "At x = π/2 + πn for every integer n, which is 90° + 180°n. These are the inputs where cos x = 0."
+        },
+        {
+          "front": "Where are the vertical asymptotes of y = cot x?",
+          "back": "At x = πn for every integer n, which is 180°n. These are the inputs where sin x = 0."
+        },
+        {
+          "front": "Where are the vertical asymptotes of y = sec x?",
+          "back": "At x = π/2 + πn, the same inputs where cos x = 0, since sec x = 1/cos x."
+        },
+        {
+          "front": "Where are the vertical asymptotes of y = csc x?",
+          "back": "At x = πn, the same inputs where sin x = 0, since csc x = 1/sin x."
+        },
+        {
+          "front": "What are the domain and range of y = tan x?",
+          "back": "Domain: all real numbers except x = π/2 + πn. Range: all real numbers."
+        },
+        {
+          "front": "What are the domain and range of y = cot x?",
+          "back": "Domain: all real numbers except x = πn. Range: all real numbers."
+        },
+        {
+          "front": "What is the domain of y = sec x?",
+          "back": "All real numbers except x = π/2 + πn, because cos x = 0 at those inputs and sec x = 1/cos x."
+        },
+        {
+          "front": "What is the domain of y = csc x?",
+          "back": "All real numbers except x = πn, because sin x = 0 at those inputs and csc x = 1/sin x."
+        },
+        {
+          "front": "What is the range of y = sec x?",
+          "back": "y ≤ -1 or y ≥ 1. Secant never takes a value strictly between -1 and 1."
+        },
+        {
+          "front": "What is the range of y = csc x?",
+          "back": "y ≤ -1 or y ≥ 1. Cosecant never takes a value strictly between -1 and 1."
+        },
+        {
+          "front": "How does the secant graph relate to the cosine graph?",
+          "back": "Each secant branch touches a cosine peak or low point at y = 1 or y = -1, then runs off toward infinity at every cosine zero."
+        },
+        {
+          "front": "How does the cosecant graph relate to the sine graph?",
+          "back": "Each cosecant branch touches a sine peak or low point at y = 1 or y = -1, then runs off toward infinity at every sine zero."
+        },
+        {
+          "front": "Is y = tan x increasing or decreasing between its asymptotes?",
+          "back": "Increasing. Every branch climbs from large negative values up through 0 to large positive values."
+        },
+        {
+          "front": "Is y = cot x increasing or decreasing between its asymptotes?",
+          "back": "Decreasing. Every branch falls from large positive values down through 0 to large negative values."
+        },
+        {
+          "front": "What is the period of y = tan(bx)?",
+          "back": "π divided by the absolute value of b. Tangent uses π in its period formula, not 2π."
+        },
+        {
+          "front": "Where does y = tan x cross the x-axis?",
+          "back": "At x = πn for every integer n. Those are the zeros of sine, and tan x = sin x / cos x."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-inverse-functions",
+      "title": "Trigonometry: Inverse Trig Functions",
+      "description": "Domains and ranges for all six inverse trig functions, why those ranges are restricted, and how to evaluate compositions such as cos(arcsin x).",
+      "tags": [
+        "trigonometry",
+        "math",
+        "inverse-functions",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "What are the domain and range of arcsin x?",
+          "back": "Domain: -1 ≤ x ≤ 1. Range: -π/2 ≤ y ≤ π/2, which is -90° to 90°, covering quadrants IV and I."
+        },
+        {
+          "front": "What are the domain and range of arccos x?",
+          "back": "Domain: -1 ≤ x ≤ 1. Range: 0 ≤ y ≤ π, which is 0° to 180°, covering quadrants I and II."
+        },
+        {
+          "front": "What are the domain and range of arctan x?",
+          "back": "Domain: all real numbers. Range: strictly between -π/2 and π/2, that is -90° to 90° with both endpoints excluded."
+        },
+        {
+          "front": "What are the domain and range of arccot x?",
+          "back": "Domain: all real numbers. Range: strictly between 0 and π, that is 0° to 180° with both endpoints excluded."
+        },
+        {
+          "front": "What are the domain and range of arcsec x?",
+          "back": "Domain: the absolute value of x is at least 1. Range: 0 ≤ y ≤ π with y ≠ π/2, since sec x is undefined at π/2."
+        },
+        {
+          "front": "What are the domain and range of arccsc x?",
+          "back": "Domain: the absolute value of x is at least 1. Range: -π/2 ≤ y ≤ π/2 with y ≠ 0, since csc x is undefined at 0."
+        },
+        {
+          "front": "Why are the ranges of the inverse trig functions restricted?",
+          "back": "The trig functions repeat, so they fail the horizontal line test. Restricting the range picks a single output per input and makes the inverse a true function."
+        },
+        {
+          "front": "How do you write the inverse sine function in symbols?",
+          "back": "arcsin x, also written as sin raised to the negative one power. That exponent means inverse function, not reciprocal, so it is not 1/sin x."
+        },
+        {
+          "front": "What is arcsin(1/2)?",
+          "back": "π/6, which is 30°. It is the only angle in the arcsine range whose sine equals (1/2)."
+        },
+        {
+          "front": "What is arcsin(-sqrt(3)/2)?",
+          "back": "-π/3, which is -60°. Negative inputs give negative outputs, since the arcsine range runs from -π/2 to π/2."
+        },
+        {
+          "front": "What is arccos(-1/2)?",
+          "back": "2π/3, which is 120°. The arccosine range runs from 0 to π, so a negative input lands in Quadrant II."
+        },
+        {
+          "front": "What is arctan(-1)?",
+          "back": "-π/4, which is -45°. The arctangent range runs from -π/2 to π/2, so the answer is -45° rather than 135°."
+        },
+        {
+          "front": "Evaluate sin(arcsin 0.4).",
+          "back": "0.4. Sine and arcsine undo each other as long as the input sits in -1 ≤ x ≤ 1."
+        },
+        {
+          "front": "Evaluate arcsin(sin 150°).",
+          "back": "30°, not 150°. The answer has to land in the arcsine range of -90° to 90°, and sin 150° = sin 30° = (1/2)."
+        },
+        {
+          "front": "Why is arccos(cos 300°) equal to 60° and not 300°?",
+          "back": "The arccosine range is 0° to 180°. Since cos 300° = cos 60° = (1/2), the inverse hands back 60°."
+        },
+        {
+          "front": "Evaluate cos(arcsin(3/5)).",
+          "back": "(4/5). Draw a right triangle with opposite side 3 and hypotenuse 5, so the adjacent side is 4."
+        },
+        {
+          "front": "Evaluate tan(arccos(5/13)).",
+          "back": "(12/5). Adjacent side 5 and hypotenuse 13 give an opposite side of 12, so the tangent is 12 ÷ 5."
+        },
+        {
+          "front": "Write cos(arcsin x) as an algebraic expression.",
+          "back": "sqrt(1 - x²). The arcsine output lies in quadrants IV and I, where cosine is never negative, so the positive root is correct."
+        }
+      ]
+    },
+    {
+      "slug": "trigonometry-reference-angles-and-quadrant-signs",
+      "title": "Trigonometry: Reference Angles and Quadrant Signs",
+      "description": "What a reference angle is, how to find it in each quadrant, and the ASTC rule for which trig functions come out positive where.",
+      "tags": [
+        "trigonometry",
+        "math",
+        "reference-angles",
+        "high-school"
+      ],
+      "cards": [
+        {
+          "front": "What is a reference angle?",
+          "back": "The acute angle between the terminal side of an angle and the x-axis. It always falls between 0° and 90°, and it is never measured to the y-axis."
+        },
+        {
+          "front": "What is the reference angle formula in Quadrant I?",
+          "back": "The reference angle is θ itself."
+        },
+        {
+          "front": "What is the reference angle formula in Quadrant II?",
+          "back": "180° - θ, which is π - θ in radians."
+        },
+        {
+          "front": "What is the reference angle formula in Quadrant III?",
+          "back": "θ - 180°, which is θ - π in radians."
+        },
+        {
+          "front": "What is the reference angle formula in Quadrant IV?",
+          "back": "360° - θ, which is 2π - θ in radians."
+        },
+        {
+          "front": "What do you do first when finding the reference angle for 500°?",
+          "back": "Subtract full turns until the angle sits between 0° and 360°. Here 500° - 360° = 140°, in Quadrant II, so the reference angle is 40°."
+        },
+        {
+          "front": "How do you use a reference angle to get an exact trig value?",
+          "back": "Find the value for the reference angle, then attach the sign the original quadrant requires. Example: cos 150° = -cos 30° = -sqrt(3)/2."
+        },
+        {
+          "front": "What does the mnemonic ASTC, All Students Take Calculus, tell you?",
+          "back": "Which functions are positive by quadrant: I all, II sine, III tangent, IV cosine. Each listed function also covers its reciprocal."
+        },
+        {
+          "front": "Which trig functions are positive in Quadrant I?",
+          "back": "All six. Both x and y are positive there, so every ratio comes out positive."
+        },
+        {
+          "front": "Which trig functions are positive in Quadrant II?",
+          "back": "Sine and cosecant only. There y is positive and x is negative."
+        },
+        {
+          "front": "Which trig functions are positive in Quadrant III?",
+          "back": "Tangent and cotangent only. Both x and y are negative there, so their quotient is positive."
+        },
+        {
+          "front": "Which trig functions are positive in Quadrant IV?",
+          "back": "Cosine and secant only. There x is positive and y is negative."
+        },
+        {
+          "front": "On the unit circle, what do the coordinates x and y stand for?",
+          "back": "x = cos θ and y = sin θ, and tan θ = y/x. The signs of x and y in a quadrant set the signs of every trig value there."
+        },
+        {
+          "front": "Why is tangent positive in Quadrant III?",
+          "back": "tan θ = y/x, and in Quadrant III both x and y are negative. A negative divided by a negative gives a positive result."
+        },
+        {
+          "front": "Why is cosine negative in Quadrant II?",
+          "back": "cos θ = x, and every point in Quadrant II has a negative x-coordinate."
+        },
+        {
+          "front": "What is the reference angle for 225°?",
+          "back": "45°. The angle is in Quadrant III, and 225° - 180° = 45°."
+        },
+        {
+          "front": "What is the reference angle for 5π/3?",
+          "back": "π/3. The angle is in Quadrant IV, and 2π - 5π/3 = π/3."
+        },
+        {
+          "front": "What is the reference angle for -120°?",
+          "back": "60°. Add 360° to get 240°, which is in Quadrant III, and 240° - 180° = 60°."
+        }
+      ]
+    }
+  ]
+}
