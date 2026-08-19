@@ -17,9 +17,11 @@ import {
   Squares2X2Icon,
   ListBulletIcon,
   ClockIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 import { SearchIcon, XIcon, DownloadIcon, UploadIcon } from 'lucide-react';
 import SetEditModal from './SetEditModal';
+import CardImageModal from './CardImageModal';
 
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -61,6 +63,7 @@ export default function FlashcardManager({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedSet, setSelectedSet] = useState<PowerSyncFlashcardSet | null>(null);
+  const [imageModalSet, setImageModalSet] = useState<PowerSyncFlashcardSet | null>(null);
 
   const { clearLocalCache } = useMigration();
   const { toast } = useToast();
@@ -146,6 +149,20 @@ export default function FlashcardManager({
     }
     setSelectedSet(set);
     setIsEditModalOpen(true);
+  };
+
+  const handleEditImages = (set: PowerSyncFlashcardSet) => {
+    if (!canEditSet(set)) {
+      toast({
+        variant: 'destructive',
+        title: 'Edit Locked',
+        description: set.is_public === 1
+          ? 'Public sets can only be edited by admins.'
+          : 'Sets can only be edited within 7 days of creation.',
+      });
+      return;
+    }
+    setImageModalSet(set);
   };
 
   const handleDeleteSet = async (setId: string) => {
@@ -505,6 +522,15 @@ export default function FlashcardManager({
                 >
                   <PencilSquareIcon className="h-5 w-5" aria-hidden="true" />
                 </button>
+                <button
+                  onClick={() => handleEditImages(set)}
+                  className={`px-3 py-2 rounded-md ${canEditSet(set) ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' : 'text-gray-500 bg-gray-50 cursor-not-allowed'}`}
+                  title={canEditSet(set) ? 'Card images' : set.is_public === 1 ? 'Public sets are admin-only' : 'Editing locked after 7 days'}
+                  aria-label={`Edit card images for ${set.title}`}
+                  disabled={!canEditSet(set)}
+                >
+                  <PhotoIcon className="h-5 w-5" aria-hidden="true" />
+                </button>
               </div>
             </div>
           ))}
@@ -575,6 +601,15 @@ export default function FlashcardManager({
                   <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
+                  onClick={() => handleEditImages(set)}
+                  className={`p-1.5 ${canEditSet(set) ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 cursor-not-allowed'}`}
+                  title={canEditSet(set) ? 'Card images' : set.is_public === 1 ? 'Public sets are admin-only' : 'Editing locked after 7 days'}
+                  aria-label={`Edit card images for ${set.title}`}
+                  disabled={!canEditSet(set)}
+                >
+                  <PhotoIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
                   onClick={() => handleStudyClick(set.id)}
                   aria-label={`Study ${set.title}`}
                   className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700"
@@ -639,6 +674,14 @@ export default function FlashcardManager({
             setIsEditModalOpen(false);
             setSelectedSet(null);
           }}
+        />
+      )}
+      {imageModalSet && (
+        <CardImageModal
+          isOpen={true}
+          onClose={() => setImageModalSet(null)}
+          setId={imageModalSet.id}
+          setTitle={imageModalSet.title}
         />
       )}
     </div>

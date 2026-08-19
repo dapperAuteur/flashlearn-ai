@@ -71,6 +71,13 @@ export interface StudySessionHistory {
   isOfflineSession: boolean;
   studyDirection: string;
   studyMode?: string;
+  /**
+   * The learner the results belong to, when a teacher ran the session for
+   * someone else. Absent on ordinary self-study, which is every record written
+   * before proctoring shipped, so reads of older rows are unaffected.
+   */
+  subjectId?: string;
+  proctorMode?: 'proctored' | 'handoff';
 }
 
 export interface PendingChange {

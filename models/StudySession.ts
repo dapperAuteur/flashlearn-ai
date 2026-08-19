@@ -24,6 +24,14 @@ export interface IStudySession extends Document {
   completedCards: number;
   studyDirection?: StudyDirection;
   studyMode?: 'classic' | 'multiple-choice' | 'type-answer';
+  /**
+   * Set when an adult ran this session on the learner's behalf. `userId` stays
+   * the learner, so every existing query that filters on it (history, stats,
+   * the dashboard, achievements) attributes the work correctly with no change.
+   * This records who was holding the device.
+   */
+  proctorId?: mongoose.Types.ObjectId;
+  proctorMode?: 'proctored' | 'handoff';
   isShareable: boolean;
   shortLinkId?: string;
   shortLinkUrl?: string;
@@ -57,6 +65,14 @@ const StudySessionSchema: Schema = new Schema(
       enum: ['classic', 'multiple-choice', 'type-answer'],
       default: 'classic'
     },
+    // Absent on ordinary self-study, which is every session recorded before
+    // this field existed. Its absence is what "the learner did this alone"
+    // means, so it has no default.
+    proctorId: { type: Schema.Types.ObjectId, ref: 'User' },
+    proctorMode: {
+      type: String,
+      enum: ['proctored', 'handoff'],
+    },
     isShareable: { type: Boolean, default: false },
     shortLinkId: { type: String, default: null },
     shortLinkUrl: { type: String, default: null }
@@ -66,6 +82,9 @@ const StudySessionSchema: Schema = new Schema(
 
 StudySessionSchema.index({ userId: 1, createdAt: -1 });
 StudySessionSchema.index({ userId: 1, status: 1, startTime: -1 });
+// "Sessions I proctored", for a teacher reviewing what they recorded. Sparse
+// because only proctored sessions carry the field.
+StudySessionSchema.index({ proctorId: 1, createdAt: -1 }, { sparse: true });
 // sessionId is already indexed by `unique: true` on the field; a second
 // declaration here triggered Mongoose's duplicate-index warning.
 

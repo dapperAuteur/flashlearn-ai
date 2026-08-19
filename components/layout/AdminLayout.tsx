@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   Share2,
   Link2,
+  Archive,
 } from "lucide-react";
 
 type AdminLayoutProps = {
@@ -99,6 +100,7 @@ const navGroups: NavGroup[] = [
       { label: "API Management", href: "/admin/api-management", icon: Key },
       { label: "SEO", href: "/admin/seo", icon: Search },
       { label: "Logs", href: "/admin/logs", icon: ScrollText },
+      { label: "Archived", href: "/admin/archived", icon: Archive },
       { label: "Settings", href: "/admin/settings", icon: Settings },
     ],
   },

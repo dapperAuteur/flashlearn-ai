@@ -9,6 +9,7 @@ import dbConnect from '@/lib/db/dbConnect';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { authOptions } from '@/lib/auth/auth';
 import { StudyAnalytics } from '@/models/StudyAnalytics';
+import { resolveStudySubject } from '@/lib/study/resolveStudySubject';
 import { User } from '@/models/User';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { Profile } from '@/models/Profile';
@@ -29,11 +30,6 @@ interface CardResult {
 interface SyncPayload {
   setId: string;
   results: CardResult[];
-}
-
-interface LeanUser {
-  _id: mongoose.Types.ObjectId;
-  profiles: mongoose.Types.ObjectId[];
 }
 
 // Helper function to determine if user is paid (implement based on your user model)
@@ -108,8 +104,25 @@ export async function POST(request: NextRequest) {
     }
     
     const userId = session.user.id;
-    const { setId, results } = body;
+    const { setId, results, subjectId, proctorMode } = body;
     const setIdAsObjectId = new mongoose.Types.ObjectId(setId);
+
+    // Whose learning this is. Defaults to the signed-in user, so every existing
+    // caller keeps working; a teacher may name a student they are authorized
+    // for. Resolved server-side because a subject named in the body is a
+    // request, not a fact.
+    const resolved = await resolveStudySubject(userId, subjectId);
+    if (!resolved.ok) {
+      await Logger.warning(LogContext.STUDY, 'Study subject rejected on sync', {
+        userId,
+        metadata: { subjectId, status: resolved.status },
+      });
+      return NextResponse.json({ message: resolved.error }, { status: resolved.status });
+    }
+    const subject = resolved.subject;
+
+    // Entitlement follows the ACTOR, not the subject: the teacher is the one
+    // spending their plan's allowance by running the session.
     const isPaidUser = await isUserPaid(userId);
     // Captured during transaction; fired AFTER commit so we never broadcast a
     // milestone for a transaction that rolled back.
@@ -119,10 +132,9 @@ export async function POST(request: NextRequest) {
     try {
         let responseData;
         await mongoSession.withTransaction(async () => {
-            const user = await User.findById(userId).select('profiles').lean().session(mongoSession) as LeanUser | null;
-            if (!user?.profiles?.length) throw new Error(`User profile not found for userId: ${userId}`);
-            
-            const profileId = user.profiles[0];
+            // The spaced-repetition schedule belongs to the subject. On a
+            // proctored session that is the student, not the teacher signed in.
+            const profileId = subject.profileId;
             let analytics = await StudyAnalytics.findOne({ profile: profileId, set: setIdAsObjectId }).session(mongoSession);
             if (!analytics) {
                 analytics = new StudyAnalytics({
@@ -248,7 +260,9 @@ export async function POST(request: NextRequest) {
             }
             const sessionData: any = {
               sessionId: body.sessionId || `${setId}_${Date.now()}`,
-              userId: new mongoose.Types.ObjectId(userId),
+              userId: subject.userId ?? new mongoose.Types.ObjectId(userId),
+              ...(subject.proctorId ? { proctorId: subject.proctorId } : {}),
+              ...(subject.isProctored ? { proctorMode: proctorMode === 'handoff' ? 'handoff' : 'proctored' } : {}),
               listId: setIdAsObjectId,
               setName: syncSetName || sessionMeta?.setName || 'Study Set',
               status: 'completed',
@@ -369,10 +383,34 @@ export async function POST(request: NextRequest) {
         }
         
         shuffleArray(flashcards);
+
+        // A signed-in teacher may open the session for a student they are
+        // authorized for. Anonymous public study keeps its throwaway id.
+        let sessionUserId = session?.user?.id
+            ? new mongoose.Types.ObjectId(session.user.id)
+            : new mongoose.Types.ObjectId();
+        let sessionProctorId: mongoose.Types.ObjectId | null = null;
+
+        if (session?.user?.id) {
+            const resolved = await resolveStudySubject(session.user.id, body.subjectId);
+            if (!resolved.ok) {
+                await Logger.warning(LogContext.STUDY, 'Study subject rejected on session start', {
+                    requestId,
+                    userId: session.user.id,
+                    metadata: { subjectId: body.subjectId, status: resolved.status },
+                });
+                return NextResponse.json({ error: resolved.error }, { status: resolved.status });
+            }
+            sessionUserId = resolved.subject.userId ?? sessionUserId;
+            sessionProctorId = resolved.subject.proctorId;
+        }
+
         // **FIX: Use Mongoose model to create the new session document**
         const newSession = await StudySession.create({
             sessionId: new mongoose.Types.ObjectId().toString(),
-            userId: session?.user?.id ? new mongoose.Types.ObjectId(session.user.id) : new mongoose.Types.ObjectId(),
+            userId: sessionUserId,
+            ...(sessionProctorId ? { proctorId: sessionProctorId } : {}),
+            ...(sessionProctorId ? { proctorMode: body.proctorMode === 'handoff' ? 'handoff' : 'proctored' } : {}),
             listId: new mongoose.Types.ObjectId(listId),
             setName: flashcardSet.title,
             startTime: new Date(),

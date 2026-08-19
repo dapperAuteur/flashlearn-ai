@@ -12,6 +12,7 @@ import {
   FlagIcon,
 } from '@heroicons/react/24/outline';
 import ReportModal from '@/components/ui/ReportModal';
+import RatingStars from '@/components/RatingStars';
 
 interface CategoryInfo {
   _id?: string;
@@ -29,6 +30,8 @@ interface PublicSet {
   categories?: CategoryInfo[];
   tags?: string[];
   createdAt: string;
+  ratingAverage?: number;
+  ratingCount?: number;
 }
 
 interface ExploreCategory {
@@ -50,6 +53,7 @@ export default function ExplorePage() {
   const [categories, setCategories] = useState<ExploreCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [reportingSet, setReportingSet] = useState<PublicSet | null>(null);
+  const [sortBy, setSortBy] = useState<'recent' | 'rating'>('recent');
   const limit = 20;
 
   // Fetch categories on mount
@@ -60,7 +64,12 @@ export default function ExplorePage() {
       .catch(() => {});
   }, []);
 
-  const fetchSets = useCallback(async (search: string, currentOffset: number, category: string) => {
+  const fetchSets = useCallback(async (
+    search: string,
+    currentOffset: number,
+    category: string,
+    sort: 'recent' | 'rating',
+  ) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
@@ -69,6 +78,7 @@ export default function ExplorePage() {
       });
       if (search) params.set('search', search);
       if (category) params.set('category', category);
+      if (sort === 'rating') params.set('sort', 'rating');
 
       const res = await fetch(`/api/sets/public?${params}`);
       if (res.ok) {
@@ -91,13 +101,13 @@ export default function ExplorePage() {
 
   useEffect(() => {
     setOffset(0);
-    fetchSets(searchTerm, 0, selectedCategory);
-  }, [searchTerm, selectedCategory, fetchSets]);
+    fetchSets(searchTerm, 0, selectedCategory, sortBy);
+  }, [searchTerm, selectedCategory, sortBy, fetchSets]);
 
   const loadMore = () => {
     const newOffset = offset + limit;
     setOffset(newOffset);
-    fetchSets(searchTerm, newOffset, selectedCategory);
+    fetchSets(searchTerm, newOffset, selectedCategory, sortBy);
   };
 
   const handleCategoryClick = (categoryId: string) => {
@@ -215,6 +225,13 @@ export default function ExplorePage() {
                       </span>
                     ))}
                   </div>
+                  <div className="mb-3">
+                    <RatingStars
+                      average={set.ratingAverage ?? 0}
+                      count={set.ratingCount ?? 0}
+                      size="sm"
+                    />
+                  </div>
                   <Link
                     href={`/study?setId=${set.id}`}
                     className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -228,13 +245,31 @@ export default function ExplorePage() {
           </div>
         )}
 
-        {/* Results count */}
-        {!isLoading && (
-          <p className="text-sm text-gray-600 mb-4">
-            {total} {total === 1 ? 'set' : 'sets'} found
-            {searchTerm && ` for "${searchTerm}"`}
-          </p>
-        )}
+        {/* Results count and sort */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          {!isLoading ? (
+            <p className="text-sm text-gray-600">
+              {total} {total === 1 ? 'set' : 'sets'} found
+              {searchTerm && ` for "${searchTerm}"`}
+            </p>
+          ) : (
+            <span />
+          )}
+          <div className="flex items-center gap-2">
+            <label htmlFor="explore-sort" className="text-sm text-gray-600">
+              Sort by
+            </label>
+            <select
+              id="explore-sort"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'recent' | 'rating')}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="recent">Newest</option>
+              <option value="rating">Highest rated</option>
+            </select>
+          </div>
+        </div>
 
         {/* Loading state */}
         {isLoading && sets.length === 0 && (
@@ -308,6 +343,13 @@ export default function ExplorePage() {
                         {cat.name}
                       </span>
                     ))}
+                  </div>
+                  <div className="mb-3">
+                    <RatingStars
+                      average={set.ratingAverage ?? 0}
+                      count={set.ratingCount ?? 0}
+                      size="sm"
+                    />
                   </div>
                   <Link
                     href={`/study?setId=${set.id}`}

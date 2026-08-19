@@ -116,7 +116,7 @@ const phases: Phase[] = [
       },
       {
         title: 'AI Content Generation',
-        description: 'Generate flashcards from text using Google Gemini.',
+        description: 'Generate flashcards from text through a switchable AI provider layer, Cerebras by default.',
         status: 'done',
         items: [
           'Generate cards from text prompts',
@@ -369,7 +369,7 @@ const phases: Phase[] = [
     features: [
       {
         title: 'Public API (v1)',
-        description: '23 REST endpoints for flashcard generation, study, and competitive challenges.',
+        description: '27 REST endpoints for flashcard generation, study, and competitive challenges.',
         status: 'done' as Status,
         items: [
           'AI flashcard generation + batch generation (Pro/Enterprise)',
@@ -487,9 +487,9 @@ const phases: Phase[] = [
         description: 'Full REST API for developers, schools, and edtech companies.',
         status: 'done',
         items: [
-          '23 REST endpoints (generation, sets, study, versus)',
+          '27 REST endpoints (generation, sets, study, versus, ecosystem)',
           '4 API key types (admin, app, public, admin-public)',
-          'Separate Gemini AI keys per key type for cost tracking',
+          'Switchable AI provider (Cerebras, OpenRouter, Mistral, Together, or Gemini) set with one env var',
           'Tiered rate limiting (Free / Developer / Pro / Enterprise)',
           'Overage billing via Stripe metered usage',
           'Webhook notifications on usage milestones',
@@ -507,7 +507,7 @@ const phases: Phase[] = [
           'Branding config: name, colors, logo, feature toggles',
           'Admin dashboard for branding & SEO management',
           'One-click Vercel deploy for schools',
-          'Open source. Customize and extend freely.',
+          'Sold under a commercial license. Buyers customize and extend it freely.',
         ],
       },
       {
@@ -525,12 +525,12 @@ const phases: Phase[] = [
       {
         title: 'SEO & Marketing Tools',
         description: 'Admin tools for managing page metadata and search visibility.',
-        status: 'done',
+        status: 'in-progress',
         items: [
           'Admin SEO dashboard with per-page title/description/OG editing',
           'Google Search result preview in admin',
           'Structured data (JSON-LD) for rich snippets',
-          'Public developer docs with beginner tutorials',
+          'Public API reference at /docs/api. The five beginner tutorials are written but still repo-only: no page renders them yet.',
         ],
       },
     ],

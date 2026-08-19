@@ -1603,6 +1603,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
 }
 ```
 
+> Historical record. The `/lists` and `/statistics` nav entries in the sidebar sample below
+> were removed from the app in Wave 4. Both routes are gone. Do not re-add them.
+
 ```typescript
 // components/layout/Sidebar.tsx
 // Ensure settings button is visible by adding height constraint

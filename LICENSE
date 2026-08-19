@@ -1,0 +1,41 @@
+FlashLearn AI
+Copyright (c) 2025-2026 B4C LLC. All rights reserved.
+
+PROPRIETARY SOFTWARE. NOT OPEN SOURCE.
+
+This repository, its source code, its documentation, its content, and its build
+artifacts are the confidential property of B4C LLC. They are made available for
+reference and for work authorized by B4C LLC, and for nothing else.
+
+Without prior written permission from B4C LLC, you may not:
+
+  1. copy, reproduce, or redistribute any part of this software;
+  2. modify this software or create derivative works from it;
+  3. run this software, or any service derived from it, for the benefit of
+     anyone other than B4C LLC;
+  4. sublicense, sell, rent, lease, or otherwise transfer any part of it;
+  5. reverse engineer, decompile, or disassemble any part of it, except where
+     applicable law grants that right regardless of this notice.
+
+SEPARATE TERMS FOR THE WHITE-LABEL STARTER APP
+
+The white-label starter app under standalone/flashlearn-starter/ is sold to
+buyers under a commercial license, which is a distinct agreement from this
+notice. Pricing and terms live at
+https://flashlearnai.witus.online/pricing#white-label-pricing.
+
+THIRD-PARTY COMPONENTS
+
+This software depends on third-party packages that carry their own licenses.
+Those licenses govern those packages. Nothing here overrides them.
+
+NO WARRANTY
+
+This software is provided "as is", without warranty of any kind, express or
+implied, including the warranties of merchantability, fitness for a particular
+purpose, and non-infringement. In no event will B4C LLC be liable for any
+claim, damages, or other liability arising from this software or its use.
+
+Licensing questions: support@flashlearnai.witus.online
+
+FlashLearn AI is a WitUS.Online product by B4C LLC.

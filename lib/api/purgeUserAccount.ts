@@ -31,6 +31,8 @@ import { Invitation } from '@/models/Invitation';
 import { EmailCampaign } from '@/models/EmailCampaign';
 import { ExternalStudentCardState } from '@/models/ExternalStudentCardState';
 import { Promotion } from '@/models/Promotion';
+import { SetRating } from '@/models/SetRating';
+import { recomputeSetRating } from '@/lib/api/setRatings';
 import { User } from '@/models/User';
 
 export interface AccountPurgeMeta {
@@ -100,6 +102,7 @@ const RETAINED_COLLECTIONS = [
   'promotions',
   'external_student_card_states',
   'users_referral',
+  'set_ratings_recomputed',
 ] as const;
 
 // Erase a single user account and everything derived from it.
@@ -270,7 +273,26 @@ export async function purgeUserAccount(
     membershipsPulled += (classroomSets.modifiedCount ?? 0) + (teamSets.modifiedCount ?? 0);
   }
 
-  // Step 8: the sets and the profiles that own them.
+  // Step 8: ratings, in both directions.
+  //
+  // The ratings this person gave are their opinion and go with them, but the
+  // sets they rated belong to other people and their averages have to be
+  // recomputed or a deleted account keeps voting. Collect the affected set ids
+  // BEFORE the delete, since afterwards there is nothing left to point at.
+  const ratedSetIds = await SetRating.distinct('setId', { userId: userObjId });
+  const ratingsGiven = await SetRating.deleteMany({ userId: userObjId });
+  byCollection.set_ratings_given = ratingsGiven.deletedCount ?? 0;
+
+  // Ratings other people left on this person's sets are deleted outright
+  // rather than recomputed, because the sets themselves go in the next step.
+  if (setIds.length > 0) {
+    const ratingsReceived = await SetRating.deleteMany({ setId: { $in: setIds } });
+    byCollection.set_ratings_received = ratingsReceived.deletedCount ?? 0;
+  } else {
+    byCollection.set_ratings_received = 0;
+  }
+
+  // Step 9: the sets and the profiles that own them.
   if (setIds.length > 0) {
     const setsResult = await FlashcardSet.deleteMany({ _id: { $in: setIds } });
     byCollection.flashcard_sets = setsResult.deletedCount ?? 0;
@@ -278,10 +300,21 @@ export async function purgeUserAccount(
     byCollection.flashcard_sets = 0;
   }
 
+  // Now that this person's own sets are gone, refresh the averages on everyone
+  // else's. Recomputing counts from the collection rather than subtracting a
+  // remembered value means a partial earlier run converges on the same answer.
+  const survivingRatedSetIds = ratedSetIds.filter(
+    (id) => !setIds.some((own) => String(own) === String(id)),
+  );
+  for (const setId of survivingRatedSetIds) {
+    await recomputeSetRating(setId);
+  }
+  byCollection.set_ratings_recomputed = survivingRatedSetIds.length;
+
   const profilesResult = await Profile.deleteMany({ user: userObjId });
   byCollection.profiles = profilesResult.deletedCount ?? 0;
 
-  // Step 9: memberships in containers owned by other people. A classroom
+  // Step 10: memberships in containers owned by other people. A classroom
   // loses a student, a team loses a member, an assignment loses an assignee.
   // None of those documents is deleted.
   const classroomMembership = await Classroom.updateMany(
@@ -317,7 +350,7 @@ export async function purgeUserAccount(
 
   // --- (d) ARCHIVE OWNED CONTAINERS --------------------------------------
 
-  // Step 10: containers this user owned. Deleting them would destroy every
+  // Step 11: containers this user owned. Deleting them would destroy every
   // other member's history, so each is archived instead and its roster is left
   // exactly as it was. Only the archive flag is written here; no membership
   // array is touched. The owner reference still names the account that is going
@@ -348,7 +381,7 @@ export async function purgeUserAccount(
 
   let anonymizedRecordCount = 0;
 
-  // Step 11: revenue events. `userId` is optional on this schema, so nulling
+  // Step 12: revenue events. `userId` is optional on this schema, so nulling
   // it is enough. `stripeCustomerId` stays: it is the reconciliation key
   // against Stripe's own books and is what makes the retained row useful for
   // a tax filing or a refund dispute.
@@ -359,7 +392,7 @@ export async function purgeUserAccount(
   byCollection.revenue_events = revenueResult.modifiedCount ?? 0;
   anonymizedRecordCount += revenueResult.modifiedCount ?? 0;
 
-  // Step 12: manual Cash App payments. `userId` is required here, so the
+  // Step 13: manual Cash App payments. `userId` is required here, so the
   // tombstone id goes in rather than null. `verifiedBy` is handled separately
   // because an admin who verified someone else's payment can also delete their
   // own account.
@@ -375,7 +408,7 @@ export async function purgeUserAccount(
   byCollection.cash_app_payments = cashAppCount;
   anonymizedRecordCount += cashAppCount;
 
-  // Step 13: auth logs. These back brute-force and takeover investigations, so
+  // Step 14: auth logs. These back brute-force and takeover investigations, so
   // the rows stay. The email is the direct identifier and is nulled. The
   // userId is kept as an opaque grouping key: the User row it pointed at is
   // gone by the end of this function, so it no longer resolves to a person,
@@ -393,7 +426,7 @@ export async function purgeUserAccount(
     byCollection.auth_logs = 0;
   }
 
-  // Step 14: API usage counters. These feed overage billing, so they are
+  // Step 15: API usage counters. These feed overage billing, so they are
   // financial-adjacent and the row stays. `userId` is required on the schema,
   // so it gets the tombstone rather than a null the admin console cannot read.
   // `apiKeyId` stays as the grouping key, same reasoning as auth_logs.
@@ -404,7 +437,7 @@ export async function purgeUserAccount(
   byCollection.api_usage = apiUsageResult.modifiedCount ?? 0;
   anonymizedRecordCount += apiUsageResult.modifiedCount ?? 0;
 
-  // Step 15: API request logs. ApiLog carries no userId at all, only the
+  // Step 16: API request logs. ApiLog carries no userId at all, only the
   // apiKeyId of the key that made the call, so there is no user reference to
   // cut. What it does carry is the caller's IP and user agent, and those are
   // the direct identifiers here. They are blanked; endpoint, status, and
@@ -421,7 +454,7 @@ export async function purgeUserAccount(
     byCollection.api_logs = 0;
   }
 
-  // Step 16: support threads. Conversation and Message are not user-to-user
+  // Step 17: support threads. Conversation and Message are not user-to-user
   // DMs; they are the user-to-admin support queue, and the admin half is the
   // business's own record of what it was told and what it answered. The thread
   // is closed and the person is cut out of it. Nothing is deleted, including
@@ -440,7 +473,7 @@ export async function purgeUserAccount(
   byCollection.messages = messagesResult.modifiedCount ?? 0;
   anonymizedRecordCount += messagesResult.modifiedCount ?? 0;
 
-  // Step 17: team chat. Unlike a support thread, TeamMessage is genuine
+  // Step 18: team chat. Unlike a support thread, TeamMessage is genuine
   // two-party conversation, so deleting this account's half would tear holes in
   // what every other member of the team can still scroll back through. The
   // message keeps its content and its place in the history; the sender is cut
@@ -452,7 +485,7 @@ export async function purgeUserAccount(
   byCollection.team_messages = teamMessagesResult.modifiedCount ?? 0;
   anonymizedRecordCount += teamMessagesResult.modifiedCount ?? 0;
 
-  // Step 18: everything else holding a reference to this account. Each row is
+  // Step 19: everything else holding a reference to this account. Each row is
   // somebody else's record or an aggregate that would lose meaning if it
   // vanished, so the row survives and only the pointer is cut. Optional refs
   // become null; required refs get the tombstone.
@@ -585,7 +618,7 @@ export async function purgeUserAccount(
   byCollection.users_referral = referralResult.modifiedCount ?? 0;
   anonymizedRecordCount += referralResult.modifiedCount ?? 0;
 
-  // Step 19: the account row itself, last, so a crash before this point
+  // Step 20: the account row itself, last, so a crash before this point
   // leaves a user who can sign in and retry rather than an orphaned session.
   const userResult = await User.deleteOne({ _id: userObjId });
   byCollection.users = userResult.deletedCount ?? 0;
@@ -594,7 +627,7 @@ export async function purgeUserAccount(
     .filter(([name]) => !RETAINED_COLLECTIONS.includes(name as typeof RETAINED_COLLECTIONS[number]))
     .reduce((sum, [, count]) => sum + count, 0);
 
-  // Step 20: the receipt. Written even on a no-op re-run so support can prove
+  // Step 21: the receipt. Written even on a no-op re-run so support can prove
   // when a deletion request was honored.
   if (db) {
     await db.collection(ACCOUNT_DELETION_LOG_COLLECTION).insertOne({

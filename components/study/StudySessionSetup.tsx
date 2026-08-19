@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import ProctorStudentPicker from './ProctorStudentPicker';
 import { useSession } from 'next-auth/react';
 import { useStudySession } from '@/contexts/StudySessionContext';
 import { useFlashcards } from '@/contexts/FlashcardContext';
@@ -712,6 +713,8 @@ export default function StudySessionSetup({ preSelectedSetId, isReviewMode }: St
         )}
 
         {/* Study Mode Selection */}
+        {currentStep === 'ready' && <ProctorStudentPicker />}
+
         {currentStep === 'ready' && (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6">
             <div className="p-6">
