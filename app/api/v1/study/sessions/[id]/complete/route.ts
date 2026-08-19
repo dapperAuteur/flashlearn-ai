@@ -5,6 +5,7 @@ import { StudySession } from '@/models/StudySession';
 import { CardResult as CardResultModel } from '@/models/CardResult';
 import dbConnect from '@/lib/db/dbConnect';
 import { type ApiAuthContext } from '@/types/api';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 /**
  * POST /api/v1/study/sessions/[id]/complete
@@ -39,17 +40,23 @@ async function handler(request: NextRequest, context: ApiAuthContext & { user: a
   if (!session) return apiError('NOT_FOUND', requestId, undefined, 'Study session not found.');
   if (session.status === 'completed') return apiError('INVALID_INPUT', requestId, undefined, 'Session already completed.');
 
-  // Save card results
+  // Save card results. The field names have to match models/CardResult: it wants
+  // the session's own `sessionId` string, a `setId`, and `timeSeconds`. This
+  // route was sending the Mongo _id, a `userId` the schema does not carry, and
+  // `timeSpent`, so every call failed validation before it could finish a
+  // session.
   const cardResults = results.map(r => ({
-    sessionId: session._id,
-    userId: new mongoose.Types.ObjectId(userId),
-    flashcardId: new mongoose.Types.ObjectId(r.cardId),
+    sessionId: session.sessionId,
+    setId: String(session.listId),
+    flashcardId: String(r.cardId),
     isCorrect: r.isCorrect,
-    timeSpent: r.timeSeconds,
+    timeSeconds: r.timeSeconds,
     confidenceRating: r.confidenceRating || 3,
+    studyMode: session.studyMode || 'classic',
+    studyDirection: session.studyDirection || 'front-to-back',
   }));
 
-  await CardResultModel.insertMany(cardResults);
+  await CardResultModel.insertMany(cardResults, { ordered: false });
 
   // Update session
   const correctCount = results.filter(r => r.isCorrect).length;
@@ -66,6 +73,27 @@ async function handler(request: NextRequest, context: ApiAuthContext & { user: a
     ? Math.round((session.endTime.getTime() - session.startTime.getTime()) / 1000)
     : 0;
   const accuracy = results.length > 0 ? Math.round((correctCount / results.length) * 100) : 0;
+
+  // 4a: a completed study session, matching the internal completion route.
+  // Two conditions, both about who did the work:
+  //   - The session is looked up by `userId: context.user._id` above, so the
+  //     learner and the API-key owner are always the same account here. That
+  //     account id is what the outbox gate reads, so a draft only ever fires
+  //     for an account that opted in (or the product owner).
+  //   - A proctored session is skipped for the reason the internal route gives:
+  //     the caption is first person, and on a proctored session the student did
+  //     the work rather than whoever held the device.
+  // The external_ref uses the stored `sessionId`, the same key the internal
+  // route uses, so one session cannot draft twice through two doors.
+  if (!session.proctorId) {
+    const durationMin = Math.max(1, Math.round(durationSeconds / 60));
+    const deckTitle = session.setName ?? 'a study set';
+    fireOutboxDrafts({
+      triggerUserId: userId,
+      externalRefBase: `study-session-${String(session.sessionId ?? session._id)}`,
+      caption: `Just drilled ${results.length} cards on "${deckTitle}": ${accuracy}% recall after ${durationMin} minute${durationMin === 1 ? '' : 's'}.`,
+    });
+  }
 
   return apiSuccess({
     sessionId: String(session._id),

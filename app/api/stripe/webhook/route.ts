@@ -6,6 +6,7 @@ import { RevenueEvent } from '@/models/RevenueEvent';
 import { CouponTracker } from '@/models/CouponTracker';
 import { ApiKey } from '@/models/ApiKey';
 import { Logger, LogContext } from '@/lib/logging/logger';
+import { fireSignupTrigger } from '@/lib/outbox-trigger';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-01-28.clover',
@@ -180,8 +181,13 @@ export async function POST(request: NextRequest) {
             const eventType = (tierRank[newTier] || 0) >= (tierRank[previousTier] || 0) ? 'upgraded' : 'downgraded';
             const amountCents = newTier === 'Annual Pro' ? 9999 : 999;
 
+            // The revenue row is the route's existing replay guard: its
+            // stripeEventId is unique, so only the first delivery of an event id
+            // inserts. Reusing that answer keeps the signup draft on the same
+            // once-per-event footing rather than adding a second scheme.
+            let revenueEventInserted = false;
             try {
-              await RevenueEvent.updateOne(
+              const revenueResult = await RevenueEvent.updateOne(
                 { stripeEventId: event.id },
                 {
                   $setOnInsert: {
@@ -197,8 +203,26 @@ export async function POST(request: NextRequest) {
                 },
                 { upsert: true }
               );
+              revenueEventInserted = revenueResult.upsertedCount === 1;
             } catch (revenueErr) {
               Logger.warning(LogContext.SYSTEM, 'Failed to record revenue event for subscription update', { error: revenueErr });
+            }
+
+            // 4f: a paid-tier signup. Fires only when a Free account crosses
+            // into a paid tier, so a Monthly -> Annual move or a re-activation
+            // at the same tier drafts nothing, and only on the delivery that
+            // inserted the revenue row, so a Stripe redelivery of the same
+            // event id drafts nothing a second time.
+            const crossedIntoPaid = (!previousTier || previousTier === 'Free') && newTier !== 'Free';
+            if (revenueEventInserted && crossedIntoPaid) {
+              await fireSignupTrigger({
+                newUser: {
+                  id: String(user._id),
+                  handle: user.username ?? null,
+                  email: user.email,
+                },
+                tier: newTier === 'Annual Pro' ? 'annual' : 'monthly',
+              });
             }
           }
         }

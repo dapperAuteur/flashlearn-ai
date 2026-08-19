@@ -368,7 +368,7 @@ const phases: Phase[] = [
     features: [
       {
         title: 'Public API (v1)',
-        description: '27 REST endpoints for flashcard generation, study, and competitive challenges.',
+        description: '30 REST endpoints for flashcard generation, study, and competitive challenges.',
         status: 'done' as Status,
         items: [
           'AI flashcard generation + batch generation (Pro/Enterprise)',
@@ -486,7 +486,7 @@ const phases: Phase[] = [
         description: 'Full REST API for developers, schools, and edtech companies.',
         status: 'done',
         items: [
-          '27 REST endpoints (generation, sets, study, versus, ecosystem)',
+          '30 REST endpoints (generation, sets, study, versus, ecosystem)',
           '4 API key types (admin, app, public, admin-public)',
           'Switchable AI provider (Cerebras, OpenRouter, Mistral, Together, or Gemini) set with one env var',
           'Tiered rate limiting (Free / Developer / Pro / Enterprise)',
