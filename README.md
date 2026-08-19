@@ -284,7 +284,7 @@ Two key types share the tier table. Choose based on your use case:
 ## Documentation
 
 - [API Getting Started](https://flashlearnai.witus.online/docs/api/getting-started)
-- [Interactive API Reference](https://flashlearnai.witus.online/docs/api). All 27 endpoints.
+- [Interactive API Reference](https://flashlearnai.witus.online/docs/api). All 30 endpoints.
 - [Ecosystem API (cross-product partners)](https://flashlearnai.witus.online/docs/api/ecosystem)
 - [Webhooks](https://flashlearnai.witus.online/docs/api/webhooks). Signing, retry, replay.
 - [Roadmap](https://flashlearnai.witus.online/roadmap)
