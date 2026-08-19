@@ -89,6 +89,48 @@ export default function PrivacyPage() {
               <li>Control profile visibility (public/private)</li>
             </ul>
 
+            <h3>What happens when you delete your account</h3>
+            <p>
+              Deleting your account from Settings signs you out and hides your public flashcard
+              sets immediately. Your data is then held for <strong>30 days</strong> before it is
+              erased. Signing back in during those 30 days cancels the deletion and restores your
+              account and your public sets. After that window the erasure is permanent.
+            </p>
+            <p>
+              Erasure removes your profile, flashcard sets, study sessions and results, study
+              analytics, achievements, notifications, follows, and API keys.
+            </p>
+            <p>
+              Some records are kept with your identifying details stripped out, because we are
+              required to retain them or need them to run the service safely:
+            </p>
+            <ul>
+              <li>
+                <strong>Payment records.</strong> Retained for tax and dispute purposes with the
+                account link removed. Payment-processor identifiers are kept so a transaction can
+                still be reconciled or refunded.
+              </li>
+              <li>
+                <strong>Security logs.</strong> Sign-in records are retained with the email address
+                removed, so we can still investigate suspicious activity.
+              </li>
+              <li>
+                <strong>API request logs.</strong> Retained with the IP address and browser
+                identifier removed. These expire on their own after 90 days.
+              </li>
+              <li>
+                <strong>Support conversations.</strong> Closed and unlinked from you, with the
+                content retained as a record of the support request.
+              </li>
+            </ul>
+            <p>
+              Shared content behaves differently by design. If you taught a classroom, the classroom
+              is archived rather than deleted so your students do not lose their work, and it can be
+              reassigned to another teacher. Where you appear in someone else&apos;s record, such as a
+              challenge you played or a team you joined, that record is kept and your entry is
+              anonymized rather than removed from their history.
+            </p>
+
             <h2>8. Cookies</h2>
             <p>
               We use essential cookies for authentication and session management. We use analytics cookies
