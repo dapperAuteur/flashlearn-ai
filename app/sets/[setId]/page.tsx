@@ -5,6 +5,7 @@ import dbConnect from "@/lib/db/mongodb";
 import { FlashcardSet, IFlashcardSet } from "@/models/FlashcardSet";
 import { isValidObjectId, Types } from "mongoose";
 import PublicSetViewer from "@/components/PublicSetViewer";
+import SetRatingPanel from "@/components/SetRatingPanel";
 import { flashcardSetSchema } from "@/lib/structured-data";
 import { StudySession } from "@/models/StudySession";
 import { ShareEventLogger } from "@/lib/share-event-logger";
@@ -137,6 +138,13 @@ export default async function PublicSetPage({ params }: PublicSetPageProps) {
                 <span>Studied {studyCount.toLocaleString()} times</span>
               </>
             )}
+          </div>
+          <div className="mt-4">
+            <SetRatingPanel
+              setId={setId}
+              initialAverage={flashcardSet.ratingAverage ?? 0}
+              initialCount={flashcardSet.ratingCount ?? 0}
+            />
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
