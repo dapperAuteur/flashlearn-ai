@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
@@ -70,11 +70,19 @@ export async function POST(request: Request) {
     // Notify admin immediately for priority conversations
     const user = session.user as { name?: string; email?: string };
     if (hasPriority) {
-      notifyAdminOfPriorityConversation(
-        subject,
-        user.name || 'Unknown',
-        user.email || ''
-      ).catch(() => {}); // fire-and-forget
+      // after() rather than a floating promise: on Vercel the invocation can
+      // freeze once the response is sent, killing any work still in flight.
+      after(async () => {
+        try {
+          await notifyAdminOfPriorityConversation(
+            subject,
+            user.name || 'Unknown',
+            user.email || ''
+          );
+        } catch {
+          // The email is a courtesy; the conversation is already saved.
+        }
+      });
     }
 
     // Non-blocking mirror to the WitUS Inbox (→ Triage). MongoDB stays the
@@ -87,7 +95,7 @@ export async function POST(request: Request) {
       kind: 'new',
       submitterEmail: user.email,
       submitterName: user.name,
-    }).catch(() => {});
+    });
 
     return NextResponse.json({ conversation }, { status: 201 });
   } catch (error) {

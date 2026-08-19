@@ -6,6 +6,7 @@ import dbConnect from '@/lib/db/dbConnect';
 import { Classroom } from '@/models/Classroom';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { createActivityEvent } from '@/lib/services/activityService';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -79,6 +80,9 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (classroom.teacherId.toString() !== session.user.id) {
       return NextResponse.json({ error: 'Only the teacher can share sets' }, { status: 403 });
     }
+
+    const archived = assertNotArchived(classroom, 'classroom');
+    if (archived) return archived;
 
     // Verify the set exists
     const set = await FlashcardSet.findById(setId).select('_id').lean();

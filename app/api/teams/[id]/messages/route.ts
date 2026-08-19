@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Team } from '@/models/Team';
 import { TeamMessage } from '@/models/TeamMessage';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     await dbConnect();
 
-    const team = await Team.findById(id).select('members').lean() as any;
+    const team = await Team.findById(id).select('members isArchived').lean() as any;
     if (!team) {
       return NextResponse.json({ error: 'Team not found' }, { status: 404 });
     }
@@ -91,6 +92,9 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (!isMember) {
       return NextResponse.json({ error: 'Only team members can send messages' }, { status: 403 });
     }
+
+    const archived = assertNotArchived(team, 'team');
+    if (archived) return archived;
 
     const message = await TeamMessage.create({
       teamId: id,

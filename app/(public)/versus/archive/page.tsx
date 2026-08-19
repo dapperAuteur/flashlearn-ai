@@ -288,7 +288,7 @@ export default async function ArchivePage({ searchParams }: ArchivePageProps) {
               Create a Challenge
             </Link>
             <Link
-              href="/signup"
+              href="/auth/signup"
               className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg border border-blue-400 text-white hover:bg-blue-500 transition-colors"
             >
               Sign Up Free

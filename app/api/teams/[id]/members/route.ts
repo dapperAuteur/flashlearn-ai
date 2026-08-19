@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Team } from '@/models/Team';
 import { User } from '@/models/User';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -40,6 +41,9 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (!requester || requester.role !== 'admin') {
       return NextResponse.json({ error: 'Only team admins can add members' }, { status: 403 });
     }
+
+    const archived = assertNotArchived(team, 'team');
+    if (archived) return archived;
 
     // Check if user exists
     const userToAdd = await User.findById(userId).select('_id').lean();
@@ -114,6 +118,13 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'Only admins can remove other members' }, { status: 403 });
     }
 
+    // Leaving an archived group always works. Removing somebody else changes the
+    // group, so it is refused while the group is frozen.
+    if (!isRemovingSelf) {
+      const archived = assertNotArchived(team, 'team');
+      if (archived) return archived;
+    }
+
     // Prevent removing the creator
     if (userId === team.creatorId.toString()) {
       return NextResponse.json({ error: 'Cannot remove the team creator' }, { status: 400 });
@@ -173,6 +184,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (!requester || requester.role !== 'admin') {
       return NextResponse.json({ error: 'Only team admins can change member roles' }, { status: 403 });
     }
+
+    const archived = assertNotArchived(team, 'team');
+    if (archived) return archived;
 
     // Find the target member
     const targetMember = team.members.find(

@@ -24,6 +24,7 @@ import {
   Swords,
 } from 'lucide-react';
 import TeamChat from '@/components/teams/TeamChat';
+import ArchivedBanner from '@/components/ui/ArchivedBanner';
 
 interface TeamMember {
   userId: string;
@@ -107,6 +108,7 @@ interface Team {
   members: TeamMember[];
   currentUserRole: 'owner' | 'admin' | 'member';
   emailInvitesUsed?: number;
+  isArchived?: boolean;
 }
 
 const MAX_EMAIL_INVITES = 3;
@@ -354,6 +356,7 @@ export default function TeamDashboardPage() {
   }
 
   const isAdmin = team.currentUserRole === 'owner' || team.currentUserRole === 'admin';
+  const isArchived = team.isArchived === true;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 -m-4 p-4 sm:-m-6 sm:p-6 lg:-m-8 lg:p-8">
@@ -368,7 +371,7 @@ export default function TeamDashboardPage() {
             <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
             Back to Study Groups
           </Link>
-          {isAdmin && (
+          {isAdmin && !isArchived && (
             <Link
               href={`/team/${teamId}/settings`}
               className="inline-flex items-center min-h-[44px] text-sm text-gray-600 hover:text-gray-900 transition-colors"
@@ -379,6 +382,8 @@ export default function TeamDashboardPage() {
             </Link>
           )}
         </div>
+
+        {isArchived && <ArchivedBanner kind="team" />}
 
         {/* Team Header Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -442,7 +447,7 @@ export default function TeamDashboardPage() {
           </div>
 
           {/* Email invite (admin only) */}
-          {isAdmin && (
+          {isAdmin && !isArchived && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -634,7 +639,7 @@ export default function TeamDashboardPage() {
                                 </span>
                               </div>
                             </div>
-                            {isAdmin && member.role !== 'owner' && (
+                            {isAdmin && !isArchived && member.role !== 'owner' && (
                               <select
                                 value={member.role}
                                 onChange={(e) =>
@@ -853,7 +858,7 @@ export default function TeamDashboardPage() {
               aria-labelledby="tab-chat"
               hidden={activeTab !== 'chat'}
             >
-              {activeTab === 'chat' && <TeamChat teamId={teamId} />}
+              {activeTab === 'chat' && <TeamChat teamId={teamId} isArchived={isArchived} />}
             </div>
           </div>
         </div>

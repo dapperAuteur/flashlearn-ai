@@ -98,7 +98,7 @@ export async function POST(
       kind: 'reply',
       submitterEmail: user.email,
       submitterName: user.name,
-    }).catch(() => {});
+    });
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {

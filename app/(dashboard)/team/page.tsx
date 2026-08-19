@@ -13,6 +13,7 @@ interface Team {
   memberCount: number;
   role: 'owner' | 'admin' | 'member';
   joinCode: string;
+  isArchived?: boolean;
 }
 
 export default function TeamsPage() {

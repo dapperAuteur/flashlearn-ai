@@ -13,7 +13,7 @@ AI-powered flashcard platform with spaced repetition, versus mode, and offline-f
 - **Curated math library.** Repo-authored sets, loaded by `npm run seed:math`: every single-digit addition, subtraction, multiplication, and division fact, split into small sets so a student can drill one number at a time, plus geometry, trigonometry, and calculus reference sets. Fact cards carry authored multiple-choice answers, so math practice costs no AI generations.
 - **Versus Mode.** Head-to-head challenges with composite scoring (accuracy, speed, confidence, streaks) and ELO ratings.
 - **Offline-First.** PowerSync + IndexedDB with automatic sync and conflict resolution.
-- **Teams & Classrooms.** Study groups with join codes, shared sets, team chat, and teacher-led classrooms.
+- **Teams & Classrooms.** Study groups with join codes, shared sets, team chat, and teacher-led classrooms. When the owner deletes their account, the group or classroom is archived rather than removed: it stays in members' listings marked as archived, members keep reading and studying what is already there, a banner at the top of the page says why, and every write is refused with a 409 until an admin reassigns it. Leaving and deleting still work.
 - **Public API.** A REST API for building on top of FlashLearnAI, including card media upload and per-student progress for partners.
 - **Ecosystem API for cross-product partners.** Spaced-repetition and comprehension backend for any consumer-facing learning product. Learner-scoped scheduled sessions, per-standard mastery rollups, cascade-delete, and signed outbound webhooks. Powers Wanderlearn and BVC classes.
 - **Signed outbound webhooks.** HMAC-SHA256 signed callbacks with 7-attempt exponential backoff, dead-letter, AES-256-GCM secret encryption at rest, and a self-service developer dashboard with replay.
@@ -140,6 +140,25 @@ registers the global tracer provider first wins, and Sentry is told to stand dow
 - **`/api/health` spans are dropped at the sampler.** Uptime monitors probe it around the clock,
   and those requests must not spend Honeycomb's free-tier event budget. Everything else is recorded
   unsampled.
+
+### Unit test + type-check CI
+
+[`.github/workflows/test.yml`](./.github/workflows/test.yml) runs `tsc --noEmit` and `npm test` as
+two named steps on every push and pull request, so a failure says which gate broke. It needs no
+secrets, database, or env: the suite is self-contained and the few tests that need a value set it
+themselves.
+
+Kept separate from the e2e gate below because that one triggers on `deployment_status`, meaning it
+only fires after Vercel finishes a deploy. Unit tests should fail before a deploy, not after.
+
+Two things worth knowing if you touch [`jest.config.js`](./jest.config.js):
+
+- The config is an **async function**, not a plain object. `next/jest` hardcodes its own
+  `node_modules` ignore pattern and only appends yours, and because `transformIgnorePatterns` is an
+  OR, next/jest's pattern always matches first. Appending an allowlist to it is dead config. We
+  resolve next/jest's config and then replace the array outright, which is what actually gets the
+  ESM-only packages compiled.
+- Add ESM-only packages to the `esmPackages` array, not to `transformIgnorePatterns` directly.
 
 ### E2E + accessibility CI
 

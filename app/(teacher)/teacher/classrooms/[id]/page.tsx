@@ -18,6 +18,7 @@ import {
   SparklesIcon,
   ShareIcon,
 } from "@heroicons/react/24/outline";
+import ArchivedBanner from "@/components/ui/ArchivedBanner";
 
 interface StudentInfo {
   _id: string;
@@ -108,6 +109,7 @@ interface ClassroomDetail {
   joinCode: string;
   students: StudentInfo[];
   teacherId: { name: string; email: string };
+  isArchived?: boolean;
 }
 
 interface AssignmentEntry {
@@ -223,6 +225,8 @@ export default function ClassroomDetailPage() {
 
   return (
     <div className="space-y-6">
+      {classroom.isArchived && <ArchivedBanner kind="classroom" />}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
