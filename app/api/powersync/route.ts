@@ -116,7 +116,21 @@ async function handlePull(userId: string, params: PullParams) {
     title: string;
     description?: string;
     isPublic: boolean;
-    flashcards?: Array<{ _id: mongoose.Types.ObjectId; front: string; back: string }>;
+    flashcards?: Array<{
+      _id: mongoose.Types.ObjectId;
+      front: string;
+      back: string;
+      frontImage?: string;
+      backImage?: string;
+      frontImageAlt?: string;
+      backImageAlt?: string;
+      frontVideo?: string;
+      backVideo?: string;
+      frontVideoAlt?: string;
+      backVideoAlt?: string;
+      options?: Array<{ id: string; text: string }>;
+      correctOptionId?: string;
+    }>;
     source: string;
     createdAt?: Date;
     updatedAt?: Date;
@@ -159,8 +173,25 @@ async function handlePull(userId: string, params: PullParams) {
             user_id: userId,
             front: card.front,
             back: card.back,
-            front_image: null, // TODO: Add when image support ready
-            back_image: null,
+            // Every one of these has a column in lib/powersync/schema.ts and is
+            // read back by StudySessionContext. They were hardcoded null, so
+            // the data had somewhere to live and never arrived.
+            //
+            // options matters most: a math fact card ships authored
+            // distractors, and without them the offline player falls back to
+            // shuffling other cards' backs. For single-digit multiplication
+            // that still looks plausible, so the student is quietly answering
+            // an easier question than the one written, with nothing to show it.
+            front_image: card.frontImage ?? null,
+            back_image: card.backImage ?? null,
+            front_image_alt: card.frontImageAlt ?? null,
+            back_image_alt: card.backImageAlt ?? null,
+            front_video: card.frontVideo ?? null,
+            back_video: card.backVideo ?? null,
+            front_video_alt: card.frontVideoAlt ?? null,
+            back_video_alt: card.backVideoAlt ?? null,
+            options: card.options ? JSON.stringify(card.options) : null,
+            correct_option_id: card.correctOptionId ?? null,
             order: index,
             created_at: set.createdAt?.toISOString() || new Date().toISOString(),
             updated_at: set.updatedAt?.toISOString() || new Date().toISOString(),

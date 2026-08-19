@@ -304,9 +304,21 @@ export class OfflineSyncService {
           if (change.data) {
             const d = change.data;
             await db.execute(
-              `INSERT OR REPLACE INTO flashcards (id, set_id, user_id, front, back, front_image, back_image, "order", created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [d.id, d.set_id, d.user_id, d.front, d.back, d.front_image || null, d.back_image || null, d.order, d.created_at, d.updated_at]
+              // Media and authored options are pulled too. The schema has
+              // always had columns for them and StudySessionContext has always
+              // read them back; only the wire ends were missing, so offline
+              // cards lost their images and their written answer choices.
+              `INSERT OR REPLACE INTO flashcards (id, set_id, user_id, front, back, front_image, back_image, front_image_alt, back_image_alt, front_video, back_video, front_video_alt, back_video_alt, options, correct_option_id, "order", created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                d.id, d.set_id, d.user_id, d.front, d.back,
+                d.front_image || null, d.back_image || null,
+                d.front_image_alt || null, d.back_image_alt || null,
+                d.front_video || null, d.back_video || null,
+                d.front_video_alt || null, d.back_video_alt || null,
+                d.options || null, d.correct_option_id || null,
+                d.order, d.created_at, d.updated_at,
+              ]
             );
           }
         } catch (err) {

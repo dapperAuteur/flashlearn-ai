@@ -25,7 +25,6 @@ import CardImageModal from './CardImageModal';
 
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useMigration } from '@/hooks/useMigration';
 import { useSession } from 'next-auth/react';
 import { LogContext, Logger } from '@/lib/logging/client-logger';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,14 +57,12 @@ export default function FlashcardManager({
   const { data: session } = useSession();
   const router = useRouter();
   const { flashcardSets, offlineSets: localSets, toggleOfflineAvailability, deleteFlashcardSet } = useFlashcards();
-  const { migrating, error: migrationError, migrationProgress, migrateAllSets } = useMigration();
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedSet, setSelectedSet] = useState<PowerSyncFlashcardSet | null>(null);
   const [imageModalSet, setImageModalSet] = useState<PowerSyncFlashcardSet | null>(null);
 
-  const { clearLocalCache } = useMigration();
   const { toast } = useToast();
 
   const [localError, setLocalError] = useState<string | null>(null);
@@ -184,11 +181,6 @@ export default function FlashcardManager({
       }
     }
   };
-  const handleClearCache = async () => {
-    if (confirm('Are you sure you want to clear the local cache? This will force a full re-sync from the server.')) {
-      await clearLocalCache();
-    }
-  }
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -425,32 +417,6 @@ export default function FlashcardManager({
             <p className="text-red-800">{localError}</p>
           </div>
         )}
-        {migrationError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800 font-medium">Migration Error</p>
-            <p className="text-red-800">{migrationError}</p>
-          </div>
-        )}
-        {/* Migration progress */}
-      {migrating && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-blue-800 font-medium">Migration in Progress</p>
-          <div className="mt-2 bg-blue-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{
-                width: `${migrationProgress.total > 0
-                  ? (migrationProgress.completed / migrationProgress.total) * 100
-                  : 0}%`
-              }}
-            />
-          </div>
-          <p className="text-blue-700 text-sm mt-2">
-            Processing batch {migrationProgress.currentBatch} sets...
-          </p>
-        </div>
-      )}
-
       {/* Grid View */}
       {viewMode === 'grid' && (
         <div role="list" aria-label="Flashcard sets" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
