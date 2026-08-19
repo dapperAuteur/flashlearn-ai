@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Team } from '@/models/Team';
 import { createActivityEvent } from '@/lib/services/activityService';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 // POST - Join a team using a join code
 export async function POST(request: NextRequest) {
@@ -25,6 +26,9 @@ export async function POST(request: NextRequest) {
     if (!team) {
       return NextResponse.json({ error: 'Invalid join code' }, { status: 404 });
     }
+
+    const archived = assertNotArchived(team, 'team');
+    if (archived) return archived;
 
     // Check if already a member
     const alreadyMember = team.members.some(

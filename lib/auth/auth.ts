@@ -6,6 +6,8 @@ import { NextAuthOptions } from "next-auth";
 import type { User } from "next-auth";
 import type { OAuthConfig } from "next-auth/providers/oauth";
 import { Logger, LogContext } from "@/lib/logging/logger";
+import dbConnect from "@/lib/db/dbConnect";
+import { restoreUserAccount } from "@/lib/api/purgeUserAccount";
 
 // --- WitUS ecosystem SSO ("Sign in with WitUS") ---
 // Central Better-Auth/OIDC IdP at accounts.witus.online. Added as a standard
@@ -177,6 +179,27 @@ export const authOptions: NextAuthOptions = {
     ...(process.env.WITUS_OIDC_CLIENT_ID ? [witusProvider()] : []),
   ],
   callbacks: {
+    // Signing in during the deletion grace period cancels the deletion. Getting
+    // into the account is the same proof an emailed cancellation token would
+    // give, so this is the entire undo path. It costs one indexed _id lookup
+    // and returns immediately for any account that never asked to be deleted.
+    async signIn({ user }) {
+      try {
+        await dbConnect();
+        const { restored, restoredSetCount } = await restoreUserAccount(user.id);
+        if (restored) {
+          Logger.info(LogContext.AUTH, "Pending account deletion cancelled by sign-in.", {
+            userId: user.id,
+            metadata: { restoredSetCount },
+          });
+        }
+      } catch (error) {
+        // A failed restore must never lock anybody out. The stamps survive and
+        // the next sign-in tries again.
+        Logger.error(LogContext.AUTH, "Failed to cancel pending account deletion.", { error });
+      }
+      return true;
+    },
     async jwt({ token, user, trigger }) {
       if (user) {
         Logger.info(LogContext.AUTH, "JWT callback: Adding user data to token.", { userId: user.id, role: user.role });

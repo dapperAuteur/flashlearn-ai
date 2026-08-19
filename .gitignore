@@ -16,6 +16,10 @@
 # next.js
 /.next/
 /out/
+# Scratch build dirs from parallel builds. Next only reads distDir from
+# next.config.mjs, so a NEXT_DIST_DIR env var does nothing; anyone working
+# around build contention has to edit the config, and these are the leftovers.
+/.next-*/
 
 # production
 /build

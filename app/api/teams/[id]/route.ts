@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Team } from '@/models/Team';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -93,6 +94,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (!member || member.role !== 'admin') {
       return NextResponse.json({ error: 'Only team admins can update team settings' }, { status: 403 });
     }
+
+    const archived = assertNotArchived(team, 'team');
+    if (archived) return archived;
 
     // Apply updates
     if (name !== undefined) team.name = name.trim();

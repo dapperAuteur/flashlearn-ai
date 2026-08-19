@@ -19,7 +19,7 @@ FlashLearn AI is a full-featured, AI-powered flashcard platform for students, te
 - **Admin card quantity selector.** Admins can choose exact card count (1-50) during AI generation.
 - **Progress analytics.** Accuracy rates, streaks, charts, problem card identification.
 - **Achievements & gamification.** Badges, streaks, and progress tracking.
-- **Sharing & discovery.** Public set pages, shareable results, community explore page.
+- **Sharing & discovery.** Public set pages, shareable results, community explore page with one-to-five-star set ratings and a highest-rated sort.
 
 ## Technology Stack
 

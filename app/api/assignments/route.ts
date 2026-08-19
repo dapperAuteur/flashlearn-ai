@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Assignment } from '@/models/Assignment';
 import { Classroom } from '@/models/Classroom';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 // GET - List assignments for the current user
 export async function GET() {
@@ -85,6 +86,9 @@ export async function POST(request: NextRequest) {
     if (classroom.teacherId.toString() !== session.user.id && session.user.role !== 'Admin') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
+
+    const archived = assertNotArchived(classroom, 'classroom');
+    if (archived) return archived;
 
     const studentIds = classroom.students;
 

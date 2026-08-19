@@ -199,7 +199,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
               <p className="text-gray-600 text-sm">Track your progress and identify areas for improvement with detailed insights.</p>
             </Link>
             
-            <Link href="/teams" className="group bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
+            <Link href="/team" className="group bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-orange-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Users className="h-6 w-6 text-white" />
               </div>
@@ -207,7 +207,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
               <p className="text-gray-600 text-sm">Share flashcard sets with your study group and track collective progress.</p>
             </Link>
             
-            <Link href="/library" className="group bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
+            <Link href="/explore" className="group bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-teal-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
@@ -216,15 +216,13 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             </Link>
             
             <Link href="/settings" className="group bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
-             Settings
               <div className="bg-gray-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Target className="h-6 w-6 text-white" />
               </div>
-
-            </Link>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Learning Goals</h3>
               <p className="text-gray-600 text-sm">Set up your learning objectives and customize your study experience.</p>
-            </div>
+            </Link>
+          </div>
           </div>
         </div>
       </div>

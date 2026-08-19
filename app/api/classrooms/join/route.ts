@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
 import { Classroom } from '@/models/Classroom';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 // POST - Join a classroom using a join code
 export async function POST(request: NextRequest) {
@@ -23,6 +24,9 @@ export async function POST(request: NextRequest) {
     if (!classroom) {
       return NextResponse.json({ error: 'Invalid join code' }, { status: 404 });
     }
+
+    const archived = assertNotArchived(classroom, 'classroom');
+    if (archived) return archived;
 
     // Check if already enrolled
     const alreadyEnrolled = classroom.students.some(

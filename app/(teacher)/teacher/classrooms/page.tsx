@@ -7,6 +7,7 @@ import {
   UserGroupIcon,
   ClipboardDocumentIcon,
   TrashIcon,
+  ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 
 interface ClassroomEntry {
@@ -15,6 +16,7 @@ interface ClassroomEntry {
   joinCode: string;
   students: string[];
   createdAt: string;
+  isArchived?: boolean;
 }
 
 export default function ClassroomsPage() {
@@ -138,9 +140,17 @@ export default function ClassroomsPage() {
           {classrooms.map((c) => (
             <div key={c._id} className="bg-white rounded-xl shadow p-4 sm:p-5">
               <div className="flex items-start justify-between mb-3">
-                <Link href={`/teacher/classrooms/${c._id}`} className="hover:text-blue-600 transition-colors">
-                  <h3 className="font-semibold text-gray-900">{c.name}</h3>
-                </Link>
+                <div className="min-w-0">
+                  <Link href={`/teacher/classrooms/${c._id}`} className="hover:text-blue-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900">{c.name}</h3>
+                  </Link>
+                  {c.isArchived && (
+                    <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900">
+                      <ArchiveBoxIcon className="h-3 w-3" aria-hidden="true" />
+                      Archived
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() => handleDelete(c._id)}
                   className="text-gray-600 hover:text-red-500 transition-colors p-1"

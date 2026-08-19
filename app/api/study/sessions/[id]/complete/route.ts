@@ -25,10 +25,13 @@ export async function POST(
     const client = await clientPromise;
     const db = client.db();
     
-    // Verify study session exists and belongs to user
+    // The learner owns the session, so a teacher completing a session they
+    // proctored is not the owner. Match either. Without the proctorId arm this
+    // 404s on every proctored session, because userId is the student.
+    const actorId = new ObjectId(session.user.id);
     const studySession = await db.collection('studySessions').findOne({
       sessionId,
-      userId: new ObjectId(session.user.id)
+      $or: [{ userId: actorId }, { proctorId: actorId }],
     });
     
     if (!studySession) {
@@ -70,8 +73,12 @@ export async function POST(
       }
     });
 
+    // Credit the learner in the classroom feed, not whoever tapped the buttons.
+    const learnerId = String(updatedSession?.userId ?? session.user.id);
+    const wasProctored = Boolean(updatedSession?.proctorId);
+
     // Fire-and-forget activity event for the team / classroom feeds.
-    createActivityEvent(session.user.id, 'study_session', {
+    createActivityEvent(learnerId, 'study_session', {
       sessionId,
       accuracy: Math.round(accuracy),
       durationSeconds,
@@ -85,8 +92,11 @@ export async function POST(
     const accuracyPct = Math.round(accuracy);
     const cardCount = updatedSession?.completedCards ?? updatedSession?.totalCards ?? 0;
     const deckTitle = updatedSession?.setName ?? 'a study set';
-    fireOutboxDrafts({
-      triggerUserId: session.user.id,
+    // Never draft a social post about a session somebody else sat. The caption
+    // is written in the first person, and on a proctored session the person who
+    // did the work is the student.
+    if (!wasProctored) fireOutboxDrafts({
+      triggerUserId: learnerId,
       externalRefBase: `study-session-${sessionId}`,
       caption: `Just drilled ${cardCount} cards on "${deckTitle}": ${accuracyPct}% recall after ${durationMin} minute${durationMin === 1 ? '' : 's'}.`,
     });

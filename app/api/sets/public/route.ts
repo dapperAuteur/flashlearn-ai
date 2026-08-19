@@ -17,6 +17,14 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const categoryId = searchParams.get('category') || '';
+  // 'rating' orders by the denormalized aggregate on the set. ratingCount is the
+  // tiebreaker so one 5-star vote does not outrank a 5-star average from thirty
+  // people, and createdAt keeps the order stable for unrated sets.
+  const sort = searchParams.get('sort') === 'rating' ? 'rating' : 'recent';
+  const sortOrder: Record<string, 1 | -1> =
+    sort === 'rating'
+      ? { ratingAverage: -1, ratingCount: -1, createdAt: -1 }
+      : { createdAt: -1 };
 
   const query: Record<string, unknown> = { isPublic: true };
 
@@ -34,9 +42,9 @@ export async function GET(request: NextRequest) {
 
   const [sets, total] = await Promise.all([
     FlashcardSet.find(query)
-      .select('title description cardCount source categories tags isFeatured createdAt')
+      .select('title description cardCount source categories tags isFeatured createdAt ratingAverage ratingCount')
       .populate('categories', 'name slug color')
-      .sort({ createdAt: -1 })
+      .sort(sortOrder)
       .skip(offset)
       .limit(limit)
       .lean(),
@@ -47,7 +55,7 @@ export async function GET(request: NextRequest) {
   let featured: Record<string, unknown>[] = [];
   if (offset === 0 && !search && !categoryId) {
     const featuredSets = await FlashcardSet.find({ isPublic: true, isFeatured: true })
-      .select('title description cardCount source categories tags createdAt featuredOrder')
+      .select('title description cardCount source categories tags createdAt featuredOrder ratingAverage ratingCount')
       .populate('categories', 'name slug color')
       .sort({ featuredOrder: 1 })
       .lean();
@@ -61,6 +69,8 @@ export async function GET(request: NextRequest) {
       categories: (s as Record<string, unknown>).categories || [],
       tags: s.tags || [],
       createdAt: s.createdAt,
+      ratingAverage: (s.ratingAverage as number) ?? 0,
+      ratingCount: (s.ratingCount as number) ?? 0,
     }));
   }
 
@@ -74,6 +84,8 @@ export async function GET(request: NextRequest) {
       categories: (s as Record<string, unknown>).categories || [],
       tags: s.tags || [],
       createdAt: s.createdAt,
+      ratingAverage: (s.ratingAverage as number) ?? 0,
+      ratingCount: (s.ratingCount as number) ?? 0,
     })),
     featured,
     total,

@@ -8,6 +8,7 @@ import { User } from '@/models/User';
 import { Invitation } from '@/models/Invitation';
 import { sendStudyGroupInviteEmail } from '@/lib/email/mailgun';
 import { Logger, LogContext } from '@/lib/logging/logger';
+import { assertNotArchived } from '@/lib/api/assertNotArchived';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -57,6 +58,9 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (!callerMembership || callerMembership.role !== 'admin') {
       return NextResponse.json({ error: 'Only group admins can send email invites.' }, { status: 403 });
     }
+
+    const archived = assertNotArchived(team, 'team');
+    if (archived) return archived;
 
     if (team.emailInvitesUsed >= MAX_EMAIL_INVITES_PER_TEAM) {
       return NextResponse.json(

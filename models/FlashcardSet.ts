@@ -91,6 +91,8 @@ export interface IFlashcardSet extends Document {
   tags?: string[];
   isFeatured?: boolean;
   featuredOrder?: number;
+  ratingAverage: number;
+  ratingCount: number;
   shortLinkId?: string;
   shortLinkUrl?: string;
   createdAt: Date;
@@ -156,9 +158,23 @@ const FlashcardSetSchema = new Schema<IFlashcardSet>({
   },
   shortLinkId: { type: String, default: null },
   shortLinkUrl: { type: String, default: null },
+  // Denormalized summary of the SetRating collection. Written only by
+  // `recomputeSetRating` (lib/api/setRatings.ts) after a rating is added,
+  // changed, or cleared, so Explore can sort on it without an aggregation.
+  ratingAverage: {
+    type: Number,
+    default: 0,
+  },
+  ratingCount: {
+    type: Number,
+    default: 0,
+  },
 }, { timestamps: true });
 
 FlashcardSetSchema.index({ isPublic: 1, createdAt: -1 });
 FlashcardSetSchema.index({ categories: 1, isPublic: 1, createdAt: -1 });
+// Sorting Explore by rating. ratingCount breaks ties so a single 5-star set does
+// not outrank a set with the same average from thirty raters.
+FlashcardSetSchema.index({ isPublic: 1, ratingAverage: -1, ratingCount: -1 });
 
 export const FlashcardSet = mongoose.models.FlashcardSet || mongoose.model('FlashcardSet', FlashcardSetSchema, 'flashcard_sets');

@@ -32,7 +32,6 @@ describe('register age-gate validation', () => {
   });
 
   it('rejects when ageAttested is a non-boolean truthy value', () => {
-    // @ts-expect-error intentional invalid value
     const result = registerSchema.safeParse({ ...validBody, ageAttested: 'yes' });
     expect(result.success).toBe(false);
   });

@@ -1,241 +1,277 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
+// app/api/flashcards/[id]/images/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { ObjectId } from 'mongodb';
-import clientPromise from '@/lib/db/mongodb';
+import { Types } from 'mongoose';
+import dbConnect from '@/lib/db/dbConnect';
+import { FlashcardSet } from '@/models/FlashcardSet';
+import { Profile } from '@/models/Profile';
+import { authOptions } from '@/lib/auth/auth';
 import { Logger, LogContext } from '@/lib/logging/logger';
-import mongodb from '@/lib/db/mongodb';
-// import { Route } from 'next';
-const { Readable } = await import('stream')
+import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
+import { validateMediaFile, uploadMediaBuffer } from '@/lib/media/cloudinaryUpload';
 
-// type RouteParams = {
-//   id: string;
-// }
-interface RouteContext {
-  params: {
-    id: string;
+/**
+ * Card media for signed-in users. `[id]` is the flashcard SET id, because cards
+ * are embedded subdocuments of a set and the set is what carries ownership.
+ * The card is addressed by `cardId` and the side by `side`.
+ *
+ * The Cloudinary work is shared with POST /api/v1/media through
+ * lib/media/cloudinaryUpload, so both paths apply the same types and size caps.
+ */
+
+type Side = 'front' | 'back';
+
+const ALT_MAX_LENGTH = 300;
+
+function isSide(value: unknown): value is Side {
+  return value === 'front' || value === 'back';
+}
+
+interface ProfileId {
+  _id: Types.ObjectId;
+}
+
+/**
+ * Build the query that limits a write to sets the caller may edit. Mirrors the
+ * rule PATCH /api/sets/[id] uses: the set belongs to one of the caller's
+ * profiles, and an admin may act on any set.
+ */
+async function buildOwnerFilter(setId: string, userId: string, role?: string) {
+  if (role === 'Admin') {
+    return { _id: new Types.ObjectId(setId) };
+  }
+  const profiles = (await Profile.find({ user: new Types.ObjectId(userId) })
+    .select('_id')
+    .lean()) as ProfileId[];
+  return {
+    _id: new Types.ObjectId(setId),
+    profile: { $in: profiles.map((p) => p._id) },
   };
 }
-// REFACTOR TO USE CLOUDINARY API
-// export async function POST(request: NextRequest){
-//   return
-// }
-// Handle uploading an image for a flashcard (both front and back)
-// export async function POST(
-//   request: NextRequest,
-//   context: { params: Promise<{ id: string }> },
-  // context: RouteContext
-// ) {
-  // const { params } = context;
-  // const params = await context;
-  // const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard image upload request",{
-  //   params: params
-  // });
-  
-  // try {
-    // Validate session
-    // const session = await getServerSession();
-    // if (!session?.user) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
-    
-    // Get the flashcard ID from the URL parameter
-    // const flashcardId = params;
-    
-    // Get form data with the image and side info
-    // const formData = await request.formData();
-    // const file = formData.get('file') as File | null;
-    // const side = formData.get('side') as string | null;
-    
-    // Validate inputs
-    // if (!file) {
-    //   await Logger.warning(LogContext.FLASHCARD, "No file provided for upload", { requestId });
-    //   return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    // }
-    
-    // if (!side || (side !== 'front' && side !== 'back')) {
-    //   await Logger.warning(LogContext.FLASHCARD, "Invalid side specified for image", { requestId });
-    //   return NextResponse.json({ error: "Side must be 'front' or 'back'" }, { status: 400 });
-    // }
-    
-    // Check if flashcard exists and belongs to user
-    // const client = await clientPromise;
-    // const db = client.db();
-    
-    // const flashcard = await db.collection('flashcards').findOne({
-    //   _id: flashcardId,
-    //   userId: session.user.id
-    // });
-    
-    // if (!flashcard) {
-    //   await Logger.warning(LogContext.FLASHCARD, "Flashcard not found or access denied", { requestId });
-    //   return NextResponse.json({ error: "Flashcard not found" }, { status: 404 });
-    // }
-    
-    // Read the file data
-    // const bytes = await file.arrayBuffer();
-    // const buffer = Buffer.from(bytes);
-    
-    // Create GridFS bucket
-    // const bucket = new mongodb.GridFSBucket(db, {
-    //   bucketName: 'flashcardImages'
-    // });
-    
-    // Create a file upload stream
-    // const uploadStream = bucket.openUploadStream(file.name, {
-    //   contentType: file.type,
-    //   metadata: {
-    //     flashcardId,
-    //     side,
-    //     userId: session.user.id,
-    //     originalName: file.name
-    //   }
-    // });
-    
-    // Convert buffer to stream and pipe to upload stream
-    // const readableStream = new Readable();
-    // readableStream.push(buffer);
-    // readableStream.push(null);
-    
-    // Wait for the upload to complete
-    // await new Promise<void>((resolve, reject) => {
-    //   readableStream.pipe(uploadStream)
-    //     .on('finish', () => resolve())
-    //     .on('error', (error: any) => reject(error));
-    // });
-    
-    // Get the file ID
-    // const fileId = uploadStream.id.toString();
-    
-    // Update the flashcard with the image reference
-    // await db.collection('flashcards').updateOne(
-    //   { _id: flashcardId },
-    //   { 
-    //     $set: { 
-    //       [`${side}Image`]: fileId,
-    //       updatedAt: new Date()
-    //     } 
-    //   }
-    // );
-    
-    // await Logger.info(LogContext.FLASHCARD, "Image uploaded successfully", {
-    //   requestId,
-    //   metadata: { fileId, flashcardId, side }
-    // });
-    
-    // Return success response
-//     return NextResponse.json({
-//       fileId,
-//       url: `/api/images/${fileId}`,
-//       fileName: file.name,
-//       mimeType: file.type,
-//       size: file.size
-//     });
-    
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : String(error);
-    
-//     await Logger.error(LogContext.FLASHCARD, `Error uploading image: ${errorMessage}`, {
-//       requestId,
-//       metadata: { error }
-//     });
-    
-//     return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
-//   }
-// }
 
-// Delete an image from a flashcard
-// Delete an image from a flashcard
-export async function DELETE(
+interface CardMediaRow {
+  _id: Types.ObjectId;
+  frontImage?: string;
+  backImage?: string;
+  frontImageAlt?: string;
+  backImageAlt?: string;
+}
+
+// POST /api/flashcards/[id]/images - attach an image to one side of one card
+export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const params = await context;
-  const requestId = await Logger.info(LogContext.FLASHCARD, "Flashcard image delete request");
-  
+  const requestId = await Logger.info(LogContext.FLASHCARD, 'Card image upload request');
+
   try {
-    // Validate session
-    const session = await getServerSession();
-    if (!session?.user) {
-      await Logger.warning(LogContext.FLASHCARD, "Unauthorized image deletion attempt", { requestId });
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      await Logger.warning(LogContext.FLASHCARD, 'Unauthorized card image upload attempt', { requestId });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
-    const flashcardId = params;
-    const searchParams = new URL(request.url).searchParams;
-    const side = searchParams.get('side');
-    
-    if (!side || (side !== 'front' && side !== 'back')) {
-      await Logger.warning(LogContext.FLASHCARD, "Invalid side specified for image deletion", { requestId });
-      return NextResponse.json({ error: "Side must be 'front' or 'back'" }, { status: 400 });
-    }
-    
-    // 1. Find the flashcard
-    const client = await clientPromise;
-    const db = client.db();
-    
-    const flashcard = await db.collection('flashcards').findOne({
-      _id: flashcardId,
-      userId: session.user.id
-    });
-    
-    if (!flashcard) {
-      await Logger.warning(LogContext.FLASHCARD, "Flashcard not found or access denied during image deletion", { requestId });
-      return NextResponse.json({ error: "Flashcard not found" }, { status: 404 });
-    }
-    
-    // 2. Get the image fileId
-    const imageField = `${side}Image`;
-    const fileId = flashcard[imageField];
-    
-    if (!fileId) {
-      await Logger.warning(LogContext.FLASHCARD, "No image exists for deletion", { 
-        requestId, 
-        metadata: { flashcardId, side } 
-      });
-      return NextResponse.json({ error: `No ${side} image exists on this flashcard` }, { status: 404 });
-    }
-    
-    // 3. Delete from GridFS
-    // const bucket = new mongodb.GridFSBucket(db, {
-    //   bucketName: 'flashcardImages'
-    // });
-    
-    // await bucket.delete(new ObjectId(fileId));
-    
-    // 4. Update the flashcard document
-    await db.collection('flashcards').updateOne(
-      { _id: flashcardId },
-      { 
-        $unset: { [imageField]: "" },
-        $set: { updatedAt: new Date() }
+
+    try {
+      const rateLimiter = getRateLimiter('card-image-upload', 20, 60);
+      const { success } = await rateLimiter.limit(session.user.id);
+      if (!success) {
+        return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
       }
+    } catch {
+      // Rate limiter unavailable — proceed without rate limiting
+    }
+
+    await dbConnect();
+    const setId = (await params).id;
+
+    if (!Types.ObjectId.isValid(setId)) {
+      return NextResponse.json({ error: 'Invalid set ID' }, { status: 400 });
+    }
+
+    let form: FormData;
+    try {
+      form = await request.formData();
+    } catch {
+      return NextResponse.json(
+        { error: 'Expected multipart/form-data with file, cardId, side, and alt fields.' },
+        { status: 400 }
+      );
+    }
+
+    const file = form.get('file');
+    const cardId = form.get('cardId');
+    const side = form.get('side');
+    const alt = form.get('alt');
+
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: 'A file is required.' }, { status: 400 });
+    }
+    if (typeof cardId !== 'string' || !Types.ObjectId.isValid(cardId)) {
+      return NextResponse.json({ error: 'A valid cardId is required.' }, { status: 400 });
+    }
+    if (!isSide(side)) {
+      return NextResponse.json({ error: "Side must be 'front' or 'back'." }, { status: 400 });
+    }
+
+    // Alt text is required, not optional. The study player reads it, and an image
+    // with no description is unusable for anyone on a screen reader.
+    const altText = typeof alt === 'string' ? alt.trim() : '';
+    if (!altText) {
+      return NextResponse.json(
+        { error: 'Alt text is required. Describe the image for people using a screen reader.' },
+        { status: 400 }
+      );
+    }
+    if (altText.length > ALT_MAX_LENGTH) {
+      return NextResponse.json(
+        { error: `Alt text must be ${ALT_MAX_LENGTH} characters or fewer.` },
+        { status: 400 }
+      );
+    }
+
+    const check = validateMediaFile(file.type, file.size);
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: 400 });
+    }
+    if (check.kind !== 'image') {
+      return NextResponse.json(
+        { error: 'Only images can be attached here. Allowed: JPG, PNG, GIF, WebP.' },
+        { status: 400 }
+      );
+    }
+
+    // Confirm ownership and that the card exists before spending a Cloudinary
+    // upload, so a rejected request never leaves an orphaned asset behind.
+    const filter = await buildOwnerFilter(setId, session.user.id, session.user.role);
+    const owned = (await FlashcardSet.findOne(filter)
+      .select('flashcards._id')
+      .lean()) as { flashcards?: CardMediaRow[] } | null;
+
+    if (!owned) {
+      await Logger.warning(LogContext.FLASHCARD, 'Card image upload denied - set not found or not owned', {
+        requestId,
+        metadata: { setId, userId: session.user.id },
+      });
+      return NextResponse.json({ error: 'Set not found' }, { status: 404 });
+    }
+
+    const cardExists = (owned.flashcards || []).some((card) => String(card._id) === cardId);
+    if (!cardExists) {
+      return NextResponse.json({ error: 'Card not found in this set' }, { status: 404 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const uploaded = await uploadMediaBuffer(buffer, 'image', 'flashlearn/card-media');
+
+    await FlashcardSet.updateOne(
+      filter,
+      {
+        $set: {
+          [`flashcards.$[card].${side}Image`]: uploaded.url,
+          [`flashcards.$[card].${side}ImageAlt`]: altText,
+        },
+      },
+      { arrayFilters: [{ 'card._id': new Types.ObjectId(cardId) }] }
     );
-    
-    await Logger.info(LogContext.FLASHCARD, "Image deleted successfully", {
+
+    await Logger.info(LogContext.FLASHCARD, 'Card image attached', {
       requestId,
-      metadata: { flashcardId, side, fileId }
+      metadata: { setId, cardId, side },
     });
-    
-    return NextResponse.json({ 
-      message: "Image deleted successfully",
-      flashcardId,
-      side
-    });
-    
+
+    return NextResponse.json(
+      { url: uploaded.url, publicId: uploaded.publicId, cardId, side, alt: altText },
+      { status: 201 }
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
-    await Logger.error(LogContext.FLASHCARD, `Error deleting image: ${errorMessage}`, {
+    await Logger.error(LogContext.FLASHCARD, `Error attaching card image: ${errorMessage}`, {
       requestId,
-      metadata: { 
-        error,
-        flashcardId: params,
-        stack: error instanceof Error ? error.stack : undefined
-      }
+      metadata: { stack: error instanceof Error ? error.stack : undefined },
     });
-    
-    return NextResponse.json({ error: "Failed to delete image" }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
+  }
+}
+
+// DELETE /api/flashcards/[id]/images?cardId=...&side=front - detach an image
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const requestId = await Logger.info(LogContext.FLASHCARD, 'Card image delete request');
+
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      await Logger.warning(LogContext.FLASHCARD, 'Unauthorized card image deletion attempt', { requestId });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await dbConnect();
+    const setId = (await params).id;
+
+    if (!Types.ObjectId.isValid(setId)) {
+      return NextResponse.json({ error: 'Invalid set ID' }, { status: 400 });
+    }
+
+    const searchParams = new URL(request.url).searchParams;
+    const cardId = searchParams.get('cardId');
+    const side = searchParams.get('side');
+
+    if (!cardId || !Types.ObjectId.isValid(cardId)) {
+      return NextResponse.json({ error: 'A valid cardId is required.' }, { status: 400 });
+    }
+    if (!isSide(side)) {
+      return NextResponse.json({ error: "Side must be 'front' or 'back'." }, { status: 400 });
+    }
+
+    const filter = await buildOwnerFilter(setId, session.user.id, session.user.role);
+    const owned = (await FlashcardSet.findOne(filter)
+      .select('flashcards._id flashcards.frontImage flashcards.backImage')
+      .lean()) as { flashcards?: CardMediaRow[] } | null;
+
+    if (!owned) {
+      await Logger.warning(LogContext.FLASHCARD, 'Card image deletion denied - set not found or not owned', {
+        requestId,
+        metadata: { setId, userId: session.user.id },
+      });
+      return NextResponse.json({ error: 'Set not found' }, { status: 404 });
+    }
+
+    const card = (owned.flashcards || []).find((c) => String(c._id) === cardId);
+    if (!card) {
+      return NextResponse.json({ error: 'Card not found in this set' }, { status: 404 });
+    }
+
+    if (!card[`${side}Image`]) {
+      return NextResponse.json({ error: `No ${side} image exists on this card` }, { status: 404 });
+    }
+
+    // Clear the description alongside the image. A stale alt outliving its image
+    // reads to a screen reader as a description of something that is not there.
+    await FlashcardSet.updateOne(
+      filter,
+      {
+        $unset: {
+          [`flashcards.$[card].${side}Image`]: '',
+          [`flashcards.$[card].${side}ImageAlt`]: '',
+        },
+      },
+      { arrayFilters: [{ 'card._id': new Types.ObjectId(cardId) }] }
+    );
+
+    await Logger.info(LogContext.FLASHCARD, 'Card image removed', {
+      requestId,
+      metadata: { setId, cardId, side },
+    });
+
+    return NextResponse.json({ message: 'Image deleted successfully', setId, cardId, side });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    await Logger.error(LogContext.FLASHCARD, `Error deleting card image: ${errorMessage}`, {
+      requestId,
+      metadata: { stack: error instanceof Error ? error.stack : undefined },
+    });
+    return NextResponse.json({ error: 'Failed to delete image' }, { status: 500 });
   }
 }

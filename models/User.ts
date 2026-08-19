@@ -184,7 +184,28 @@ const UserSchema = new Schema<IUser>({
   utmMedium: { type: String },
   utmCampaign: { type: String },
   referredBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  // Soft-delete grace period. `deletedAt` stamps when the owner asked to be
+  // erased; `purgeScheduledFor` is the earliest moment the cron may run the
+  // irreversible purge. Both are absent on a normal account rather than set to
+  // null, so the sparse index below holds only the handful of pending rows.
+  deletedAt: {
+    type: Date,
+  },
+  purgeScheduledFor: {
+    type: Date,
+  },
+  // Sets that were public and got flipped private for the length of the grace
+  // period. Recording the ids means a restore puts back exactly what was
+  // hidden and leaves sets the owner had already made private alone.
+  deletionHiddenSetIds: [{
+    type: Schema.Types.ObjectId,
+    ref: 'FlashcardSet',
+  }],
 }, { timestamps: true }); // Automatically adds createdAt and updatedAt timestamps
+
+// The purge cron reads exactly one shape: accounts whose grace period has run
+// out. Sparse because only pending deletions carry the field at all.
+UserSchema.index({ purgeScheduledFor: 1 }, { sparse: true });
 
 // Create and export the User model. If the model already exists, use the existing one.
 // This prevents Mongoose from recompiling the model on every hot-reload in development.
