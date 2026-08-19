@@ -2,20 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
 import { checkRateLimit, incrementGenerationCount } from '@/lib/ratelimit/rateLimitGemini';
-import { FLASHCARD_MIN } from '@/lib/constants';
-import { getFlashcardMax } from '@/lib/appConfigValues';
-import { generateFlashcards } from '@/lib/ai/generate';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import dbConnect from '@/lib/db/dbConnect';
-import { PDFParse } from 'pdf-parse';
-import {
-  buildSourcePrompt,
-  sanitizeUserInstructions,
-  MAX_USER_INSTRUCTIONS_LENGTH,
-} from '@/lib/services/buildGenerationPrompt';
-
-const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20MB
-const MAX_TEXT_LENGTH = 50000; // chars to send to Gemini
+import { generateFlashcardsFromPdf } from '@/lib/services/pdfGeneration';
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -36,65 +25,23 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const rawPrompt = formData.get('prompt');
-    if (typeof rawPrompt === 'string' && rawPrompt.trim().length > MAX_USER_INSTRUCTIONS_LENGTH) {
+
+    const result = await generateFlashcardsFromPdf({ file, rawPrompt });
+
+    if (!result.ok) {
       return NextResponse.json(
-        { error: `Instructions must be ${MAX_USER_INSTRUCTIONS_LENGTH} characters or fewer.` },
-        { status: 400 },
+        { error: result.message },
+        { status: result.code === 'NO_CARDS' ? 500 : 400 },
       );
-    }
-    const userInstructions = sanitizeUserInstructions(rawPrompt);
-
-    if (!file) {
-      return NextResponse.json({ error: 'No PDF file provided' }, { status: 400 });
-    }
-
-    if (!file.type.includes('pdf')) {
-      return NextResponse.json({ error: 'File must be a PDF' }, { status: 400 });
-    }
-
-    if (file.size > MAX_PDF_SIZE) {
-      return NextResponse.json({ error: 'PDF must be under 20MB' }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const parser = new PDFParse({ data: new Uint8Array(buffer) });
-    const textResult = await parser.getText();
-    await parser.destroy();
-    let text = textResult.text?.trim();
-    const pageCount = textResult.total || 0;
-
-    if (!text || text.length < 20) {
-      return NextResponse.json(
-        { error: 'Could not extract enough text from this PDF. It may be image-based; try the Image upload instead.' },
-        { status: 400 },
-      );
-    }
-
-    // Truncate if too long
-    if (text.length > MAX_TEXT_LENGTH) {
-      text = text.substring(0, MAX_TEXT_LENGTH);
-    }
-
-    const prompt = buildSourcePrompt({
-      sourceKind: 'pdf',
-      body: text,
-      userInstructions,
-      min: FLASHCARD_MIN,
-      max: await getFlashcardMax(),
-    });
-
-    const flashcards = await generateFlashcards({ prompt });
-    if (flashcards.length === 0) {
-      return NextResponse.json({ error: 'Failed to generate flashcards from PDF content.' }, { status: 500 });
     }
 
     await incrementGenerationCount(userId);
 
     return NextResponse.json({
-      flashcards,
+      flashcards: result.flashcards,
       source: 'pdf',
-      pageCount,
-      textLength: text.length,
+      pageCount: result.pageCount,
+      textLength: result.textLength,
     });
   } catch (error) {
     Logger.error(LogContext.AI, 'PDF flashcard generation error', { error });

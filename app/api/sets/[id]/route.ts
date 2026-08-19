@@ -10,6 +10,7 @@ import { authOptions } from '@/lib/auth/auth';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { getRateLimiter } from '@/lib/ratelimit/ratelimit';
 import { createShortLink, toSwitchySlug } from '@/lib/switchy';
+import { fireOutboxDrafts } from '@/lib/outbox-trigger';
 
 // GET /api/sets/[id] - Fetch full set with flashcards
 export async function GET(
@@ -111,6 +112,13 @@ export async function PATCH(
       updateData.categories = validCategories;
     }
 
+    // Read the pre-update state once. The non-admin guards below need it, and so
+    // does the 4e outbox trigger, which has to tell a private -> public flip
+    // apart from an edit to a set that was already public.
+    const existingSet = await FlashcardSet.findOne({ _id: new ObjectId(setId) })
+      .select('createdAt isPublic').lean() as { createdAt: Date; isPublic: boolean } | null;
+    const wasPublic = Boolean(existingSet?.isPublic);
+
     // Only admins can toggle isPublic
     if (session.user.role === 'Admin') {
       updateData.isPublic = Boolean(isPublic);
@@ -118,8 +126,6 @@ export async function PATCH(
 
     // Non-admin users cannot edit public sets, and can only edit within 7 days
     if (session.user.role !== 'Admin') {
-      const existingSet = await FlashcardSet.findOne({ _id: new ObjectId(setId) })
-        .select('createdAt isPublic').lean() as { createdAt: Date; isPublic: boolean } | null;
       if (existingSet?.isPublic) {
         return NextResponse.json(
           { error: 'Public sets can only be edited by admins.' },
@@ -162,9 +168,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Set not found or access denied' }, { status: 404 });
     }
 
+    const siteUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
+
     // Fire-and-forget: generate a tracked short link when set becomes public
     if (updatedSet.isPublic && !updatedSet.shortLinkId) {
-      const siteUrl = process.env.NEXTAUTH_URL || 'https://flashlearnai.witus.online';
       createShortLink({
         url: `${siteUrl}/sets/${setId}`,
         slug: toSwitchySlug('s', updatedSet.title || setId),
@@ -179,6 +186,23 @@ export async function PATCH(
           );
         }
       }).catch(() => { /* non-critical */ });
+    }
+
+    // 4e: a set flipped from private to public. The transition is the whole
+    // condition. A PATCH that leaves an already-public set public drafts
+    // nothing, otherwise every unrelated title edit would post again. Shares
+    // the `public-set-<id>` external_ref with the create-as-public trigger in
+    // POST /api/flashcards, so one set never drafts twice for the same
+    // milestone. The trigger user is the admin taking the action, which is the
+    // id the outbox gate reads; the caption is third person, so nothing is
+    // attributed to the wrong person.
+    if (!wasPublic && updatedSet.isPublic) {
+      const cardCount = updatedSet.cardCount ?? updatedSet.flashcards?.length ?? 0;
+      fireOutboxDrafts({
+        triggerUserId: session.user.id,
+        externalRefBase: `public-set-${setId}`,
+        caption: `New public deck on FlashLearn: "${updatedSet.title}", ${cardCount} cards. Free to study or remix. ${siteUrl}/sets/${setId}`,
+      });
     }
 
     Logger.info(LogContext.FLASHCARD, 'Flashcard set updated', {

@@ -5,11 +5,40 @@ import { sendToOutbox, type OutboxPlatform } from "./sender-outbox";
 const PRODUCT_NAME = "FlashLearn AI";
 
 /**
+ * Reads the per-user consent flag. Fails closed: an unreadable user, a
+ * malformed id, or a database error all mean "do not post". Imported lazily so
+ * that a module importing this trigger does not pull mongoose in at load time.
+ */
+async function hasOutboxOptIn(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    const [{ default: dbConnect }, { User }] = await Promise.all([
+      import("./db/dbConnect"),
+      import("../models/User"),
+    ]);
+    await dbConnect();
+    const user = (await User.findById(userId)
+      .select("shareToOutboxOptIn")
+      .lean()) as { shareToOutboxOptIn?: boolean } | null;
+    return Boolean(user?.shareToOutboxOptIn);
+  } catch (error) {
+    console.error("[outbox-trigger] opt-in lookup failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
+/**
  * Fire one outbox draft per platform. Three layered gates run BEFORE any
  * network call:
  *   1. OUTBOX_TRIGGER_ENABLED env kill-switch
- *   2. BAM-only smoke gate (PRODUCT_OWNER_USER_ID)
- *   3. (Future) per-user opt-in
+ *   2. the product owner (PRODUCT_OWNER_USER_ID), for smoke runs
+ *   3. or any user who set `shareToOutboxOptIn` on their account
+ *
+ * Gates 2 and 3 are an OR: the product owner never needs the flag, and everyone
+ * else needs nothing but the flag. Gate 3 costs one indexed read, so it runs
+ * inside `after()` and returns before the first network call rather than after.
  *
  * `as_draft: true` always — operator reviews + schedules from /outbox/[id]
  * before anything goes live.
@@ -24,7 +53,9 @@ export function fireOutboxDrafts(args: {
   asDraft?: boolean;
 }) {
   if (process.env.OUTBOX_TRIGGER_ENABLED !== "true") return;
-  if (args.triggerUserId !== process.env.PRODUCT_OWNER_USER_ID) return;
+  const isProductOwner =
+    Boolean(process.env.PRODUCT_OWNER_USER_ID) &&
+    args.triggerUserId === process.env.PRODUCT_OWNER_USER_ID;
 
   const platforms = args.platforms ?? (["twitter", "bluesky", "linkedin"] as const);
   const placeholderTime =
@@ -32,6 +63,8 @@ export function fireOutboxDrafts(args: {
   const asDraft = args.asDraft ?? true;
 
   after(async () => {
+    if (!isProductOwner && !(await hasOutboxOptIn(args.triggerUserId))) return;
+
     for (const platform of platforms) {
       const result = await sendToOutbox({
         outboxUrl: process.env.OUTBOX_INGEST_URL!,
@@ -86,14 +119,15 @@ export function anonymizedHandle(user: {
 
 /**
  * Cross-cutting signup trigger from triggers/signups.md. Free signups go to
- * twitter+bluesky; paid (annual/lifetime) add linkedin with welcome-tier copy.
+ * twitter+bluesky; paid (monthly/annual/lifetime) add linkedin with
+ * welcome-tier copy.
  *
  * Skips the BAM-only gate from `fireOutboxDrafts` — every new signup fires a
  * draft (drafts don't auto-publish; BAM reviews each in /outbox/[id]).
  */
 export async function fireSignupTrigger(args: {
   newUser: { id: string; handle?: string | null; email: string };
-  tier: "free" | "annual" | "lifetime";
+  tier: "free" | "monthly" | "annual" | "lifetime";
 }) {
   if (process.env.OUTBOX_TRIGGER_ENABLED !== "true") return;
 

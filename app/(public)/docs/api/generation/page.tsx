@@ -35,6 +35,35 @@ export default function GenerationGuidePage() {
         <p className="text-gray-600 mt-3">Returns 5-20 flashcards. If a matching public set exists, returns that instead (saving your generation quota). The <code className="bg-gray-100 px-1 rounded text-xs">source</code> field is <code className="bg-gray-100 px-1 rounded text-xs">&quot;generated&quot;</code> or <code className="bg-gray-100 px-1 rounded text-xs">&quot;shared&quot;</code>.</p>
       </section>
 
+      <section aria-labelledby="from-a-pdf">
+        <h2 id="from-a-pdf" className="text-xl font-semibold text-gray-900 mt-10 mb-4">From a PDF</h2>
+        <Code lang="bash" code={`curl -X POST https://flashlearnai.witus.online/api/v1/generate/pdf \\
+  -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
+  -F "file=@lecture-notes.pdf" \\
+  -F "prompt=Focus on the definitions"`} />
+        <p className="text-gray-600 mt-3">
+          Multipart, not JSON. Up to 20MB, and the extracted text is truncated at 50,000 characters.
+          A PDF whose text layer is missing or shorter than 20 characters is rejected before the model
+          is called, so a scanned page costs you nothing.
+        </p>
+        <p className="text-gray-600 mt-3">
+          Sets made this way are private, unlike topic generation, which publishes so identical topics
+          can be deduplicated. Your uploaded document is yours.
+        </p>
+      </section>
+
+      <section aria-labelledby="from-youtube">
+        <h2 id="from-youtube" className="text-xl font-semibold text-gray-900 mt-10 mb-4">From a YouTube video</h2>
+        <Code lang="bash" code={`curl -X POST https://flashlearnai.witus.online/api/v1/generate/youtube \\
+  -H "Authorization: Bearer fl_pub_YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "https://www.youtube.com/watch?v=VIDEO_ID"}'`} />
+        <p className="text-gray-600 mt-3">
+          Reads the video&apos;s transcript, so a video without one is rejected before the model is
+          called. Transcripts are truncated at 50,000 characters. Sets are private, as with PDF.
+        </p>
+      </section>
+
       <section aria-labelledby="batch">
         <h2 id="batch" className="text-xl font-semibold text-gray-900 mt-10 mb-4">Batch Generation <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full ml-2">Pro / Enterprise</span></h2>
         <Code lang="bash" code={`curl -X POST https://flashlearnai.witus.online/api/v1/generate/batch \\

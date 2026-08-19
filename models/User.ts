@@ -183,6 +183,16 @@ const UserSchema = new Schema<IUser>({
     type: Boolean,
     default: false,
   },
+  /**
+   * Consent to have this account's milestones drafted as social posts in the
+   * shared Outbox. Defaults to false so nothing changes for an existing account
+   * until its owner turns it on. Drafts still land in review rather than
+   * publishing on their own.
+   */
+  shareToOutboxOptIn: {
+    type: Boolean,
+    default: false,
+  },
   // Age-gate self-attestation. Required for new accounts; existing accounts are grandfathered.
   ageAttested: {
     type: Boolean,

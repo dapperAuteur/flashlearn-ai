@@ -33,6 +33,13 @@ export const openApiSpec = {
         description:
           'API key obtained from the Developer Portal. Pass as `Authorization: Bearer fl_pub_...`',
       },
+      SessionCookie: {
+        type: 'apiKey' as const,
+        in: 'cookie' as const,
+        name: 'next-auth.session-token',
+        description:
+          'Signed-in browser session. Used only by the developer portal billing endpoint, which is called from the portal UI rather than with an API key.',
+      },
     },
     schemas: {
       Flashcard: {
@@ -588,6 +595,222 @@ export const openApiSpec = {
           }, required: ['topic'] } } },
         } } } },
         responses: { '201': { description: 'Batch results with per-topic status, cards, and set IDs' } },
+      },
+    },
+    '/api/v1/generate/pdf': {
+      post: {
+        operationId: 'generateFlashcardsFromPdf',
+        summary: 'Generate flashcards from a PDF',
+        description:
+          'Uploads a PDF, extracts its text, and generates flashcards from it. Uploads are capped at 20MB and the first 50,000 characters of extracted text are used. A scanned or image-only PDF is rejected with 400 before any AI call. The set is created private, since the source document is yours. This counts as a generation call against your monthly quota.',
+        tags: ['Generate'],
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': {
+              schema: {
+                type: 'object' as const,
+                properties: {
+                  file: {
+                    type: 'string' as const,
+                    format: 'binary' as const,
+                    description: 'The PDF to read. Maximum 20MB, content type must be a PDF.',
+                  },
+                  prompt: {
+                    type: 'string' as const,
+                    maxLength: 500,
+                    description: 'Optional author instructions, treated as guidance only. 500 characters or fewer.',
+                  },
+                  title: {
+                    type: 'string' as const,
+                    description: 'Optional title for the created set (defaults to the file name)',
+                  },
+                  description: {
+                    type: 'string' as const,
+                    description: 'Optional description for the set',
+                  },
+                },
+                required: ['file'],
+              },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Flashcards generated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object' as const,
+                  properties: {
+                    data: {
+                      type: 'object' as const,
+                      properties: {
+                        flashcards: {
+                          type: 'array' as const,
+                          items: { $ref: '#/components/schemas/Flashcard' },
+                        },
+                        setId: { type: 'string' as const },
+                        source: { type: 'string' as const, enum: ['generated'] },
+                        cardCount: { type: 'integer' as const },
+                        pageCount: { type: 'integer' as const, description: 'Pages found in the uploaded PDF' },
+                        textLength: { type: 'integer' as const, description: 'Characters of extracted text sent to the model' },
+                      },
+                    },
+                    meta: {
+                      type: 'object' as const,
+                      properties: {
+                        requestId: { type: 'string' as const },
+                        rateLimit: {
+                          type: 'object' as const,
+                          properties: {
+                            limit: { type: 'integer' as const },
+                            remaining: { type: 'integer' as const },
+                            reset: { type: 'integer' as const },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Missing file, wrong file type, file over 20MB, instructions over 500 characters, or too little extractable text', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+          '403': { description: 'API key lacks the generate permission', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+          '429': { description: 'Rate limit or quota exceeded', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+          '502': { description: 'AI generation failed', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+        },
+      },
+    },
+    '/api/v1/generate/youtube': {
+      post: {
+        operationId: 'generateFlashcardsFromYouTube',
+        summary: 'Generate flashcards from a YouTube video',
+        description:
+          'Fetches a video transcript and generates flashcards from it. Accepts a watch link, a youtu.be link, an embed link, or a bare 11-character video id. The first 50,000 characters of the transcript are used. A video with no captions is rejected with 400 before any AI call. The set is created private. This counts as a generation call against your monthly quota.',
+        tags: ['Generate'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object' as const,
+                properties: {
+                  url: {
+                    type: 'string' as const,
+                    description: 'Video URL or bare video id',
+                    example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                  },
+                  prompt: {
+                    type: 'string' as const,
+                    maxLength: 500,
+                    description: 'Optional author instructions, treated as guidance only. 500 characters or fewer.',
+                  },
+                  title: {
+                    type: 'string' as const,
+                    description: 'Optional title for the created set (defaults to the video id)',
+                  },
+                  description: {
+                    type: 'string' as const,
+                    description: 'Optional description for the set',
+                  },
+                },
+                required: ['url'],
+              },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Flashcards generated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object' as const,
+                  properties: {
+                    data: {
+                      type: 'object' as const,
+                      properties: {
+                        flashcards: {
+                          type: 'array' as const,
+                          items: { $ref: '#/components/schemas/Flashcard' },
+                        },
+                        setId: { type: 'string' as const },
+                        source: { type: 'string' as const, enum: ['generated'] },
+                        cardCount: { type: 'integer' as const },
+                        videoId: { type: 'string' as const, description: 'The 11-character video id that was read' },
+                        transcriptLength: { type: 'integer' as const, description: 'Characters of transcript sent to the model' },
+                      },
+                    },
+                    meta: {
+                      type: 'object' as const,
+                      properties: {
+                        requestId: { type: 'string' as const },
+                        rateLimit: {
+                          type: 'object' as const,
+                          properties: {
+                            limit: { type: 'integer' as const },
+                            remaining: { type: 'integer' as const },
+                            reset: { type: 'integer' as const },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Missing or unparseable URL, instructions over 500 characters, or no transcript available', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+          '403': { description: 'API key lacks the generate permission', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+          '429': { description: 'Rate limit or quota exceeded', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+          '502': { description: 'AI generation failed', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiError' } } } },
+        },
+      },
+    },
+    '/api/v1/billing/checkout': {
+      post: {
+        operationId: 'createApiCheckoutSession',
+        summary: 'Start a checkout for an API tier',
+        description:
+          'Creates a Stripe checkout session for the Developer or Pro API subscription and returns the URL to send the buyer to. This is the self-serve upgrade path behind the API pricing table. It authenticates with the signed-in browser session rather than an API key, because the developer portal calls it, so it does not accept `Authorization: Bearer`. Responses are plain JSON, not the v1 envelope.',
+        tags: ['Usage'],
+        security: [{ SessionCookie: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object' as const,
+                properties: {
+                  plan: { type: 'string' as const, enum: ['developer', 'pro'], description: 'Which API tier to buy' },
+                  apiKeyId: { type: 'string' as const, description: 'Optional public key to attach the subscription to. Must belong to you.' },
+                },
+                required: ['plan'],
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Checkout session created',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object' as const,
+                  properties: { url: { type: 'string' as const, format: 'uri' as const, description: 'Stripe-hosted checkout URL' } },
+                },
+              },
+            },
+          },
+          '400': { description: 'Plan missing or not one of developer, pro' },
+          '401': { description: 'No signed-in session' },
+          '404': { description: 'User not found, or the given apiKeyId is not a public key you own' },
+          '500': { description: 'API subscription price not configured, or checkout could not be created' },
+        },
       },
     },
     '/api/v1/versus/challenges': {

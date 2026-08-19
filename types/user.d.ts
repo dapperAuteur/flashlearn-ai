@@ -44,6 +44,8 @@ export interface IUser extends Document {
   followersCount?: number;
   followingCount?: number;
   onboardingCompleted?: boolean;
+  // Consent to have this account's milestones drafted as social posts
+  shareToOutboxOptIn?: boolean;
   // Age-gate self-attestation
   ageAttested?: boolean;
   ageAttestedAt?: Date;
