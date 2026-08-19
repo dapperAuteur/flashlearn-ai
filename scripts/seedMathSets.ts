@@ -32,13 +32,7 @@ import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { mathFactSets, type MathFactCard } from '../lib/data/math-facts';
 import { loadReferenceSubjects, referenceCardExternalId } from '../lib/data/math-reference/loadSets';
-
-/**
- * Every card this script writes carries an externalId under this prefix. The
- * prefix is what lets a re-seed tell its own cards apart from any a human added
- * to the set by hand, so only seeded cards are ever pruned.
- */
-const SEED_ID_PREFIX = 'math:';
+import { mergeSeedCards, SEED_ID_PREFIX } from '../lib/data/mergeSeedCards';
 
 /**
  * Marks a set as seeded by this script. Stored as a tag because FlashcardSet has
@@ -175,66 +169,6 @@ interface SetResult {
   total: number;
 }
 
-/**
- * Merge cards into a set, matching on externalId so existing card _ids (and
- * therefore every CardResult and spaced-repetition schedule pointing at them)
- * are preserved.
- */
-export function mergeCards(
-  existing: IFlashcard[],
-  incoming: SeedCard[],
-): { cards: IFlashcard[]; added: number; changed: number; removed: number } {
-  const byExternalId = new Map(
-    existing.filter((c) => c.externalId).map((c) => [c.externalId as string, c]),
-  );
-  const incomingIds = new Set(incoming.map((c) => c.externalId));
-
-  let added = 0;
-  let changed = 0;
-
-  const merged: IFlashcard[] = incoming.map((card) => {
-    const prior = byExternalId.get(card.externalId);
-
-    if (!prior) {
-      added += 1;
-      return { ...card } as IFlashcard;
-    }
-
-    const sameOptions =
-      JSON.stringify(prior.options?.map((o) => ({ id: o.id, text: o.text })) ?? null) ===
-      JSON.stringify(card.options ?? null);
-
-    if (
-      prior.front !== card.front ||
-      prior.back !== card.back ||
-      prior.correctOptionId !== card.correctOptionId ||
-      !sameOptions
-    ) {
-      changed += 1;
-    }
-
-    // Keep the existing _id; overwrite the authored content.
-    return {
-      ...prior,
-      front: card.front,
-      back: card.back,
-      options: card.options,
-      correctOptionId: card.correctOptionId,
-    } as IFlashcard;
-  });
-
-  // Prune only cards this script wrote in an earlier run. A card added by hand
-  // has no seeded externalId and is carried over untouched.
-  const keptManual = existing.filter(
-    (c) => !c.externalId || !c.externalId.startsWith(SEED_ID_PREFIX),
-  );
-  const removed = existing.filter(
-    (c) => c.externalId?.startsWith(SEED_ID_PREFIX) && !incomingIds.has(c.externalId),
-  ).length;
-
-  return { cards: [...merged, ...keptManual], added, changed, removed };
-}
-
 async function seedSet(
   seedable: SeedableSet,
   ctx: {
@@ -246,7 +180,7 @@ async function seedSet(
   const { profileId, categoryId, options } = ctx;
   const existing = await FlashcardSet.findOne({ profile: profileId, tags: seedable.slug });
 
-  const merge = mergeCards(existing?.flashcards ?? [], seedable.cards);
+  const merge = mergeSeedCards<IFlashcard>(existing?.flashcards ?? [], seedable.cards, SEED_ID_PREFIX);
   const action: SetResult['action'] = !existing
     ? 'created'
     : merge.added || merge.changed || merge.removed
