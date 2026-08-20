@@ -224,11 +224,49 @@ const UserSchema = new Schema<IUser>({
     type: Schema.Types.ObjectId,
     ref: 'FlashcardSet',
   }],
+  // A classroom account a teacher created for a student who has no email
+  // address of their own. It holds no password and is refused by every
+  // sign-in path. The student turns it into an ordinary account by claiming
+  // it, which clears these fields and keeps every study session, card result,
+  // and review schedule already recorded against this id.
+  //
+  // Absent on every account that predates this, so nothing changes for anyone.
+  isManaged: {
+    type: Boolean,
+    default: false,
+  },
+  // The teacher who created the account, so ownership is explicit and
+  // revocable. Cleared when the student claims the account.
+  managedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  // SHA-256 of the claim code the teacher reads off the roster. Hashed and not
+  // reversible, so a leaked database dump does not hand over the accounts;
+  // a teacher who needs the code again mints a fresh one, which invalidates
+  // the old one. Same hash the email-code sign-in path uses for its codes.
+  claimCodeHash: {
+    type: String,
+  },
+  claimCodeExpires: {
+    type: Date,
+  },
 }, { timestamps: true }); // Automatically adds createdAt and updatedAt timestamps
 
 // The purge cron reads exactly one shape: accounts whose grace period has run
 // out. Sparse because only pending deletions carry the field at all.
 UserSchema.index({ purgeScheduledFor: 1 }, { sparse: true });
+
+// The roster read asks one question: which managed students belong to this
+// teacher. A partial index rather than a sparse one, because `isManaged`
+// defaults to false and so is present on every new account; the filter keeps
+// the index to the handful of rows that are actually managed.
+UserSchema.index({ managedBy: 1 }, { partialFilterExpression: { isManaged: true } });
+
+// Claiming an account is a lookup by code hash and nothing else. Sparse and
+// unique: two accounts must never answer to the same code, and a hash is
+// present only while a claim is outstanding.
+UserSchema.index({ claimCodeHash: 1 }, { unique: true, sparse: true });
 
 // Create and export the User model. If the model already exists, use the existing one.
 // This prevents Mongoose from recompiling the model on every hot-reload in development.
