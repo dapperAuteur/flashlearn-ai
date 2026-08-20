@@ -85,14 +85,20 @@ everything they can do differs.
 
 ### 6. Study with them the same day
 
-**On screen:** start a study session, pick the new student in the **Who is studying?** picker, run
-three or four cards, finish.
+**On screen:** on the student's row, choose **Start session**. The study screen opens with an amber
+banner reading **This session will be saved to** the student's name**, not to you.** Pick a set, run
+three or four cards, finish. Point at the banner before you pick the set.
 
-**Say:** "They exist properly now, so everything from the proctoring video works. I hold the device,
-they answer, and it lands on their account and their review schedule."
+**Say:** "They exist properly now, so everything from the proctoring video works. Starting from the
+roster means I never have to remember to switch to them: the app already knows, and it says so before
+I have chosen anything. I hold the device, they answer, and it lands on their account and their review
+schedule."
 
 **Why it matters:** connects this to script 01 and shows the account is a real one rather than a
-placeholder row.
+placeholder row. The banner is also the safety net, so let it be seen.
+
+If you want to show the other route, the **Who is studying?** picker on the last step still works when
+you start from a set, and it now opens already set to the student you came in with.
 
 ### 7. Say the limitation out loud
 
@@ -110,8 +116,9 @@ the roster is on screen, where it applies.
 ### 8. Hand the account over
 
 **On screen:** open the claim page at **/claim** as the student, the address the claim code dialog
-names. Enter the code from beat 4, an email address, a password, and tick the confirmation that they
-are 13 or older. Submit. Then open their study history and show the session from beat 6 sitting there.
+names. The page asks **Are you 13 or older?** first, before any field appears. Answer yes, then enter
+the code from beat 4, an email address, and a password twice. Submit. Then open their study history
+and show the session from beat 6 sitting there.
 
 **Say:** "Same account, so the work came with it. The session we just ran, the cards they missed, the
 dates those cards are due back. None of it moved, because nothing needed to move. They verify the
@@ -133,7 +140,9 @@ looking unfinished and looking considered.
 
 ### 10. Removing is not deleting
 
-**On screen:** remove a student from the roster. Show the message saying the account was not deleted.
+**On screen:** choose **Remove** on a student's row. It turns into **Confirm remove** and **Cancel**,
+with a line underneath saying what removal does. Confirm, then show the message saying the account
+still exists.
 
 **Say:** "Removing takes them off my roster. It does not delete the account and it does not touch a
 single thing they studied. Most removals are corrections, wrong class or a duplicate name, and losing

@@ -365,6 +365,15 @@ account rather than a new one.
 Claiming asks the student to confirm they are 13 or older. Afterwards they verify the email address
 they entered, and then they can sign in with their password.
 
+## Studying with a managed student
+
+On the roster, choose **Start session** next to the student. The study screen opens with a banner
+saying the session will be saved to them, and you pick the set from there. If you started from a set
+instead, the **Who is studying?** picker on the last step does the same job.
+
+Studying for a student needs a connection. Offline results are saved against whoever is signed in, so
+the app refuses to mis-attribute them and studies as you instead.
+
 ## The limitation, stated plainly
 
 A managed student **cannot sign in, and cannot study at home**. There is no password to give them and

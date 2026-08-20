@@ -19,11 +19,13 @@ import {
   ShareIcon,
 } from "@heroicons/react/24/outline";
 import ArchivedBanner from "@/components/ui/ArchivedBanner";
+import ClassroomRoster from "@/components/teacher/ClassroomRoster";
 
 interface StudentInfo {
   _id: string;
   name: string;
-  email: string;
+  /** Null for a managed account, and for every caller who is not the teacher. */
+  email: string | null;
 }
 
 type LeaderboardScope = "classroom" | "global";
@@ -108,7 +110,7 @@ interface ClassroomDetail {
   name: string;
   joinCode: string;
   students: StudentInfo[];
-  teacherId: { name: string; email: string };
+  teacherId: { name: string; email: string | null };
   isArchived?: boolean;
 }
 
@@ -245,31 +247,11 @@ export default function ClassroomDetailPage() {
         </div>
       </div>
 
-      {/* Students */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <UserGroupIcon className="h-5 w-5 text-gray-600" />
-          <h2 className="text-base font-semibold text-gray-900">
-            Students ({classroom.students?.length || 0})
-          </h2>
-        </div>
-        {classroom.students?.length === 0 ? (
-          <div className="p-6 text-center text-sm text-gray-500">
-            No students yet. Share the join code <strong>{classroom.joinCode}</strong> with your students.
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {classroom.students?.map((s) => (
-              <li key={s._id} className="px-4 sm:px-6 py-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{s.name}</p>
-                  <p className="text-xs text-gray-500">{s.email}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ClassroomRoster
+        classroomId={classroomId}
+        joinCode={classroom.joinCode}
+        isArchived={classroom.isArchived}
+      />
 
       {/* Leaderboard */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
