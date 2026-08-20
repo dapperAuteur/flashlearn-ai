@@ -8,6 +8,7 @@ import {
   Megaphone,
   Webhook,
   GraduationCap,
+  MessageSquare,
   UserPlus,
   Sigma,
   Activity,
@@ -35,6 +36,21 @@ interface Release {
 }
 
 const releases: Release[] = [
+  {
+    version: '1.15.0',
+    date: '2026-08-20',
+    title: 'Help Article Feedback That Goes Somewhere',
+    icon: MessageSquare,
+    iconColor: 'text-teal-600',
+    items: [
+      'The Yes and No buttons under every help article now do something. They were rendered with no handler behind them, on a page with no client code at all, so every answer anyone ever gave was discarded the moment it was clicked.',
+      'A No opens an optional comment box, and a comment goes to the same triage queue as the in-app feedback widget. The count says which article is failing and only the comment says why.',
+      'The answer is recorded before the box appears, so a reader who clicks No and closes the tab has still told us something.',
+      'It works signed out. The in-app feedback widget only renders for signed-in users, and help articles are public, so until now a reader who had not signed up had no way to report a bad article at all.',
+      'A new Help Feedback page in the admin area ranks articles by how many readers said they did not help, which is the order worth rewriting them in.',
+      'A bare thumbs-down does not open a ticket, and a comment attached to a Yes is ignored, so the triage queue only receives things somebody actually wrote about a problem.',
+    ],
+  },
   {
     version: '1.14.0',
     date: '2026-08-19',

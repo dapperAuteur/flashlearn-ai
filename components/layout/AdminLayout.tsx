@@ -93,6 +93,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Campaigns", href: "/admin/campaigns", icon: Megaphone },
       { label: "Conversations", href: "/admin/conversations", icon: MessageSquare },
+      { label: "Help Feedback", href: "/admin/help", icon: MessageSquare },
     ],
   },
   {
