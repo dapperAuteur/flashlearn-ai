@@ -57,6 +57,8 @@ const releases: Release[] = [
       'Removed the offline conflict-resolution screen and its banner. The feature never worked: the sync service watched for a 409 response that no route has ever returned, so no conflict was ever recorded and the review page was always empty. The 1.4.0 entry below describes behavior the app did not have.',
       'Corrected the offline documentation to match the code. The local set copy runs one way, server to device, on a five-minute poll, and study results upload with retry when you reconnect. There is no live streaming and no clash detection.',
       'The homepage now shows your real study numbers. Cards due, average accuracy, and streak come from the same endpoints the dashboard uses. They used to be hardcoded, so a brand new account was congratulated on a twelve-day streak.',
+      'A figure on the homepage now appears only when it is yours. Every other state, including a fresh account and a request that did not land, reads "Review your due cards" or "Track your progress" with no number in it. The streak pill is only a number, so it does not render until there is a streak.',
+      'Replaced the two homepage claims that had no source, "2,000+ active learners" and "4.9/5 average rating". In their place: a count of the ready-to-study sets taken from the curated content itself, the fact that every math fact is verified against the arithmetic by an automated test, and a live count of accounts that finished a session in the last 30 days. The live count is cached hourly and prints nothing at all if the count fails.',
     ],
   },
   {
