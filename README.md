@@ -294,7 +294,11 @@ Two key types share the tier table. Choose based on your use case:
 - [Webhooks](https://flashlearnai.witus.online/docs/api/webhooks). Signing, retry, replay.
 - [Roadmap](https://flashlearnai.witus.online/roadmap)
 - [Changelog](https://flashlearnai.witus.online/changelog)
-- [Help Center](https://flashlearnai.witus.online/help)
+- [Help Center](https://flashlearnai.witus.online/help). Articles live in the database, not in
+  the repo, and are published by the seed button on `/admin/settings`. A fresh environment
+  shows an empty help centre until that runs. Readers answer "Was this article helpful?" at
+  the foot of each article whether or not they are signed in; counts appear on `/admin/help`
+  and any comment goes to the Inbox with the rest of the feedback.
 
 ## License
 
