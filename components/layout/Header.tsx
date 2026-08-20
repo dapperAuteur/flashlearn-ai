@@ -27,7 +27,7 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 export default function Header() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const pathname = usePathname();
   const pageActions = usePageActions();
   const { isOnline, isSyncing, pendingCount } = useNetworkSync();
@@ -40,9 +40,6 @@ export default function Header() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  // DEBUG: Log session to verify role is present
-  console.log('[Header] session status:', status, '| user:', JSON.stringify(session?.user));
 
   const isActivePath = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -236,6 +233,20 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
+              {session?.user?.role && TEACHER_ROLES.includes(session.user.role) && (
+                <Link
+                  href="/teacher"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  aria-current={pathname.startsWith('/teacher') ? 'page' : undefined}
+                  className={`block pl-3 pr-4 py-2 text-base font-medium transition-colors ${
+                    pathname.startsWith('/teacher')
+                      ? 'bg-blue-50 border-r-4 border-blue-500 text-blue-700'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  }`}
+                >
+                  Teach
+                </Link>
+              )}
               {session?.user?.role === 'Admin' && (
                 <Link
                   href="/admin/dashboard"
