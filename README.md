@@ -16,6 +16,7 @@ AI-powered flashcard platform with spaced repetition, versus mode, and offline-f
 - **Versus Mode.** Head-to-head challenges with composite scoring (accuracy, speed, confidence, streaks) and ELO ratings.
 - **Offline study.** Sets you own are copied to a local SQLite store on app start, on reconnect, and every five minutes, so you can study them with no connection. Card images, alt text, video, and authored answer choices come down with them. Results are held in IndexedDB and upload when the connection returns, which is when the spaced-repetition schedule advances. The copy runs one way, server to device: sets edited offline and public sets you do not own are not covered.
 - **Teams & Classrooms.** Study groups with join codes, shared sets, team chat, and teacher-led classrooms. When the owner deletes their account, the group or classroom is archived rather than removed: it stays in members' listings marked as archived, members keep reading and studying what is already there, a banner at the top of the page says why, and every write is refused with a 409 until an admin reassigns it. Leaving and deleting still work.
+- **Teacher-managed student accounts.** A teacher adds a student to a classroom by name and nothing else: no email address, no signup, no second device. The student gets a real account, so study sessions, card results, achievements, and the SM-2 schedule attach to them exactly as they would for anyone who signed themselves up. The account carries no password and is refused at both sign-in paths, and its address sits in the reserved `.invalid` TLD (RFC 2606), so it can never resolve or receive mail. Creating the student returns a claim code shown once. The student later enters that code with their own email and password, and the account becomes theirs keeping every session and every review date, because the user id never changes. A teacher can only manage students in a classroom they teach, checked against the classroom rather than the role, and cannot set a student's password anywhere: a teacher who could would be indistinguishable from the student in the proctoring audit trail. Removing a student from a roster unenrols them and leaves the account alone. The routes live under `/api/teacher` and are authenticated by browser session, so they are app routes rather than part of the public v1 API and do not appear in the OpenAPI spec. Adding students one at a time is the whole of it; there is no bulk import, and managed students have no avatar or PIN sign-in.
 - **Public API.** A REST API for building on top of FlashLearnAI, including card media upload and per-student progress for partners.
 - **Ecosystem API for cross-product partners.** Spaced-repetition and comprehension backend for any consumer-facing learning product. Learner-scoped scheduled sessions, per-standard mastery rollups, cascade-delete, and signed outbound webhooks. Powers Wanderlearn and BVC classes.
 - **Signed outbound webhooks.** HMAC-SHA256 signed callbacks with 7-attempt exponential backoff, dead-letter, AES-256-GCM secret encryption at rest, and a self-service developer dashboard with replay.
@@ -132,12 +133,12 @@ Error monitoring (Better Stack via the Sentry SDK, inert unless a DSN is set) is
 ### Distributed tracing
 
 Traces go to **Honeycomb** over OTLP via `@vercel/otel` ([`otel.config.ts`](./otel.config.ts),
-loaded from [`instrumentation.ts`](./instrumentation.ts) **before** the Sentry configs — whoever
+loaded from [`instrumentation.ts`](./instrumentation.ts) **before** the Sentry configs, because whoever
 registers the global tracer provider first wins, and Sentry is told to stand down via
 `skipOpenTelemetrySetup` in `sentry.server.config.ts`). Service name is **`flashlearnai`**.
 
 - **Inert until the key is set.** `HONEYCOMB_INGEST_API_KEY_SECRET` (fallback `HONEYCOMB_API_KEY`).
-  With neither set, registration is skipped entirely — same leave-unset-and-nothing-initializes
+  With neither set, registration is skipped entirely, the same leave-unset-and-nothing-initializes
   pattern as the Sentry DSN.
 - **`/api/health` spans are dropped at the sampler.** Uptime monitors probe it around the clock,
   and those requests must not spend Honeycomb's free-tier event budget. Everything else is recorded
@@ -165,13 +166,13 @@ Two things worth knowing if you touch [`jest.config.js`](./jest.config.js):
 ### E2E + accessibility CI
 
 Playwright specs live in [`e2e/`](./e2e/); the gate runs in
-[`.github/workflows/e2e.yml`](./.github/workflows/e2e.yml) on `deployment_status` — it tests the
+[`.github/workflows/e2e.yml`](./.github/workflows/e2e.yml) on `deployment_status`. It tests the
 **real Vercel deployment URL** (preview → full suite, production → `@smoke` only), so CI needs no
 secrets, database, or env. The suite runs desktop plus a 360px mobile project, and covered pages
-must pass an axe check with **zero serious or critical violations** — minor/moderate findings are
+must pass an axe check with **zero serious or critical violations**. Minor and moderate findings are
 reported but don't gate. The gate is strict on purpose; fix the page, not the gate.
 
-- Local runs: `PLAYWRIGHT_BASE_URL=<url> npx playwright test` — local runs drive installed Chrome
+- Local runs: `PLAYWRIGHT_BASE_URL=<url> npx playwright test`. Local runs drive installed Chrome
   via `channel: "chrome"` (Playwright's bundled chromium doesn't support macOS 13); CI uses the
   bundled browser.
 - If the Vercel project enables Deployment Protection, set the project's "Protection Bypass for
@@ -180,7 +181,7 @@ reported but don't gate. The gate is strict on purpose; fix the page, not the ga
 
 ### Synthetic traffic tag
 
-Every request Playwright makes — the CI gate and tutorial recordings alike — carries
+Every request Playwright makes, the CI gate and tutorial recordings alike, carries
 `x-witus-origin-test: playwright-synthetic` (an `extraHTTPHeaders` entry in both Playwright
 configs). The OTel layer surfaces it as the **`witus.origin_test`** span attribute
 (`attributesFromHeaders` in [`otel.config.ts`](./otel.config.ts)), so Honeycomb queries can include
@@ -191,7 +192,7 @@ users exclude the attribute.
 
 Every user-facing tutorial is a **runnable Playwright spec** in
 [`e2e/tutorials/`](./e2e/tutorials/) (`*.tutorial.ts`, driven by the helper in
-[`e2e/tutorials/tutorial.ts`](./e2e/tutorials/tutorial.ts)) — so a tutorial that no longer matches
+[`e2e/tutorials/tutorial.ts`](./e2e/tutorials/tutorial.ts)), so a tutorial that no longer matches
 the app **fails**, instead of quietly rotting as prose:
 
 ```bash
@@ -285,7 +286,10 @@ Two key types share the tier table. Choose based on your use case:
 ## Documentation
 
 - [API Getting Started](https://flashlearnai.witus.online/docs/api/getting-started)
-- [Interactive API Reference](https://flashlearnai.witus.online/docs/api). All 30 endpoints.
+- [Interactive API Reference](https://flashlearnai.witus.online/docs/api). All 30 paths and 35
+  operations in [`lib/api/openapi.ts`](./lib/api/openapi.ts), plus the `session.completed` webhook.
+  Session-authenticated app routes, including the `/api/teacher` roster and claim routes, are not
+  part of the v1 surface and are not in the spec.
 - [Ecosystem API (cross-product partners)](https://flashlearnai.witus.online/docs/api/ecosystem)
 - [Webhooks](https://flashlearnai.witus.online/docs/api/webhooks). Signing, retry, replay.
 - [Roadmap](https://flashlearnai.witus.online/roadmap)

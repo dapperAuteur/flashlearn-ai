@@ -8,6 +8,7 @@ import {
   Megaphone,
   Webhook,
   GraduationCap,
+  UserPlus,
   Sigma,
   Activity,
   ShieldCheck,
@@ -34,6 +35,26 @@ interface Release {
 }
 
 const releases: Release[] = [
+  {
+    version: '1.14.0',
+    date: '2026-08-19',
+    title: 'Student Accounts a Teacher Can Create',
+    icon: UserPlus,
+    iconColor: 'text-indigo-600',
+    items: [
+      'A teacher adds a student to a classroom by name alone. No email address, no device, and no signup on the student\'s part, which is what stood between a class and its first session.',
+      'A managed student cannot sign in. No password is ever set, and the credentials provider refuses these accounts outright instead of relying on the password check failing by accident.',
+      'A managed account never receives email. It is created unsubscribed, so it leaves campaigns and reminders at the source rather than depending on delivery failing.',
+      'A one-time claim code hands the account to the student. They add their own email and password, and every session, card result, and review schedule survives, because the account id never changes. The work belongs to the student, not the teacher.',
+      'The claim code is shown to the teacher once and never stored in readable form. A teacher who loses it generates a new one, which retires the old.',
+      'A teacher cannot set a student\'s password anywhere in the app. That would make teacher and student indistinguishable in the record, which is the thing proctored-session attribution exists to keep apart.',
+      'A teacher can only manage students in a classroom they teach. The check is against the classroom, not the role, so holding the Teacher role grants nothing on someone else\'s roster.',
+      'Removing a student from a class unenrols them and leaves the account alone. Roster removals are usually corrections, and deleting the account would orphan the student\'s history the moment they were added back.',
+      'Proctored study needed no changes to work with these accounts, which is asserted by a test that creates a student through the real route and runs the real resolver.',
+      'The header stopped printing your session to the browser console on every page.',
+      'The mobile menu now offers Teach to the same roles the desktop menu does. Teachers on a phone previously had no way into the teacher area at all.',
+    ],
+  },
   {
     version: '1.13.0',
     date: '2026-08-19',
