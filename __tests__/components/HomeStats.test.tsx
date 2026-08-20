@@ -1,15 +1,23 @@
 /**
  * The homepage used to print literal figures about the signed-in visitor: eight
- * cards due, 87% accuracy, a twelve-day streak. These assertions are the promise
- * that replaced them. A number appears only when it has been fetched, an empty
- * account reads copy written for zero, and a failed request drops the figure
- * instead of falling back to one.
+ * cards due, 87% accuracy, a twelve-day streak. Wiring the real endpoints in
+ * fixed the lying, and then left a second problem: copy written for zero still
+ * reads as a status report about the reader, and it arrived a moment after the
+ * loading copy it replaced.
+ *
+ * So there is one resting state now, with no figure in it, and it covers every
+ * case that is not this reader's own number: still loading, nothing due, no
+ * sessions yet, request failed. These assertions are that promise. A number
+ * appears only when it has been fetched for the person reading it.
  */
 import { render, screen, waitFor } from '@testing-library/react';
 import {
   AccuracySummary,
   DueCardsSummary,
   HomeStatTile,
+  RESTING_ACCURACY_COPY,
+  RESTING_DUE_COPY,
+  RESTING_STREAK_SENTENCE,
   StreakBadge,
   StreakSentence,
   resetHomeStatsCache,
@@ -44,6 +52,11 @@ function mockPending() {
   const fetchMock = jest.fn(() => new Promise(() => {}));
   global.fetch = fetchMock as unknown as typeof fetch;
   return fetchMock;
+}
+
+/** Resolves ok, but with an account that has done nothing yet. */
+function mockEmptyAccount() {
+  return mockEndpoints({ overallAccuracy: 0, streak: 0, totalSessions: 0 }, 0);
 }
 
 beforeEach(() => {
@@ -88,6 +101,15 @@ describe('real values', () => {
     expect(screen.queryByText(/12-day/)).not.toBeInTheDocument();
   });
 
+  it('names the streak in the closing call to action once there is one', async () => {
+    mockEndpoints({ overallAccuracy: 64, streak: 3, totalSessions: 9 }, 4);
+    render(<StreakSentence />);
+
+    expect(
+      await screen.findByText(`You are on a 3-day streak. ${RESTING_STREAK_SENTENCE}`),
+    ).toBeInTheDocument();
+  });
+
   it('puts the number and its label in one polite live region on a tile', async () => {
     mockEndpoints({ overallAccuracy: 64, streak: 3, totalSessions: 9 }, 4);
     const { container } = render(
@@ -100,119 +122,102 @@ describe('real values', () => {
   });
 });
 
-describe('nothing to show yet', () => {
-  it('invites a user with no cards due instead of counting zero at them', async () => {
-    mockEndpoints({ overallAccuracy: 0, streak: 0, totalSessions: 0 }, 0);
+/**
+ * The four states that are not a real figure all have to look the same. They
+ * are listed together so a future change cannot quietly give one of them its
+ * own sentence again.
+ */
+describe.each([
+  ['while the fetch is still in flight', mockPending],
+  ['when the account has no history yet', mockEmptyAccount],
+  ['when the request fails', mockFailure],
+  [
+    'when the endpoint answers with an error status',
+    () => {
+      const fetchMock = jest.fn(() => Promise.resolve({ ok: false, json: async () => ({}) }));
+      global.fetch = fetchMock as unknown as typeof fetch;
+      return fetchMock;
+    },
+  ],
+])('the resting state: %s', (_name, mockState) => {
+  it('offers the due-cards card without counting anything at the reader', async () => {
+    mockState();
     render(<DueCardsSummary />);
 
-    expect(
-      await screen.findByText('Nothing is due today. Study ahead any time.'),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/Review 0 cards/)).not.toBeInTheDocument();
+    expect(await screen.findByText(RESTING_DUE_COPY)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/\d/);
   });
 
-  it('invites a day-one user to start a streak rather than congratulating one', async () => {
-    mockEndpoints({ overallAccuracy: 0, streak: 0, totalSessions: 0 }, 0);
-    render(<StreakBadge />);
-
-    expect(await screen.findByText('Study today to start your streak')).toBeInTheDocument();
-    expect(screen.queryByText(/0-day/)).not.toBeInTheDocument();
-  });
-
-  it('separates "no sessions yet" from "scored zero" on accuracy', async () => {
-    mockEndpoints({ overallAccuracy: 0, streak: 0, totalSessions: 0 }, 0);
+  it('offers the progress card without a percentage', async () => {
+    mockState();
     render(<AccuracySummary />);
 
-    expect(
-      await screen.findByText('Study a set to start tracking your accuracy'),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/0% average/)).not.toBeInTheDocument();
-  });
-
-  it('says None yet on an accuracy tile with no sessions behind it', async () => {
-    mockEndpoints({ overallAccuracy: 0, streak: 0, totalSessions: 0 }, 0);
-    render(<HomeStatTile metric="accuracy" icon={null} iconWrapperClassName="icon" />);
-
-    expect(await screen.findByText(/None yet/)).toBeInTheDocument();
-    expect(screen.queryByText(/0%/)).not.toBeInTheDocument();
-  });
-
-  it('offers a first session rather than a streak in the closing call to action', async () => {
-    mockEndpoints({ overallAccuracy: 0, streak: 0, totalSessions: 0 }, 0);
-    render(<StreakSentence />);
-
-    expect(
-      await screen.findByText('Start your streak today with a personalized study session.'),
-    ).toBeInTheDocument();
-  });
-});
-
-describe('while the values are still loading', () => {
-  it('shows no figure at all, neither zero nor the old hardcoded one', () => {
-    mockPending();
-    render(
-      <>
-        <DueCardsSummary />
-        <AccuracySummary />
-        <StreakBadge />
-      </>,
-    );
-
-    expect(screen.getByText('Checking what is ready for review')).toBeInTheDocument();
-    expect(screen.getByText('Checking your results')).toBeInTheDocument();
-    expect(screen.getByText('Checking your study streak')).toBeInTheDocument();
+    expect(await screen.findByText(RESTING_ACCURACY_COPY)).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/\d/);
   });
 
-  it('does not let a tile read as the number zero before the fetch lands', () => {
-    mockPending();
-    render(<HomeStatTile metric="due" icon={null} iconWrapperClassName="icon" />);
-
-    expect(screen.getByText(/Loading/)).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/\d/);
-  });
-});
-
-describe('when the request fails', () => {
-  it('drops the figure rather than falling back to a hardcoded one', async () => {
-    mockFailure();
-    render(<DueCardsSummary />);
-
-    expect(await screen.findByText('Pick up where you left off')).toBeInTheDocument();
-    expect(screen.queryByText(/8 cards/)).not.toBeInTheDocument();
-  });
-
-  it('leaves the accuracy card standing without a number', async () => {
-    mockFailure();
-    render(<AccuracySummary />);
-
-    expect(await screen.findByText('Track your learning stats')).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/\d/);
-  });
-
-  it('removes the streak pill entirely, since a streak pill is only a number', async () => {
-    mockFailure();
+  it('drops the streak pill entirely, since a streak pill is only a number', async () => {
+    mockState();
     const { container } = render(<StreakBadge />);
 
     await waitFor(() => expect(container).toBeEmptyDOMElement());
   });
 
-  it('says a tile is unavailable instead of showing zero', async () => {
-    mockFailure();
-    render(<HomeStatTile metric="streak" icon={null} iconWrapperClassName="icon" />);
+  it('closes with the figure-free call to action', async () => {
+    mockState();
+    render(<StreakSentence />);
 
-    expect(await screen.findByText(/Unavailable/)).toBeInTheDocument();
+    expect(await screen.findByText(RESTING_STREAK_SENTENCE)).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/\d/);
   });
 
-  it('treats a non-ok response as a failure rather than reading zero off it', async () => {
-    const fetchMock = jest.fn(() =>
-      Promise.resolve({ ok: false, json: async () => ({}) }),
-    );
-    global.fetch = fetchMock as unknown as typeof fetch;
+  it.each(['due', 'accuracy', 'streak', 'sessions'] as const)(
+    'leaves the %s tile showing its label and no figure',
+    async (metric) => {
+      mockState();
+      const { container } = render(
+        <HomeStatTile metric={metric} icon={null} iconWrapperClassName="icon" />,
+      );
 
-    render(<DueCardsSummary />);
-    expect(await screen.findByText('Pick up where you left off')).toBeInTheDocument();
+      // A short wait lets any state change land, so a tile that flips to a
+      // placeholder a tick later still fails this.
+      await waitFor(() => expect(document.body.textContent).not.toMatch(/\d/));
+
+      // No word standing in the space a number would take, either.
+      expect(screen.queryByText(/Loading|None yet|Unavailable|Nothing/)).not.toBeInTheDocument();
+
+      const region = container.querySelector('[aria-live="polite"]');
+      expect(region).toBeInTheDocument();
+      // The label is inside the live region from the first render, so the value
+      // that arrives later is announced with the thing it counts.
+      expect(region?.textContent?.trim()).toBe(
+        {
+          due: 'Cards Due Today',
+          accuracy: 'Average Accuracy',
+          streak: 'Day Streak',
+          sessions: 'Study Sessions',
+        }[metric],
+      );
+    },
+  );
+});
+
+describe('no figure survives from the old hardcoded copy', () => {
+  it('never falls back to eight cards, 87%, or a twelve-day streak', async () => {
+    mockFailure();
+    render(
+      <>
+        <DueCardsSummary />
+        <AccuracySummary />
+        <StreakBadge />
+        <StreakSentence />
+      </>,
+    );
+
+    await screen.findByText(RESTING_DUE_COPY);
+    expect(screen.queryByText(/8 cards/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/87%/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/12-day/)).not.toBeInTheDocument();
   });
 });
 

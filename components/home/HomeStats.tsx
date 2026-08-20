@@ -14,9 +14,12 @@
  * 1. One round trip per endpoint per page load. Several of these little pieces
  *    render in different corners of the same page, so the request is cached at
  *    module scope and every consumer awaits the same promise.
- * 2. Nothing renders a number it does not have. Loading says it is loading,
- *    an empty account gets copy written for zero, and a failed fetch drops the
- *    figure instead of inventing one.
+ * 2. A figure appears only when it is this reader's own figure. Everything else
+ *    is one resting state with no number in it at all: still loading, nothing
+ *    due, no sessions yet, request failed. That is deliberate. Copy written for
+ *    zero still reads as a status report about the reader, and swapping one
+ *    sentence for another mid-render is a flicker nobody asked for. The resting
+ *    copy is already the right thing to show, so most readers never see a change.
  *
  * These only mount inside the signed-in branch of each homepage arm, which the
  * server decides with getServerSession. An anonymous visitor never mounts them
@@ -105,39 +108,40 @@ export function useHomeStats(): HomeStatsState {
   return state;
 }
 
+/**
+ * The resting copy for each card. No figure, no count, nothing that reads as a
+ * status report. Every state that is not a real fetched value uses these.
+ */
+export const RESTING_DUE_COPY = 'Review your due cards';
+export const RESTING_ACCURACY_COPY = 'Track your progress';
+export const RESTING_STREAK_SENTENCE =
+  'Keep the momentum going with your personalized study session.';
+
 export function dueCardsCopy(state: HomeStatsState): string {
-  if (state.status === 'loading') return 'Checking what is ready for review';
-  if (state.status === 'error') return 'Pick up where you left off';
-  if (state.stats.dueToday === 0) {
-    return 'Nothing is due today. Study ahead any time.';
-  }
+  if (state.status !== 'ready' || state.stats.dueToday === 0) return RESTING_DUE_COPY;
   const count = state.stats.dueToday;
   return `Review ${count} card${count === 1 ? '' : 's'} due for optimal retention`;
 }
 
 export function accuracyCopy(state: HomeStatsState): string {
-  if (state.status === 'loading') return 'Checking your results';
-  if (state.status === 'error') return 'Track your learning stats';
-  if (state.stats.totalSessions === 0) {
-    return 'Study a set to start tracking your accuracy';
-  }
+  // Zero sessions is not zero accuracy, and neither one earns a percentage on
+  // the homepage, so both land on the same figure-free line.
+  if (state.status !== 'ready' || state.stats.totalSessions === 0) return RESTING_ACCURACY_COPY;
   return `${state.stats.accuracy}% average accuracy across your sessions`;
 }
 
 export function streakCopy(state: HomeStatsState): string | null {
-  if (state.status === 'loading') return 'Checking your study streak';
-  if (state.status === 'error') return null;
-  if (state.stats.streak === 0) {
-    return 'Study today to start your streak';
-  }
+  // This pill exists only to state a number. With no streak to state there is
+  // nothing figure-free left for it to say, so it does not render.
+  if (state.status !== 'ready' || state.stats.streak === 0) return null;
   return `${state.stats.streak}-day study streak! Keep it up!`;
 }
 
 /**
  * A value that arrives after render has to be announced, not silently swapped
- * in, so every one of these sits in a polite live region. The loading text is
+ * in, so every one of these sits in a polite live region. The resting copy is
  * the region's initial content, which screen readers do not announce as a
- * change, and it is words rather than a digit either way.
+ * change, and it holds no digit either way.
  */
 export function DueCardsSummary({ className }: { className?: string }) {
   const state = useHomeStats();
@@ -176,14 +180,10 @@ export function StreakBadge({ className }: { className?: string }) {
 export function StreakSentence({ className }: { className?: string }) {
   const state = useHomeStats();
 
-  let copy: string;
-  if (state.status === 'ready' && state.stats.streak > 0) {
-    copy = `You are on a ${state.stats.streak}-day streak. Keep the momentum going with your personalized study session.`;
-  } else if (state.status === 'ready') {
-    copy = 'Start your streak today with a personalized study session.';
-  } else {
-    copy = 'Keep the momentum going with your personalized study session.';
-  }
+  const copy =
+    state.status === 'ready' && state.stats.streak > 0
+      ? `You are on a ${state.stats.streak}-day streak. ${RESTING_STREAK_SENTENCE}`
+      : RESTING_STREAK_SENTENCE;
 
   return (
     <p className={className} aria-live="polite">
@@ -205,22 +205,28 @@ function metricValue(state: HomeStatsState, metric: HomeStatMetric): string | nu
   if (state.status !== 'ready') return null;
   switch (metric) {
     case 'due':
-      return String(state.stats.dueToday);
+      return state.stats.dueToday === 0 ? null : String(state.stats.dueToday);
     case 'streak':
-      return String(state.stats.streak);
+      return state.stats.streak === 0 ? null : String(state.stats.streak);
     case 'sessions':
-      return String(state.stats.totalSessions);
+      return state.stats.totalSessions === 0 ? null : String(state.stats.totalSessions);
     case 'accuracy':
       // A brand new account has no accuracy, which is a different fact from
-      // scoring zero, so the tile says so in words instead of printing "0%".
+      // scoring zero. Neither one is a figure worth printing here.
       return state.stats.totalSessions === 0 ? null : `${state.stats.accuracy}%`;
   }
 }
 
 /**
- * One tile in a stats grid. With no value to show it prints a short phrase
- * rather than a figure, so the tile never reads as the number zero when the
- * truth is "not known yet".
+ * One tile in a stats grid. Its resting state is its label and nothing else:
+ * no zero, no "Loading", no word standing in the space a number would take.
+ * A figure appears only once one has been fetched for this reader.
+ *
+ * The label lives inside the live region as well as under it, so the announced
+ * text is "3 Day Streak" rather than a bare "3". It is in the region from the
+ * first render, which means the region is never empty and the arriving value is
+ * announced as a change to it. The reserved height keeps the tile from jumping
+ * when that happens.
  */
 export function HomeStatTile({
   metric,
@@ -235,21 +241,15 @@ export function HomeStatTile({
   const value = metricValue(state, metric);
   const label = METRIC_LABELS[metric];
 
-  let placeholder = 'None yet';
-  if (state.status === 'loading') placeholder = 'Loading';
-  else if (state.status === 'error') placeholder = 'Unavailable';
-
   return (
     <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
       <div className={iconWrapperClassName}>{icon}</div>
       <div
-        className={`font-bold text-gray-900 mb-1 ${value === null ? 'text-base text-gray-500' : 'text-2xl'}`}
+        className="text-2xl font-bold text-gray-900 mb-1 min-h-[2rem]"
         aria-live="polite"
       >
-        {value ?? placeholder}
-        {/* Keeps the announcement meaningful: a live region reads only its own
-            text, so "24" alone would arrive without saying 24 of what. */}
-        <span className="sr-only"> {label}</span>
+        {value}
+        <span className="sr-only">{value ? ' ' : ''}{label}</span>
       </div>
       <div className="text-sm text-gray-600" aria-hidden="true">
         {label}

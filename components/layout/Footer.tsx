@@ -107,6 +107,11 @@ export default function Footer() {
               &copy; {year} FlashLearnAI.WitUS.Online. All rights reserved.
             </p>
             <div className="flex flex-wrap gap-4">
+              {/* /help existed with no link to it from any nav, header, footer or
+                  tab bar, so the only way in was typing the URL. */}
+              <Link href="/help" className="text-xs text-gray-400 hover:text-gray-300 min-h-[44px] inline-flex items-center">
+                Help
+              </Link>
               <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-300 min-h-[44px] inline-flex items-center">
                 Privacy
               </Link>

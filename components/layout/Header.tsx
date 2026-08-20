@@ -12,6 +12,10 @@ import NotificationBell from '@/components/ui/NotificationBell';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { NavigationItem } from '@/types/navigation';
 
+/** Matches the roles middleware.ts allows into /teacher, so the link is never
+ *  shown to somebody who would be turned away at the route. */
+const TEACHER_ROLES = ['Teacher', 'Tutor', 'SchoolAdmin', 'Admin'];
+
 const primaryNavigation: NavigationItem[] = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Flashcards', href: '/flashcards' },
@@ -19,6 +23,7 @@ const primaryNavigation: NavigationItem[] = [
   { label: 'Versus', href: '/versus' },
   { label: 'Developer', href: '/developer' },
   { label: 'Settings', href: '/settings' },
+  { label: 'Help', href: '/help' },
 ];
 
 export default function Header() {
@@ -74,6 +79,19 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            {session?.user?.role && TEACHER_ROLES.includes(session.user.role) && (
+              <Link
+                href="/teacher"
+                aria-current={pathname.startsWith('/teacher') ? 'page' : undefined}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
+                  pathname.startsWith('/teacher')
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                Teach
+              </Link>
+            )}
             {session?.user?.role === 'Admin' && (
               <Link
                 href="/admin/dashboard"

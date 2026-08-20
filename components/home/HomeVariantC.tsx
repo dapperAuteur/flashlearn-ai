@@ -15,9 +15,20 @@ import {
   Users
 } from "lucide-react";
 import { AccuracySummary, DueCardsSummary, StreakBadge, StreakSentence } from "@/components/home/HomeStats";
+import HomeSocialProofRow from "@/components/home/HomeSocialProof";
+import { type HomeSocialProof } from "@/lib/home/socialProof";
+import { homeSocialProof } from "@/lib/home/socialProofCounts";
 
 // Modern Hero Section with Conditional Content
-const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; session?: any }) => {
+const ModernHero = ({
+  isAuthenticated,
+  session,
+  proof,
+}: {
+  isAuthenticated: boolean;
+  session?: any;
+  proof: HomeSocialProof | null;
+}) => {
   if (isAuthenticated) {
     return (
       <div className="relative bg-white overflow-hidden">
@@ -126,21 +137,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
             </Link>
           </div>
 
-          {/* Social Proof */}
-          <div className="flex items-center justify-center space-x-6 text-sm text-gray-500 mb-16">
-            <div className="flex items-center space-x-2">
-              <div className="flex -space-x-2">
-                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white" />
-                <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-teal-500 rounded-full border-2 border-white" />
-                <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full border-2 border-white" />
-              </div>
-              <span>2,000+ active learners</span>
-            </div>
-            <div className="w-px h-4 bg-gray-300" />
-            <span>4.9/5 average rating</span>
-            <div className="w-px h-4 bg-gray-300" />
-            <span>40% better retention rate</span>
-          </div>
+          <HomeSocialProofRow proof={proof} />
         </div>
       </div>
     </div>
@@ -372,6 +369,9 @@ const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
 export default async function HomeVariantC() {
   const session = await getServerSession(authOptions);
   const isAuthenticated = !!session;
+  // Only the signed-out hero carries these claims, so a signed-in visit never
+  // pays for the aggregate behind the learner count.
+  const proof = isAuthenticated ? null : await homeSocialProof();
 
   return (
     <Suspense fallback={
@@ -383,7 +383,7 @@ export default async function HomeVariantC() {
       </div>
     }>
       <div className="min-h-screen">
-        <ModernHero isAuthenticated={isAuthenticated} session={session} />
+        <ModernHero isAuthenticated={isAuthenticated} session={session} proof={proof} />
         <BenefitsSection isAuthenticated={isAuthenticated} />
         {!isAuthenticated && <FeaturesShowcase />}
         <FinalCTA isAuthenticated={isAuthenticated} />
