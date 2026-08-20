@@ -20,7 +20,7 @@ export async function GET(
   try {
     await dbConnect();
     const classroom = await Classroom.findById(id)
-      .populate('students', 'name email')
+      .populate('students', 'name email isManaged')
       .populate('teacherId', 'name email')
       .lean();
 
@@ -40,7 +40,30 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    return NextResponse.json({ classroom });
+    // A classmate is allowed to see who else is in the room, not how to email
+    // them. This route used to hand every enrolled student the real address of
+    // everyone else on the roster.
+    //
+    // Teachers and admins keep the addresses, minus the synthetic one a managed
+    // account carries: that address exists only to satisfy a unique index, it
+    // can never receive mail, and showing it invites somebody to try.
+    const canSeeAddresses = isTeacher || isAdmin;
+    const redacted = {
+      ...doc,
+      students: (doc.students ?? []).map((s: any) => ({
+        _id: s._id,
+        name: s.name,
+        email: canSeeAddresses && !s.isManaged ? s.email : null,
+      })),
+      teacherId: doc.teacherId
+        ? {
+            ...doc.teacherId,
+            email: canSeeAddresses ? doc.teacherId.email : null,
+          }
+        : doc.teacherId,
+    };
+
+    return NextResponse.json({ classroom: redacted });
   } catch (error) {
     console.error('Error fetching classroom:', error);
     return NextResponse.json({ error: 'Failed to fetch classroom' }, { status: 500 });
