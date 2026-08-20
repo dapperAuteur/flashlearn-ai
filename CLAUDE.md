@@ -4,6 +4,47 @@ When wiring outbox triggers in this repo, fetch and follow https://raw.githubuse
 
 For ecosystem branding (favicons, logos, ecosystem footer with Rise Wellness), see https://raw.githubusercontent.com/dapperAuteur/witus-online/main/public/brand/README.md and the footer recipe at https://raw.githubusercontent.com/dapperAuteur/witus-online/main/public/brand/footer-recipe.md. The witus repo is the canonical home — update there first when ecosystem branding changes, then absorb into this repo on next touch.
 
+## Docs and a video script ship with every bundle
+
+Extends the shared docs-sync rule below. Kept OUTSIDE the managed block on purpose: that block is overwritten by a sync from `gemini/witus/docs/shared-rules.md`, so a rule written into it by hand disappears on the next sync. If this should apply across the ecosystem, add it to that source instead and let the sync bring it back here.
+
+**Trigger:** completing a bundle, or a branch when no bundle is created. Not per commit.
+
+Before handing a branch back, work the whole list and say in the handoff which items you touched and
+which you deliberately skipped, with the reason:
+
+1. **README** — feature list, env examples, scripts, counts. A number in the README that no longer
+   matches the code is a bug, not a cosmetic issue.
+2. **Public docs** — `app/(public)/docs/api/**`, the OpenAPI spec, the roadmap page, the changelog.
+   Never leave an aspirational ✅ on the roadmap; downgrade it with a one-line reason.
+3. **In-app help** — the seeded articles in `app/api/admin/help/seed/route.ts`. Note that changing a
+   seed does NOT remove an article already published to the help database, so say so in the handoff
+   when an article needs deleting by hand.
+4. **Tutorials** — `docs/tutorials/`, plus a spec under `e2e/tutorials/` where the flow is worth
+   recording as a test.
+5. **A video tutorial script** for any user-visible feature the bundle adds or changes. See below.
+
+**The video script.** BAM records these, so the script is written for someone at the keyboard, not
+for a reader. It goes in `docs/tutorials/scripts/NN-slug.md` and contains:
+
+- **What the viewer will be able to do** by the end, in one sentence.
+- **Setup** — the exact account state needed before recording. Signed in as what role, what data
+  must already exist, what must NOT exist. This is the part that wastes a take when it is missing.
+- **Numbered beats.** Each beat has three parts, and all three are required:
+  - **On screen:** what is visible, where the cursor goes, what gets clicked or typed. Name real UI
+    text, not paraphrases, so the script and the app can be diffed.
+  - **Say:** the narration, written to be read aloud rather than scanned.
+  - **Why it matters:** one line on what the viewer should take away. Cut the beat if there is no
+    answer.
+- **What to be careful of** — anything that produces real side effects while recording (a real
+  social draft, a real email, a consumed AI generation), and anything that looks broken but is not.
+- **A YouTube embed placeholder** so the article ships text-first and gains its video later:
+  `{{video:PENDING}}`, swapped for the id once published. Never block a doc on a recording.
+
+Open the script with the mental model, not the click path, wherever getting the model wrong is
+costly. A viewer who does not understand that proctored study writes to a *student's* account will
+misuse it no matter how well the buttons are labelled.
+
 ---
 
 <!-- BEGIN:witus-shared-rules v1 -->

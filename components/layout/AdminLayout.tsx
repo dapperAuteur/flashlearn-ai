@@ -31,6 +31,7 @@ import {
   Share2,
   Link2,
   Archive,
+  FlaskConical,
 } from "lucide-react";
 
 type AdminLayoutProps = {
@@ -101,6 +102,7 @@ const navGroups: NavGroup[] = [
       { label: "SEO", href: "/admin/seo", icon: Search },
       { label: "Logs", href: "/admin/logs", icon: ScrollText },
       { label: "Archived", href: "/admin/archived", icon: Archive },
+      { label: "A/B Test", href: "/admin/ab-test", icon: FlaskConical },
       { label: "Settings", href: "/admin/settings", icon: Settings },
     ],
   },

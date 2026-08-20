@@ -104,40 +104,22 @@ const offline_sets = new Table(
 );
 
 // ============================================================================
-// TABLE: categories
-// ============================================================================
-const categories = new Table(
-  {
-    id: column.text,
-    user_id: column.text,
-    name: column.text,
-    color: column.text,
-    created_at: column.text,
-  },
-  {
-    // Local only: nothing in this store is ever uploaded by the SDK. Without
-    // it every write appends to PowerSync's internal ps_crud queue, and since
-    // no connector is wired that queue is never drained and grows for the
-    // lifetime of the browser profile.
-    localOnly: true,
-    indexes: {
-      user_categories: ['user_id'],
-    },
-  }
-);
-
-// ============================================================================
 // SCHEMA EXPORT
 // ============================================================================
+// A `categories` table used to sit here. Nothing ever inserted into it, queried
+// it, or pulled it, and its IndexedDB twin was already retired. Categories come
+// from /api/sets/categories, which is the only implementation that works, so
+// the table was removed rather than left to imply an offline category store
+// exists. It held no rows, so no watermark bump was needed to drop it.
 export const AppSchema = new Schema({
   flashcard_sets,
   flashcards,
   offline_sets,
-  categories,
 });
 
 Logger.log(LogContext.SYSTEM, 'PowerSync schema defined', {
-  tables: Object.keys(AppSchema.tables),
+  // tables is an array of Table instances, so Object.keys gave back "0","1","2".
+  tables: AppSchema.tables.map((table) => table.name),
 });
 
 // ============================================================================
@@ -186,14 +168,6 @@ export interface PowerSyncOfflineSet {
   set_id: string;
   is_owned: 0 | 1;
   last_accessed: string;
-  created_at: string;
-}
-
-export interface PowerSyncCategory {
-  id: string;
-  user_id: string;
-  name: string;
-  color: string;
   created_at: string;
 }
 

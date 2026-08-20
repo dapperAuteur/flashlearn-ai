@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
+type OutboxStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 interface Preferences {
   defaultStudyDirection: string;
   defaultStudyMode: string;
@@ -25,6 +27,11 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // null while the account's stored answer is still on its way. The switch is
+  // not rendered until it is known, so it never shows "off" to someone who is
+  // opted in.
+  const [outboxOptIn, setOutboxOptIn] = useState<boolean | null>(null);
+  const [outboxStatus, setOutboxStatus] = useState<OutboxStatus>('idle');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -47,7 +54,23 @@ export default function SettingsPage() {
       }
     };
 
+    // The Outbox consent lives on the user record, not in study preferences,
+    // so it is a second read. Read it rather than assume it: an account that
+    // already opted in has to see the switch on.
+    const fetchOutboxOptIn = async () => {
+      try {
+        const res = await fetch('/api/user/profile');
+        if (res.ok) {
+          const data = await res.json();
+          setOutboxOptIn(data?.user?.shareToOutboxOptIn === true);
+        }
+      } catch {
+        // Leave it unknown. An unanswered switch is better than a wrong one.
+      }
+    };
+
     fetchSettings();
+    fetchOutboxOptIn();
   }, [status, router]);
 
   const handleSave = async () => {
@@ -72,6 +95,34 @@ export default function SettingsPage() {
       setMessage({ type: 'error', text: 'Failed to save settings' });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleOutboxToggle = async () => {
+    if (outboxOptIn === null) return;
+
+    const next = !outboxOptIn;
+    setOutboxOptIn(next);
+    setOutboxStatus('saving');
+
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shareToOutboxOptIn: next }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setOutboxOptIn(data?.user?.shareToOutboxOptIn === true);
+        setOutboxStatus('saved');
+      } else {
+        setOutboxOptIn(!next);
+        setOutboxStatus('error');
+      }
+    } catch {
+      setOutboxOptIn(!next);
+      setOutboxStatus('error');
     }
   };
 
@@ -226,6 +277,78 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Sharing */}
+      <div className="mt-6 bg-white shadow sm:rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
+            Sharing your milestones
+          </h3>
+          <p className="mt-1 text-sm text-gray-600">
+            Off by default. Nothing is shared unless you turn this on.
+          </p>
+
+          <div className="mt-6 flex items-start justify-between gap-4">
+            <div>
+              <span id="outbox-optin-label" className="block text-sm font-medium text-gray-700">
+                Turn my study milestones into draft social posts
+              </span>
+              <p id="outbox-optin-help" className="mt-1 text-xs text-gray-600">
+                When you hit a milestone, such as a study streak or a set you made public,
+                FlashLearn AI writes a draft social post about it. A person on our team reads
+                every draft and decides whether to post it, edit it, or bin it. Nothing is
+                published automatically. Turning this off stops new drafts from being written.
+              </p>
+            </div>
+
+            {outboxOptIn === null ? (
+              <span className="text-xs text-gray-600 flex-shrink-0 pt-1">Loading...</span>
+            ) : (
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                <button
+                  id="outbox-optin"
+                  type="button"
+                  role="switch"
+                  aria-checked={outboxOptIn}
+                  aria-labelledby="outbox-optin-label"
+                  aria-describedby="outbox-optin-help outbox-optin-status"
+                  onClick={handleOutboxToggle}
+                  disabled={outboxStatus === 'saving'}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed ${
+                    outboxOptIn ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      outboxOptIn ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                {/* The word, not just the colour, says which way the switch is set. */}
+                <span aria-hidden="true" className="text-xs font-medium text-gray-700">
+                  {outboxOptIn ? 'On' : 'Off'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <p
+            id="outbox-optin-status"
+            role="status"
+            aria-live="polite"
+            className={`mt-3 text-xs min-h-[1rem] ${
+              outboxStatus === 'error' ? 'text-red-700' : 'text-gray-600'
+            }`}
+          >
+            {outboxStatus === 'saving' && 'Saving your choice...'}
+            {outboxStatus === 'saved' &&
+              (outboxOptIn
+                ? 'Saved. Your milestones can now be drafted as posts for review.'
+                : 'Saved. No new drafts will be written from your milestones.')}
+            {outboxStatus === 'error' && 'That did not save. Your setting is unchanged. Try again.'}
+          </p>
         </div>
       </div>
 

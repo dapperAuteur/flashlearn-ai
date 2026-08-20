@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { User, BookOpen, GraduationCap, Swords, Check, X, ArrowRight } from 'lucide-react';
@@ -17,62 +17,94 @@ interface Step {
 const steps: Step[] = [
   {
     id: 'profile',
-    title: 'Complete Your Profile',
-    description: 'Add a username, bio, and profile picture to personalize your experience.',
+    title: 'Complete your profile',
+    description: 'Add a username, bio, and profile picture on your profile page.',
     icon: User,
-    href: '/settings',
+    href: '/profile',
     color: 'bg-blue-500',
   },
   {
     id: 'first-set',
-    title: 'Create Your First Set',
-    description: 'Generate flashcards from text, PDF, YouTube, or any content with AI.',
+    title: 'Create your first set',
+    description: 'Generate flashcards from text, a PDF, a YouTube video, or your own notes.',
     icon: BookOpen,
     href: '/generate',
     color: 'bg-purple-500',
   },
   {
     id: 'first-study',
-    title: 'Start Studying',
-    description: 'Study your flashcards with spaced repetition for better retention.',
+    title: 'Start studying',
+    description: 'Study your flashcards with spaced repetition so they stick.',
     icon: GraduationCap,
     href: '/study',
     color: 'bg-green-500',
   },
   {
     id: 'versus',
-    title: 'Try Versus Mode',
-    description: 'Challenge friends to a head-to-head flashcard battle.',
+    title: 'Try Versus mode',
+    description: 'Challenge a friend to a head-to-head flashcard match.',
     icon: Swords,
     href: '/versus',
     color: 'bg-orange-500',
   },
 ];
 
+/**
+ * The dashboard's first-run checklist.
+ *
+ * Whether it shows is answered by the account, not by this component's state.
+ * `onboardingCompleted` comes back from GET /api/user/profile, and dismissing
+ * writes it back with PATCH, so a dismissal survives a reload and follows the
+ * user to their next device. Until that answer arrives the component renders
+ * nothing, because a card that appears and then vanishes reads as a glitch.
+ *
+ * The per-step ticks are deliberately session-local. They are a scratch pad for
+ * the current visit, not a record of what the account has done.
+ */
 export default function GettingStartedWizard() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const [dismissed, setDismissed] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [resolved, setResolved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
 
-  if (dismissed || !session) return null;
+  useEffect(() => {
+    if (status !== 'authenticated' || !session?.user) {
+      // Signed out, or the session is still loading. Nothing to ask about yet.
+      setResolved(status === 'unauthenticated');
+      return;
+    }
 
-  const handleStepClick = (step: Step) => {
-    router.push(step.href);
-  };
+    let active = true;
 
-  const handleMarkComplete = (stepId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCompletedSteps(prev => {
-      const next = new Set(prev);
-      next.add(stepId);
-      return next;
-    });
-  };
+    const readOnboardingState = async () => {
+      try {
+        const res = await fetch('/api/user/profile');
+        if (!active) return;
+        if (!res.ok) {
+          // Unknown beats guessing. Staying hidden avoids showing a checklist
+          // to someone who already dismissed it.
+          setResolved(true);
+          return;
+        }
+        const data = await res.json();
+        setVisible(data?.user?.onboardingCompleted !== true);
+      } catch {
+        // Offline or the request failed. Same reasoning as above.
+      } finally {
+        if (active) setResolved(true);
+      }
+    };
 
-  const handleDismiss = async () => {
-    setDismissed(true);
-    // Mark onboarding complete
+    readOnboardingState();
+
+    return () => {
+      active = false;
+    };
+  }, [status, session?.user]);
+
+  const handleDismiss = useCallback(async () => {
+    setVisible(false);
     try {
       await fetch('/api/user/profile', {
         method: 'PATCH',
@@ -80,30 +112,52 @@ export default function GettingStartedWizard() {
         body: JSON.stringify({ onboardingCompleted: true }),
       });
     } catch {
-      // Silently fail
+      // The card is already gone for this visit. If the write failed the card
+      // comes back on the next load, which is the safer of the two mistakes.
     }
+  }, []);
+
+  if (!resolved || !visible) return null;
+
+  const handleStepClick = (step: Step) => {
+    router.push(step.href);
   };
 
-  const progress = (completedSteps.size / steps.length) * 100;
+  const handleMarkComplete = (stepId: string) => {
+    setCompletedSteps(prev => {
+      const next = new Set(prev);
+      next.add(stepId);
+      return next;
+    });
+  };
+
+  const completedCount = completedSteps.size;
+  const progress = Math.round((completedCount / steps.length) * 100);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6" role="region" aria-label="Getting started guide">
+    <div
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6"
+      role="region"
+      aria-label="Getting started guide"
+    >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Getting Started</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Complete these steps to get the most out of FlashLearn AI</p>
+          <h2 className="text-lg font-semibold text-gray-900">Getting started</h2>
+          <p className="text-sm text-gray-600 mt-0.5">
+            Four steps to get the most out of FlashLearn AI.
+          </p>
         </div>
         <button
+          type="button"
           onClick={handleDismiss}
-          className="text-gray-400 hover:text-gray-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-          aria-label="Dismiss getting started guide"
+          className="text-gray-500 hover:text-gray-700 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Dismiss the getting started guide"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full bg-gray-100 rounded-full h-2 mb-6">
+      <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
         <div
           className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
@@ -111,69 +165,84 @@ export default function GettingStartedWizard() {
           aria-valuenow={progress}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label={`${completedSteps.size} of ${steps.length} steps completed`}
+          aria-label="Getting started progress"
         />
       </div>
+      <p className="text-xs text-gray-600 mb-6" aria-live="polite">
+        {completedCount} of {steps.length} steps ticked off
+      </p>
 
-      <div className="space-y-3">
+      <ul className="space-y-3 list-none p-0 m-0">
         {steps.map(step => {
           const isCompleted = completedSteps.has(step.id);
           const Icon = step.icon;
 
           return (
-            <div
+            <li
               key={step.id}
-              className={`flex items-center gap-4 p-3 rounded-lg border cursor-pointer transition-all ${
+              className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                 isCompleted
-                  ? 'bg-green-50 border-green-200'
-                  : 'bg-white border-gray-200 hover:border-blue-200 hover:shadow-sm'
+                  ? 'bg-green-50 border-green-300'
+                  : 'bg-white border-gray-200 hover:border-blue-300'
               }`}
-              onClick={() => !isCompleted && handleStepClick(step)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !isCompleted) handleStepClick(step); }}
-              aria-label={`${step.title}${isCompleted ? ' (completed)' : ''}`}
             >
-              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                isCompleted ? 'bg-green-500' : step.color
-              }`}>
+              <div
+                className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                  isCompleted ? 'bg-green-600' : step.color
+                }`}
+              >
                 {isCompleted ? (
                   <Check className="h-5 w-5 text-white" aria-hidden="true" />
                 ) : (
                   <Icon className="h-5 w-5 text-white" aria-hidden="true" />
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${isCompleted ? 'text-green-700 line-through' : 'text-gray-900'}`}>
+
+              <button
+                type="button"
+                onClick={() => handleStepClick(step)}
+                className="flex-1 min-w-0 text-left rounded focus:outline-none focus:ring-2 focus:ring-blue-500 py-1"
+              >
+                <span
+                  className={`block text-sm font-medium ${
+                    isCompleted ? 'text-green-800 line-through' : 'text-gray-900'
+                  }`}
+                >
                   {step.title}
-                </p>
-                <p className="text-xs text-gray-500">{step.description}</p>
-              </div>
-              {!isCompleted ? (
+                  {isCompleted ? <span className="sr-only"> (ticked off)</span> : null}
+                </span>
+                <span className="block text-xs text-gray-600">{step.description}</span>
+              </button>
+
+              {isCompleted ? null : (
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
-                    onClick={(e) => handleMarkComplete(step.id, e)}
-                    className="text-xs text-gray-400 hover:text-green-600 px-2 py-1 rounded min-h-[44px] inline-flex items-center"
-                    aria-label={`Mark "${step.title}" as complete`}
+                    type="button"
+                    onClick={() => handleMarkComplete(step.id)}
+                    className="text-xs text-gray-600 hover:text-green-700 px-2 py-1 rounded min-h-[44px] inline-flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     Skip
+                    <span className="sr-only"> {step.title}</span>
                   </button>
-                  <ArrowRight className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                  <ArrowRight className="h-4 w-4 text-gray-500" aria-hidden="true" />
                 </div>
-              ) : null}
-            </div>
+              )}
+            </li>
           );
         })}
-      </div>
+      </ul>
 
-      {completedSteps.size === steps.length && (
+      {completedCount === steps.length && (
         <div className="mt-4 p-3 bg-green-50 rounded-lg text-center">
-          <p className="text-sm font-medium text-green-700">All done! You&apos;re ready to learn. 🎉</p>
+          <p className="text-sm font-medium text-green-800">
+            That is all four. You are ready to learn.
+          </p>
           <button
+            type="button"
             onClick={handleDismiss}
-            className="text-xs text-green-600 hover:text-green-700 mt-1 min-h-[44px] inline-flex items-center"
+            className="text-xs text-green-700 hover:text-green-800 underline mt-1 min-h-[44px] inline-flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
           >
-            Dismiss this guide
+            Hide this guide for good
           </button>
         </div>
       )}

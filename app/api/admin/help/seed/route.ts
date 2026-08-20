@@ -182,6 +182,36 @@ Answers are stored on your device as you go and upload on their own once you are
 There is no clash detection. If the same set is changed in two places, whichever change is saved last is the one kept. Edit a set in one place at a time.
 `,
   },
+  {
+    slug: 'sharing-your-milestones',
+    title: 'Sharing Your Milestones',
+    category: 'account',
+    excerpt: 'What the milestone sharing setting does, what it never does, and how to turn it off.',
+    order: 3,
+    tags: ['account', 'privacy', 'sharing'],
+    content: `# Sharing Your Milestones
+
+There is a setting on your Settings page called **Sharing your milestones**. It is off unless you turn it on.
+
+## What it does when it is on
+
+When you hit a milestone, like finishing a long review streak or making a set public, we write a **draft** social post about it.
+
+## What it never does
+
+**It never publishes anything.** A draft goes into a review queue and a person reads it before it goes anywhere. Nothing is posted automatically, and nothing is posted without that review.
+
+It also never shares your answers, your scores, or anything about what you got wrong.
+
+## Turning it off
+
+Settings, then switch **Sharing your milestones** off. It takes effect straight away. Drafts already written stay in the review queue; if you want one pulled, contact support.
+
+## If you never turn it on
+
+Nothing happens. No drafts are written and no milestone leaves your account.
+`,
+  },
   // ──── API ────
   {
     slug: 'short-link-sharing',
