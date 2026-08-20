@@ -29,6 +29,16 @@ function clamp(value: unknown, max: number): string | undefined {
 // homepage is public); the userId is attached only when a session exists.
 export async function POST(request: NextRequest) {
   try {
+    // The test window is the only time this endpoint should write. The page
+    // selector mounts the tracker only while the flag is on, so with it off
+    // every arriving event is either a stale in-flight beacon or a hand-rolled
+    // request. Accepting those would put rows in the collection that no split
+    // ever produced, which is worse than losing them. Answer 202 so the tracker
+    // treats it as delivered and does not retry.
+    if (!isHomeAbTestEnabled()) {
+      return NextResponse.json({ success: false, recorded: false }, { status: 202 });
+    }
+
     const body = await request.json();
     const variant = normalizeHomeVariant(body?.variant);
 

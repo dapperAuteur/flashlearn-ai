@@ -41,6 +41,9 @@ const releases: Release[] = [
     icon: GraduationCap,
     iconColor: 'text-emerald-600',
     items: [
+      'Getting started checklist now appears for new accounts and remembers being dismissed, on every device. It was written months ago and never mounted, so nobody had seen it',
+      'New Sharing your milestones setting. Off by default. When on, a study milestone can become a draft social post that a person reviews before anything publishes',
+      'Offline study failing to start now says so, instead of showing an empty set list to someone with plenty of sets. Most often this is a private window, which cannot keep an offline copy at all',
       'Teacher-proctored study sessions: an adult runs the session and the student\'s spaced-repetition schedule is the one that advances',
       'Two authorization edges for proctoring: an active classroom the actor teaches, or a student linked to the actor\'s account. Archived classrooms do not count.',
       'GET /api/study/proctorable-students backs the picker on the study setup screen. It returns names, usernames, and classroom names, and no email addresses.',

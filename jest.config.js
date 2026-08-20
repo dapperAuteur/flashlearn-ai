@@ -9,6 +9,9 @@ const createJestConfig = nextJest({
 // replace next/jest's list wholesale below.
 const esmPackages = [
   '@powersync',
+  // Pulled in by @powersync/web's index, so any import of the schema module
+  // reaches it even though nothing here opens a database.
+  '@journeyapps',
   'bson',
   '@upstash/qstash',
   'jose',
