@@ -313,6 +313,91 @@ Teachers have additional features:
 ## Shared Set Libraries
 Teams and classrooms have shared set libraries where members can contribute flashcard sets for everyone to study.`,
   },
+  {
+    slug: 'managed-student-accounts',
+    title: 'Adding Students Who Have No Email Address',
+    category: 'teams',
+    excerpt: 'Add a student to your classroom by name, hand them a claim code, and let them take the account over later with their own email and password.',
+    order: 2,
+    tags: ['classrooms', 'teachers', 'students', 'claim-code'],
+    content: `# Adding Students Who Have No Email Address
+
+Some students do not have an email address, a device of their own, or a signup they can remember. You
+can still put them on your roster. Add them by name and FlashLearnAI creates the account for you.
+
+## Adding a student
+
+1. Open your classroom from **Classrooms**.
+2. On the roster, choose **Add student**.
+3. Type the student's name, between 2 and 80 characters. That is the only thing you enter.
+4. Save. The student appears on the roster straight away, marked as managed.
+
+You add students one at a time. There is no list paste and no file import.
+
+## The claim code, and why you see it once
+
+Every managed student is created with a **claim code**: ten characters in two groups, like
+ABCDE-FGHJK. It is the student's only route to taking the account over later, so write it down or
+hand it to them before you close the dialog. The dialog will not let you past it until you confirm
+with **I have written the code down**.
+
+Nothing stores the code in readable form, so nobody, support included, can look it up for you
+afterwards. If you lose it, open the student on the roster and mint a **new claim code**. The old one
+stops working the moment the new one appears.
+
+A claim code lasts 90 days. After that the roster shows it as expired and you mint a fresh one the
+same way.
+
+## What to tell the student
+
+Say this, in this order:
+
+1. "This account is yours. Everything you do in class is recorded on it."
+2. "Here is your claim code. Keep it somewhere you will find it."
+3. "When you have an email address, go to flashlearnai.witus.online/claim, enter the code, your
+   email, and a password."
+4. "Everything you have already studied comes with you. Nothing resets."
+
+That last line is worth saying out loud, because it is the point of the whole thing. Claiming keeps
+every session, every card result, and the entire spaced repetition schedule, because it is the same
+account rather than a new one.
+
+Claiming asks the student to confirm they are 13 or older. Afterwards they verify the email address
+they entered, and then they can sign in with their password.
+
+## Studying with a managed student
+
+On the roster, choose **Start session** next to the student. The study screen opens with a banner
+saying the session will be saved to them, and you pick the set from there. If you started from a set
+instead, the **Who is studying?** picker on the last step does the same job.
+
+Studying for a student needs a connection. Offline results are saved against whoever is signed in, so
+the app refuses to mis-attribute them and studies as you instead.
+
+## The limitation, stated plainly
+
+A managed student **cannot sign in, and cannot study at home**. There is no password to give them and
+no way for you to set one. In class they study on your device, with you running the session, and the
+results record to their account. That is all a managed account does until it is claimed.
+
+If a student already has an email address, have them sign up and join the classroom with the join
+code instead. That gets them everything at once.
+
+## Why you cannot set a student's password
+
+This is deliberate. A teacher who can set a password can sign in as the student, and then nothing in
+the record can tell which of the two answered a card. The claim flow is the only path from your
+account to theirs, and it runs through the student.
+
+## Removing a student
+
+Removing a student takes them off the roster. It does not delete the account and it does not touch
+their study history. Removals are usually corrections: wrong class, duplicate name, a student who
+moved sections. Erasing weeks of a student's work would be the wrong answer to a typo.
+
+Once a student is off your roster you can no longer record sessions for them or mint them a claim
+code. Both of those come from the student being in your classroom.`,
+  },
   // ──── Account ────
   {
     slug: 'managing-your-account',

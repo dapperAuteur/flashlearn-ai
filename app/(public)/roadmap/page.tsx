@@ -334,6 +334,8 @@ const phases: Phase[] = [
           'Classroom creation and student enrollment',
           'Shared classroom set libraries',
           'Classroom analytics and assignment tracking',
+          'Teacher-created student accounts, no email address needed',
+          'Claim codes that hand a student their account with all their work intact',
         ],
       },
       {

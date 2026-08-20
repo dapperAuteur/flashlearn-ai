@@ -7,6 +7,7 @@ import {
   UserGroupIcon,
   ClipboardDocumentListIcon,
   PlusIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 
 interface ClassroomSummary {
@@ -56,6 +57,10 @@ export default function TeacherDashboardPage() {
 
   const totalStudents = classrooms.reduce((sum, c) => sum + (c.students?.length || 0), 0);
   const recentAssignments = assignments.slice(0, 5);
+  // With one classroom the roster is the obvious destination, so skip the list
+  // page. With none, the same button still lands somewhere that can create one.
+  const rosterHref =
+    classrooms.length === 1 ? `/teacher/classrooms/${classrooms[0]._id}` : "/teacher/classrooms";
 
   if (loading) {
     return (
@@ -95,7 +100,7 @@ export default function TeacherDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Link
           href="/teacher/classrooms"
           className="flex items-center gap-3 bg-white rounded-xl shadow p-4 hover:shadow-md transition-shadow"
@@ -106,6 +111,20 @@ export default function TeacherDashboardPage() {
           <div>
             <p className="font-medium text-gray-900 text-sm">Create Classroom</p>
             <p className="text-xs text-gray-500">Set up a new class and invite students</p>
+          </div>
+        </Link>
+        <Link
+          href={rosterHref}
+          className="flex items-center gap-3 bg-white rounded-xl shadow p-4 hover:shadow-md transition-shadow"
+        >
+          <div className="bg-amber-100 p-2 rounded-lg">
+            <UserPlusIcon className="h-5 w-5 text-amber-700" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="font-medium text-gray-900 text-sm">Add Students</p>
+            <p className="text-xs text-gray-600">
+              Make accounts for students with no email, then study with them in class
+            </p>
           </div>
         </Link>
         <Link
@@ -120,6 +139,41 @@ export default function TeacherDashboardPage() {
             <p className="text-xs text-gray-500">Assign flashcard sets to your students</p>
           </div>
         </Link>
+      </div>
+
+      {/* Classrooms, each linking straight to its roster */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900">Your Classrooms</h2>
+          <Link href="/teacher/classrooms" className="text-sm text-blue-600 hover:text-blue-800">
+            Manage
+          </Link>
+        </div>
+        {classrooms.length === 0 ? (
+          <div className="p-6 text-center text-sm text-gray-600">
+            No classrooms yet. Create one, then add students by name.
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {classrooms.map((c) => (
+              <li key={c._id} className="px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{c.name}</p>
+                  <p className="text-xs text-gray-600">
+                    {c.students?.length || 0} students &middot; Join code {c.joinCode}
+                  </p>
+                </div>
+                <Link
+                  href={`/teacher/classrooms/${c._id}`}
+                  className="shrink-0 min-h-11 inline-flex items-center px-3 py-2 text-sm font-medium text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50"
+                >
+                  Roster
+                  <span className="sr-only"> for {c.name}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Recent Assignments */}

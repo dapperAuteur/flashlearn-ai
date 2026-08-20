@@ -86,6 +86,9 @@ export async function middleware(request: NextRequest) {
     '/auth/signup',
     '/auth/forgot-password',
     '/auth/reset-password',
+    // A student claiming a teacher-made account has never signed in, so this
+    // page has to be reachable with no token.
+    '/claim',
     '/study',
     '/pricing',
     '/roadmap',

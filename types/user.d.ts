@@ -59,4 +59,15 @@ export interface IUser extends Document {
   deletedAt?: Date;
   purgeScheduledFor?: Date;
   deletionHiddenSetIds?: Schema.Types.ObjectId[];
+  /**
+   * A classroom account a teacher created for a student with no email address.
+   * No password, refused by every sign-in path, and cleared when the student
+   * claims the account. Absent on every account that predates the field.
+   */
+  isManaged?: boolean;
+  /** The teacher who created a managed account. Cleared on claim. */
+  managedBy?: Schema.Types.ObjectId;
+  /** SHA-256 of the outstanding claim code. Cleared on claim. */
+  claimCodeHash?: string;
+  claimCodeExpires?: Date;
 }

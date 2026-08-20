@@ -70,6 +70,17 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
           
+          // A teacher-managed classroom account holds no password at all, so
+          // bcrypt would throw on the undefined hash below and the catch would
+          // return null. That is the right answer for the wrong reason: it is
+          // an accident of the library, not a decision. Refuse first, and
+          // return the same null every other failure here returns, so an
+          // attacker cannot tell a managed account from a wrong password.
+          if (userDoc.isManaged === true || !userDoc.password) {
+            Logger.warning(LogContext.AUTH, "Authorize failed: Account has no password.", { email });
+            return null;
+          }
+
           const isPasswordValid = await compare(password, userDoc.password);
           
           if (!isPasswordValid) {
@@ -119,6 +130,17 @@ export const authOptions: NextAuthOptions = {
           const client = await clientPromise;
           const db = client.db();
           const userDoc = await db.collection("users").findOne({ email });
+
+          // Same refusal as the password path. A managed address sits in the
+          // .invalid TLD so no code could ever have been delivered to it, and
+          // a managed account never carries a loginCode, so both checks below
+          // would already reject it. Neither is a rule anyone wrote down, and
+          // relying on them means a future change to either one quietly opens
+          // a sign-in path for these accounts.
+          if (userDoc?.isManaged === true) {
+            Logger.warning(LogContext.AUTH, "Email-code authorize failed: Account has no password.", { email });
+            return null;
+          }
 
           if (!userDoc || !userDoc.loginCode || !userDoc.loginCodeExpires) {
             Logger.warning(LogContext.AUTH, "Email-code authorize failed: No user or no pending code.", { email });
