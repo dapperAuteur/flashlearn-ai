@@ -20,3 +20,19 @@ describe('PowerSync Helpers', () => {
     expect(intToBool(0)).toBe(false);
   });
 });
+
+describe('PowerSync schema', () => {
+  it('declares only the tables something actually reads', async () => {
+    const { AppSchema } = await import('../schema');
+
+    // `categories` used to sit here with two indexes and no reader, no writer,
+    // and no puller. Categories come from /api/sets/categories. A local table
+    // that nothing touches reads to the next person as an offline feature that
+    // exists, so this asserts it stays gone.
+    expect(AppSchema.tables.map((table) => table.name).sort()).toEqual([
+      'flashcard_sets',
+      'flashcards',
+      'offline_sets',
+    ]);
+  });
+});

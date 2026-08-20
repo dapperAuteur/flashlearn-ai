@@ -8,7 +8,7 @@ import { softDeleteUserAccount, ACCOUNT_GRACE_PERIOD_DAYS } from '@/lib/api/purg
 import { User } from '@/models/User';
 
 const PROFILE_FIELDS =
-  'name email username profilePicture role subscriptionTier createdAt onboardingCompleted';
+  'name email username profilePicture role subscriptionTier createdAt onboardingCompleted shareToOutboxOptIn';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -84,11 +84,15 @@ export async function PUT(request: NextRequest) {
   return NextResponse.json({ user, message: 'Profile updated successfully' });
 }
 
-// Narrow partial update. PATCH accepts one field and nothing else. It is
-// deliberately not a laxer PUT: a handler that copied the request body into
-// the update would let anyone hand themselves `role: 'Admin'` or a paid
-// `subscriptionTier`. Adding a field here means adding it to this list on
-// purpose, with its own validation.
+// Narrow partial update. PATCH accepts the keys on PATCHABLE_BOOLEANS and
+// nothing else. It is deliberately not a laxer PUT: a handler that copied the
+// request body into the update would let anyone hand themselves `role: 'Admin'`
+// or a paid `subscriptionTier`. Adding a field here means adding it to this
+// list on purpose, with its own validation. The body is never spread.
+const PATCHABLE_BOOLEANS = ['onboardingCompleted', 'shareToOutboxOptIn'] as const;
+
+type PatchableBoolean = (typeof PATCHABLE_BOOLEANS)[number];
+
 export async function PATCH(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -96,19 +100,39 @@ export async function PATCH(request: NextRequest) {
   }
 
   await dbConnect();
-  const body = await request.json();
-  const { onboardingCompleted } = body;
 
-  if (typeof onboardingCompleted !== 'boolean') {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Request body must be JSON' }, { status: 400 });
+  }
+
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be an object' }, { status: 400 });
+  }
+
+  const source = body as Record<string, unknown>;
+  const updateData: Partial<Record<PatchableBoolean, boolean>> = {};
+
+  for (const key of PATCHABLE_BOOLEANS) {
+    if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+    if (typeof source[key] !== 'boolean') {
+      return NextResponse.json({ error: `${key} must be true or false` }, { status: 400 });
+    }
+    updateData[key] = source[key] as boolean;
+  }
+
+  if (Object.keys(updateData).length === 0) {
     return NextResponse.json(
-      { error: 'onboardingCompleted must be true or false' },
+      { error: `This route updates ${PATCHABLE_BOOLEANS.join(' or ')}. Send at least one of them.` },
       { status: 400 },
     );
   }
 
   const user = await User.findByIdAndUpdate(
     session.user.id,
-    { onboardingCompleted },
+    updateData,
     { new: true, select: PROFILE_FIELDS },
   ).lean();
 

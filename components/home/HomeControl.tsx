@@ -23,6 +23,7 @@ import {
   Trophy,
 } from "lucide-react";
 import Footer from "@/components/layout/Footer";
+import { AccuracySummary, DueCardsSummary, StreakBadge, StreakSentence } from "@/components/home/HomeStats";
 import ActivePromoBanner from "@/components/ui/ActivePromoBanner";
 
 // Modern Hero Section with Conditional Content
@@ -38,7 +39,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
           <div className="text-center">
             {/* Welcome Message */}
             <div className="inline-flex items-center space-x-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <CheckCircle className="h-4 w-4" />
+              <CheckCircle className="h-4 w-4" aria-hidden="true" />
               <span>Welcome back, {session?.user?.name || 'Learner'}!</span>
             </div>
             
@@ -54,19 +55,20 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
             </p>
 
             {/* Quick Action Cards */}
+            <h2 className="sr-only">Quick actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               <Link href="/flashcards" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Play className="h-6 w-6 text-white" />
+                  <Play className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Study Now</h3>
-                <p className="text-sm text-gray-600 mb-3">Review 8 cards due for optimal retention</p>
+                <DueCardsSummary className="text-sm text-gray-600 mb-3" />
                 <div className="text-blue-600 text-sm font-medium group-hover:text-blue-700">Start session →</div>
               </Link>
 
               <Link href="/generate" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-purple-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Sparkles className="h-6 w-6 text-white" />
+                  <Sparkles className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Create Cards</h3>
                 <p className="text-sm text-gray-600 mb-3">Generate from PDF or text</p>
@@ -75,16 +77,16 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
 
               <Link href="/dashboard" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-green-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <TrendingUp className="h-6 w-6 text-white" />
+                  <TrendingUp className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">View Progress</h3>
-                <p className="text-sm text-gray-600 mb-3">87% average accuracy this week</p>
+                <AccuracySummary className="text-sm text-gray-600 mb-3" />
                 <div className="text-green-600 text-sm font-medium group-hover:text-green-700">See details →</div>
               </Link>
 
               <Link href="/versus" className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-orange-200 transition-all duration-300">
                 <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Swords className="h-6 w-6 text-white" />
+                  <Swords className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Versus Mode</h3>
                 <p className="text-sm text-gray-600 mb-3">Challenge others and climb the leaderboard</p>
@@ -93,10 +95,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
             </div>
             
             {/* Study Streak */}
-            <div className="inline-flex items-center space-x-3 bg-yellow-50 border border-yellow-200 rounded-full px-6 py-3">
-              <Target className="h-5 w-5 text-yellow-600" />
-              <span className="text-yellow-800 font-medium">12-day study streak! Keep it up!</span>
-            </div>
+            <StreakBadge className="inline-flex items-center space-x-3 bg-yellow-50 border border-yellow-200 rounded-full px-6 py-3" />
           </div>
         </div>
       </div>
@@ -112,7 +111,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
         <div className="text-center">
           {/* Badge */}
           <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-8">
-            <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
             <span>AI-Powered Learning Revolution</span>
           </div>
           
@@ -135,14 +134,14 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
               className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               Start Learning Free
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
             </Link>
             <Link
               href="/generate"
               className="inline-flex items-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300"
             >
               Try AI Generator
-              <Play className="ml-2 h-5 w-5" />
+              <Play className="ml-2 h-5 w-5" aria-hidden="true" />
             </Link>
           </div>
 
@@ -236,7 +235,7 @@ const BenefitsSection = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
           {benefits.map((benefit, index) => (
             <div key={index} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200 hover:shadow-lg transition-shadow duration-300">
               <div className={`bg-gradient-to-br ${colorMap[benefit.color]} rounded-xl w-14 h-14 flex items-center justify-center mb-6`}>
-                <benefit.icon className="h-7 w-7 text-white" />
+                <benefit.icon className="h-7 w-7 text-white" aria-hidden="true" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">{benefit.title}</h3>
               <p className="text-gray-600">{benefit.description}</p>
@@ -267,7 +266,7 @@ const FeaturesShowcase = () => {
           <div className="space-y-8">
             <div className="flex items-start space-x-4">
               <div className="bg-blue-100 rounded-lg p-2 flex-shrink-0">
-                <Sparkles className="h-5 w-5 text-blue-600" />
+                <Sparkles className="h-5 w-5 text-blue-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">AI Content Generation</h3>
@@ -277,7 +276,7 @@ const FeaturesShowcase = () => {
             
             <div className="flex items-start space-x-4">
               <div className="bg-green-100 rounded-lg p-2 flex-shrink-0">
-                <Brain className="h-5 w-5 text-green-600" />
+                <Brain className="h-5 w-5 text-green-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Spaced Repetition Algorithm</h3>
@@ -287,7 +286,7 @@ const FeaturesShowcase = () => {
             
             <div className="flex items-start space-x-4">
               <div className="bg-purple-100 rounded-lg p-2 flex-shrink-0">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
+                <TrendingUp className="h-5 w-5 text-purple-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Progress Analytics</h3>
@@ -297,7 +296,7 @@ const FeaturesShowcase = () => {
             
             <div className="flex items-start space-x-4">
               <div className="bg-orange-100 rounded-lg p-2 flex-shrink-0">
-                <WifiOff className="h-5 w-5 text-orange-600" />
+                <WifiOff className="h-5 w-5 text-orange-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Offline Study Mode</h3>
@@ -307,7 +306,7 @@ const FeaturesShowcase = () => {
 
             <div className="flex items-start space-x-4">
               <div className="bg-teal-100 rounded-lg p-2 flex-shrink-0">
-                <Globe className="h-5 w-5 text-teal-600" />
+                <Globe className="h-5 w-5 text-teal-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Explore Community Sets</h3>
@@ -317,7 +316,7 @@ const FeaturesShowcase = () => {
 
             <div className="flex items-start space-x-4">
               <div className="bg-rose-100 rounded-lg p-2 flex-shrink-0">
-                <MessageSquare className="h-5 w-5 text-rose-600" />
+                <MessageSquare className="h-5 w-5 text-rose-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">In-App Feedback</h3>
@@ -327,7 +326,7 @@ const FeaturesShowcase = () => {
 
             <div className="flex items-start space-x-4">
               <div className="bg-amber-100 rounded-lg p-2 flex-shrink-0">
-                <Swords className="h-5 w-5 text-amber-600" />
+                <Swords className="h-5 w-5 text-amber-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Versus Mode</h3>
@@ -341,7 +340,7 @@ const FeaturesShowcase = () => {
             <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl p-8 shadow-lg">
               <div className="bg-white rounded-xl p-6 shadow-sm mb-4">
                 <div className="flex items-center space-x-3 mb-3">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
+                  <BookOpen className="h-5 w-5 text-blue-600" aria-hidden="true" />
                   <span className="font-medium text-gray-900">Biology Chapter 7</span>
                 </div>
                 <p className="text-gray-600 text-sm">24 cards • 85% accuracy • Due for review</p>
@@ -352,7 +351,7 @@ const FeaturesShowcase = () => {
               
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-center space-x-3 mb-3">
-                  <Sparkles className="h-5 w-5 text-purple-600" />
+                  <Sparkles className="h-5 w-5 text-purple-600" aria-hidden="true" />
                   <span className="font-medium text-gray-900">Spanish Vocabulary</span>
                 </div>
                 <p className="text-gray-600 text-sm">12 cards • Generated from PDF</p>
@@ -374,7 +373,7 @@ const SocialSection = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-16">
         <div className="inline-flex items-center space-x-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
-          <Users className="h-4 w-4" />
+          <Users className="h-4 w-4" aria-hidden="true" />
           <span>Social &amp; Collaboration</span>
         </div>
         <h2 id="social-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -388,7 +387,7 @@ const SocialSection = () => (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
           <div className="bg-blue-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
-            <Users className="h-6 w-6 text-white" />
+            <Users className="h-6 w-6 text-white" aria-hidden="true" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-3">Public Profiles</h3>
           <p className="text-gray-600">
@@ -398,7 +397,7 @@ const SocialSection = () => (
 
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100">
           <div className="bg-purple-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
-            <Target className="h-6 w-6 text-white" />
+            <Target className="h-6 w-6 text-white" aria-hidden="true" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-3">Study Teams</h3>
           <p className="text-gray-600">
@@ -408,7 +407,7 @@ const SocialSection = () => (
 
         <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-8 border border-green-100">
           <div className="bg-green-500 rounded-xl w-12 h-12 flex items-center justify-center mb-4">
-            <BookOpen className="h-6 w-6 text-white" />
+            <BookOpen className="h-6 w-6 text-white" aria-hidden="true" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-3">Classrooms</h3>
           <p className="text-gray-600">
@@ -423,7 +422,7 @@ const SocialSection = () => (
           className="inline-flex items-center px-6 py-3 min-h-[44px] bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors"
         >
           Join the Community
-          <ArrowRight className="ml-2 h-4 w-4" />
+          <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
     </div>
@@ -436,7 +435,7 @@ const DeveloperAPISection = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
         <div className="inline-flex items-center space-x-2 bg-blue-900 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
-          <Code className="h-4 w-4" />
+          <Code className="h-4 w-4" aria-hidden="true" />
           <span>Public API: Free Tier Available</span>
         </div>
         <h2 id="dev-api-heading" className="text-3xl md:text-4xl font-bold mb-4">
@@ -493,7 +492,7 @@ const DeveloperAPISection = () => (
           className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
         >
           Read the Docs
-          <ArrowRight className="ml-2 h-4 w-4" />
+          <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
         </Link>
         <Link
           href="/docs/api"
@@ -528,15 +527,13 @@ const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Your Next Learning Victory Awaits
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            You&apos;re on a 12-day streak! Keep the momentum going with your personalized study session.
-          </p>
+          <StreakSentence className="text-xl text-blue-100 mb-8" />
           <Link
             href="/flashcards"
             className="inline-flex items-center bg-yellow-400 text-blue-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-yellow-300 transition-colors shadow-lg"
           >
             Continue Studying
-            <ArrowRight className="ml-2 h-5 w-5" />
+            <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
           </Link>
         </div>
       </div>

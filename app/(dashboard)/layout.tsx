@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import { useOnboarding } from '@/hooks/OnboardingHooks';
 import OnboardingModal from '@/components/ui/OnboardingModal';
+import GettingStartedWizard from '@/components/ui/GettingStartedWizard';
 import { getSyncService } from '@/lib/services/syncService';
 
 /**
@@ -67,6 +68,14 @@ export default function DashboardLayout({
 
       <main id="main-content" className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/*
+            First-run checklist. It reads onboardingCompleted from the account
+            and renders nothing once that is true, so a user who dismisses it
+            never sees it again on any device. It sits in the layout rather
+            than on one page because a new user's first stop is not always
+            /dashboard.
+          */}
+          <GettingStartedWizard />
           {children}
         </div>
       </main>

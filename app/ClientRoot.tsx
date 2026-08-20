@@ -16,12 +16,17 @@ import { Toaster } from '@/components/ui/toaster';
 import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
 import FeedbackWidget from '@/components/ui/FeedbackWidget';
 import MobileTabBar from '@/components/layout/MobileTabBar';
+import LocalStoreErrorBanner from '@/components/ui/LocalStoreErrorBanner';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { Logger, LogContext } from '@/lib/logging/client-logger';
 
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   // undefined = loading, null = failed, PowerSyncDatabase = ready
   const [powerSyncDB, setPowerSyncDB] = useState<any>(undefined);
+  // Kept apart from powerSyncDB so the failure is a state the UI can render,
+  // not something only a console reader would ever find out about.
+  const [localStoreFailed, setLocalStoreFailed] = useState(false);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -40,9 +45,13 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
         const { initPowerSync, getPowerSync } = await import('@/lib/powersync/client');
         await initPowerSync();
         setPowerSyncDB(getPowerSync());
+        setLocalStoreFailed(false);
       } catch (error) {
-        console.error('PowerSync initialization failed:', error);
+        Logger.error(LogContext.SYSTEM, 'Local read cache failed to open', { error });
+        // Still resolve the loading state. The local store is a cache, so the
+        // rest of the app has to render without it rather than spin forever.
         setPowerSyncDB(null);
+        setLocalStoreFailed(true);
       }
     };
     init();
@@ -69,6 +78,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
       <ThemeProvider>
       <AuthProvider>
         <AnnouncementBanner />
+        <LocalStoreErrorBanner failed={localStoreFailed} />
         <PowerSyncContext.Provider value={powerSyncDB}>
           <NetworkSyncProvider>
             <FlashcardProvider>

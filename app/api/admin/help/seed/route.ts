@@ -65,6 +65,52 @@ You can also generate from:
   },
   // ──── Study Modes ────
   {
+    slug: 'your-library',
+    title: 'Your Library: Keeping the Sets You Actually Study',
+    category: 'getting-started',
+    excerpt: 'Add public sets to your own shelf so the sets you study are the first thing you see when you sign in.',
+    order: 3,
+    tags: ['library', 'explore', 'dashboard'],
+    content: `# Your Library
+
+There are hundreds of public sets on FlashLearnAI, and Explore shows the newest ones first. Your
+library is the fix: a short list of the sets you actually use, shown at the top of your dashboard
+every time you sign in.
+
+## Adding a set
+
+- On **Explore**, every card has an **Add to library** button next to **Study Now**.
+- On a set's own page, the same button sits under the title.
+- Anything **you** create is added for you when you save it, so your own work is always there.
+
+Once a set is on your shelf the button reads **In your library**. Click it again to remove it.
+
+## How your library is sorted
+
+Most recently studied first, then most recently added. Study the seven times table this morning and
+it is at the top tomorrow without you doing anything. Sets you have not studied yet sit below the
+ones you have, in the order you added them.
+
+## Adding does not copy the set
+
+Your library points at the original set. It does not make a copy. That means a correction the author
+publishes reaches you, instead of leaving you studying an old version.
+
+It also means you cannot edit a public set from your library. Sets you created are the ones you can
+edit, from **My Flashcards**.
+
+## Removing a set keeps your progress
+
+Removing a set takes it off the shelf and nothing else. Your streak, your accuracy, and your spaced
+repetition schedule for that set are all kept. Add the set back later and everything picks up where
+it left off.
+
+## There is no limit
+
+Keep three sets or keep forty. The library is not a quota; it is just the shortcut past a large
+catalogue.`,
+  },
+  {
     slug: 'study-modes-explained',
     title: 'Study Modes Explained',
     category: 'study-modes',
@@ -180,6 +226,36 @@ Answers are stored on your device as you go and upload on their own once you are
 
 ## Editing on two devices
 There is no clash detection. If the same set is changed in two places, whichever change is saved last is the one kept. Edit a set in one place at a time.
+`,
+  },
+  {
+    slug: 'sharing-your-milestones',
+    title: 'Sharing Your Milestones',
+    category: 'account',
+    excerpt: 'What the milestone sharing setting does, what it never does, and how to turn it off.',
+    order: 3,
+    tags: ['account', 'privacy', 'sharing'],
+    content: `# Sharing Your Milestones
+
+There is a setting on your Settings page called **Sharing your milestones**. It is off unless you turn it on.
+
+## What it does when it is on
+
+When you hit a milestone, like finishing a long review streak or making a set public, we write a **draft** social post about it.
+
+## What it never does
+
+**It never publishes anything.** A draft goes into a review queue and a person reads it before it goes anywhere. Nothing is posted automatically, and nothing is posted without that review.
+
+It also never shares your answers, your scores, or anything about what you got wrong.
+
+## Turning it off
+
+Settings, then switch **Sharing your milestones** off. It takes effect straight away. Drafts already written stay in the review queue; if you want one pulled, contact support.
+
+## If you never turn it on
+
+Nothing happens. No drafts are written and no milestone leaves your account.
 `,
   },
   // ──── API ────

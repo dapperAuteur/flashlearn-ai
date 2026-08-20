@@ -10,6 +10,7 @@ import mongoose, { Types } from "mongoose";
 import { createShortLink, toSwitchySlug } from '@/lib/switchy';
 import { createActivityEvent } from '@/lib/services/activityService';
 import { fireOutboxDrafts } from '@/lib/outbox-trigger';
+import { addSetToLibrary } from '@/lib/library/libraryService';
 
 // Define the expected shape of the incoming request body
 const saveSetSchema = z.object({
@@ -87,6 +88,14 @@ export async function POST(request: NextRequest) {
     });
 
     const savedSet = await newSet.save();
+
+    // A set you made belongs on your own shelf from the moment it exists.
+    // Without this the dashboard, which now leads with the library, would not
+    // show a person their own work, and that reads as the save having failed.
+    await addSetToLibrary(profileId, savedSet._id).catch(() => {
+      // The set is saved either way. A missing shelf entry is recoverable from
+      // My Flashcards; failing the save over it is not.
+    });
 
     createActivityEvent(userId, 'set_created', {
       setId: savedSet._id.toString(),

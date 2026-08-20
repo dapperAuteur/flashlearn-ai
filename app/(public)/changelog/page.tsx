@@ -41,6 +41,9 @@ const releases: Release[] = [
     icon: GraduationCap,
     iconColor: 'text-emerald-600',
     items: [
+      'Getting started checklist now appears for new accounts and remembers being dismissed, on every device. It was written months ago and never mounted, so nobody had seen it',
+      'New Sharing your milestones setting. Off by default. When on, a study milestone can become a draft social post that a person reviews before anything publishes',
+      'Offline study failing to start now says so, instead of showing an empty set list to someone with plenty of sets. Most often this is a private window, which cannot keep an offline copy at all',
       'Teacher-proctored study sessions: an adult runs the session and the student\'s spaced-repetition schedule is the one that advances',
       'Two authorization edges for proctoring: an active classroom the actor teaches, or a student linked to the actor\'s account. Archived classrooms do not count.',
       'GET /api/study/proctorable-students backs the picker on the study setup screen. It returns names, usernames, and classroom names, and no email addresses.',
@@ -53,6 +56,7 @@ const releases: Release[] = [
       'Retired the MongoDB-to-PowerSync migration path. Background sync already fills a fresh device with your sets, so signing in on a new browser no longer prompts for a migration you were not allowed to run.',
       'Removed the offline conflict-resolution screen and its banner. The feature never worked: the sync service watched for a 409 response that no route has ever returned, so no conflict was ever recorded and the review page was always empty. The 1.4.0 entry below describes behavior the app did not have.',
       'Corrected the offline documentation to match the code. The local set copy runs one way, server to device, on a five-minute poll, and study results upload with retry when you reconnect. There is no live streaming and no clash detection.',
+      'The homepage now shows your real study numbers. Cards due, average accuracy, and streak come from the same endpoints the dashboard uses. They used to be hardcoded, so a brand new account was congratulated on a twelve-day streak.',
     ],
   },
   {

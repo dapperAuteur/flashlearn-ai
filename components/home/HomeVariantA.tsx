@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
 import { Brain, Zap, Users, TrendingUp, Clock, Sparkles } from "lucide-react";
+import { HomeStatTile } from "@/components/home/HomeStats";
 
 // Authenticated Dashboard View
 const AuthenticatedHome = ({ session }: { session: any }) => {
@@ -19,10 +20,11 @@ const AuthenticatedHome = ({ session }: { session: any }) => {
         </div>
 
         {/* Quick Actions */}
+        <h2 className="sr-only">Quick actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Link href="/generate" className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center space-x-3">
-              <Sparkles className="h-8 w-8 text-blue-600" />
+              <Sparkles className="h-8 w-8 text-blue-600" aria-hidden="true" />
               <div>
                 <h3 className="font-semibold text-gray-900">Generate Flashcards</h3>
                 <p className="text-sm text-gray-600">Create from text, PDF, or YouTube</p>
@@ -32,7 +34,7 @@ const AuthenticatedHome = ({ session }: { session: any }) => {
           
           <Link href="/flashcards" className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center space-x-3">
-              <Brain className="h-8 w-8 text-green-600" />
+              <Brain className="h-8 w-8 text-green-600" aria-hidden="true" />
               <div>
                 <h3 className="font-semibold text-gray-900">Study Session</h3>
                 <p className="text-sm text-gray-600">Review your flashcards</p>
@@ -42,7 +44,7 @@ const AuthenticatedHome = ({ session }: { session: any }) => {
           
           <Link href="/dashboard" className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center space-x-3">
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <TrendingUp className="h-8 w-8 text-purple-600" aria-hidden="true" />
               <div>
                 <h3 className="font-semibold text-gray-900">View Progress</h3>
                 <p className="text-sm text-gray-600">Track your learning stats</p>
@@ -51,24 +53,26 @@ const AuthenticatedHome = ({ session }: { session: any }) => {
           </Link>
         </div>
 
-        {/* Recent Activity Placeholder */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div>
-                <p className="font-medium text-gray-900">Biology Flashcards</p>
-                <p className="text-sm text-gray-600">Last studied 2 hours ago</p>
-              </div>
-              <span className="text-sm text-green-600 font-medium">85% accuracy</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div>
-                <p className="font-medium text-gray-900">Spanish Vocabulary</p>
-                <p className="text-sm text-gray-600">Last studied yesterday</p>
-              </div>
-              <span className="text-sm text-blue-600 font-medium">Ready to review</span>
-            </div>
+        {/* Your Progress: read from the same endpoints the dashboard reads, so
+            the two screens can never show a signed-in user different numbers. */}
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Progress</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <HomeStatTile
+              metric="due"
+              iconWrapperClassName="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Clock className="h-6 w-6 text-blue-600" aria-hidden="true" />}
+            />
+            <HomeStatTile
+              metric="streak"
+              iconWrapperClassName="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Zap className="h-6 w-6 text-purple-600" aria-hidden="true" />}
+            />
+            <HomeStatTile
+              metric="accuracy"
+              iconWrapperClassName="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<TrendingUp className="h-6 w-6 text-green-600" aria-hidden="true" />}
+            />
           </div>
         </div>
       </div>
@@ -122,7 +126,7 @@ const UnauthenticatedHome = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-                <Brain className="h-8 w-8 text-blue-600" />
+                <Brain className="h-8 w-8 text-blue-600" aria-hidden="true" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Spaced Repetition Science</h3>
               <p className="text-gray-600">
@@ -132,7 +136,7 @@ const UnauthenticatedHome = () => {
             
             <div className="text-center">
               <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-                <Zap className="h-8 w-8 text-green-600" />
+                <Zap className="h-8 w-8 text-green-600" aria-hidden="true" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">AI Content Creation</h3>
               <p className="text-gray-600">
@@ -142,7 +146,7 @@ const UnauthenticatedHome = () => {
             
             <div className="text-center">
               <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-                <TrendingUp className="h-8 w-8 text-purple-600" />
+                <TrendingUp className="h-8 w-8 text-purple-600" aria-hidden="true" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Progress Tracking</h3>
               <p className="text-gray-600">
@@ -162,7 +166,7 @@ const UnauthenticatedHome = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="flex space-x-4">
-              <Clock className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
+              <Clock className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" aria-hidden="true" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Smart Study Scheduling</h3>
                 <p className="text-gray-600">Get notified when it&apos;s the perfect time to review specific cards for maximum retention.</p>
@@ -170,7 +174,7 @@ const UnauthenticatedHome = () => {
             </div>
             
             <div className="flex space-x-4">
-              <Users className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
+              <Users className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" aria-hidden="true" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Team Collaboration</h3>
                 <p className="text-gray-600">Share flashcard sets with study groups and track collective progress.</p>
@@ -178,7 +182,7 @@ const UnauthenticatedHome = () => {
             </div>
             
             <div className="flex space-x-4">
-              <Sparkles className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
+              <Sparkles className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" aria-hidden="true" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Multiple Study Modes</h3>
                 <p className="text-gray-600">Choose from flashcards, multiple choice, fill-in-the-blank, and free response formats.</p>
@@ -186,7 +190,7 @@ const UnauthenticatedHome = () => {
             </div>
             
             <div className="flex space-x-4">
-              <TrendingUp className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
+              <TrendingUp className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" aria-hidden="true" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Detailed Analytics</h3>
                 <p className="text-gray-600">Understand your learning patterns with comprehensive progress reports and insights.</p>

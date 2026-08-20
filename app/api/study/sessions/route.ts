@@ -9,6 +9,7 @@ import dbConnect from '@/lib/db/dbConnect';
 import { Logger, LogContext } from '@/lib/logging/logger';
 import { authOptions } from '@/lib/auth/auth';
 import { StudyAnalytics } from '@/models/StudyAnalytics';
+import { touchLibraryEntry } from '@/lib/library/libraryService';
 import { resolveStudySubject } from '@/lib/study/resolveStudySubject';
 import { User } from '@/models/User';
 import { FlashcardSet } from '@/models/FlashcardSet';
@@ -307,6 +308,15 @@ export async function POST(request: NextRequest) {
             }
 
             responseData = { message: 'Sync successful', analyticsId: analytics._id.toString(), sessionId: sessionData.sessionId };
+        });
+
+        // Move this set to the top of the learner's library. Runs after the
+        // transaction commits, so a rolled-back session cannot leave a
+        // lastStudiedAt behind. No upsert: studying a set is not the same as
+        // choosing to keep it, so a set the learner never added stays off the
+        // shelf.
+        await touchLibraryEntry(subject.profileId, setIdAsObjectId).catch(() => {
+          // Sort order is not worth failing a synced session over.
         });
 
         await Logger.info(LogContext.STUDY, `Successfully synced study session for set ${setId}.`, { userId, metadata: { setId, resultsCount: results.length, isPaidUser  } });

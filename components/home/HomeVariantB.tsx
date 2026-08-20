@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
 import { Brain, Zap, Users, TrendingUp, Clock, Sparkles, BarChart3, BookOpen, Target } from "lucide-react";
+import { HomeStatTile } from "@/components/home/HomeStats";
 
 // Shared Hero Component that adapts based on auth status
 const AdaptiveHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; session?: any }) => {
@@ -80,37 +81,29 @@ const AdaptiveStatsSection = ({ isAuthenticated }: { isAuthenticated: boolean })
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
-              <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">24</div>
-              <div className="text-sm text-gray-600">Flashcard Sets</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
-              <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <Target className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">87%</div>
-              <div className="text-sm text-gray-600">Average Accuracy</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
-              <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">12</div>
-              <div className="text-sm text-gray-600">Day Streak</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
-              <div className="bg-yellow-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">156</div>
-              <div className="text-sm text-gray-600">Cards Mastered</div>
-            </div>
+            <HomeStatTile
+              metric="sessions"
+              iconWrapperClassName="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<BookOpen className="h-6 w-6 text-blue-600" aria-hidden="true" />}
+            />
+
+            <HomeStatTile
+              metric="accuracy"
+              iconWrapperClassName="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Target className="h-6 w-6 text-green-600" aria-hidden="true" />}
+            />
+
+            <HomeStatTile
+              metric="streak"
+              iconWrapperClassName="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Clock className="h-6 w-6 text-purple-600" aria-hidden="true" />}
+            />
+
+            <HomeStatTile
+              metric="due"
+              iconWrapperClassName="bg-yellow-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Sparkles className="h-6 w-6 text-yellow-600" aria-hidden="true" />}
+            />
           </div>
         </div>
       </div>
@@ -130,7 +123,7 @@ const AdaptiveStatsSection = ({ isAuthenticated }: { isAuthenticated: boolean })
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
             <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-              <Brain className="h-8 w-8 text-blue-600" />
+              <Brain className="h-8 w-8 text-blue-600" aria-hidden="true" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">40% Better Retention</h3>
             <p className="text-gray-600">
@@ -140,7 +133,7 @@ const AdaptiveStatsSection = ({ isAuthenticated }: { isAuthenticated: boolean })
           
           <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
             <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-              <Clock className="h-8 w-8 text-green-600" />
+              <Clock className="h-8 w-8 text-green-600" aria-hidden="true" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">80% Time Savings</h3>
             <p className="text-gray-600">
@@ -150,7 +143,7 @@ const AdaptiveStatsSection = ({ isAuthenticated }: { isAuthenticated: boolean })
           
           <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
             <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <TrendingUp className="h-8 w-8 text-purple-600" aria-hidden="true" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Personalized Learning</h3>
             <p className="text-gray-600">
@@ -167,7 +160,6 @@ const AdaptiveStatsSection = ({ isAuthenticated }: { isAuthenticated: boolean })
 const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   if (isAuthenticated) {
     return (
-      <div>
       <div className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-12">
@@ -177,7 +169,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Link href="/generate" className="group bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-blue-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Sparkles className="h-6 w-6 text-white" />
+                <Sparkles className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Generate New Cards</h3>
               <p className="text-gray-600 text-sm">Upload PDFs, paste text, or share YouTube links to create flashcards instantly with AI.</p>
@@ -185,7 +177,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <Link href="/flashcards" className="group bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-green-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Brain className="h-6 w-6 text-white" />
+                <Brain className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Study Session</h3>
               <p className="text-gray-600 text-sm">Review your flashcards with our intelligent spaced repetition algorithm.</p>
@@ -193,7 +185,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <Link href="/dashboard" className="group bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-purple-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <BarChart3 className="h-6 w-6 text-white" />
+                <BarChart3 className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">View Analytics</h3>
               <p className="text-gray-600 text-sm">Track your progress and identify areas for improvement with detailed insights.</p>
@@ -201,7 +193,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <Link href="/team" className="group bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-orange-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Users className="h-6 w-6 text-white" />
+                <Users className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Team Collaboration</h3>
               <p className="text-gray-600 text-sm">Share flashcard sets with your study group and track collective progress.</p>
@@ -209,7 +201,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <Link href="/explore" className="group bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-teal-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <BookOpen className="h-6 w-6 text-white" />
+                <BookOpen className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Browse Library</h3>
               <p className="text-gray-600 text-sm">Explore public flashcard sets and discover new learning materials.</p>
@@ -217,12 +209,11 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <Link href="/settings" className="group bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
               <div className="bg-gray-600 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Target className="h-6 w-6 text-white" />
+                <Target className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Learning Goals</h3>
               <p className="text-gray-600 text-sm">Set up your learning objectives and customize your study experience.</p>
             </Link>
-          </div>
           </div>
         </div>
       </div>
@@ -240,7 +231,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
           <div className="space-y-6">
             <div className="flex items-start space-x-4">
               <div className="bg-blue-100 rounded-lg p-2 flex-shrink-0">
-                <Sparkles className="h-5 w-5 text-blue-600" />
+                <Sparkles className="h-5 w-5 text-blue-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">AI Content Generation</h3>
@@ -250,7 +241,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <div className="flex items-start space-x-4">
               <div className="bg-green-100 rounded-lg p-2 flex-shrink-0">
-                <Brain className="h-5 w-5 text-green-600" />
+                <Brain className="h-5 w-5 text-green-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Spaced Repetition Algorithm</h3>
@@ -260,7 +251,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <div className="flex items-start space-x-4">
               <div className="bg-purple-100 rounded-lg p-2 flex-shrink-0">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
+                <TrendingUp className="h-5 w-5 text-purple-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Progress Analytics</h3>
@@ -272,7 +263,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
           <div className="space-y-6">
             <div className="flex items-start space-x-4">
               <div className="bg-orange-100 rounded-lg p-2 flex-shrink-0">
-                <Users className="h-5 w-5 text-orange-600" />
+                <Users className="h-5 w-5 text-orange-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Team Collaboration</h3>
@@ -282,7 +273,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <div className="flex items-start space-x-4">
               <div className="bg-teal-100 rounded-lg p-2 flex-shrink-0">
-                <Zap className="h-5 w-5 text-teal-600" />
+                <Zap className="h-5 w-5 text-teal-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Multiple Study Modes</h3>
@@ -292,7 +283,7 @@ const AdaptiveFeaturesSection = ({ isAuthenticated }: { isAuthenticated: boolean
             
             <div className="flex items-start space-x-4">
               <div className="bg-yellow-100 rounded-lg p-2 flex-shrink-0">
-                <Clock className="h-5 w-5 text-yellow-600" />
+                <Clock className="h-5 w-5 text-yellow-600" aria-hidden="true" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Smart Notifications</h3>

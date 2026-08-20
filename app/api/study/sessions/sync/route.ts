@@ -8,6 +8,7 @@ import { StudySession } from '@/models/StudySession';
 import { CardResult as CardResultModel } from '@/models/CardResult';
 import { FlashcardSet } from '@/models/FlashcardSet';
 import { StudyAnalytics } from '@/models/StudyAnalytics';
+import { touchLibraryEntry } from '@/lib/library/libraryService';
 import { resolveStudySubject } from '@/lib/study/resolveStudySubject';
 import { calculateSM2 } from '@/lib/algorithms/sm2';
 import { Logger, LogContext, LogLevel } from '@/lib/logging/logger';
@@ -335,6 +336,11 @@ export async function POST(request: NextRequest) {
         : 0;
 
       await analytics.save();
+
+      // Same write, same profile, same set: move this set to the top of the
+      // learner's library. No upsert, so studying a set the learner never added
+      // does not quietly put it on their shelf.
+      await touchLibraryEntry(profileId, setIdAsObjectId);
 
       Logger.log({
         context: LogContext.STUDY,
