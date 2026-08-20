@@ -5,6 +5,7 @@ import { Profile as ProfileModel } from '@/models/Profile';
 import { buildFlashcardDoc, serializeApiCard, type FlashcardInput } from '@/lib/api/flashcardOptions';
 import dbConnect from '@/lib/db/dbConnect';
 import { type ApiAuthContext } from '@/types/api';
+import { addSetToLibrary } from '@/lib/library/libraryService';
 
 /**
  * GET /api/v1/sets
@@ -112,6 +113,13 @@ async function handlePost(request: NextRequest, context: ApiAuthContext, request
     source: 'CSV', // API-created sets marked as CSV source
     flashcards: cardDocs,
     cardCount: cardDocs.length,
+  });
+
+  // Same rule as the in-app save: a set its author created is on their shelf
+  // from birth, so the dashboard library shows their own work without them
+  // having to add it back from Explore.
+  await addSetToLibrary(userProfile._id, newSet._id).catch(() => {
+    // Never fail the create over the shelf entry.
   });
 
   return apiSuccess({

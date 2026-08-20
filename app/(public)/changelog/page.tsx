@@ -56,6 +56,7 @@ const releases: Release[] = [
       'Retired the MongoDB-to-PowerSync migration path. Background sync already fills a fresh device with your sets, so signing in on a new browser no longer prompts for a migration you were not allowed to run.',
       'Removed the offline conflict-resolution screen and its banner. The feature never worked: the sync service watched for a 409 response that no route has ever returned, so no conflict was ever recorded and the review page was always empty. The 1.4.0 entry below describes behavior the app did not have.',
       'Corrected the offline documentation to match the code. The local set copy runs one way, server to device, on a five-minute poll, and study results upload with retry when you reconnect. There is no live streaming and no clash detection.',
+      'The homepage now shows your real study numbers. Cards due, average accuracy, and streak come from the same endpoints the dashboard uses. They used to be hardcoded, so a brand new account was congratulated on a twelve-day streak.',
     ],
   },
   {

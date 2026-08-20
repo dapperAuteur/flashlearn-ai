@@ -53,7 +53,7 @@ const PROCTOR_ROLES = ['Teacher', 'Tutor', 'Parent', 'SchoolAdmin', 'Admin'];
  * (app/api/flashcards/route.ts), so a student who has never studied can still
  * be proctored.
  */
-async function resolveProfileId(userId: Types.ObjectId): Promise<Types.ObjectId> {
+export async function resolveProfileId(userId: Types.ObjectId): Promise<Types.ObjectId> {
   const user = await User.findById(userId)
     .select('profiles')
     .lean<{ profiles?: Types.ObjectId[] } | null>();

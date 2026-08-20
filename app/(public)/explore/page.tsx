@@ -13,6 +13,8 @@ import {
 } from '@heroicons/react/24/outline';
 import ReportModal from '@/components/ui/ReportModal';
 import RatingStars from '@/components/RatingStars';
+import LibraryToggleButton from '@/components/library/LibraryToggleButton';
+import { useLibrarySetIds } from '@/hooks/useLibrarySetIds';
 
 interface CategoryInfo {
   _id?: string;
@@ -55,6 +57,11 @@ export default function ExplorePage() {
   const [reportingSet, setReportingSet] = useState<PublicSet | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'rating'>('recent');
   const limit = 20;
+
+  // Which of these sets the visitor already keeps. Signed-out visitors make no
+  // request and see no toggle, since there is no shelf to add to.
+  const { setIds: librarySetIds, isLoaded: libraryLoaded, markLocal } =
+    useLibrarySetIds(Boolean(session));
 
   // Fetch categories on mount
   useEffect(() => {
@@ -125,6 +132,15 @@ export default function ExplorePage() {
           <p className="text-gray-600 max-w-xl mx-auto">
             Browse community flashcard sets and start studying. No account required.
           </p>
+          {session && (
+            <p className="mt-3 text-sm text-gray-600">
+              Add the ones you use to your library, then{' '}
+              <Link href="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium underline">
+                open your library
+              </Link>{' '}
+              to pick up where you left off.
+            </p>
+          )}
         </div>
 
         {/* Search */}
@@ -232,13 +248,22 @@ export default function ExplorePage() {
                       size="sm"
                     />
                   </div>
-                  <Link
-                    href={`/study?setId=${set.id}`}
-                    className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <PlayIcon className="h-4 w-4 mr-2" />
-                    Study Now
-                  </Link>
+                  <div className="flex flex-wrap items-start gap-2">
+                    <Link
+                      href={`/study?setId=${set.id}`}
+                      className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <PlayIcon className="h-4 w-4 mr-2" />
+                      Study Now
+                    </Link>
+                    {session && libraryLoaded && (
+                      <LibraryToggleButton
+                        setId={set.id}
+                        initialInLibrary={librarySetIds.has(set.id)}
+                        onChange={markLocal}
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -351,13 +376,22 @@ export default function ExplorePage() {
                       size="sm"
                     />
                   </div>
-                  <Link
-                    href={`/study?setId=${set.id}`}
-                    className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <PlayIcon className="h-4 w-4 mr-2" />
-                    Study Now
-                  </Link>
+                  <div className="flex flex-wrap items-start gap-2">
+                    <Link
+                      href={`/study?setId=${set.id}`}
+                      className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <PlayIcon className="h-4 w-4 mr-2" />
+                      Study Now
+                    </Link>
+                    {session && libraryLoaded && (
+                      <LibraryToggleButton
+                        setId={set.id}
+                        initialInLibrary={librarySetIds.has(set.id)}
+                        onChange={markLocal}
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

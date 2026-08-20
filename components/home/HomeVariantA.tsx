@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
 import { Brain, Zap, Users, TrendingUp, Clock, Sparkles } from "lucide-react";
+import { HomeStatTile } from "@/components/home/HomeStats";
 
 // Authenticated Dashboard View
 const AuthenticatedHome = ({ session }: { session: any }) => {
@@ -52,24 +53,26 @@ const AuthenticatedHome = ({ session }: { session: any }) => {
           </Link>
         </div>
 
-        {/* Recent Activity Placeholder */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div>
-                <p className="font-medium text-gray-900">Biology Flashcards</p>
-                <p className="text-sm text-gray-600">Last studied 2 hours ago</p>
-              </div>
-              <span className="text-sm text-green-600 font-medium">85% accuracy</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div>
-                <p className="font-medium text-gray-900">Spanish Vocabulary</p>
-                <p className="text-sm text-gray-600">Last studied yesterday</p>
-              </div>
-              <span className="text-sm text-blue-600 font-medium">Ready to review</span>
-            </div>
+        {/* Your Progress: read from the same endpoints the dashboard reads, so
+            the two screens can never show a signed-in user different numbers. */}
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Progress</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <HomeStatTile
+              metric="due"
+              iconWrapperClassName="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Clock className="h-6 w-6 text-blue-600" aria-hidden="true" />}
+            />
+            <HomeStatTile
+              metric="streak"
+              iconWrapperClassName="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Zap className="h-6 w-6 text-purple-600" aria-hidden="true" />}
+            />
+            <HomeStatTile
+              metric="accuracy"
+              iconWrapperClassName="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<TrendingUp className="h-6 w-6 text-green-600" aria-hidden="true" />}
+            />
           </div>
         </div>
       </div>

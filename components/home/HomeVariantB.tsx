@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
 import { Brain, Zap, Users, TrendingUp, Clock, Sparkles, BarChart3, BookOpen, Target } from "lucide-react";
+import { HomeStatTile } from "@/components/home/HomeStats";
 
 // Shared Hero Component that adapts based on auth status
 const AdaptiveHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; session?: any }) => {
@@ -80,37 +81,29 @@ const AdaptiveStatsSection = ({ isAuthenticated }: { isAuthenticated: boolean })
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
-              <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="h-6 w-6 text-blue-600" aria-hidden="true" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">24</div>
-              <div className="text-sm text-gray-600">Flashcard Sets</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
-              <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <Target className="h-6 w-6 text-green-600" aria-hidden="true" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">87%</div>
-              <div className="text-sm text-gray-600">Average Accuracy</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
-              <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-6 w-6 text-purple-600" aria-hidden="true" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">12</div>
-              <div className="text-sm text-gray-600">Day Streak</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
-              <div className="bg-yellow-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="h-6 w-6 text-yellow-600" aria-hidden="true" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">156</div>
-              <div className="text-sm text-gray-600">Cards Mastered</div>
-            </div>
+            <HomeStatTile
+              metric="sessions"
+              iconWrapperClassName="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<BookOpen className="h-6 w-6 text-blue-600" aria-hidden="true" />}
+            />
+
+            <HomeStatTile
+              metric="accuracy"
+              iconWrapperClassName="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Target className="h-6 w-6 text-green-600" aria-hidden="true" />}
+            />
+
+            <HomeStatTile
+              metric="streak"
+              iconWrapperClassName="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Clock className="h-6 w-6 text-purple-600" aria-hidden="true" />}
+            />
+
+            <HomeStatTile
+              metric="due"
+              iconWrapperClassName="bg-yellow-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4"
+              icon={<Sparkles className="h-6 w-6 text-yellow-600" aria-hidden="true" />}
+            />
           </div>
         </div>
       </div>

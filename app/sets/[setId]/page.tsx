@@ -9,6 +9,11 @@ import SetRatingPanel from "@/components/SetRatingPanel";
 import { flashcardSetSchema } from "@/lib/structured-data";
 import { StudySession } from "@/models/StudySession";
 import { ShareEventLogger } from "@/lib/share-event-logger";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth/auth";
+import { Profile } from "@/models/Profile";
+import { LibraryEntry } from "@/models/LibraryEntry";
+import LibraryToggleButton from "@/components/library/LibraryToggleButton";
 
 // FIXED: Updated interface for Next.js 15 - params is now a Promise
 interface PublicSetPageProps {
@@ -92,6 +97,26 @@ async function getPublicFlashcardSet(setId: string): Promise<IFlashcardSet | nul
   return JSON.parse(JSON.stringify(flashcardSet));
 }
 
+/**
+ * Is this set already on the visitor's shelf?
+ *
+ * Resolved on the server so the button renders in its real state on first
+ * paint, rather than flickering from "Add" to "In your library" once a client
+ * fetch lands. Signed-out visitors get null and no button.
+ */
+async function readLibraryState(setId: string): Promise<boolean | null> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || !isValidObjectId(session.user.id)) return null;
+
+  const profile = await Profile.findOne({ user: session.user.id })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+  if (!profile) return false;
+
+  const entry = await LibraryEntry.exists({ profile: profile._id, set: setId });
+  return Boolean(entry);
+}
+
 // FIXED: Updated main component to await params
 export default async function PublicSetPage({ params }: PublicSetPageProps) {
   // FIXED: Await the params Promise
@@ -102,6 +127,8 @@ export default async function PublicSetPage({ params }: PublicSetPageProps) {
   if (!flashcardSet) {
     notFound();
   }
+
+  const inLibrary = await readLibraryState(setId);
 
   const structuredData = flashcardSetSchema({
     title: flashcardSet.title,
@@ -159,6 +186,13 @@ export default async function PublicSetPage({ params }: PublicSetPageProps) {
             >
               ⚔️ Challenge a Friend
             </Link>
+            {inLibrary !== null && (
+              <LibraryToggleButton
+                setId={setId}
+                initialInLibrary={inLibrary}
+                className="self-center"
+              />
+            )}
           </div>
         </div>
 

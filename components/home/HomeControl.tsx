@@ -23,6 +23,7 @@ import {
   Trophy,
 } from "lucide-react";
 import Footer from "@/components/layout/Footer";
+import { AccuracySummary, DueCardsSummary, StreakBadge, StreakSentence } from "@/components/home/HomeStats";
 import ActivePromoBanner from "@/components/ui/ActivePromoBanner";
 
 // Modern Hero Section with Conditional Content
@@ -61,7 +62,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                   <Play className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Study Now</h3>
-                <p className="text-sm text-gray-600 mb-3">Review 8 cards due for optimal retention</p>
+                <DueCardsSummary className="text-sm text-gray-600 mb-3" />
                 <div className="text-blue-600 text-sm font-medium group-hover:text-blue-700">Start session →</div>
               </Link>
 
@@ -79,7 +80,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
                   <TrendingUp className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">View Progress</h3>
-                <p className="text-sm text-gray-600 mb-3">87% average accuracy this week</p>
+                <AccuracySummary className="text-sm text-gray-600 mb-3" />
                 <div className="text-green-600 text-sm font-medium group-hover:text-green-700">See details →</div>
               </Link>
 
@@ -94,10 +95,7 @@ const ModernHero = ({ isAuthenticated, session }: { isAuthenticated: boolean; se
             </div>
             
             {/* Study Streak */}
-            <div className="inline-flex items-center space-x-3 bg-yellow-50 border border-yellow-200 rounded-full px-6 py-3">
-              <Target className="h-5 w-5 text-yellow-600" aria-hidden="true" />
-              <span className="text-yellow-800 font-medium">12-day study streak! Keep it up!</span>
-            </div>
+            <StreakBadge className="inline-flex items-center space-x-3 bg-yellow-50 border border-yellow-200 rounded-full px-6 py-3" />
           </div>
         </div>
       </div>
@@ -529,9 +527,7 @@ const FinalCTA = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Your Next Learning Victory Awaits
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            You&apos;re on a 12-day streak! Keep the momentum going with your personalized study session.
-          </p>
+          <StreakSentence className="text-xl text-blue-100 mb-8" />
           <Link
             href="/flashcards"
             className="inline-flex items-center bg-yellow-400 text-blue-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-yellow-300 transition-colors shadow-lg"

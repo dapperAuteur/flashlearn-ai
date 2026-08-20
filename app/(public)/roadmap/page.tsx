@@ -115,6 +115,18 @@ const phases: Phase[] = [
         ],
       },
       {
+        title: 'Your Library',
+        description: 'A personal shelf of the sets you actually study, and the first block on your dashboard.',
+        status: 'done',
+        items: [
+          'Add any public set from Explore or from the set page',
+          'Sets you create are added automatically',
+          'Sorted by most recently studied, then most recently added',
+          'Removing a set keeps your progress on it',
+          'No limit on how many sets you keep',
+        ],
+      },
+      {
         title: 'AI Content Generation',
         description: 'Generate flashcards from text through a switchable AI provider layer, Cerebras by default.',
         status: 'done',

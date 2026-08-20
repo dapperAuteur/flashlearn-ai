@@ -65,6 +65,52 @@ You can also generate from:
   },
   // ──── Study Modes ────
   {
+    slug: 'your-library',
+    title: 'Your Library: Keeping the Sets You Actually Study',
+    category: 'getting-started',
+    excerpt: 'Add public sets to your own shelf so the sets you study are the first thing you see when you sign in.',
+    order: 3,
+    tags: ['library', 'explore', 'dashboard'],
+    content: `# Your Library
+
+There are hundreds of public sets on FlashLearnAI, and Explore shows the newest ones first. Your
+library is the fix: a short list of the sets you actually use, shown at the top of your dashboard
+every time you sign in.
+
+## Adding a set
+
+- On **Explore**, every card has an **Add to library** button next to **Study Now**.
+- On a set's own page, the same button sits under the title.
+- Anything **you** create is added for you when you save it, so your own work is always there.
+
+Once a set is on your shelf the button reads **In your library**. Click it again to remove it.
+
+## How your library is sorted
+
+Most recently studied first, then most recently added. Study the seven times table this morning and
+it is at the top tomorrow without you doing anything. Sets you have not studied yet sit below the
+ones you have, in the order you added them.
+
+## Adding does not copy the set
+
+Your library points at the original set. It does not make a copy. That means a correction the author
+publishes reaches you, instead of leaving you studying an old version.
+
+It also means you cannot edit a public set from your library. Sets you created are the ones you can
+edit, from **My Flashcards**.
+
+## Removing a set keeps your progress
+
+Removing a set takes it off the shelf and nothing else. Your streak, your accuracy, and your spaced
+repetition schedule for that set are all kept. Add the set back later and everything picks up where
+it left off.
+
+## There is no limit
+
+Keep three sets or keep forty. The library is not a quota; it is just the shortcut past a large
+catalogue.`,
+  },
+  {
     slug: 'study-modes-explained',
     title: 'Study Modes Explained',
     category: 'study-modes',

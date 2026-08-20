@@ -13,6 +13,7 @@ import {
   CheckCircleIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
+import LibraryPanel from '@/components/library/LibraryPanel';
 import ReviewSchedule from '@/components/dashboard/ReviewSchedule';
 import DailyGoal from '@/components/dashboard/DailyGoal';
 import { getSubscriptionDisplay, shouldShowUpgradeCTA } from '@/lib/utils/subscription';
@@ -120,6 +121,11 @@ export default function DashboardPage() {
         </p>
       </div>
 
+      {/* Your Library. First block on the page: the sets this person actually
+          uses, so signing in lands on a short list instead of the whole
+          catalogue. Stats and quick actions follow it. */}
+      <LibraryPanel />
+
       {/* Daily Goal & Streak */}
       <DailyGoal />
 
@@ -196,7 +202,7 @@ export default function DashboardPage() {
             href="/explore"
             className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
           >
-            Start Studying
+            Find More Sets
           </Link>
         </div>
       </div>
