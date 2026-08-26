@@ -74,7 +74,16 @@ export async function middleware(request: NextRequest) {
   // --- Teacher Route Protection ---
   if (pathname.startsWith('/teacher')) {
     const teacherRoles = ['Teacher', 'Tutor', 'SchoolAdmin', 'Admin'];
-    if (token?.role && teacherRoles.includes(token.role)) {
+    // A parent reaches a learner through linkedStudentIds rather than through a
+    // classroom, so they have no business in classrooms or assignments and
+    // every right to the progress of a student they are linked to. This only
+    // decides who may ask; which students they may see is decided per request
+    // by resolveStudySubject, against the same edges that govern proctoring.
+    const progressRoles = [...teacherRoles, 'Parent'];
+    const allowedRoles = pathname.startsWith('/teacher/students')
+      ? progressRoles
+      : teacherRoles;
+    if (token?.role && allowedRoles.includes(token.role)) {
       return NextResponse.next();
     }
     return NextResponse.redirect(new URL('/dashboard', request.url));

@@ -7,6 +7,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const teacherRoles = ["Teacher", "Tutor", "SchoolAdmin", "Admin"];
+// Mirrors the split in middleware.ts: a parent may read the progress of a
+// student they are linked to, and nothing else under /teacher.
+const progressRoles = [...teacherRoles, "Parent"];
 
 const navItems = [
   { href: "/teacher", label: "Dashboard" },
@@ -27,10 +30,18 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!session || !teacherRoles.includes(session.user.role)) {
+  const isProgressPage = pathname.startsWith("/teacher/students");
+  const allowedRoles = isProgressPage ? progressRoles : teacherRoles;
+
+  if (!session || !allowedRoles.includes(session.user.role)) {
     router.push("/dashboard");
     return null;
   }
+
+  // A parent has no classrooms and no assignments, so offering the links would
+  // only bounce them back to the dashboard. They also are not teaching, so the
+  // area is not called teaching at them.
+  const isTeacher = teacherRoles.includes(session.user.role);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,10 +50,13 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-1 overflow-x-auto">
-              <Link href="/teacher" className="text-lg font-bold text-blue-600 mr-4 flex-shrink-0">
-                Teacher
+              <Link
+                href={isTeacher ? "/teacher" : "/dashboard"}
+                className="text-lg font-bold text-blue-600 mr-4 flex-shrink-0"
+              >
+                {isTeacher ? "Teacher" : "FlashLearnAI"}
               </Link>
-              {navItems.map((item) => {
+              {isTeacher && navItems.map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/teacher" && pathname.startsWith(item.href));
                 return (
                   <Link
