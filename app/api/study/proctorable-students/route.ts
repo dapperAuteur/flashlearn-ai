@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import mongoose from 'mongoose';
 import { authOptions } from '@/lib/auth/auth';
 import dbConnect from '@/lib/db/dbConnect';
+import { PROCTOR_ROLES } from '@/lib/study/resolveStudySubject';
 import { Classroom } from '@/models/Classroom';
 import { User } from '@/models/User';
 import { Logger, LogContext } from '@/lib/logging/logger';
@@ -22,9 +23,6 @@ import { Logger, LogContext } from '@/lib/logging/logger';
  * A student loading the study screen has done nothing wrong; they simply have
  * nobody to record for.
  */
-
-/** Mirrors PROCTOR_ROLES in lib/study/resolveStudySubject.ts. */
-const PROCTOR_ROLES = ['Teacher', 'Tutor', 'Parent', 'SchoolAdmin', 'Admin'];
 
 interface StudentRow {
   _id: mongoose.Types.ObjectId;

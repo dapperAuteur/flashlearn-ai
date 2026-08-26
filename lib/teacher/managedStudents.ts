@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { Classroom } from '@/models/Classroom';
 import { Profile } from '@/models/Profile';
 import { User } from '@/models/User';
+import { MANAGED_EMAIL_DOMAIN, isManagedEmail } from '@/lib/teacher/managedEmailDomain';
 
 /**
  * Teacher-managed student accounts.
@@ -15,15 +16,12 @@ import { User } from '@/models/User';
  * attribution bug.
  *
  * The cost of a real row is that `User.email` is required and unique, so the
- * account gets a synthetic address. See MANAGED_EMAIL_DOMAIN below.
+ * account gets a synthetic address. See `lib/teacher/managedEmailDomain.ts`.
  */
 
-/**
- * RFC 2606 reserves `.invalid` so that it can never be delegated and never
- * resolve. A managed address cannot receive mail by construction rather than by
- * a delivery attempt failing.
- */
-export const MANAGED_EMAIL_DOMAIN = 'students.invalid';
+// Re-exported so every existing importer keeps one place to ask from, while a
+// browser component can import the pure module directly.
+export { MANAGED_EMAIL_DOMAIN, isManagedEmail };
 
 /** How long a freshly minted claim code stays usable. */
 export const CLAIM_CODE_TTL_DAYS = 90;
@@ -44,10 +42,6 @@ const CLAIM_CODE_LENGTH = 10;
  */
 export function buildManagedEmail(userId: Types.ObjectId): string {
   return `managed-${userId.toHexString()}@${MANAGED_EMAIL_DOMAIN}`;
-}
-
-export function isManagedEmail(email: string | null | undefined): boolean {
-  return typeof email === 'string' && email.toLowerCase().endsWith(`@${MANAGED_EMAIL_DOMAIN}`);
 }
 
 /**
