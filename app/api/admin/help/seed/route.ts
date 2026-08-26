@@ -398,6 +398,118 @@ moved sections. Erasing weeks of a student's work would be the wrong answer to a
 Once a student is off your roster you can no longer record sessions for them or mint them a claim
 code. Both of those come from the student being in your classroom.`,
   },
+  {
+    slug: 'reading-a-student-progress',
+    title: 'Reading a Student\'s Progress',
+    category: 'teams',
+    excerpt: 'Open one student\'s record from the roster, read what each number means, and know why "no study sessions yet" is not the same as 0%.',
+    order: 3,
+    tags: ['classrooms', 'teachers', 'tutors', 'parents', 'progress'],
+    content: `# Reading a Student's Progress
+
+You can open one student's whole record: what they get right, what they keep missing, when they last
+studied, and how long for. It is written to be read in the minute before a lesson, so the summary is
+at the top and the part you act on, the list of cards to go over, is right underneath it.
+
+## Opening it
+
+1. Open your classroom from **Classrooms**.
+2. Find the student on the roster.
+3. Choose **Progress** next to their name.
+
+The page is headed with the student's name. **Back to the roster** returns you to where you started.
+
+## Who is allowed to see this
+
+The adults who may run a study session for a student are exactly the adults who may read that
+student's progress. There are two ways to be one of them:
+
+- You teach an active classroom the student is enrolled in. An archived classroom does not count.
+- The student is linked to your account. This is how a tutor, a parent, or a guardian reaches a
+  learner who is not in a classroom you teach.
+
+Nobody else can open the page, whatever role they hold. Holding the Teacher role does not let you
+read a student on somebody else's roster. Asking for a student you are not connected to answers
+**You can only see progress for a student you teach or are linked to.**
+
+If you are a parent or a guardian, the progress page is the only page in the teaching area open to
+you. There is no wider family area yet, no single list of every child you look after, and the link
+between your account and a student is not something you can create yourself: it has to be set on your
+account for you. Creating classrooms and assignments stays with the teaching roles.
+
+No email address appears anywhere on the page. A class account you created holds a placeholder
+address that cannot receive mail, and it is left out of the report rather than shown to whoever opens
+it.
+
+## "No study sessions yet" is not a zero
+
+A student who has never finished a study session gets a short block headed **No study sessions yet**
+in place of the whole report. It says there is no accuracy, no card record, and no time to report.
+
+Read that as an absence, not a bad result. 0% would mean the student answered questions and got all
+of them wrong. This means nothing has been recorded, which tells you nothing about the student at
+all. Anywhere else on the page, a figure with nothing behind it says so in words rather than showing
+a zero: **No answers yet**, **Not recorded**, **None yet**, **Not scored yet**.
+
+A session has to be finished to count. One that was abandoned halfway does not appear.
+
+The empty block offers **Start a session**, which is usually the right next move.
+
+## The short version
+
+The block at the top of the page:
+
+- **Accuracy, all time.** Cards answered right, out of cards attempted, across every session.
+- **Accuracy, last 30 days.** The same sum over the last 30 days only. Read it next to the all-time
+  figure: a recent number well above it is a student who is pulling ahead of their own record, and
+  one well below it is worth asking about.
+- **Cards right** and **Cards wrong.** Totals over every session. These two are the numbers the
+  accuracy above is calculated from, on purpose, so the figures multiply out instead of being three
+  different measurements you have to reconcile.
+- **Sessions finished.** How many study sessions the student has completed.
+- **Time studied.** Total time in session, however it was spent.
+
+Underneath, a line covering the last 30 days, and **Average session score**. That last one is the
+figure on the student's own dashboard, averaged across sets, so it can sit a little apart from the
+card accuracy above it. Both are right. They are answering different questions.
+
+## Cards to go over
+
+Every card the student has answered wrong at least once, worst accuracy first, up to twenty of them.
+**Hardest mode** names the study mode and direction the card goes worst in, which is often the real
+story: a student who knows a fact front to back and not back to front does not have a gap in the
+fact.
+
+A card lands on this list after **one** miss. The review scheduler waits for more than that before it
+changes how often a card comes back, and it is right to, because one miss can be a slip. This list
+does not wait, because you are deciding what to ask about in the next ten minutes rather than
+rescheduling anything.
+
+If a card has been edited or deleted since the student answered it, the row reads **This card has
+since been edited or removed** and the counts are still accurate.
+
+## By set
+
+Each set the student has a record in, weakest set first, with accuracy, right, wrong, sessions, time,
+and **Cards seen**. Cards seen is how many cards in that set the student has any record for, so it
+tells you how much of the set they have actually met.
+
+## Recent sessions
+
+The last ten finished sessions, newest first, with the date and time, the set, right and wrong
+counts, accuracy, how long it took, and **Studied**, which reads **With an adult** or **On their
+own**. That last column matters when a score looks unexpectedly high or low: a session you ran
+together is a different kind of evidence than one the student did alone.
+
+## Where the numbers come from
+
+The same records the student's own progress page reads. You and the student are never looking at two
+different figures for the same thing, which means you can talk about a number on this page with them
+directly.
+
+A session an adult ran counts toward the student, never toward the adult. If you have run sessions
+for a student, that work is on their page and not on yours.`,
+  },
   // ──── Account ────
   {
     slug: 'managing-your-account',

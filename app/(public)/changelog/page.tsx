@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Image as ImageIcon,
   Cpu,
+  BarChart3,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -36,6 +37,31 @@ interface Release {
 }
 
 const releases: Release[] = [
+  {
+    version: '1.16.0',
+    date: '2026-08-26',
+    title: 'Student Progress for Teachers, Tutors, and Parents',
+    icon: BarChart3,
+    iconColor: 'text-sky-600',
+    items: [
+      'Progress on a roster row opens one student\'s record: accuracy all time and over the last 30 days, cards right and cards wrong, sessions finished with the date each one ran, time studied, a breakdown per set with the weakest first, and every card they have answered wrong at least once.',
+      'Whoever can run a study session for a student can read that student\'s progress, and nobody else. It is the same rule read from the same place, so the two cannot drift apart and leave someone able to see a student they cannot study with.',
+      'A student who has never finished a session gets "No study sessions yet", not 0%. A zero reads as having answered everything wrong, which is the opposite of having answered nothing.',
+      'Parents can reach the app for the first time. Parent was a role an admin could assign and nothing more: every page in the teacher area sent them back to the dashboard. They now reach the progress pages for students linked to them and nothing else. Creating classrooms and assignments stays with the teaching roles, and there is no wider family area behind this.',
+      'No email address appears anywhere in a progress report, so a class account\'s placeholder address cannot surface on a page a parent or tutor is reading.',
+      'Two figures are deliberately not the ones the student sees on their own dashboard, and the page says so where they appear. Headline accuracy is cards right over cards attempted, so it multiplies out against the counts beside it. A card is listed as one to go over after a single miss rather than two, because an adult planning a lesson is asking a different question than the review scheduler is.',
+      'Finishing a study session no longer blocks the next one. Session state is held above the router, so once a session had ended, arriving at Study again showed the finished session\'s results instead of the set picker, and the only way out was one of the two buttons on that screen.',
+      'The worse half of that bug was silent. Start session on a student row opens study with that student already chosen, and the step that reads the student out of the link only runs on the set picker. With the old results still on screen that step never ran, so the student was never selected, and a teacher who carried on would have recorded the lesson onto their own account.',
+      'Sign in with WitUS now signs you in to an account that exists. The session used to carry the identity provider\'s id rather than a FlashLearnAI one, so every lookup keyed on it matched nothing. That is why it could look signed in and behave as though it were not.',
+      'Signing in with WitUS no longer demotes a teacher. Every sign-in through that button stamped the account as a Student, so a Teacher lost the teacher area each time they used it.',
+      'A WitUS identity is linked to an account that already exists only when the identity provider states the address is verified, and no answer counts as not verified. Linking an unverified address to an account that already has a password is a way to take that account over.',
+      'Class accounts and suspended accounts are refused at the WitUS button, and a refused sign-in says the same thing whichever rule stopped it.',
+      'The server log stopped printing names, email addresses, account ids, and roles. One of those lines ran on every sign-in and two more ran on every session read.',
+      'An admin can link a guardian to a student from the users screen. The field that grants a parent or tutor access to a learner had been on the schema for a while, and nothing in the app had ever written to it, so the only way to create one of these links was to edit the account directly. A progress page for parents without this would have been a door with no key.',
+      'Linking is admin only on purpose. A parent-initiated or teacher-initiated version needs a consent flow that does not exist yet, and an admin is already trusted with every other action of this weight.',
+      'The admin users screen stopped showing managed students the synthetic address their account carries. It cannot receive mail, and printing it invites somebody to write to it.',
+    ],
+  },
   {
     version: '1.15.0',
     date: '2026-08-20',
