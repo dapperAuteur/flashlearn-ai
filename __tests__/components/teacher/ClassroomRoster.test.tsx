@@ -65,6 +65,18 @@ describe('ClassroomRoster', () => {
     expect(link).toHaveAttribute('href', '/study?studentId=student-1');
   });
 
+  test('links each student row to their progress, and back to this roster', async () => {
+    mockRoster([managedStudent]);
+
+    render(<ClassroomRoster classroomId="c1" joinCode="ABC123" />);
+
+    const link = await screen.findByRole('link', { name: /progress for Ada Lovelace/i });
+    expect(link).toHaveAttribute(
+      'href',
+      '/teacher/students/student-1/analytics?classroom=c1',
+    );
+  });
+
   test('shows the claim code once, in a dialog that needs a deliberate dismiss', async () => {
     mockRoster([]);
     (global.fetch as jest.Mock).mockResolvedValueOnce({

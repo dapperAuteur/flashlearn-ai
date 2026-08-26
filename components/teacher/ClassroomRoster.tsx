@@ -8,6 +8,7 @@ import {
   PlayIcon,
   KeyIcon,
   TrashIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import ClaimCodeDialog from './ClaimCodeDialog';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
@@ -340,6 +341,18 @@ export default function ClassroomRoster({
                       <PlayIcon className="h-4 w-4" aria-hidden="true" />
                       Start session
                       <span className="sr-only"> with {student.name}</span>
+                    </Link>
+
+                    {/* The classroom id only decides where the back link goes.
+                        The progress page asks the API, and the API decides for
+                        itself who may read this student's numbers. */}
+                    <Link
+                      href={`/teacher/students/${encodeURIComponent(student.id)}/analytics?classroom=${encodeURIComponent(classroomId)}`}
+                      className="min-h-11 inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 text-sm font-medium text-gray-900 rounded-lg hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                    >
+                      <ChartBarIcon className="h-4 w-4" aria-hidden="true" />
+                      Progress
+                      <span className="sr-only"> for {student.name}</span>
                     </Link>
 
                     {canMintCode && (
