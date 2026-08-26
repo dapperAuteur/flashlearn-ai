@@ -9,6 +9,7 @@ export default function StudyPage() {
   const searchParams = useSearchParams();
   const setId = searchParams.get('setId') || undefined;
   const isReviewMode = searchParams.get('review') === 'true';
+  const proctorStudentId = searchParams.get('studentId') || undefined;
 
   useEffect(() => {
     Logger.log(LogContext.STUDY, "Study page loaded", { setId, isReviewMode });
@@ -19,7 +20,11 @@ export default function StudyPage() {
       <h1 className="text-sm sm:text-base font-semibold mb-1 text-gray-800 dark:text-gray-700">
         {isReviewMode ? 'Review Session' : 'Study Session'}
       </h1>
-      <StudySessionManager preSelectedSetId={setId} isReviewMode={isReviewMode} />
+      <StudySessionManager
+        preSelectedSetId={setId}
+        isReviewMode={isReviewMode}
+        proctorStudentId={proctorStudentId}
+      />
     </div>
   );
 }

@@ -44,8 +44,12 @@ export type ResolveSubjectResult =
 /**
  * Roles that may run a session on someone else's behalf. A Student cannot
  * proctor, even for a classmate they share a classroom with.
+ *
+ * Exported so the routes that gate on the same question import this list rather
+ * than keeping a copy. A copy that falls behind hands someone an edge the
+ * resolver will refuse, or offers a link that can never be used.
  */
-const PROCTOR_ROLES = ['Teacher', 'Tutor', 'Parent', 'SchoolAdmin', 'Admin'];
+export const PROCTOR_ROLES = ['Teacher', 'Tutor', 'Parent', 'SchoolAdmin', 'Admin'];
 
 /**
  * The profile every learner-scoped write keys on. Mirrors the self-healing the
@@ -75,10 +79,12 @@ export async function resolveProfileId(userId: Types.ObjectId): Promise<Types.Ob
  *      `Classroom.students[]` already exist, so nothing new has to be managed.
  *      Archived classrooms do not count: a classroom is archived when its
  *      teacher's account is deleted, so the relationship it recorded is gone.
- *   2. `User.linkedStudentIds` on the actor. The field has been on the schema
- *      unused since it was added; this is the tutor and guardian edge it was
- *      meant for. Nothing in the app writes it yet, so in practice it only
- *      matches where an admin has set it directly.
+ *   2. `User.linkedStudentIds` on the actor. This is the tutor and guardian
+ *      edge, and the only way a Parent reaches a learner at all, since a parent
+ *      teaches no classroom. An admin writes it through
+ *      `app/api/admin/users/[id]/linked-students`; nothing else in the app does,
+ *      because a guardian relationship is a claim the app cannot check and a
+ *      self-serve version needs a consent model that does not exist yet.
  */
 async function isAuthorizedProctor(
   actorUserId: Types.ObjectId,

@@ -26,9 +26,12 @@ const formatTime = (milliseconds: number): string => {
 interface StudySessionManagerProps {
   preSelectedSetId?: string;
   isReviewMode?: boolean;
+  /** Present when a teacher arrived from a classroom roster. Not used to start
+   *  anything here, only to notice that the URL is asking for something new. */
+  proctorStudentId?: string;
 }
 
-export default function StudySessionManager({ preSelectedSetId, isReviewMode }: StudySessionManagerProps) {
+export default function StudySessionManager({ preSelectedSetId, isReviewMode, proctorStudentId }: StudySessionManagerProps) {
   const {
     sessionId,
     flashcardSetName,
@@ -56,12 +59,25 @@ export default function StudySessionManager({ preSelectedSetId, isReviewMode }: 
   const [newAchievements, setNewAchievements] = useState<Array<{ type: string; title: string; description: string; icon: string }>>([]);
   const cardContainerRef = useRef<HTMLDivElement>(null);
 
-  // Reset stale session when navigating to study with a new setId
+  // A finished session is stale the moment somebody arrives asking for a new
+  // one. The provider lives in ClientRoot, above the router, so `sessionId` and
+  // `isComplete` survive every client-side navigation, and `resetSession` is
+  // otherwise only called by the two buttons on the results screen. Arrive at
+  // /study any other way and the results screen renders again instead of the
+  // set picker. A teacher who finished a session and then clicked Start session
+  // on a student's row got sent back to their own results, and because
+  // StudySessionSetup never mounted, the student was never selected either.
+  //
+  // This runs on mount, which is what catches arriving from another route, and
+  // again when the URL asks for a different set or a different student, which
+  // is what catches the App Router keeping this mounted across a search-param
+  // change. It deliberately does not depend on `isComplete`, so finishing a
+  // session still leaves the results on screen.
   useEffect(() => {
-    if (preSelectedSetId && sessionId && isComplete) {
+    if (sessionId && isComplete) {
       resetSession();
     }
-  }, [preSelectedSetId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [preSelectedSetId, proctorStudentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // Move focus to the card container when a new card appears

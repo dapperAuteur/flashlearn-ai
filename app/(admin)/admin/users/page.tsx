@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -11,6 +11,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useToast } from "@/hooks/use-toast";
+import { isManagedEmail } from "@/lib/teacher/managedEmailDomain";
 
 interface UserEntry {
   _id: string;
@@ -31,11 +32,27 @@ interface Pagination {
 }
 
 interface ConfirmAction {
-  type: 'role' | 'tier' | 'delete';
+  type: 'role' | 'tier' | 'delete' | 'unlink';
   userId: string;
   userName: string;
   value?: string;
   oldValue?: string;
+  /** Set for 'unlink' only: the student losing the link. */
+  studentId?: string;
+}
+
+/** A learner reachable through User.linkedStudentIds on the account above. */
+interface LinkedStudent {
+  id: string;
+  name: string;
+  email: string | null;
+  isManaged: boolean;
+  pendingDeletion: boolean;
+}
+
+interface LinkedStudents {
+  guardian: { id: string; name: string; role: string; canProctor: boolean };
+  students: LinkedStudent[];
 }
 
 const ROLES = ["Student", "Teacher", "Tutor", "Parent", "SchoolAdmin", "Admin"];
@@ -57,6 +74,18 @@ export default function AdminUsersPage() {
   const [tierFilter, setTierFilter] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+
+  // Linked students, one open panel at a time. Keeping a single panel's worth
+  // of state rather than a map per user means the search box and its results
+  // cannot belong to a row the admin has since closed.
+  const [linkedPanelUserId, setLinkedPanelUserId] = useState<string | null>(null);
+  const [linked, setLinked] = useState<LinkedStudents | null>(null);
+  const [linkedLoading, setLinkedLoading] = useState(false);
+  const [linkedMessage, setLinkedMessage] = useState("");
+  const [linkSearch, setLinkSearch] = useState("");
+  const [linkResults, setLinkResults] = useState<UserEntry[] | null>(null);
+  const [linkSearching, setLinkSearching] = useState(false);
+  const [linkBusyId, setLinkBusyId] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async (page = 1) => {
     setLoading(true);
@@ -133,6 +162,129 @@ export default function AdminUsersPage() {
     }
   };
 
+  const loadLinkedStudents = useCallback(async (userId: string) => {
+    setLinkedLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/linked-students`);
+      const data = await res.json();
+      if (!res.ok) {
+        setLinked(null);
+        setLinkedMessage(data.error || "Could not load linked students.");
+        return;
+      }
+      setLinked(data);
+      setLinkedMessage(
+        data.students.length === 0
+          ? "No students are linked to this account."
+          : `${data.students.length} student${data.students.length === 1 ? "" : "s"} linked.`,
+      );
+    } catch {
+      setLinked(null);
+      setLinkedMessage("Could not load linked students.");
+    } finally {
+      setLinkedLoading(false);
+    }
+  }, []);
+
+  const toggleLinkedPanel = (user: UserEntry) => {
+    if (linkedPanelUserId === user._id) {
+      setLinkedPanelUserId(null);
+      return;
+    }
+    setLinkedPanelUserId(user._id);
+    setLinked(null);
+    setLinkResults(null);
+    setLinkSearch("");
+    setLinkedMessage("");
+    loadLinkedStudents(user._id);
+  };
+
+  // The account picker reuses the list endpoint this page already reads, so an
+  // admin searching for a student gets the same matches, filters, and paging
+  // rules as the table above rather than a second search that answers
+  // differently.
+  const searchStudentsToLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = linkSearch.trim();
+    if (!linkedPanelUserId || !term) return;
+
+    setLinkSearching(true);
+    try {
+      const params = new URLSearchParams({ page: "1", limit: "10", search: term });
+      const res = await fetch(`/api/admin/users?${params.toString()}`);
+      if (!res.ok) throw new Error("Search failed");
+      const data = await res.json();
+      // Nobody is their own guardian, so the account being edited is never a
+      // result. The route refuses it too; this keeps the button from appearing.
+      const matches: UserEntry[] = (data.users || []).filter(
+        (candidate: UserEntry) => candidate._id !== linkedPanelUserId,
+      );
+      setLinkResults(matches);
+      setLinkedMessage(
+        matches.length === 0
+          ? "No accounts matched that search."
+          : `${matches.length} account${matches.length === 1 ? "" : "s"} found.`,
+      );
+    } catch {
+      setLinkResults([]);
+      setLinkedMessage("Search failed. Try again.");
+    } finally {
+      setLinkSearching(false);
+    }
+  };
+
+  const handleLink = async (studentId: string, studentName: string) => {
+    if (!linkedPanelUserId) return;
+    setLinkBusyId(studentId);
+    try {
+      const res = await fetch(`/api/admin/users/${linkedPanelUserId}/linked-students`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLinkedMessage(data.error || "Could not link that student.");
+        toast({ variant: "destructive", title: "Link Failed", description: data.error || "Could not link that student." });
+        return;
+      }
+      setLinked(data);
+      setLinkedMessage(`${studentName} is now linked to this account.`);
+      toast({ title: "Student Linked", description: `${studentName} can now be proctored by this account.` });
+    } catch {
+      setLinkedMessage("Could not link that student.");
+      toast({ variant: "destructive", title: "Link Failed", description: "Could not link that student." });
+    } finally {
+      setLinkBusyId(null);
+    }
+  };
+
+  const handleUnlink = async (studentId: string, studentName: string) => {
+    if (!linkedPanelUserId) return;
+    setLinkBusyId(studentId);
+    try {
+      const res = await fetch(`/api/admin/users/${linkedPanelUserId}/linked-students`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLinkedMessage(data.error || "Could not unlink that student.");
+        toast({ variant: "destructive", title: "Unlink Failed", description: data.error || "Could not unlink that student." });
+        return;
+      }
+      setLinked(data);
+      setLinkedMessage(`${studentName} is no longer linked to this account.`);
+      toast({ title: "Student Unlinked", description: `This account can no longer proctor ${studentName}.` });
+    } catch {
+      setLinkedMessage("Could not unlink that student.");
+      toast({ variant: "destructive", title: "Unlink Failed", description: "Could not unlink that student." });
+    } finally {
+      setLinkBusyId(null);
+    }
+  };
+
   const requestConfirmation = (action: ConfirmAction) => {
     setConfirmAction(action);
   };
@@ -145,6 +297,8 @@ export default function AdminUsersPage() {
       handleUpdate(confirmAction.userId, 'role', confirmAction.value!);
     } else if (confirmAction.type === 'tier') {
       handleUpdate(confirmAction.userId, 'subscriptionTier', confirmAction.value!);
+    } else if (confirmAction.type === 'unlink' && confirmAction.studentId) {
+      handleUnlink(confirmAction.studentId, confirmAction.value || 'That student');
     }
     setConfirmAction(null);
   };
@@ -158,6 +312,12 @@ export default function AdminUsersPage() {
     if (!d) return "—";
     return new Date(d).toLocaleDateString();
   };
+
+  // A teacher-managed account's address is synthetic and can never receive
+  // mail, so showing it invites an admin to write to an address that does not
+  // exist. The name is the only useful identifier those accounts have.
+  const displayEmail = (email?: string | null) =>
+    email && !isManagedEmail(email) ? email : "Managed account, no email address";
 
   const isPaying = (user: UserEntry) => !!user.stripeCustomerId;
 
@@ -177,6 +337,137 @@ export default function AdminUsersPage() {
     return tier;
   };
 
+  /**
+   * The linked-students panel, rendered inline under the row it belongs to.
+   *
+   * Inline rather than a second modal: the confirm dialog this page already
+   * uses would have to open on top of it to confirm an unlink, and stacked
+   * dialogs are a trap for keyboard and screen reader users. `layout` keeps the
+   * ids unique, because the card list and the table are both in the DOM and CSS
+   * decides which one is shown.
+   */
+  const renderLinkedPanel = (user: UserEntry, layout: string) => {
+    const searchId = `link-search-${layout}-${user._id}`;
+
+    return (
+      <div
+        id={`linked-panel-${layout}-${user._id}`}
+        className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-left"
+      >
+        <h3 className="text-sm font-semibold text-gray-900">
+          Students linked to {user.name}
+        </h3>
+        <p className="text-xs text-gray-600 mt-1">
+          A linked account can run study sessions for that student and read their progress.
+          Only an admin can create or remove a link.
+        </p>
+
+        {linked && !linked.guardian.canProctor && (
+          <p className="mt-3 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2">
+            This account&apos;s role is {linked.guardian.role}, which cannot study on anyone
+            else&apos;s behalf. New links are refused, and any link listed below does nothing
+            until the role changes.
+          </p>
+        )}
+
+        <p role="status" aria-live="polite" className="mt-3 text-xs text-gray-700 min-h-[1rem]">
+          {linkedLoading ? "Loading linked students..." : linkedMessage}
+        </p>
+
+        {linked && linked.students.length > 0 && (
+          <ul className="mt-2 space-y-2">
+            {linked.students.map((student) => (
+              <li
+                key={student.id}
+                className="flex flex-wrap items-center justify-between gap-2 bg-white border border-gray-200 rounded p-2"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-gray-900">{student.name}</span>
+                  <span className="block text-xs text-gray-600">
+                    {student.isManaged ? "Managed account, no email address" : student.email || "No email on file"}
+                    {student.pendingDeletion ? " (scheduled for deletion)" : ""}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    requestConfirmation({
+                      type: 'unlink',
+                      userId: user._id,
+                      userName: user.name,
+                      value: student.name,
+                      studentId: student.id,
+                    })
+                  }
+                  disabled={linkBusyId === student.id}
+                  className="px-3 py-1.5 text-xs font-medium text-red-700 border border-red-300 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {linkBusyId === student.id ? "Working..." : "Unlink"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <form onSubmit={searchStudentsToLink} className="mt-4 flex flex-col sm:flex-row sm:items-end gap-2">
+          <div className="flex-1">
+            <label htmlFor={searchId} className="block text-xs font-medium text-gray-700 mb-1">
+              Find a student to link
+            </label>
+            <input
+              id={searchId}
+              type="search"
+              value={linkSearch}
+              onChange={(e) => setLinkSearch(e.target.value)}
+              placeholder="Name or email"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={linkSearching || !linkSearch.trim()}
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {linkSearching ? "Searching..." : "Search"}
+          </button>
+        </form>
+
+        {linkResults && linkResults.length > 0 && (
+          <ul className="mt-3 space-y-2">
+            {linkResults.map((candidate) => {
+              const alreadyLinked = linked?.students.some((s) => s.id === candidate._id) ?? false;
+              return (
+                <li
+                  key={candidate._id}
+                  className="flex flex-wrap items-center justify-between gap-2 bg-white border border-gray-200 rounded p-2"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-gray-900">{candidate.name}</span>
+                    <span className="block text-xs text-gray-600">
+                      {displayEmail(candidate.email)} ({candidate.role})
+                    </span>
+                  </span>
+                  {alreadyLinked ? (
+                    <span className="text-xs text-gray-600">Already linked</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleLink(candidate._id, candidate.name)}
+                      disabled={linkBusyId === candidate._id}
+                      className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {linkBusyId === candidate._id ? "Linking..." : "Link"}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
   if (status === "loading") {
     return <div className="p-6 text-center">Loading...</div>;
   }
@@ -192,7 +483,11 @@ export default function AdminUsersPage() {
                 <ExclamationTriangleIcon className={`h-5 w-5 ${confirmAction.type === 'delete' ? 'text-red-600' : 'text-amber-600'}`} />
               </div>
               <h2 id="confirm-title" className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                {confirmAction.type === 'delete' ? 'Delete User' : 'Confirm Change'}
+                {confirmAction.type === 'delete'
+                  ? 'Delete User'
+                  : confirmAction.type === 'unlink'
+                    ? 'Unlink Student'
+                    : 'Confirm Change'}
               </h2>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -201,6 +496,12 @@ export default function AdminUsersPage() {
             {confirmAction.type === 'delete' ? (
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                 This will permanently delete this user and their profile. This action cannot be undone.
+              </p>
+            ) : confirmAction.type === 'unlink' ? (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                Unlink <strong>{confirmAction.value}</strong>? This account will stop being able to
+                run study sessions for them or read their progress. Nothing already recorded is
+                deleted, and the link can be made again.
               </p>
             ) : (
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
@@ -220,7 +521,11 @@ export default function AdminUsersPage() {
                   confirmAction.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
-                {confirmAction.type === 'delete' ? 'Delete' : 'Confirm'}
+                {confirmAction.type === 'delete'
+                  ? 'Delete'
+                  : confirmAction.type === 'unlink'
+                    ? 'Unlink'
+                    : 'Confirm'}
               </button>
             </div>
           </div>
@@ -279,7 +584,7 @@ export default function AdminUsersPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="min-w-0">
                     <p className="font-medium text-gray-900 text-sm truncate">{user.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    <p className="text-xs text-gray-500 truncate">{displayEmail(user.email)}</p>
                   </div>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${getTierBadge(user)}`}>
                     {getTierLabel(user)}
@@ -327,7 +632,7 @@ export default function AdminUsersPage() {
                       </button>
                     )}
                     <button
-                      onClick={() => requestConfirmation({ type: 'delete', userId: user._id, userName: `${user.name} (${user.email})` })}
+                      onClick={() => requestConfirmation({ type: 'delete', userId: user._id, userName: `${user.name} (${displayEmail(user.email)})` })}
                       disabled={updating === user._id}
                       className="p-1 text-gray-400 hover:text-red-600 transition-colors"
                       aria-label={`Delete ${user.name}`}
@@ -336,6 +641,20 @@ export default function AdminUsersPage() {
                     </button>
                   </div>
                 </div>
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleLinkedPanel(user)}
+                    aria-expanded={linkedPanelUserId === user._id}
+                    aria-controls={`linked-panel-card-${user._id}`}
+                    className="w-full px-3 py-2 text-xs font-medium text-blue-700 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    {linkedPanelUserId === user._id ? "Hide linked students" : "Linked students"}
+                  </button>
+                </div>
+                {linkedPanelUserId === user._id && (
+                  <div className="mt-3">{renderLinkedPanel(user, "card")}</div>
+                )}
               </div>
             ))}
           </div>
@@ -357,10 +676,11 @@ export default function AdminUsersPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {users.map((user) => (
-                    <tr key={user._id} className={`hover:bg-gray-50 ${updating === user._id ? "opacity-60" : ""}`}>
+                    <Fragment key={user._id}>
+                    <tr className={`hover:bg-gray-50 ${updating === user._id ? "opacity-60" : ""}`}>
                       <td className="px-4 py-3">
                         <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
+                        <p className="text-xs text-gray-500">{displayEmail(user.email)}</p>
                       </td>
                       <td className="px-4 py-3">
                         <select
@@ -401,17 +721,36 @@ export default function AdminUsersPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">{formatDate(user.createdAt)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => requestConfirmation({ type: 'delete', userId: user._id, userName: `${user.name} (${user.email})` })}
-                          disabled={updating === user._id}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          aria-label={`Delete ${user.name}`}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleLinkedPanel(user)}
+                            aria-expanded={linkedPanelUserId === user._id}
+                            aria-controls={`linked-panel-row-${user._id}`}
+                            className="px-2.5 py-1.5 text-xs font-medium text-blue-700 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
+                          >
+                            {linkedPanelUserId === user._id ? "Hide linked" : "Linked students"}
+                          </button>
+                          <button
+                            onClick={() => requestConfirmation({ type: 'delete', userId: user._id, userName: `${user.name} (${displayEmail(user.email)})` })}
+                            disabled={updating === user._id}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            aria-label={`Delete ${user.name}`}
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
+                    {linkedPanelUserId === user._id && (
+                      <tr>
+                        <td colSpan={7} className="px-4 pb-4">
+                          {renderLinkedPanel(user, "row")}
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

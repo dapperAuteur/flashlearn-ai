@@ -8,20 +8,36 @@ import type { OAuthConfig } from "next-auth/providers/oauth";
 import { Logger, LogContext } from "@/lib/logging/logger";
 import dbConnect from "@/lib/db/dbConnect";
 import { restoreUserAccount } from "@/lib/api/purgeUserAccount";
+import {
+  isLocalUserId,
+  readRefusalReason,
+  refusalUserId,
+  resolveWitusUser,
+  type WitusResolution,
+} from "@/lib/auth/witusSso";
 
 // --- WitUS ecosystem SSO ("Sign in with WitUS") ---
 // Central Better-Auth/OIDC IdP at accounts.witus.online. Added as a standard
 // OIDC provider ALONGSIDE the existing Credentials providers — public users can
 // still sign in with email/password or email code. No admin gate here.
+export const WITUS_PROVIDER_ID = "witus";
+
 interface WitusProfile {
   sub: string;
   email?: string;
   name?: string;
+  /**
+   * The IdP's assertion that it has proved the person controls this address.
+   * It advertises the claim in `claims_supported`, and it is the only thing
+   * that makes attaching an SSO identity to an existing password account safe,
+   * so a sign-in without it is refused rather than trusted.
+   */
+  email_verified?: boolean;
 }
 
 function witusProvider(): OAuthConfig<WitusProfile> {
   return {
-    id: "witus",
+    id: WITUS_PROVIDER_ID,
     name: "WitUS",
     type: "oauth",
     wellKnown:
@@ -29,20 +45,45 @@ function witusProvider(): OAuthConfig<WitusProfile> {
       "https://accounts.witus.online/api/idp/.well-known/openid-configuration",
     clientId: process.env.WITUS_OIDC_CLIENT_ID,
     clientSecret: process.env.WITUS_OIDC_CLIENT_SECRET,
+    // `email_verified` rides along inside the id token's standard OIDC claims,
+    // so no extra scope is needed for it.
     authorization: { params: { scope: "openid email profile" } },
     idToken: true,
     checks: ["pkce", "state"],
-    profile(profile): User {
-      // Defaults for the app's required fields; SSO users start as free Students.
-      return {
-        id: profile.sub,
-        email: profile.email ?? "",
-        name: profile.name ?? "",
-        image: null,
-        role: "Student",
-        subscriptionTier: "Free",
-        emailVerified: true,
-      };
+    /**
+     * next-auth 4.24 awaits this hook (`await provider.profile(...)` in
+     * core/lib/oauth/callback.js), so the local lookup belongs here rather than
+     * in the `signIn` callback: whatever comes back is what the JWT is built
+     * from, which means `session.user.id` is a real MongoDB `_id` from the very
+     * first token instead of the IdP's subject identifier.
+     */
+    async profile(profile): Promise<User> {
+      let resolution: WitusResolution;
+      try {
+        const client = await clientPromise;
+        resolution = await resolveWitusUser(client.db(), profile);
+      } catch (error) {
+        Logger.error(LogContext.AUTH, "WitUS sign-in could not resolve a local account.", { error });
+        resolution = { ok: false, reason: "resolution_failed" };
+      }
+
+      if (!resolution.ok) {
+        // Throwing here would be swallowed by next-auth's OAUTH_PARSE_PROFILE
+        // catch and land the browser back on the sign-in page with nothing on
+        // it. Returning the reason in `id` lets the `signIn` callback refuse
+        // where a refusal is actually visible.
+        return {
+          id: refusalUserId(resolution.reason),
+          email: profile.email ?? "",
+          name: profile.name ?? "",
+          image: null,
+          role: "Student",
+          subscriptionTier: "Free",
+          emailVerified: false,
+        };
+      }
+
+      return { ...resolution.user };
     },
   };
 }
@@ -205,7 +246,25 @@ export const authOptions: NextAuthOptions = {
     // into the account is the same proof an emailed cancellation token would
     // give, so this is the entire undo path. It costs one indexed _id lookup
     // and returns immediately for any account that never asked to be deleted.
-    async signIn({ user }) {
+    async signIn({ user, account }) {
+      if (account?.provider === WITUS_PROVIDER_ID) {
+        const refusal = readRefusalReason(user.id);
+        // The gate is the positive test, not the sentinel: a WitUS sign-in
+        // proceeds only when `profile()` handed back a real MongoDB `_id`.
+        // Anything else fails closed, so a sentinel can never become a session
+        // even if a future reason string stops being recognised here.
+        if (refusal || !isLocalUserId(user.id)) {
+          // The reason stays in the server log. The browser gets one refusal
+          // for all of them, because a per-reason message would tell anyone
+          // holding an address whether it is suspended, managed, or unknown
+          // here.
+          Logger.warning(LogContext.AUTH, "WitUS sign-in refused.", {
+            metadata: { reason: refusal ?? "unresolved_local_account" },
+          });
+          return false;
+        }
+      }
+
       try {
         await dbConnect();
         const { restored, restoredSetCount } = await restoreUserAccount(user.id);
@@ -225,7 +284,6 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger }) {
       if (user) {
         Logger.info(LogContext.AUTH, "JWT callback: Adding user data to token.", { userId: user.id, role: user.role });
-        console.log('[DEBUG AUTH] JWT callback - user object:', JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }));
         token.id = user.id;
         token.role = user.role;
         token.subscriptionTier = user.subscriptionTier || 'Free';
@@ -254,14 +312,12 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      console.log('[DEBUG AUTH] Session callback - token.role:', token?.role, '| session.user exists:', !!session.user);
       if (token && session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.subscriptionTier = token.subscriptionTier || 'Free';
         session.user.emailVerified = token.emailVerified || false;
         session.user.image = token.image || null;
-        console.log('[DEBUG AUTH] Session callback - set session.user.role to:', session.user.role);
       }
       return session;
     }
