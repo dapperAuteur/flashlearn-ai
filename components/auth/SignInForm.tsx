@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { Logger, LogContext } from "@/lib/logging/client-logger";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import {
+  SILENT_SSO_TIMEOUT_MS,
+  SSO_ATTEMPT_STORAGE_KEY,
+  continueAsLabel,
+  parseSilentSsoIdentity,
+  silentSsoDecision,
+  type SsoIdentity,
+} from "@/lib/auth/witusEcosystem";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -17,7 +25,16 @@ const signInSchema = z.object({
 
 type SignInFormData = z.infer<typeof signInSchema>;
 
-export default function SignInForm() {
+export default function SignInForm({
+  silentSsoUrl = null,
+}: {
+  /**
+   * IdP session-probe endpoint, resolved on the SERVER (the sign-in page calls
+   * witusSilentSsoUrl()). Null means this app is not a configured ecosystem
+   * OIDC client, and the "Continue as <name>" check never runs.
+   */
+  silentSsoUrl?: string | null;
+} = {}) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
@@ -35,6 +52,78 @@ export default function SignInForm() {
   const [codeSent, setCodeSent] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
+
+  // --- WitUS ecosystem SSO: the silent "Continue as <name>" check ---
+  // Display copy only. `identity` NEVER authenticates anyone: it arrives in a
+  // cross-origin response body, so it is client-supplied by definition. Clicking
+  // the button runs the real OIDC code flow through signIn("witus"), and that is
+  // the only thing here that establishes who someone is.
+  const [ssoIdentity, setSsoIdentity] = useState<SsoIdentity | null>(null);
+  const { status: sessionStatus } = useSession();
+
+  useEffect(() => {
+    // 'loading' is not an answer yet — waiting one tick avoids probing for
+    // someone who turns out to be signed in already.
+    if (sessionStatus === 'loading') return;
+
+    const decision = silentSsoDecision({
+      endpoint: silentSsoUrl,
+      search: window.location.search,
+      attempted: readSsoAttempted(),
+      signedIn: sessionStatus === 'authenticated',
+    });
+    // `!silentSsoUrl` is implied by decision.attempt; repeating it makes the
+    // narrowing the compiler's rather than a cast that outlives the invariant.
+    if (!decision.attempt || !silentSsoUrl) return;
+
+    // Abort rather than hang. A probe still in flight after the visitor has
+    // moved on is a leak of attention, not just of a socket.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SILENT_SSO_TIMEOUT_MS);
+    let live = true;
+
+    // `credentials: "include"` is the entire mechanism: the answer depends on
+    // the IdP's OWN cookie, which is third-party from here. Browsers that
+    // partition or block third-party cookies (Safari ITP, Firefox Total Cookie
+    // Protection) answer nothing, and that is a supported outcome rather than a
+    // bug to work around — the visitor simply keeps the ordinary button.
+    fetch(silentSsoUrl, {
+      credentials: "include",
+      mode: "cors",
+      cache: "no-store",
+      headers: { accept: "application/json" },
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (!live) return;
+        const found = parseSilentSsoIdentity(payload);
+        if (found) setSsoIdentity(found);
+      })
+      .catch(() => {
+        // Invisible on purpose: network error, CORS refusal, abort, non-JSON
+        // body — all the same. A failed silent check changes nothing on screen
+        // and says nothing, which is the requirement.
+      })
+      .finally(() => clearTimeout(timer));
+
+    return () => {
+      live = false;
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [silentSsoUrl, sessionStatus]);
+
+  const startWitusSignIn = () => {
+    // THE LOOP GUARD, written BEFORE the redirect and never after the return: a
+    // marker written on return does not exist when the return is the thing that
+    // failed. Without it, a stale IdP session gives probe says "Continue as X"
+    // -> click -> the IdP cannot finish -> back to /auth/signin -> probe says
+    // "Continue as X" -> forever. With it, one attempt per tab; the second
+    // render offers the plain button and the email form, which always work.
+    writeSsoAttempted();
+    signIn('witus', { callbackUrl });
+  };
 
   const handleResendVerification = async () => {
     setResendLoading(true);
@@ -228,11 +317,20 @@ export default function SignInForm() {
         <div className="space-y-4">
           <button
             type="button"
-            onClick={() => signIn('witus', { callbackUrl })}
+            onClick={startWitusSignIn}
             className="w-full px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Sign in with WitUS
+            {continueAsLabel(ssoIdentity)}
           </button>
+          {/* Always in the DOM so the label change is announced when it happens,
+              and silent (and invisible) when the probe found nothing. */}
+          <p
+            role="status"
+            aria-live="polite"
+            className={ssoIdentity ? "-mt-2 text-center text-xs text-gray-500" : "sr-only"}
+          >
+            {ssoIdentity ? "Not you? Sign in with your email below." : ""}
+          </p>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-gray-200" />
             <span className="text-xs text-gray-400 uppercase">or</span>
@@ -444,4 +542,26 @@ export default function SignInForm() {
       )}
     </div>
   );
+}
+
+/**
+ * sessionStorage throws outright in some privacy modes, so both halves are
+ * wrapped. A browser that cannot remember the attempt still gets the other half
+ * of the guard: NextAuth puts its own `?error=` on /auth/signin after a failed
+ * OAuth round trip, and silentSsoDecision treats that as the marker.
+ */
+function readSsoAttempted(): boolean {
+  try {
+    return window.sessionStorage.getItem(SSO_ATTEMPT_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeSsoAttempted(): void {
+  try {
+    window.sessionStorage.setItem(SSO_ATTEMPT_STORAGE_KEY, '1');
+  } catch {
+    // No storage, no marker. The query-param half still applies.
+  }
 }

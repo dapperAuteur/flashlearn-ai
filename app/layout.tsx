@@ -3,6 +3,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 import ClientRoot from './ClientRoot';
 import { PostHogProvider } from '@/lib/analytics/posthog-provider';
+import { WitusEcosystemProvider } from '@/components/providers/WitusEcosystemProvider';
+import { witusEndSessionUrl } from '@/lib/auth/witusEcosystemServer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -53,7 +55,19 @@ export default function RootLayout({
           apiKey={process.env.NEXT_PUBLIC_POSTHOG_KEY ?? null}
           apiHost="/ingest"
         />
-        <ClientRoot>{children}</ClientRoot>
+        {/* GLOBAL SIGN-OUT (BAM, 2026-08-30: signing out of one WitUS app signs
+            you out of all of them). WITUS_OIDC_CLIENT_ID has no NEXT_PUBLIC_
+            prefix, so the URL is resolved HERE, in the Server Component, and
+            pushed down — same reasoning as the PostHog key above. `null` (this
+            app is not a configured ecosystem OIDC client) leaves every sign-out
+            button on today's purely-local behaviour.
+
+            Outside ClientRoot rather than inside it because ClientRoot returns a
+            loading spinner early while PowerSync initialises; a provider in
+            there would not exist during that window. */}
+        <WitusEcosystemProvider endSessionUrl={witusEndSessionUrl()}>
+          <ClientRoot>{children}</ClientRoot>
+        </WitusEcosystemProvider>
       </body>
     </html>
   );

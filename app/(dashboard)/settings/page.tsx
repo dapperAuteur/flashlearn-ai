@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
+import { useWitusSignOut } from '@/components/providers/WitusEcosystemProvider';
 import { useRouter } from 'next/navigation';
 
 type OutboxStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -15,6 +16,7 @@ interface Preferences {
 
 export default function SettingsPage() {
   const { status } = useSession();
+  const { signOutEverywhere } = useWitusSignOut();
   const router = useRouter();
 
   const [preferences, setPreferences] = useState<Preferences>({
@@ -130,7 +132,10 @@ export default function SettingsPage() {
     try {
       const res = await fetch('/api/user/profile', { method: 'DELETE' });
       if (res.ok) {
-        await signOut({ callbackUrl: '/' });
+        // Global sign-out here too: the local account is gone, so leaving the
+        // shared WitUS session alive would let "Continue as <name>" offer to
+        // sign the person straight back into an account that no longer exists.
+        await signOutEverywhere({ callbackUrl: '/' });
       } else {
         const data = await res.json();
         setMessage({ type: 'error', text: data.error || 'Failed to delete account' });
