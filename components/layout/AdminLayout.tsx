@@ -2,7 +2,8 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useWitusSignOut } from "@/components/providers/WitusEcosystemProvider";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -111,6 +112,10 @@ const navGroups: NavGroup[] = [
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { data: session, status } = useSession();
+  // Global sign-out when this app is a configured WitUS OIDC client, and today's
+  // purely-local signOut when it is not. The hook owns the ordering (local
+  // session destroyed first, IdP handed the browser second) and the label.
+  const { signOutEverywhere, label: signOutLabel } = useWitusSignOut();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -248,11 +253,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             App
           </Link>
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() => void signOutEverywhere({ callbackUrl: "/" })}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
           >
             <LogOut className="h-3.5 w-3.5" />
-            Sign out
+            {signOutLabel}
           </button>
         </div>
       </div>

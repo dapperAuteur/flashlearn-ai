@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { signOut } from 'next-auth/react';
+import { useWitusSignOut } from '@/components/providers/WitusEcosystemProvider';
 // import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -18,6 +18,10 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({user}: UserMenuProps) {
+  // Global sign-out when this app is a configured WitUS OIDC client, and today's
+  // purely-local signOut when it is not. The hook owns the ordering (local
+  // session destroyed first, IdP handed the browser second) and the label.
+  const { signOutEverywhere, label: signOutLabel } = useWitusSignOut();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
@@ -111,11 +115,11 @@ export default function UserMenu({user}: UserMenuProps) {
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               onClick={() => {
                 setIsOpen(false);
-                signOut({ callbackUrl: '/' })
+                void signOutEverywhere({ callbackUrl: '/' });
               }}
             >
               <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
-              Sign out
+              {signOutLabel}
             </button>
           </div>
         </div>

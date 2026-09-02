@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import SignInPageClient from '@/app/(auth)/auth/signin/SignInPageClient';
 import { Skeleton } from '@/components/ui/skeleton';
+import { witusSilentSsoUrl } from '@/lib/auth/witusEcosystemServer';
 
 function SignInSkeleton() {
   return (
@@ -27,8 +28,11 @@ function SignInSkeleton() {
 export default function SignInPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* The "Continue as <name>" probe endpoint, resolved on the SERVER because
+          WITUS_OIDC_CLIENT_ID has no NEXT_PUBLIC_ prefix. `null` means this app
+          is not a configured ecosystem OIDC client, and the probe never runs. */}
       <Suspense fallback={<SignInSkeleton />}>
-        <SignInPageClient />
+        <SignInPageClient silentSsoUrl={witusSilentSsoUrl()} />
       </Suspense>
     </div>
   );

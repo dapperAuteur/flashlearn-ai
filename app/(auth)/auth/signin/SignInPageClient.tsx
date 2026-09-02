@@ -6,7 +6,12 @@ import { CheckCircle } from 'lucide-react';
 import SignInForm from '@/components/auth/SignInForm';
 import { Logger, LogContext } from '@/lib/logging/client-logger';
 
-export default function SignInPageClient() {
+export default function SignInPageClient({
+  silentSsoUrl = null,
+}: {
+  /** IdP session-probe endpoint, or null when ecosystem SSO is not configured. */
+  silentSsoUrl?: string | null;
+}) {
   const searchParams = useSearchParams();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
@@ -40,7 +45,7 @@ export default function SignInPageClient() {
         </h2>
         <p className="mt-2 text-gray-600">Welcome back to FlashLearnAI.WitUS.Online</p>
       </div>
-      <SignInForm />
+      <SignInForm silentSsoUrl={silentSsoUrl} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import type { OAuthConfig } from "next-auth/providers/oauth";
 import { Logger, LogContext } from "@/lib/logging/logger";
 import dbConnect from "@/lib/db/dbConnect";
 import { restoreUserAccount } from "@/lib/api/purgeUserAccount";
+import { WITUS_OIDC_DISCOVERY_FALLBACK } from "@/lib/auth/witusEcosystem";
 import {
   isLocalUserId,
   readRefusalReason,
@@ -40,9 +41,9 @@ function witusProvider(): OAuthConfig<WitusProfile> {
     id: WITUS_PROVIDER_ID,
     name: "WitUS",
     type: "oauth",
-    wellKnown:
-      process.env.WITUS_OIDC_DISCOVERY_URL ??
-      "https://accounts.witus.online/api/idp/.well-known/openid-configuration",
+    // Shared with the ecosystem-SSO helpers so the one external URL this app
+    // asserts about accounts.witus.online is written down exactly once.
+    wellKnown: process.env.WITUS_OIDC_DISCOVERY_URL ?? WITUS_OIDC_DISCOVERY_FALLBACK,
     clientId: process.env.WITUS_OIDC_CLIENT_ID,
     clientSecret: process.env.WITUS_OIDC_CLIENT_SECRET,
     // `email_verified` rides along inside the id token's standard OIDC claims,
