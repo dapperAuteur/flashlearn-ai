@@ -210,10 +210,19 @@ Every user-facing tutorial is a **runnable Playwright spec** in
 the app **fails**, instead of quietly rotting as prose:
 
 ```bash
+npm run tutorial:check    # every published help article maps to a spec or a waiver (see below)
 npm run tutorial:record   # run the specs via playwright.tutorial.config.ts → video + step marks
 npm run tutorial:docs     # generate per-step markdown walkthroughs into docs/tutorials/
 npm run tutorial:video    # compose the narrated video from recordings + narration audio
 ```
+
+Coverage is tracked in [`e2e/tutorials/manifest.json`](./e2e/tutorials/manifest.json): one entry per
+help article, naming either the spec that records it or a waiver saying why there is nothing to
+record. `tutorial:check` enumerates the articles from
+[`app/api/admin/help/seed/route.ts`](./app/api/admin/help/seed/route.ts) — the `/help` pages render
+from MongoDB, so the seed is the repo's source of truth, and seeding is additive, so production can
+serve articles the seed no longer names (the check reports those rather than failing on them). Add
+`-- --strict` to fail on `"status": "todo"` entries; that is the gate for "ready to record".
 
 Auth-gated tutorials **skip** (never fail) unless `TUTORIAL_STORAGE_STATE` points at a signed-in
 Playwright storage state (e.g. `.auth/tutorial-user.json`). The generated walkthroughs are

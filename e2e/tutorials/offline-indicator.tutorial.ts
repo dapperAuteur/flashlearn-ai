@@ -28,7 +28,12 @@ defineTutorial(
       title: "Start online",
       narration: "Explore, with a normal connection. Nothing is pinned to the bottom of the screen.",
       action: async (page) => {
-        await expect(page.getByRole("heading", { name: "Explore Flashcard Sets", level: 1 })).toBeVisible();
+        // Longer than the 5s default on the first assertion only: Explore is the slowest public
+        // page to settle when the whole suite hits production back to back. The claim is
+        // unchanged — the heading still has to be visible.
+        await expect(
+          page.getByRole("heading", { name: "Explore Flashcard Sets", level: 1 }),
+        ).toBeVisible({ timeout: 30_000 });
         await expect(page.getByText(/you're offline — progress saved locally/i)).toBeHidden();
       },
     },

@@ -38,7 +38,12 @@ defineTutorial(
       narration:
         "Explore lists the community's public sets, and Study Now opens one without an account.",
       action: async (page) => {
-        await expect(page.getByRole("heading", { name: "Explore Flashcard Sets", level: 1 })).toBeVisible();
+        // Longer than the 5s default on the first assertion only: Explore is the slowest public
+        // page to settle when the whole suite hits production back to back. The claim is
+        // unchanged — the heading still has to be visible.
+        await expect(
+          page.getByRole("heading", { name: "Explore Flashcard Sets", level: 1 }),
+        ).toBeVisible({ timeout: 30_000 });
         await page.getByRole("link", { name: /study now/i }).first().click();
       },
     },
