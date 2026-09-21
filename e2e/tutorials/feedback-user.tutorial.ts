@@ -14,10 +14,16 @@ import { defineTutorial } from "./tutorial";
 // feedback→Inbox pipeline. Two guards keep it identifiable and harmless:
 //   1. The Subject starts with "[TUTORIAL] " so BAM can spot (and clean up) tutorial traffic
 //      in the Inbox at a glance.
-//   2. The category is General, NOT Bug — plans/31 step 4 films it as a Bug, but a Bug
-//      submission triggers an automatic high-priority SMS to BAM's phone. The narration line
-//      ("Bugs get flagged high-priority automatically") stays verbatim; only the on-screen
-//      category diverges. Re-film as Bug deliberately if BAM wants the SMS on camera.
+//   2. The category is General, NOT Bug, unless TUTORIAL_AS_BUG=1. A Bug submission sends an
+//      automatic HIGH-PRIORITY SMS TO BAM'S PHONE, so the default is General and the narration
+//      line ("Bugs get flagged high-priority automatically") stays verbatim while the on-screen
+//      category diverges. The flag exists for exactly one purpose: BAM filming the "marked high"
+//      path on camera, once, deliberately, knowing the text message will arrive. Nobody else
+//      sets it, no CI job sets it, and no unattended run sets it. Step order and narration are
+//      identical either way — only which category button is clicked changes.
+
+/** OFF unless BAM is deliberately filming the Bug path; see guard 2 above. Bug texts his phone. */
+const AS_BUG = process.env.TUTORIAL_AS_BUG === "1";
 
 const SUBJECT = "[TUTORIAL] Trying the feedback thread";
 const MESSAGE =
@@ -57,8 +63,11 @@ defineTutorial(
         "Tell me what kind of message it is — found a bug, want a feature — add a subject and the details. Screenshots welcome; you can attach images or a short video.",
       action: async (page) => {
         await page.getByRole("button", { name: "New Conversation" }).click();
-        // General, not Bug — see the recording notes at the top of this file.
-        await page.getByRole("button", { name: /^general$/i }).click();
+        // General, not Bug — see the recording notes at the top of this file. TUTORIAL_AS_BUG=1
+        // picks Bug instead, and a Bug submission texts BAM's phone.
+        await page
+          .getByRole("button", { name: AS_BUG ? /^bug$/i : /^general$/i })
+          .click();
         await page.getByPlaceholder("Brief description...").fill(SUBJECT);
         await page.getByPlaceholder("Describe in detail...").fill(MESSAGE);
       },

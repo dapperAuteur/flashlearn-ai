@@ -15,6 +15,7 @@
     "engagement-check": "tsx --env-file=.env.local scripts/engagementCheck.ts",
     "check:providers": "tsx --env-file=.env.local scripts/checkProviders.ts",
     "tutorial:record": "playwright test --config playwright.tutorial.config.ts",
+    "tutorial:check": "node scripts/tutorial-video/check-manifest.mjs",
     "tutorial:docs": "node scripts/tutorial-video/gen-docs.mjs",
     "tutorial:video": "node scripts/tutorial-video/compose.mjs",
     "seed:math": "tsx --env-file=.env.local scripts/seedMathSets.ts",

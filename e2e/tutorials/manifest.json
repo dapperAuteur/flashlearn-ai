@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "helpSource": "app/api/admin/help/seed/route.ts (seedArticles). The /help pages render from MongoDB (HelpArticle via app/(public)/help/page.tsx), so the seed file is the source of truth in the repo, not the live list. Seeding is additive and never deletes, so production can hold articles the seed no longer names: as of 2026-09-21 https://flashlearnai.witus.online/api/help returns 15 articles and the seed defines 14. The extra one, resolving-sync-conflicts, is listed below and has no file source.",
+  "articles": [
+    {
+      "article": "what-is-flashlearnai",
+      "title": "What Is FlashLearnAI?",
+      "spec": "e2e/tutorials/help-center.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": false,
+      "sideEffects": "none",
+      "status": "passes",
+      "notes": "Signed-out tour of the Help Center itself: category nav, the article card, the article page and its Related Articles rail. Nothing is clicked that writes."
+    },
+    {
+      "article": "creating-your-first-set",
+      "title": "Creating Your First Flashcard Set",
+      "spec": "e2e/tutorials/deck-flow.tutorial.ts",
+      "kind": "lead",
+      "requiresAuth": true,
+      "sideEffects": "spends-quota",
+      "status": "written-not-run",
+      "notes": "Existing lead demo, narration audio pending. Every run consumes ONE AI generation from the signed-in account. Skips without TUTORIAL_STORAGE_STATE. Step order is frozen once audio exists."
+    },
+    {
+      "article": "your-library",
+      "title": "Your Library: Keeping the Sets You Actually Study",
+      "spec": "e2e/tutorials/your-library.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": true,
+      "sideEffects": "creates-data",
+      "status": "written-not-run",
+      "notes": "Adds one public set to the signed-in account's own library and removes it again in the last step, so it cleans up after itself. The toggle renders only for signed-in visitors (app/(public)/explore/page.tsx:259,387), which the article does not say."
+    },
+    {
+      "article": "study-modes-explained",
+      "title": "Study Modes Explained",
+      "spec": "e2e/tutorials/study-modes.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": false,
+      "sideEffects": "none",
+      "status": "passes",
+      "notes": "Stops before Begin Study Session so no session record is written. The setup screen offers TWO modes (Classic, Multiple Choice); Type Answer is only a default in Settings. The spec follows the app, not the article."
+    },
+    {
+      "article": "versus-mode-guide",
+      "title": "How Versus Mode Works",
+      "spec": "e2e/tutorials/versus-how-it-works.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": false,
+      "sideEffects": "none",
+      "status": "passes",
+      "notes": "Reads the public /versus/how-it-works explainer. No challenge is created, joined or shared — those notify real opponents."
+    },
+    {
+      "article": "offline-mode",
+      "title": "Studying Offline",
+      "spec": "e2e/tutorials/offline-indicator.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": false,
+      "sideEffects": "none",
+      "status": "passes",
+      "notes": "Drops the browser context offline to film the amber status bar, then restores it. The blue syncing bar needs queued writes from a signed-in session and is not filmed."
+    },
+    {
+      "article": "studying-offline",
+      "title": "Studying Offline",
+      "spec": "e2e/tutorials/offline-basics.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": false,
+      "sideEffects": "none",
+      "status": "passes",
+      "notes": "Films the /offline fallback page, which names exactly what is cached. Duplicate title with offline-mode: two published articles are both called 'Studying Offline'."
+    },
+    {
+      "article": "resolving-sync-conflicts",
+      "title": "Resolving Sync Conflicts",
+      "waiver": "The feature this article documents no longer exists. The conflict screens and badge were removed in August 2026 (app/(public)/roadmap/page.tsx:242-247) because the sync service watched for an HTTP 409 no route ever returned (lib/services/syncService.ts:400). There is no Dashboard → Conflicts route to record. The article is published in the production help database but is not in the seed file, so it has to be deleted by hand."
+    },
+    {
+      "article": "sharing-your-milestones",
+      "title": "Sharing Your Milestones",
+      "spec": "e2e/tutorials/milestone-sharing.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": true,
+      "sideEffects": "none",
+      "status": "written-not-run",
+      "notes": "Read-only by default: it reads the switch state and the copy around it. Flipping the switch writes the account's opt-in and is built only when TUTORIAL_TOGGLE_MILESTONES=1."
+    },
+    {
+      "article": "short-link-sharing",
+      "title": "Short Link Sharing & Tracking",
+      "kind": "quick-reference",
+      "requiresAuth": true,
+      "sideEffects": "creates-data",
+      "status": "todo",
+      "notes": "Deliberately not written this session. Every share surface is behind a mutation: the results share card needs a finished study session, ChallengeShareModal needs a created versus challenge, and the /admin/links half is an admin dashboard. Recording it against production would create a real challenge or a real tracked link."
+    },
+    {
+      "article": "teams-and-classrooms",
+      "title": "Teams & Classrooms",
+      "spec": "e2e/tutorials/study-groups.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": true,
+      "sideEffects": "creates-data",
+      "status": "written-not-run",
+      "notes": "Browses the study-group hub and opens the join-code form without submitting. Privacy-gated because the clip is published and every card prints its group's live join code: it refuses to run unless TUTORIAL_DEMO_STUDY_GROUP names the demo group, every group on the account must be a demo group, and a preview deployment is preferred. The create-form step is built only when TUTORIAL_CREATE_STUDY_GROUP=1 and stops before saving; the closing /teacher step is built only when TUTORIAL_DEMO_CLASSROOM is set, since that page lists real classrooms with their join codes."
+    },
+    {
+      "article": "managed-student-accounts",
+      "title": "Adding Students Who Have No Email Address",
+      "spec": "e2e/tutorials/managed-student.tutorial.ts",
+      "kind": "lead",
+      "requiresAuth": true,
+      "sideEffects": "creates-data",
+      "status": "written-not-run",
+      "notes": "Existing lead demo, narration audio pending. Creates a real managed student account and mints a real claim code; the last step unenrols but does not delete. Preview deployments only."
+    },
+    {
+      "article": "reading-a-student-progress",
+      "title": "Reading a Student's Progress",
+      "spec": "e2e/tutorials/student-progress.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": true,
+      "sideEffects": "none",
+      "status": "written-not-run",
+      "notes": "Read-only, and privacy-gated because the clip is published: it refuses to run unless TUTORIAL_DEMO_CLASSROOM names the demo classroom to open, with no fallback to the first classroom. EVERY student on that roster must be a demo account (the managed-student tutorial creates one), and the first student must have at least one finished study session or step 4 fails with that instruction rather than narrating an empty report. Record against a preview deployment: the classroom's live join code is on screen at step 1."
+    },
+    {
+      "article": "managing-your-account",
+      "title": "Managing Your Account",
+      "spec": "e2e/tutorials/account-profile.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": true,
+      "sideEffects": "none",
+      "status": "written-not-run",
+      "notes": "Read-only: it opens the email and password panels but never submits. The article says these live under Settings; in the app they live on /profile."
+    },
+    {
+      "article": "subscription-plans",
+      "title": "Subscription Plans",
+      "spec": "e2e/tutorials/pricing-plans.tutorial.ts",
+      "kind": "quick-reference",
+      "requiresAuth": false,
+      "sideEffects": "none",
+      "status": "passes",
+      "notes": "Reads the public /pricing page and the FAQ only. No checkout button is ever clicked. Prices and tier names on the page differ from the article — see the spec header."
+    },
+    {
+      "article": null,
+      "title": "Feedback that never falls through the cracks (lead demo, no help article)",
+      "spec": "e2e/tutorials/feedback-user.tutorial.ts",
+      "kind": "lead",
+      "requiresAuth": true,
+      "sideEffects": "creates-data",
+      "status": "written-not-run",
+      "notes": "Existing lead demo, narration audio pending. Creates a REAL conversation in the production WitUS Inbox. Category General, never Bug — a Bug submission sends an automatic SMS to the owner's phone. No new spec submits feedback."
+    }
+  ]
+}
