@@ -104,7 +104,7 @@
       "requiresAuth": true,
       "sideEffects": "creates-data",
       "status": "written-not-run",
-      "notes": "Browses the study-group hub and opens the join-code form without submitting. The step that opens the create form is built only when TUTORIAL_CREATE_STUDY_GROUP=1, and even then it stops before saving."
+      "notes": "Browses the study-group hub and opens the join-code form without submitting. Privacy-gated because the clip is published and every card prints its group's live join code: it refuses to run unless TUTORIAL_DEMO_STUDY_GROUP names the demo group, every group on the account must be a demo group, and a preview deployment is preferred. The create-form step is built only when TUTORIAL_CREATE_STUDY_GROUP=1 and stops before saving; the closing /teacher step is built only when TUTORIAL_DEMO_CLASSROOM is set, since that page lists real classrooms with their join codes."
     },
     {
       "article": "managed-student-accounts",
@@ -124,7 +124,7 @@
       "requiresAuth": true,
       "sideEffects": "none",
       "status": "written-not-run",
-      "notes": "Read-only. Needs a teacher session whose own classroom has at least one student; it opens a student on the recorder's own roster and never types or asserts a student's name into the spec."
+      "notes": "Read-only, and privacy-gated because the clip is published: it refuses to run unless TUTORIAL_DEMO_CLASSROOM names the demo classroom to open, with no fallback to the first classroom. EVERY student on that roster must be a demo account (the managed-student tutorial creates one), and the first student must have at least one finished study session or step 4 fails with that instruction rather than narrating an empty report. Record against a preview deployment: the classroom's live join code is on screen at step 1."
     },
     {
       "article": "managing-your-account",

@@ -52,8 +52,15 @@ defineTutorial(
       narration:
         "You can steer the AI — definitions only, undergraduate level — and give the set a name.",
       action: async (page) => {
-        await page.getByPlaceholder(/undergraduate level|definitions only/i).fill("Definitions only, concise");
-        await page.getByPlaceholder(/biology chapter 7/i).fill("How Memory Works");
+        // Typed, not filled: these two are short fields a person types on camera, and with slowMo
+        // gone (playwright.tutorial.config.ts) a fill() would pop the whole string in one frame.
+        // Step 3 above stays a fill() because pasting notes is what a viewer actually does.
+        await page
+          .getByPlaceholder(/undergraduate level|definitions only/i)
+          .pressSequentially("Definitions only, concise", { delay: 35 });
+        await page
+          .getByPlaceholder(/biology chapter 7/i)
+          .pressSequentially("How Memory Works", { delay: 35 });
       },
     },
     {

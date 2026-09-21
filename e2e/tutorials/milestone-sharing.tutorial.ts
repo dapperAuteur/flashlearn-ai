@@ -73,7 +73,13 @@ if (TOGGLE) {
       action: async (page) => {
         const sw = page.getByRole("switch", { name: /turn my study milestones/i });
         await sw.click();
-        await expect(page.getByText(/saved\./i)).toBeVisible();
+        // The exact "on" message, not a loose /saved/ — a loose match would also pass on the
+        // "off" message and this caption would describe the wrong state.
+        await expect(
+          page.getByText("Saved. Your milestones can now be drafted as posts for review."),
+          "The switch was already ON when this run started, so clicking it turned it OFF. " +
+            "Set it back to off on /settings before recording.",
+        ).toBeVisible();
       },
     },
     {
