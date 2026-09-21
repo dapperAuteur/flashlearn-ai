@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { defineTutorial } from "./tutorial";
+import { warmStart } from "./_helpers";
 
 // Quick-reference clip for the help article "Studying Offline" (slug studying-offline, category
 // offline). Captions only — no narration audio (witus plans/33 §4 decision 4).
@@ -27,6 +28,7 @@ defineTutorial(
       narration:
         "When a page cannot load without a connection, FlashLearnAI shows this instead of a browser error.",
       action: async (page) => {
+        await warmStart(page, "/offline");
         await expect(page.getByRole("heading", { name: "You're Offline", level: 1 })).toBeVisible();
       },
     },

@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { defineTutorial } from "./tutorial";
+import { warmStart } from "./_helpers";
 
 // Quick-reference clip for the help article "How Versus Mode Works" (slug versus-mode-guide,
 // category versus). Captions only — no narration audio (witus plans/33 §4 decision 4).
@@ -25,6 +26,7 @@ defineTutorial(
       narration:
         "The public explainer for Versus Mode lives at /versus/how-it-works. No account needed to read it.",
       action: async (page) => {
+        await warmStart(page, "/versus/how-it-works");
         await expect(
           page.getByRole("heading", { name: "Challenge Your Friends to Learn", level: 1 }),
         ).toBeVisible();

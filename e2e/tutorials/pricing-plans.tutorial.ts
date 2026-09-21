@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { defineTutorial } from "./tutorial";
+import { warmStart } from "./_helpers";
 
 // Quick-reference clip for the help article "Subscription Plans" (slug subscription-plans,
 // category billing). Captions only — no narration audio (witus plans/33 §4 decision 4).
@@ -42,6 +43,7 @@ defineTutorial(
       title: "The plans page",
       narration: "Every plan and price lives on one public page: /pricing.",
       action: async (page) => {
+        await warmStart(page, "/pricing");
         await expect(
           page.getByRole("heading", { name: /choose your\s+learning plan/i, level: 1 }),
         ).toBeVisible();

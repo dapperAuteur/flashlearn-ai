@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { defineTutorial } from "./tutorial";
+import { warmStart } from "./_helpers";
 
 // Quick-reference clip for the help article "What Is FlashLearnAI?" (slug what-is-flashlearnai,
 // category getting-started). Captions only — no narration audio (witus plans/33 §4 decision 4).
@@ -33,6 +34,7 @@ defineTutorial(
       title: "Open the Help Center",
       narration: "Every FlashLearnAI page footer leads here: the Help Center at /help.",
       action: async (page) => {
+        await warmStart(page, "/help");
         await expect(page.getByRole("heading", { name: "Help Center", level: 1 })).toBeVisible();
       },
     },

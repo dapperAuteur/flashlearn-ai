@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { defineTutorial } from "./tutorial";
+import { warmStart } from "./_helpers";
 
 // Quick-reference clip for the help article "Study Modes Explained" (slug study-modes-explained,
 // category study-modes). Captions only — no narration audio (witus plans/33 §4 decision 4).
@@ -38,9 +39,9 @@ defineTutorial(
       narration:
         "Explore lists the community's public sets, and Study Now opens one without an account.",
       action: async (page) => {
-        // Longer than the 5s default on the first assertion only: Explore is the slowest public
-        // page to settle when the whole suite hits production back to back. The claim is
-        // unchanged — the heading still has to be visible.
+        // Longer than the 5s default here only: Explore is the slowest public page to settle
+        // when the whole suite hits production back to back. The claim is unchanged.
+        await warmStart(page, "/explore");
         await expect(
           page.getByRole("heading", { name: "Explore Flashcard Sets", level: 1 }),
         ).toBeVisible({ timeout: 30_000 });

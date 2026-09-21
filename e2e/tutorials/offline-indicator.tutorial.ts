@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { defineTutorial } from "./tutorial";
+import { warmStart } from "./_helpers";
 
 // Quick-reference clip for the help article "Studying Offline" (slug offline-mode, category
 // offline — note a second published article, studying-offline, carries the same title).
@@ -28,9 +29,9 @@ defineTutorial(
       title: "Start online",
       narration: "Explore, with a normal connection. Nothing is pinned to the bottom of the screen.",
       action: async (page) => {
-        // Longer than the 5s default on the first assertion only: Explore is the slowest public
-        // page to settle when the whole suite hits production back to back. The claim is
-        // unchanged — the heading still has to be visible.
+        // Longer than the 5s default here only: Explore is the slowest public page to settle
+        // when the whole suite hits production back to back. The claim is unchanged.
+        await warmStart(page, "/explore");
         await expect(
           page.getByRole("heading", { name: "Explore Flashcard Sets", level: 1 }),
         ).toBeVisible({ timeout: 30_000 });
