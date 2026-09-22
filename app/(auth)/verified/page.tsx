@@ -1,12 +1,20 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { VERIFIED_NOTICE_COOKIE } from "@/lib/auth/verified-notice";
 
 export const metadata: Metadata = {
   title: "Email Verified | FlashLearnAI.WitUS.Online",
   description: "Your email has been verified",
 };
 
-export default function VerifiedPage() {
+// Public on purpose (verification happens before sign-in), but honest: it only says "verified" to
+// the browser the verify route just sent here, which carries a 2-minute notice cookie. Anyone else,
+// including someone who types the URL, goes to sign-in and is told nothing.
+export default async function VerifiedPage() {
+  const cookieStore = await cookies();
+  if (cookieStore.get(VERIFIED_NOTICE_COOKIE)?.value !== "1") redirect("/auth/signin");
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
