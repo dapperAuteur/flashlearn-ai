@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get("token");
     
     if (!token) {
-      return NextResponse.redirect(new URL("/auth/error?error=missing_token", request.url));
+      return NextResponse.redirect(new URL("/error?error=missing_token", request.url));
     }
     
     const client = await clientPromise;
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.redirect(new URL("/auth/error?error=invalid_token", request.url));
+      return NextResponse.redirect(new URL("/error?error=invalid_token", request.url));
     }
 
     // Update user as verified and remove token (clear both field name variants)
@@ -41,9 +41,9 @@ export async function GET(request: NextRequest) {
     await sendWelcomeEmail(user.email, user.name);
     
     // Redirect to success page
-    return NextResponse.redirect(new URL("/auth/verified", request.url));
+    return NextResponse.redirect(new URL("/verified", request.url));
   } catch (error) {
     console.error("Verification error:", error);
-    return NextResponse.redirect(new URL("/auth/error?error=server_error", request.url));
+    return NextResponse.redirect(new URL("/error?error=server_error", request.url));
   }
 }

@@ -26,7 +26,7 @@ export default function EcosystemDocsPage() {
         Drop FlashLearn AI in as the spaced-repetition + comprehension-measurement backend for any consumer-facing learning product.
       </p>
       <p className="text-sm text-gray-500 mb-8">
-        Built for cross-product partners (consumer learning apps, classroom tools, curriculum platforms) that need scheduled review sessions, per-standard mastery tracking, and a real cascade-delete pathway. Used in production by <a href="https://wanderlearn.witus.online" className="text-blue-600 hover:underline" rel="noopener">Wanderlearn</a> (high school immersive 360-degree learning) and Better Vice Club classes (BAM&apos;s vice-engagement curriculum delivered via Centenarian Academy LMS).
+        Built for cross-product partners (consumer learning apps, classroom tools, curriculum platforms) that need scheduled review sessions, per-standard mastery tracking, and a real cascade-delete pathway. Used in production by <a href="https://wanderlust.witus.online" className="text-blue-600 hover:underline" rel="noopener">Wanderlust</a> (high school immersive 360-degree learning) and Better Vice Club classes (BAM&apos;s vice-engagement curriculum delivered via Centenarian Academy LMS).
       </p>
 
       <section aria-labelledby="when" className="mb-10">
