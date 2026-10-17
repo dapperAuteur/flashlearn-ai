@@ -50,6 +50,11 @@ function witusProvider(): OAuthConfig<WitusProfile> {
     // so no extra scope is needed for it.
     authorization: { params: { scope: "openid email profile" } },
     idToken: true,
+    // accounts.witus.online signs ID tokens with EdDSA (its JWKS holds one Ed25519 key).
+    // openid-client 5 defaults to RS256 and rejects them with "unexpected JWT alg
+    // received", which NextAuth reports as ?error=OAuthCallback. Found on witus.online
+    // 2026-10-16; witus repo scripts/check-idp-id-token-alg.mjs checks the live JWKS.
+    client: { id_token_signed_response_alg: "EdDSA" },
     checks: ["pkce", "state"],
     /**
      * next-auth 4.24 awaits this hook (`await provider.profile(...)` in
