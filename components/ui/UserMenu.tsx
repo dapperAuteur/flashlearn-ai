@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useWitusSignOut } from '@/components/providers/WitusEcosystemProvider';
+import { SIGN_OUT_LABEL, useWitusSignOut } from '@/components/providers/WitusEcosystemProvider';
+import SignOutEverywhereButton from '@/components/ui/SignOutEverywhereButton';
 // import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -18,10 +19,10 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({user}: UserMenuProps) {
-  // Global sign-out when this app is a configured WitUS OIDC client, and today's
-  // purely-local signOut when it is not. The hook owns the ordering (local
-  // session destroyed first, IdP handed the browser second) and the label.
-  const { signOutEverywhere, label: signOutLabel } = useWitusSignOut();
+  // "Sign out" ends only this app's session (BAM, 2026-10-29, witus task 128
+  // option (b)). "Sign out of WitUS everywhere" sits under it and renders only
+  // when this app is a configured WitUS OIDC client.
+  const { signOutHere } = useWitusSignOut();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
@@ -76,7 +77,7 @@ export default function UserMenu({user}: UserMenuProps) {
       </button>
       
       {isOpen && (
-        <div role="menu" aria-label="User menu" className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+        <div role="menu" aria-label="User menu" className="origin-top-right absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
           <div className="py-1 px-4 border-b border-gray-100">
             <p className="text-sm font-medium text-gray-900">{user.name}</p>
             <p className="text-sm font-medium text-gray-600">{user.email}</p>
@@ -115,12 +116,17 @@ export default function UserMenu({user}: UserMenuProps) {
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               onClick={() => {
                 setIsOpen(false);
-                void signOutEverywhere({ callbackUrl: '/' });
+                void signOutHere({ callbackUrl: '/' });
               }}
             >
               <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
-              {signOutLabel}
+              {SIGN_OUT_LABEL}
             </button>
+            <SignOutEverywhereButton
+              role="menuitem"
+              className="flex w-full items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-100"
+              helpClassName="px-4 pb-2 text-xs text-gray-600"
+            />
           </div>
         </div>
       )}

@@ -1,10 +1,11 @@
-# Video script 05: "Continue as ..." and signing out of every WitUS app
+# Video script 05: "Continue as ..." and the two ways to sign out
 
 {{video:PENDING}}
 
 **What the viewer will be able to do:** sign in to FlashLearnAI without typing anything when they
-already have a WitUS session open, and understand that signing out here signs them out of every
-WitUS app on that browser.
+already have a WitUS session open, and understand the two sign-out controls: **Sign out** leaves
+FlashLearnAI only, and **Sign out of WitUS everywhere** also ends their WitUS session (BAM,
+2026-10-29, witus task 128 option (b)).
 
 **Length:** aim for 3 to 4 minutes.
 
@@ -35,11 +36,11 @@ the feature is doing.
 | Needs to be true | Why |
 |---|---|
 | **Chrome or Edge**, not Safari or Firefox | Safari's ITP and Firefox's Total Cookie Protection block the third-party cookie the check depends on. The feature is *designed* to show nothing there, so nothing to film |
-| `WITUS_OIDC_CLIENT_ID` and `NEXT_PUBLIC_WITUS_SSO=true` set on the environment you record against | With either unset both features are dark by design: no button, no check, and sign-out stays local |
+| `WITUS_OIDC_CLIENT_ID` and `NEXT_PUBLIC_WITUS_SSO=true` set on the environment you record against | With either unset both features are dark by design: no button, no check, and no "Sign out of WitUS everywhere" control |
 | A WitUS account signed in **in another tab** on the same browser, on any WitUS app | This is the entire premise of beat 3. Without it the button just says "Sign in with WitUS" |
 | A second, ordinary FlashLearnAI account with a password | Beat 6 needs a signed-in session to sign out of |
 | Your real display name on the WitUS account is one you are willing to show | It goes on screen at full size in beat 3 |
-| Two browser tabs arranged before you hit record | Beat 7 cuts between them; fumbling for the second tab wastes the take |
+| Two browser tabs arranged before you hit record | Beats 3 and 4 cut between them; fumbling for the second tab wastes the take |
 
 ---
 
@@ -99,34 +100,36 @@ every time, and it is fine."
 **Why it matters:** pre-empts the support ticket that says "the Continue as button is broken on my
 Mac." It is not broken. It is the design.
 
-### 6. Sign out, and read the button
+### 6. Sign out, and read the menu
 
-**On screen:** back in the signed-in window, open the user menu. The item reads **Sign out of WitUS**,
-not "Sign out". Pause on it before clicking.
+**On screen:** back in the signed-in window, open the user menu. It has **Sign out**, and under it
+**Sign out of WitUS everywhere** with one line of help text. Pause on the help text.
 
-**Say:** "Read that carefully. It does not say sign out, it says sign out of WitUS. This ends the
-shared session, not just this app's."
+**Say:** "Two choices. Sign out leaves FlashLearnAI and nothing else. Sign out of WitUS everywhere
+also ends my WitUS session. Other WitUS apps I'm signed in to stay signed in until I sign out of
+them."
 
-**Why it matters:** the copy is doing the consent work. A viewer who clicks past it and then finds
-themselves signed out of another app will read it as a bug.
+**Why it matters:** the copy is doing the consent work. Plain "Sign out" never reaches beyond this
+app, so nobody is surprised.
 
-### 7. Show what it actually did
+### 7. Show what each one does
 
-**On screen:** click it. Land back on the FlashLearnAI home page. Now switch to the other tab — the
-WitUS app you were signed in to in the setup — and reload it. It is signed out too.
+**On screen:** click **Sign out**. Land on the FlashLearnAI home page. Click "Sign in with WitUS":
+it goes straight in, no WitUS login page. Open the menu again and click **Sign out of WitUS
+everywhere**. The browser passes through accounts.witus.online and lands back on FlashLearnAI. Click
+"Sign in with WitUS" again: now the WitUS login page shows.
 
-**Say:** "One click, both apps. That is what 'of WitUS' meant."
+**Say:** "Sign out kept my WitUS session. Everywhere ended it."
 
-**Why it matters:** the effect is invisible in the tab you clicked in. Without the second tab the
-feature looks identical to an ordinary sign-out.
+**Why it matters:** the difference is invisible unless you sign in again after each one.
 
 ### 8. Close on the ordering, briefly
 
 **On screen:** just you, or a title card.
 
-**Say:** "One detail worth knowing: this app ends your session here first and only then hands you to
-the identity provider. So if WitUS is having a bad day, you are still signed out of FlashLearnAI.
-Sign out always means signed out."
+**Say:** "One detail worth knowing: Sign out of WitUS everywhere ends your session here first and
+only then hands you to the identity provider. So if WitUS is having a bad day, you are still signed
+out of FlashLearnAI. Sign out always means signed out."
 
 **Why it matters:** it is the safety property of the whole feature and it costs ten seconds to say.
 
@@ -139,8 +142,8 @@ Sign out always means signed out."
   behaviour, not a bug to work around.
 - **Your display name goes on screen** at full size in beat 3. Decide before recording whether that is
   the name you want published.
-- **Beat 7 really signs you out of the other WitUS app.** If that tab has unsaved work in it, lose it
-  before you record rather than during.
+- **Beat 7 really ends your WitUS session.** Other WitUS apps keep their own sessions, but the next
+  "Sign in with WitUS" anywhere will ask you to log in to WitUS again.
 - **The private window in beat 5 needs to be genuinely fresh.** A private window reused from an
   earlier take may still hold the one-shot `sessionStorage` marker, which also suppresses the check —
   and then you will be filming the right screen for the wrong reason.

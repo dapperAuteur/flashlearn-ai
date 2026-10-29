@@ -3,7 +3,8 @@
 
 import { ReactNode, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useWitusSignOut } from "@/components/providers/WitusEcosystemProvider";
+import { SIGN_OUT_LABEL, useWitusSignOut } from "@/components/providers/WitusEcosystemProvider";
+import SignOutEverywhereButton from "@/components/ui/SignOutEverywhereButton";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -112,10 +113,10 @@ const navGroups: NavGroup[] = [
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { data: session, status } = useSession();
-  // Global sign-out when this app is a configured WitUS OIDC client, and today's
-  // purely-local signOut when it is not. The hook owns the ordering (local
-  // session destroyed first, IdP handed the browser second) and the label.
-  const { signOutEverywhere, label: signOutLabel } = useWitusSignOut();
+  // "Sign out" ends only this app's session (BAM, 2026-10-29, witus task 128
+  // option (b)). "Sign out of WitUS everywhere" sits under it and renders only
+  // when this app is a configured WitUS OIDC client.
+  const { signOutHere } = useWitusSignOut();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -253,12 +254,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             App
           </Link>
           <button
-            onClick={() => void signOutEverywhere({ callbackUrl: "/" })}
+            onClick={() => void signOutHere({ callbackUrl: "/" })}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
           >
             <LogOut className="h-3.5 w-3.5" />
-            {signOutLabel}
+            {SIGN_OUT_LABEL}
           </button>
+        </div>
+        <div className="mt-2">
+          <SignOutEverywhereButton
+            className="w-full px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+            helpClassName="mt-1 text-xs text-gray-600"
+          />
         </div>
       </div>
     </div>

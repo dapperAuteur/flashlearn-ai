@@ -59,8 +59,9 @@ export default function RootLayout({
             you out of all of them). WITUS_OIDC_CLIENT_ID has no NEXT_PUBLIC_
             prefix, so the URL is resolved HERE, in the Server Component, and
             pushed down — same reasoning as the PostHog key above. `null` (this
-            app is not a configured ecosystem OIDC client) leaves every sign-out
-            button on today's purely-local behaviour.
+            app is not a configured ecosystem OIDC client) hides the "Sign out
+            of WitUS everywhere" control; plain "Sign out" is always local
+            (BAM, 2026-10-29, witus task 128 option (b)).
 
             Outside ClientRoot rather than inside it because ClientRoot returns a
             loading spinner early while PowerSync initialises; a provider in

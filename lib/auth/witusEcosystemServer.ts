@@ -30,8 +30,9 @@ function discoveryUrl(): string {
 }
 
 /**
- * Where sign-out ends the SHARED WitUS session, with `client_id` already baked
- * in. The caller appends `post_logout_redirect_uri` (see
+ * Where "Sign out of WitUS everywhere" ends the SHARED WitUS session (BAM,
+ * 2026-10-29, witus task 128 option (b); plain "Sign out" is local-only), with
+ * `client_id` already baked in. The caller appends `post_logout_redirect_uri` (see
  * `endSessionUrlWithReturn`), which is why this ends in a query string.
  *
  * `client_id` IS REQUIRED, not optional. better-auth's endSession endpoint

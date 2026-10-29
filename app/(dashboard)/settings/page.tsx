@@ -16,7 +16,7 @@ interface Preferences {
 
 export default function SettingsPage() {
   const { status } = useSession();
-  const { signOutEverywhere } = useWitusSignOut();
+  const { signOutHere } = useWitusSignOut();
   const router = useRouter();
 
   const [preferences, setPreferences] = useState<Preferences>({
@@ -132,10 +132,11 @@ export default function SettingsPage() {
     try {
       const res = await fetch('/api/user/profile', { method: 'DELETE' });
       if (res.ok) {
-        // Global sign-out here too: the local account is gone, so leaving the
-        // shared WitUS session alive would let "Continue as <name>" offer to
-        // sign the person straight back into an account that no longer exists.
-        await signOutEverywhere({ callbackUrl: '/' });
+        // Local sign-out only (BAM, 2026-10-29, witus task 128 option (b)):
+        // deleting the FlashLearnAI account does not end the person's WitUS
+        // session or sign them out of other WitUS apps. Their WitUS account
+        // still exists, so a later "Sign in with WitUS" here is a fresh start.
+        await signOutHere({ callbackUrl: '/' });
       } else {
         const data = await res.json();
         setMessage({ type: 'error', text: data.error || 'Failed to delete account' });

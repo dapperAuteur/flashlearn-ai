@@ -16,8 +16,8 @@ import { endSessionUrlWithReturn } from '@/lib/auth/witusEcosystem';
  * the same pattern layout.tsx already uses for the PostHog key — keeps the env
  * read on the server and gives every button the same answer.
  *
- * `null` means "not a configured ecosystem OIDC client", and every consumer then
- * falls back to today's purely-local sign-out.
+ * `null` means "not a configured ecosystem OIDC client", and the "Sign out of
+ * WitUS everywhere" control does not render. Plain "Sign out" is always local.
  */
 const WitusEndSessionContext = createContext<string | null>(null);
 
@@ -35,53 +35,66 @@ export function WitusEcosystemProvider({
   );
 }
 
+/** Exact accessible names and help text (BAM, 2026-10-29, witus task 128 option (b)). */
+export const SIGN_OUT_LABEL = 'Sign out';
+export const SIGN_OUT_EVERYWHERE_LABEL = 'Sign out of WitUS everywhere';
+export const SIGN_OUT_EVERYWHERE_HELP =
+  'Also signs you out of WitUS. Other WitUS apps you are signed in to stay signed in until you sign out of them.';
+
 /**
- * Sign-out, global when this app is an ecosystem OIDC client and local when it
- * is not.
+ * The two sign-out flows (BAM, 2026-10-29, witus task 128 option (b)).
  *
- * Returns `{ signOutEverywhere, isGlobal, label }`. `label` is here rather than
- * hardcoded at each call site so the copy stays consistent: "Sign out of WitUS"
- * tells the person that the click reaches beyond this tab, which is the whole
- * point of BAM's 2026-08-30 decision that signing out signs you out of every
- * WitUS app.
+ * - `signOutHere` is plain "Sign out": it ends ONLY FlashLearnAI's session and
+ *   goes to `callbackUrl`. It never navigates to the IdP, even when an
+ *   end-session URL is configured; the WitUS session and every other WitUS
+ *   app's session stay alive. (The 2026-08-30 behaviour, where the one button
+ *   always ended the WitUS session too, surprised BAM because every other app
+ *   kept its own session.)
+ * - `signOutEverywhere` backs the separate "Sign out of WitUS everywhere"
+ *   control, which renders only when `canSignOutEverywhere` is true.
  */
 export function useWitusSignOut() {
   const endSessionUrl = useContext(WitusEndSessionContext);
 
-  const signOutEverywhere = useCallback(
-    async (options?: { callbackUrl?: string }) => {
-      const callbackUrl = options?.callbackUrl ?? '/';
+  const signOutHere = useCallback(async (options?: { callbackUrl?: string }) => {
+    await signOut({ callbackUrl: options?.callbackUrl ?? '/' });
+  }, []);
 
-      if (!endSessionUrl) {
-        // No shared session to end. Exactly what every call site did before.
-        await signOut({ callbackUrl });
-        return;
-      }
+  const signOutEverywhere = useCallback(async () => {
+    if (!endSessionUrl) {
+      // The control is not rendered without a URL; if it is ever called anyway,
+      // there is no shared session to end, so sign out here only.
+      await signOut({ callbackUrl: '/' });
+      return;
+    }
 
-      // ORDER IS THE SAFETY PROPERTY. Destroy the LOCAL session first, and only
-      // then hand the browser to the IdP. `redirect: false` is what makes this
-      // possible: it awaits the real sign-out round trip instead of navigating
-      // away mid-flight, so by the time the next line runs the local session is
-      // definitely gone. If the IdP is then unreachable, refuses the logout, or
-      // never returns, the person is still signed out HERE. Handing off first
-      // and clearing locally afterwards would turn any IdP failure into "I
-      // clicked sign out and I'm still signed in", which is the bug this
-      // ordering exists to prevent.
+    // ORDER IS THE SAFETY PROPERTY. Destroy the LOCAL session first, and only
+    // then hand the browser to the IdP. `redirect: false` is what makes this
+    // possible: it awaits the real sign-out round trip instead of navigating
+    // away mid-flight, so by the time the next line runs the local session is
+    // definitely gone. If the IdP is then unreachable, refuses the logout, or
+    // never returns, the person is still signed out HERE. Handing off first
+    // and clearing locally afterwards would turn any IdP failure into "I
+    // clicked sign out and I'm still signed in", which is the bug this
+    // ordering exists to prevent.
+    try {
       await signOut({ redirect: false });
+    } catch {
+      // A failed local sign-out must not trap someone in a session they asked
+      // to leave; the handoff below still happens.
+    }
 
-      // A full navigation, not a router push: this leaves our origin. The IdP
-      // ends the shared session and returns to post_logout_redirect_uri, which
-      // must be registered for this client in gemini/witus
-      // lib/identity/clients.ts — https://flashlearnai.witus.online/ — or the
-      // IdP lands the visitor on its own page instead. Signed out either way.
-      window.location.assign(endSessionUrlWithReturn(endSessionUrl, window.location.origin));
-    },
-    [endSessionUrl]
-  );
+    // A full navigation, not a router push: this leaves our origin. The IdP
+    // ends the shared session and returns to post_logout_redirect_uri, which
+    // must be registered for this client in gemini/witus
+    // lib/identity/clients.ts — https://flashlearnai.witus.online/ — or the
+    // IdP lands the visitor on its own page instead. Signed out either way.
+    window.location.assign(endSessionUrlWithReturn(endSessionUrl, window.location.origin));
+  }, [endSessionUrl]);
 
   return {
+    signOutHere,
     signOutEverywhere,
-    isGlobal: Boolean(endSessionUrl),
-    label: endSessionUrl ? 'Sign out of WitUS' : 'Sign out',
+    canSignOutEverywhere: Boolean(endSessionUrl),
   };
 }
