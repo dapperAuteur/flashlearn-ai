@@ -97,6 +97,21 @@ export default function GlobalError({
             >
               Back to home
             </a>
+            {/* The root layout and its header failed, so this shell carries Sign in itself. */}
+            <a
+              href="/auth/signin"
+              style={{
+                minHeight: '2.75rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '0 1.5rem',
+                color: '#1d4ed8',
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+              }}
+            >
+              Sign in
+            </a>
           </div>
           {error.digest ? (
             <p

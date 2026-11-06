@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import PublicHeader from '@/components/layout/PublicHeader';
+import Footer from '@/components/layout/Footer';
 import { 
   HomeIcon, 
   AcademicCapIcon,
@@ -8,9 +10,13 @@ import {
   ArrowLeftIcon 
 } from '@heroicons/react/24/outline';
 
+// Error pages keep the app shell (witus docs/shared-ui-ux-dx.md): ClientRoot only mounts
+// PublicHeader on "/", so the 404 page renders the header and footer itself.
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <>
+    <PublicHeader />
+    <main id="main-content" className="relative min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       
@@ -101,6 +107,8 @@ export default function NotFound() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
+    <Footer />
+    </>
   );
 }
