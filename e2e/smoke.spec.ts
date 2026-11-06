@@ -18,3 +18,14 @@ test("@smoke homepage serves", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("h1").first()).toBeVisible();
 });
+
+// Error pages keep the app shell (witus docs/shared-ui-ux-dx.md): a missing path answers 404 and
+// still renders the header sign-in link and the footer. The app renders client-side after
+// PowerSync opens, so this runs in a browser rather than reading the raw HTML.
+test("@smoke not-found page keeps the header and footer", async ({ page }) => {
+  const res = await page.goto("/this-page-does-not-exist-smoke");
+  expect(res?.status()).toBe(404);
+  await expect(page.locator("footer").first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('a[href="/auth/signin"]').first()).toBeAttached();
+  await expect(page.locator("h1")).toHaveCount(1);
+});
