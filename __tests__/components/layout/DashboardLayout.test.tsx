@@ -69,7 +69,8 @@ describe('DashboardLayout', () => {
     expect(screen.queryByText('Test Content')).not.toBeInTheDocument();
   });
 
-  it('redirects to sign in page when user is not authenticated', () => {
+  it('redirects to sign in page, carrying the return path, when user is not authenticated', () => {
+    window.history.pushState({}, '', '/dashboard?tab=1');
     (useSession as jest.Mock).mockReturnValue({
       data: null,
       status: 'unauthenticated',
@@ -81,7 +82,8 @@ describe('DashboardLayout', () => {
       </DashboardLayout>
     );
 
-    expect(mockRouter.push).toHaveBeenCalledWith('/auth/signin');
+    expect(mockRouter.push).toHaveBeenCalledWith('/auth/signin?callbackUrl=%2Fdashboard%3Ftab%3D1');
+    window.history.pushState({}, '', '/');
     expect(screen.queryByText('Test Content')).not.toBeInTheDocument();
   });
 

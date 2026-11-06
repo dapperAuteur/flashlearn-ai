@@ -86,7 +86,6 @@ export function isPublicPath(pathname: string): boolean {
 // Control characters (CR/LF, NUL, tab) can smuggle a newline into a Location
 // header, and browsers strip tab/newline from URLs, which turns "/\t/evil" into
 // "//evil". Written as escapes so the source stays greppable and lint-clean.
-// eslint-disable-next-line no-control-regex
 const CONTROL_CHARS = /[\u0000-\u001F\u007F]/;
 
 function localPathOrNull(value: string): string | null {
