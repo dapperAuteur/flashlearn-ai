@@ -8,6 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { Logger, LogContext } from "@/lib/logging/client-logger";
+import { safeCallbackPath } from "@/lib/auth/publicPaths";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import {
   SILENT_SSO_TIMEOUT_MS,
@@ -38,7 +39,12 @@ export default function SignInForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/flashcards';
+  // Same-origin only: the raw query value would make this page an open
+  // redirect (window.location.href = 'https://evil.example').
+  const callbackUrl = safeCallbackPath(
+    searchParams.get('callbackUrl'),
+    typeof window !== 'undefined' ? window.location.origin : null,
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
   const [resendEmail, setResendEmail] = useState("");

@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { edgeLogger, EdgeLogContext } from '@/lib/logging/edge-logger';
 import { isReconProbe } from '@/lib/security/reconProbes';
+import { isPublicPath as isPublicPathFor } from '@/lib/auth/publicPaths';
 import { checkReconProbeRateLimit } from '@/lib/ratelimit/reconProbeLimit';
 import {
   HOME_AB_COOKIE,
@@ -90,31 +91,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // --- General Protected Route Protection ---
-  const publicPaths = [
-    '/auth/signin',
-    '/auth/signup',
-    '/auth/forgot-password',
-    '/auth/reset-password',
-    // A student claiming a teacher-made account has never signed in, so this
-    // page has to be reachable with no token.
-    '/claim',
-    '/study',
-    '/pricing',
-    '/roadmap',
-    '/explore',
-    '/results',
-    '/versus/how-it-works',
-    '/blog',
-    '/about',
-    '/contact',
-    '/privacy',
-    '/terms',
-    '/u/',
-    '/teams/',
-    '/help',
-    '/'
-  ];
-  const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
+  // The list and its matching rule live in lib/auth/publicPaths.ts. Matching is
+  // exact or segment-prefix; '/' is the root only (it used to make every path
+  // public).
+  const isPublicPath = isPublicPathFor(pathname);
 
   // --- Email Verification Check ---
   const authPaths = ['/auth/', '/api/auth/'];
@@ -130,8 +110,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!token && !isPublicPath) {
+    // A relative callback (path + query), so the sign-in form's same-origin
+    // check accepts it and it never names another host.
     const signInUrl = new URL('/auth/signin', request.url);
-    signInUrl.searchParams.set('callbackUrl', request.nextUrl.href);
+    signInUrl.searchParams.set('callbackUrl', `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(signInUrl);
   }
 

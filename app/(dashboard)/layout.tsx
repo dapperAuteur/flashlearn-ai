@@ -37,7 +37,10 @@ export default function DashboardLayout({
   // Redirect unauthenticated users
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      // Middleware normally redirects first; this covers a session that ends
+      // while the page is open. Carry the return path so sign-in lands back here.
+      const here = `${window.location.pathname}${window.location.search}`;
+      router.push(`/auth/signin?callbackUrl=${encodeURIComponent(here)}`);
     }
   }, [status, router]);
 
