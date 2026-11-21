@@ -64,7 +64,7 @@
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.2",
     "motion": "^12.12.2",
-    "next": "15.5.28",
+    "next": "15.5.29",
     "next-auth": "^4.24.15",
     "nodemailer": "^7.0.13",
     "papaparse": "^5.5.3",
